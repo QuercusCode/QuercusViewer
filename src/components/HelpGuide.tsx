@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
     CircleHelp, X, MousePointer2, Keyboard, Sparkles,
-    BookOpen, Layers, Activity, Share2, FileUp, ArrowLeft, Wrench, Palette, Mail, Github, MessageSquare, ExternalLink, Linkedin, Heart, Users
+    BookOpen, Layers, Activity, Share2, FileUp, ArrowLeft, Wrench, Palette, Mail, Github, MessageSquare, ExternalLink, Linkedin, Heart, Users, Bot
 } from 'lucide-react';
 
 type FeatureSection = {
@@ -182,6 +182,42 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
                             <div className="bg-black/20 p-2 rounded border border-white/5">
                                 <strong className="text-white block mb-1">Interaction</strong>
                                 <span className="text-neutral-400">"Pass the Chalk" to let others drive.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )
+        },
+        {
+            id: 'ai',
+            title: 'Dr. AI Assistant',
+            icon: Bot,
+            description: 'Chemical & Structural Analysis Agent.',
+            content: (
+                <div className="space-y-6">
+                    <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20 p-4 rounded-xl">
+                        <h4 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
+                            <Bot className="w-4 h-4 text-purple-400" /> Dr. AI Catalyst
+                        </h4>
+                        <p className="text-xs text-neutral-300 mb-4 leading-relaxed">
+                            Your personal research assistant. Ask questions in natural language to analyze properties or control the view.
+                        </p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                            <div className="bg-black/20 p-2 rounded border border-white/5">
+                                <strong className="text-white block mb-1">Chemical Analysis</strong>
+                                <span className="text-neutral-400">Calculate pI, Molecular Weight, and Hydrophobicity.</span>
+                            </div>
+                            <div className="bg-black/20 p-2 rounded border border-white/5">
+                                <strong className="text-white block mb-1">View Control</strong>
+                                <span className="text-neutral-400">"Color by B-Factor", "Show Surface", "Mutate to Arg".</span>
+                            </div>
+                            <div className="bg-black/20 p-2 rounded border border-white/5">
+                                <strong className="text-white block mb-1">Knowledge Base</strong>
+                                <span className="text-neutral-400">Ask about "Active Sites", "Domains", or general biochemistry.</span>
+                            </div>
+                            <div className="bg-black/20 p-2 rounded border border-white/5">
+                                <strong className="text-white block mb-1">Smart Highlighting</strong>
+                                <span className="text-neutral-400">"Color residue 50 red" or "Highlight Chain A".</span>
                             </div>
                         </div>
                     </div>
