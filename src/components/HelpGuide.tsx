@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
     CircleHelp, X, MousePointer2, Keyboard, Sparkles,
-    BookOpen, Layers, Activity, Share2, FileUp, ArrowLeft, Wrench, Palette, Mail, Github, MessageSquare, ExternalLink, Linkedin, Heart
+    BookOpen, Layers, Activity, Share2, FileUp, ArrowLeft, Wrench, Palette, Mail, Github, MessageSquare, ExternalLink, Linkedin, Heart, Users
 } from 'lucide-react';
 
 type FeatureSection = {
@@ -92,7 +92,7 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
 
                     <div className="bg-neutral-800/50 p-4 rounded-xl border border-neutral-700/50">
                         <h4 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
-                            <MousePointer2 className="w-4 h-4 text-purple-400" /> Mouse Controls
+                            <MousePointer2 className="w-4 h-4 text-purple-400" /> Controls
                         </h4>
                         <div className="grid grid-cols-2 gap-3 text-xs">
                             <div className="bg-black/20 p-2 rounded border border-white/5">
@@ -108,8 +108,8 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
                                 <span className="text-neutral-400">Right Click + Drag</span>
                             </div>
                             <div className="bg-black/20 p-2 rounded border border-white/5">
-                                <strong className="text-white block mb-1">Center</strong>
-                                <span className="text-neutral-400">Ctrl + Click Atom</span>
+                                <strong className="text-white block mb-1">Power User</strong>
+                                <span className="text-neutral-400">Cmd+K for Commands</span>
                             </div>
                         </div>
                     </div>
@@ -146,6 +146,42 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
                             <div className="bg-black/20 p-2 rounded border border-white/5 flex items-center gap-2">
                                 <div className="grid grid-cols-2 gap-0.5 w-4 h-4"><div className="bg-indigo-500/20 border border-indigo-500/50" /><div className="bg-indigo-500/20 border border-indigo-500/50" /><div className="bg-indigo-500/20 border border-indigo-500/50" /><div className="bg-indigo-500/20 border border-indigo-500/50" /></div>
                                 <span className="text-white">Quad Grid</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )
+        },
+        {
+            id: 'live',
+            title: 'Live Collaboration',
+            icon: Users,
+            description: 'Real-time synchronization and chat.',
+            content: (
+                <div className="space-y-6">
+                    <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/20 p-4 rounded-xl">
+                        <h4 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
+                            <Users className="w-4 h-4 text-green-400" /> Remote Teaching & Research
+                        </h4>
+                        <p className="text-xs text-neutral-300 mb-4 leading-relaxed">
+                            Connect with colleagues or students instantly. Host a session, share the ID, and sync your view in real-time.
+                        </p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                            <div className="bg-black/20 p-2 rounded border border-white/5">
+                                <strong className="text-white block mb-1">Peer-to-Peer</strong>
+                                <span className="text-neutral-400">Direct, secure connection via PeerJS.</span>
+                            </div>
+                            <div className="bg-black/20 p-2 rounded border border-white/5">
+                                <strong className="text-white block mb-1">State Sync</strong>
+                                <span className="text-neutral-400">Camera, representation, and highlights are mirrored.</span>
+                            </div>
+                            <div className="bg-black/20 p-2 rounded border border-white/5">
+                                <strong className="text-white block mb-1">Communication</strong>
+                                <span className="text-neutral-400">Built-in Voice Room and Text Chat.</span>
+                            </div>
+                            <div className="bg-black/20 p-2 rounded border border-white/5">
+                                <strong className="text-white block mb-1">Interaction</strong>
+                                <span className="text-neutral-400">"Pass the Chalk" to let others drive.</span>
                             </div>
                         </div>
                     </div>
@@ -287,27 +323,27 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
                         <h4 className="text-sm font-bold text-white mb-3">Structural Tools</h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="bg-black/20 p-3 rounded-lg border border-white/5">
-                                <strong className="text-white text-xs block mb-1">Structure Superposition</strong>
+                                <strong className="text-white text-xs block mb-1">Sequence Track</strong>
                                 <p className="text-[11px] text-neutral-400">
-                                    Align multiple protein structures (by PDB ID or file) onto the main view to compare conformations and binding sites.
+                                    Analyze chain sequences. Color by <span className="text-yellow-400">Hydrophobicity</span> or <span className="text-purple-400">B-Factor</span> to identify key regions.
                                 </p>
                             </div>
                             <div className="bg-black/20 p-3 rounded-lg border border-white/5">
-                                <strong className="text-white text-xs block mb-1">Measurements</strong>
+                                <strong className="text-white text-xs block mb-1">Measurements Panel</strong>
                                 <p className="text-[11px] text-neutral-400">
-                                    Click any two atoms to calculate the precise distance (Å) between them. Ideal for active site analysis.
+                                    Calculate distances (Å) between atoms. Manage list, customize colors, and <strong className="text-neutral-300">Export CSV</strong>.
+                                </p>
+                            </div>
+                            <div className="bg-black/20 p-3 rounded-lg border border-white/5">
+                                <strong className="text-white text-xs block mb-1">Structure Superposition</strong>
+                                <p className="text-[11px] text-neutral-400">
+                                    Align multiple protein structures (by PDB ID or file) onto the main view to compare conformations.
                                 </p>
                             </div>
                             <div className="bg-black/20 p-3 rounded-lg border border-white/5">
                                 <strong className="text-white text-xs block mb-1">Contact Map</strong>
                                 <p className="text-[11px] text-neutral-400">
-                                    Generate a 2D matrix representation of residue-residue contacts (Cα-Cα distance &lt; 8Å).
-                                </p>
-                            </div>
-                            <div className="bg-black/20 p-3 rounded-lg border border-white/5">
-                                <strong className="text-white text-xs block mb-1">Motif Search</strong>
-                                <p className="text-[11px] text-neutral-400">
-                                    Find specific bioactive sequences (e.g., <code className="bg-neutral-800 px-1 rounded">RGD</code>) instantly.
+                                    Interactive 2D heatmap of residue interactions. Click cells to visualize contacts in 3D.
                                 </p>
                             </div>
                         </div>
@@ -369,8 +405,8 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
                         <div className="grid grid-cols-3 gap-3 text-xs text-center">
                             <div className="bg-black/20 p-3 rounded-lg hover:bg-black/30 transition-colors">
                                 <div className="text-2xl mb-1">📸</div>
-                                <div className="font-bold text-white">Image</div>
-                                <div className="text-neutral-500 scale-90">Transparent PNG</div>
+                                <div className="text-bold text-white">Image</div>
+                                <div className="text-neutral-500 scale-90">High-Res PNG (3x)</div>
                             </div>
                             <div className="bg-black/20 p-3 rounded-lg hover:bg-black/30 transition-colors">
                                 <div className="text-2xl mb-1">🎬</div>
