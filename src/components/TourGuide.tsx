@@ -80,8 +80,8 @@ export const startOnboardingTour = (onComplete?: () => void, onHighlight?: (elem
         {
             element: '#export-tools',
             popover: {
-                title: 'Capture & Export',
-                description: 'Capture high-resolution transparent snapshots or record movies of your structure.'
+                title: 'Tools & Collaboration',
+                description: 'Capture high-resolution snapshots, record movies, or use the Share button to start a Live Collaboration session with colleagues.'
             }
         },
         {
