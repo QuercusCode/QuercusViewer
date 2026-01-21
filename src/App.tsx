@@ -2417,6 +2417,7 @@ function App() {
         <StudioLayout
           recorder={recorder}
           onExit={() => setIsStudioMode(false)}
+          exportVideo={handleExportVideo}
         />
       )}
 
