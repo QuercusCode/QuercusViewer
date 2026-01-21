@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import {
     ArrowLeft, Play, Pause, Scissors, Trash2, Download,
     Settings, Layers, Music, Type, Film, Pencil, Undo, Redo,
-    Image as ImageIcon, Monitor, Camera
+    Image as ImageIcon, Monitor, Camera, Plus
 } from 'lucide-react';
 import { VideoTimeline } from './VideoTimeline';
 import type { useSessionRecorder } from '../hooks/useSessionRecorder';
-import { formatTime, parseTimeString } from '../utils/format';
+import { formatTime, parseTimeString } from '../utils/timeUtils';
 
 interface StudioLayoutProps {
     recorder: ReturnType<typeof useSessionRecorder>;
@@ -46,6 +46,8 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
     } = recorder;
 
     const [isEditingTitle, setIsEditingTitle] = useState(false);
+
+    const selectedSegments = segments.filter(s => selectedSegmentIds.includes(s.id));
 
     // Global Edit Modes
     const [isTrimMode, setIsTrimMode] = useState(false);
@@ -402,6 +404,84 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                                 <div className={`absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full transition-transform ${session.metadata.settings?.showCursor ? 'translate-x-4' : 'translate-x-0'}`} />
                                             </button>
                                         </div>
+                                        {/* Watermark Toggle */}
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-xs text-white/60">Watermark</span>
+                                            <button
+                                                onClick={() => updateMetadata({
+                                                    settings: { ...session.metadata.settings, showWatermark: !session.metadata.settings?.showWatermark }
+                                                })}
+                                                className={`w-8 h-4 rounded-full transition-colors relative ${session.metadata.settings?.showWatermark ? 'bg-blue-600' : 'bg-white/10'}`}
+                                            >
+                                                <div className={`absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full transition-transform ${session.metadata.settings?.showWatermark ? 'translate-x-4' : 'translate-x-0'}`} />
+                                            </button>
+                                        </div>
+                                        {session.metadata.settings?.showWatermark && (
+                                            <input
+                                                type="text"
+                                                value={session.metadata.watermarkText || ''}
+                                                onChange={(e) => updateMetadata({ watermarkText: e.target.value })}
+                                                className="w-full bg-neutral-800 border border-white/10 rounded px-2 py-1 text-xs text-white"
+                                                placeholder="Custom Watermark..."
+                                            />
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Text Overlays */}
+                                <div className="space-y-3 pt-4 border-t border-white/10">
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-xs text-white/70 font-semibold flex items-center gap-2">
+                                            <Type className="w-3 h-3" /> Overlays
+                                        </label>
+                                        <button
+                                            onClick={() => {
+                                                const newOverlay = {
+                                                    id: Date.now().toString(),
+                                                    text: "New Title",
+                                                    start: playbackTime,
+                                                    end: playbackTime + 2000,
+                                                    x: 0.5,
+                                                    y: 0.8
+                                                };
+                                                updateMetadata({
+                                                    textOverlays: [...(session.metadata.textOverlays || []), newOverlay]
+                                                });
+                                            }}
+                                            className="p-1 bg-white/10 hover:bg-white/20 rounded text-white"
+                                            title="Add Text Overlay at current time"
+                                        >
+                                            <Plus className="w-3 h-3" />
+                                        </button>
+                                    </div>
+                                    <div className="max-h-32 overflow-y-auto space-y-1">
+                                        {(session.metadata.textOverlays || []).map((overlay) => (
+                                            <div key={overlay.id} className="flex items-center gap-2 text-[10px] bg-neutral-800 p-2 rounded">
+                                                <input
+                                                    type="text"
+                                                    value={overlay.text}
+                                                    onChange={(e) => {
+                                                        const updated = (session.metadata.textOverlays || []).map(o =>
+                                                            o.id === overlay.id ? { ...o, text: e.target.value } : o
+                                                        );
+                                                        updateMetadata({ textOverlays: updated });
+                                                    }}
+                                                    className="flex-1 bg-transparent border-none text-white outline-none"
+                                                />
+                                                <button
+                                                    onClick={() => {
+                                                        const updated = (session.metadata.textOverlays || []).filter(o => o.id !== overlay.id);
+                                                        updateMetadata({ textOverlays: updated });
+                                                    }}
+                                                    className="text-white/40 hover:text-red-400"
+                                                >
+                                                    <Trash2 className="w-3 h-3" />
+                                                </button>
+                                            </div>
+                                        ))}
+                                        {(!session.metadata.textOverlays || session.metadata.textOverlays.length === 0) && (
+                                            <p className="text-[10px] text-white/30 text-center italic">No text overlays</p>
+                                        )}
                                     </div>
                                 </div>
 
@@ -410,6 +490,31 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                     <label className="text-xs text-white/70 font-semibold flex items-center gap-2">
                                         <Trash2 className="w-3 h-3" /> Bulk Delete
                                     </label>
+                                    <div className="space-y-3 mb-4">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-white font-bold truncate">Segment Settings</span>
+                                        </div>
+
+                                        {selectedSegments.length === 1 && (
+                                            <div className="space-y-3 mb-4">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-xs text-white/60">Fade In/Out</span>
+                                                    <button
+                                                        onClick={() => {
+                                                            const seg = selectedSegments[0];
+                                                            const hasFade = !!seg.transition;
+                                                            updateSegment(seg.id, {
+                                                                transition: hasFade ? undefined : { type: 'fade', duration: 1000 }
+                                                            });
+                                                        }}
+                                                        className={`w-8 h-4 rounded-full transition-colors relative ${selectedSegments[0].transition ? 'bg-purple-600' : 'bg-white/10'}`}
+                                                    >
+                                                        <div className={`absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full transition-transform ${selectedSegments[0].transition ? 'translate-x-4' : 'translate-x-0'}`} />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
 
                                     <div className="grid grid-cols-2 gap-2">
                                         <button

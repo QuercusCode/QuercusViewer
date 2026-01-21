@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import type { RecordedSession } from '../types';
 import { VideoTimeline } from './VideoTimeline';
-import { formatTime, parseTimeString } from '../utils/format';
+import { formatTime, parseTimeString } from '../utils/timeUtils';
 
 interface RecorderControlsProps {
     isRecording: boolean;

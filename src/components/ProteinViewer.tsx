@@ -108,7 +108,11 @@ export interface ProteinViewerRef {
     getAtomPositionByIndex: (atomIndex: number) => { x: number, y: number, z: number } | null;
     addResidue: (chainName: string, resType: string) => Promise<Blob | null>;
     recordTurntable: (duration?: number) => Promise<Blob>;
-    recordMovie: (duration: number) => Promise<Blob>; // Added
+    recordMovie: (duration: number, options?: {
+        watermark?: { text: string; show: boolean };
+        overlays?: { id: string; text: string; start: number; end: number; x: number; y: number }[];
+        transitions?: { start: number; end: number; type: 'fade'; duration: number }[];
+    }) => Promise<Blob>; // Updated
     resetCamera: () => void;
     clearMeasurements: () => void;
     getMeasurements: () => MeasurementData[];
@@ -272,7 +276,14 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
     const error = externalError !== undefined ? externalError : internalError;
     const setError = setExternalError || setInternalError;
 
-    const performVideoRecord = async (duration: number): Promise<Blob> => {
+    const performVideoRecord = async (
+        duration: number,
+        options: {
+            watermark?: { text: string; show: boolean };
+            overlays?: { id: string; text: string; start: number; end: number; x: number; y: number }[];
+            transitions?: { start: number; end: number; type: 'fade'; duration: number }[];
+        } = {}
+    ): Promise<Blob> => {
         return new Promise((resolve, reject) => {
             if (!stageRef.current || !stageRef.current.viewer) {
                 reject(new Error("Viewer not initialized"));
@@ -285,8 +296,21 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                 return;
             }
 
-            // 1. Setup Stream
-            const stream = canvas.captureStream(30);
+            // 1. Setup Composite Canvas
+            const width = canvas.width;
+            const height = canvas.height;
+            const compositeCanvas = document.createElement('canvas');
+            compositeCanvas.width = width;
+            compositeCanvas.height = height;
+            const compositeCtx = compositeCanvas.getContext('2d');
+
+            if (!compositeCtx) {
+                reject(new Error("Failed to create composite context"));
+                return;
+            }
+
+            // 2. Setup Stream
+            const stream = compositeCanvas.captureStream(30);
 
             // Robust MIME type detection
             const mimeTypes = [
@@ -304,13 +328,13 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                 }
             }
 
-            const options: MediaRecorderOptions = {
+            const recOptions: MediaRecorderOptions = {
                 mimeType: selectedMimeType || 'video/webm',
                 videoBitsPerSecond: 8000000
             };
 
             try {
-                const mediaRecorder = new MediaRecorder(stream, options);
+                const mediaRecorder = new MediaRecorder(stream, recOptions);
                 const chunks: Blob[] = [];
 
                 mediaRecorder.ondataavailable = (e) => {
@@ -338,10 +362,10 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                     reject(new Error(e.error?.message || "MediaRecorder error"));
                 };
 
-                // 2. Start Recording
+                // 3. Start Recording
                 mediaRecorder.start();
 
-                // 3. Perform Spin
+                // 4. Animation Loop
                 const startTime = performance.now();
                 const defaultSpeed = 0.01;
                 const targetSpeed = defaultSpeed * (4000 / duration);
@@ -359,7 +383,67 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                         return;
                     }
 
+                    // Render WebGL
                     stage.viewer.requestRender();
+
+                    // Composite Step
+                    // Draw WebGL Canvas onto Composite
+                    compositeCtx.drawImage(canvas, 0, 0);
+
+                    // 1. Watermark
+                    if (options.watermark?.show && options.watermark.text) {
+                        const fontSize = Math.max(20, Math.floor(height * 0.03));
+                        compositeCtx.font = `700 ${fontSize}px "Inter", sans-serif`;
+                        compositeCtx.textAlign = 'right';
+                        compositeCtx.textBaseline = 'bottom';
+                        compositeCtx.shadowColor = 'rgba(0,0,0,0.6)';
+                        compositeCtx.shadowBlur = 4;
+                        compositeCtx.shadowOffsetX = 1;
+                        compositeCtx.shadowOffsetY = 1;
+                        compositeCtx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                        const margin = Math.floor(width * 0.02);
+                        compositeCtx.fillText(options.watermark.text, width - margin, height - margin);
+                    }
+
+                    // 2. Text Overlays
+                    if (options.overlays) {
+                        options.overlays.forEach(overlay => {
+                            // Note: 'start' & 'end' in overlay here should be relative to clip time 0-duration
+                            // Or we map them before passing. Let's assume passed relative to 0.
+                            if (elapsed >= overlay.start && elapsed <= overlay.end) {
+                                const fontSize = Math.max(24, Math.floor(height * 0.05));
+                                compositeCtx.font = `800 ${fontSize}px "Inter", sans-serif`;
+                                compositeCtx.textAlign = 'center';
+                                compositeCtx.textBaseline = 'middle';
+                                compositeCtx.fillStyle = 'white';
+                                compositeCtx.shadowColor = 'black';
+                                compositeCtx.shadowBlur = 6;
+                                compositeCtx.fillText(overlay.text, width * overlay.x, height * overlay.y);
+                            }
+                        });
+                    }
+
+                    // 3. Transitions (Fade In/Out)
+                    // Currently handling simple Fade In at start and Fade Out at end relative to clip
+                    // passed via options.transitions = [{start: 0, end: 1000, type: 'fade', duration: 1000}]
+                    // Wait, logic: Fade In means opacity 1->0 for black overlay.
+                    if (options.transitions) {
+                        options.transitions.forEach(t => {
+                            let opacity = 0;
+                            // If t.start is 0, it's a Fade In
+                            if (t.start === 0 && elapsed < t.duration) {
+                                opacity = 1 - (elapsed / t.duration);
+                            }
+                            // If t.end is end, it's a Fade Out
+                            // Not implemented yet fully to match segments logic, but support generic overlay
+
+                            if (opacity > 0) {
+                                compositeCtx.fillStyle = `rgba(0, 0, 0, ${opacity})`;
+                                compositeCtx.fillRect(0, 0, width, height);
+                            }
+                        });
+                    }
+
                     requestAnimationFrame(animate);
                 };
 

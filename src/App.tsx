@@ -87,7 +87,7 @@ function App() {
     useRef<ProteinViewerRef>(null)
   ];
 
-  const { toasts, removeToast, success } = useToast();
+  const { toasts, addToast, removeToast, success, error } = useToast();
   const { favorites, toggleFavorite, removeFavorite, isFavorite } = useFavorites();
   const { history, addToHistory } = useHistory();
   const peerSession = usePeerSession();
@@ -1000,161 +1000,13 @@ function App() {
   }, [controllers, viewMode, recorder]);
 
   // Video Export Logic
-  const [isExportingVideo, setIsExportingVideo] = useState(false);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const recordedChunksRef = useRef<Blob[]>([]);
+  // Video Export Logic
+  // (Instant export removed in favor of composited high-quality export)
 
-  // Live Recording State (for instant download)
-  const liveVideoRecorderRef = useRef<MediaRecorder | null>(null);
-  const liveVideoChunksRef = useRef<Blob[]>([]);
-  const [liveVideoBlob, setLiveVideoBlob] = useState<Blob | null>(null);
+  // Effect: Clear live blob when session is edited (trim/delete) - REMOVED
 
-  // Effect: Auto-record video when session recording starts (for instant export)
-  useEffect(() => {
-    if (recorder.isRecording) {
-      // Start Live Capture
-      const canvas = viewerRefs[0]?.current?.container?.querySelector('canvas');
-      if (!canvas) return;
+  // Monitor Video Export Completion - REMOVED
 
-      try {
-        const stream = canvas.captureStream(60);
-        const mimeType = [
-          'video/webm;codecs=vp9',
-          'video/webm;codecs=h264',
-          'video/webm'
-        ].find(type => MediaRecorder.isTypeSupported(type)) || 'video/webm';
-
-        // 10x Quality Increase: 80 Mbps
-        const mr = new MediaRecorder(stream, {
-          mimeType,
-          videoBitsPerSecond: 80000000
-        });
-
-        liveVideoChunksRef.current = [];
-        mr.ondataavailable = (e) => {
-          if (e.data.size > 0) liveVideoChunksRef.current.push(e.data);
-        };
-        mr.onstop = () => {
-          const blob = new Blob(liveVideoChunksRef.current, { type: mimeType });
-          setLiveVideoBlob(blob);
-        };
-
-        mr.start();
-        liveVideoRecorderRef.current = mr;
-        setLiveVideoBlob(null); // Clear previous
-      } catch (e) {
-        console.error("Failed to start live video capture", e);
-      }
-    } else {
-      // Stop Live Capture
-      if (liveVideoRecorderRef.current && liveVideoRecorderRef.current.state !== 'inactive') {
-        liveVideoRecorderRef.current.stop();
-      }
-    }
-  }, [recorder.isRecording]);
-
-
-  // Effect: Clear live blob when session is edited (trim/delete)
-  // We track both session ID and events length to distinguish edits from new recordings
-  const prevSessionIdRef = useRef<string | null>(null);
-  const prevEventsLengthRef = useRef<number>(0);
-  useEffect(() => {
-    if (recorder.session) {
-      const currentId = recorder.session.id;
-      const currentLength = recorder.session.events.length;
-
-      // Only clear blob if this is the SAME session but events changed (edit occurred)
-      // Don't clear if it's a new session (different ID) - that's a fresh recording
-      if (prevSessionIdRef.current === currentId &&
-        prevEventsLengthRef.current !== currentLength) {
-        setLiveVideoBlob(null);
-      }
-
-      prevSessionIdRef.current = currentId;
-      prevEventsLengthRef.current = currentLength;
-    } else {
-      prevSessionIdRef.current = null;
-      prevEventsLengthRef.current = 0;
-    }
-  }, [recorder.session?.id, recorder.session?.events.length]);
-
-
-  const handleExportVideo = useCallback(() => {
-    // 1. Instant Download (if we have a fresh live recording)
-    if (liveVideoBlob && recorder.session) {
-      const url = URL.createObjectURL(liveVideoBlob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${recorder.session.metadata.title || 'recording'}.webm`;
-      a.click();
-      URL.revokeObjectURL(url);
-      return;
-    }
-
-    // 2. Fallback: Render Loop (for imported sessions)
-    if (!recorder.session || !viewerRefs[0]?.current?.container) {
-      if (!viewerRefs[0]?.current?.container) alert("Canvas container not found");
-      return;
-    }
-
-    const canvas = viewerRefs[0].current.container.querySelector('canvas');
-    if (!canvas) {
-      alert("Could not find canvas for video export.");
-      return;
-    }
-
-    try {
-      const stream = canvas.captureStream(60);
-      const mimeType = [
-        'video/webm;codecs=vp9',
-        'video/webm;codecs=h264',
-        'video/webm'
-      ].find(type => MediaRecorder.isTypeSupported(type)) || 'video/webm';
-
-      // 10x Quality: 80 Mbps
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType,
-        videoBitsPerSecond: 80000000
-      });
-
-      mediaRecorderRef.current = mediaRecorder;
-      recordedChunksRef.current = [];
-
-      mediaRecorder.ondataavailable = (e) => {
-        if (e.data.size > 0) recordedChunksRef.current.push(e.data);
-      };
-
-      mediaRecorder.onstop = () => {
-        const blob = new Blob(recordedChunksRef.current, { type: mimeType });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${recorder.session?.metadata.title || 'session-render'}.webm`;
-        a.click();
-        URL.revokeObjectURL(url);
-        setIsExportingVideo(false);
-      };
-
-      setIsExportingVideo(true);
-      mediaRecorder.start();
-
-      recorder.seek(0);
-      recorder.play();
-
-    } catch (err) {
-      console.error("Export failed", err);
-      alert("Video export failed. See console.");
-      setIsExportingVideo(false);
-    }
-  }, [recorder, liveVideoBlob]);
-
-  // Monitor Video Export Completion
-  useEffect(() => {
-    if (isExportingVideo && !recorder.isPlaying && recorder.playbackTime >= (recorder.session?.metadata.duration || 0)) {
-      // Playback finished naturally
-      mediaRecorderRef.current?.stop();
-    }
-  }, [isExportingVideo, recorder.isPlaying, recorder.playbackTime, recorder.session]);
 
   const handleStartTour = () => {
     // Determine context (simple check based on dataSource or explicit logic)
@@ -1583,6 +1435,65 @@ function App() {
     } catch (e) {
       console.error("CRITICAL SAVE ERROR:", e);
       alert(`Failed to save session: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  };
+
+  const handleExportVideo = async () => {
+    const viewer = viewerRef.current || viewerRefs[0].current;
+    if (!viewer || !recorder.session) return;
+
+    if (recorder.isRecording) {
+      error("Please stop recording before exporting.");
+      return;
+    }
+
+    // Manual Loading Toast
+    const toastId = addToast("Rendering video...", 'info', 60000); // 1 min timeout
+    try {
+      const duration = recorder.session.metadata.duration || 5000;
+
+      // Extract new options
+      const watermark = recorder.session.metadata.settings?.showWatermark ? {
+        text: recorder.session.metadata.watermarkText || 'Created with ProteinViewer',
+        show: true
+      } : undefined;
+
+      const overlays = recorder.session.metadata.textOverlays; // Already matches expected format
+
+      // Map transitions from segments
+      const transitions = recorder.segments
+        .filter(s => s.transition)
+        .map(s => {
+          return {
+            start: s.startTime,
+            end: s.startTime + (s.transition!.duration || 1000),
+            type: 'fade' as const,
+            duration: s.transition!.duration || 1000
+          };
+        });
+
+      const blob = await viewer.recordMovie(duration, {
+        watermark,
+        overlays,
+        transitions
+      });
+
+      // Prompt download
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `recording-${Date.now()}.webm`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      removeToast(toastId);
+      success("Video exported successfully!");
+    } catch (e) {
+      console.error(e);
+      removeToast(toastId);
+      error("Export failed.");
     }
   };
 

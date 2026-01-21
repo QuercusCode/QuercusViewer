@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import type { RecordedSession, TimelineSegment } from '../types';
+import { formatTime } from '../utils/timeUtils';
 
 interface VideoTimelineProps {
     session: RecordedSession | null;
@@ -156,12 +157,7 @@ export const VideoTimeline = ({
     }, [draggingHandle, trimMode, trimStart, trimEnd, duration, onTrimChange, zoomLevel, scrollLeft]);
 
     // Format time as MM:SS
-    const formatTime = (ms: number) => {
-        const seconds = Math.floor(ms / 1000);
-        const m = Math.floor(seconds / 60).toString().padStart(2, '0');
-        const s = (seconds % 60).toString().padStart(2, '0');
-        return `${m}:${s}`;
-    };
+
 
     // Group events into visual blocks, respecting segments
     const getEventBlocks = () => {

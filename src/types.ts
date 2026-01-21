@@ -164,6 +164,15 @@ export interface RecordedSession {
         duration: number;
         description?: string;
         thumbnail?: string; // Data URL
+        watermarkText?: string; // Custom watermark text
+        textOverlays?: {
+            id: string;
+            text: string;
+            start: number; // Global time
+            end: number;
+            x: number; // 0-1 relative
+            y: number; // 0-1 relative
+        }[];
         settings?: {
             showCursor?: boolean;
             showWatermark?: boolean;
@@ -182,6 +191,10 @@ export interface TimelineSegment {
     duration: number; // Duration of this segment (ms)
     sourceStartTime: number; // Start time within source recording (ms)
     color?: string; // Optional color for visual distinction
+    transition?: {
+        type: 'fade';
+        duration: number; // ms
+    };
 }
 
 export interface ProjectState {
