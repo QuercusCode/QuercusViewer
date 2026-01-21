@@ -1046,19 +1046,22 @@ function App() {
     }
   }, [recorder.isRecording]);
 
-  // Effect: Clear live blob if session changes (e.g. import) and we aren't just finishing a recording
+  // Effect: Clear live blob when session is edited (trim/delete)
+  // We track the session.events array length to detect modifications
+  const prevEventsLengthRef = useRef<number>(0);
   useEffect(() => {
-    // If we just finished recording, liveVideoBlob is fresh / being set. 
-    // If we imported, we should clear it. 
-    // Simple heuristic: If session ID changes and we didn't just stop recording... 
-    // Actually, simplest is: handleExportVideo checks.
-    // But let's clear it explicitly on import in the future. For now, rely on matching logic or just user intent.
-    // Better: Clear it when `session` changes IF `!isRecording`.
-    if (!recorder.isRecording && !liveVideoRecorderRef.current) {
-      // Check if the current session matches what we potentially recorded? 
-      // It's hard to link. Let's just keep the blob until next record or component unmount.
+    if (recorder.session) {
+      const currentLength = recorder.session.events.length;
+      // If events array changed (trim/delete happened), clear the live blob
+      // This forces video export to use the render loop which respects edits
+      if (prevEventsLengthRef.current !== 0 && prevEventsLengthRef.current !== currentLength) {
+        setLiveVideoBlob(null);
+      }
+      prevEventsLengthRef.current = currentLength;
+    } else {
+      prevEventsLengthRef.current = 0;
     }
-  }, [recorder.session]);
+  }, [recorder.session?.events.length]);
 
 
   const handleExportVideo = useCallback(() => {
