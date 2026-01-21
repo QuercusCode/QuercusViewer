@@ -1,7 +1,7 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import {
     Play, Pause, Circle, Square,
-    Upload, Save, Film
+    Upload, Save, Film, Pencil
 } from 'lucide-react';
 import type { RecordedSession } from '../types';
 
@@ -42,6 +42,9 @@ export const RecorderControls = ({
     isLightMode, cardBg
 }: RecorderControlsProps) => {
 
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [isEditingTitle, setIsEditingTitle] = useState(false);
+
     // Only show full detailed controls if we have a session or are recording
     // Otherwise show a compact "Start Recording" or "Load Session" button
     const styles = {
@@ -50,8 +53,6 @@ export const RecorderControls = ({
         activeButton: "bg-red-500 text-white border-red-600 animate-pulse",
         text: `text-[10px] font-bold uppercase tracking-wider ${isLightMode ? 'text-neutral-500' : 'text-neutral-400'}`
     };
-
-    const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Render Timeline Scrubber
     const renderScrubber = () => {
@@ -107,12 +108,29 @@ export const RecorderControls = ({
                             <span className="text-xs font-bold">REC {formatTime(recordingTime)}</span>
                         </div>
                     ) : session ? (
-                        <input
-                            type="text"
-                            value={session.metadata.title}
-                            onChange={(e) => updateMetadata({ title: e.target.value })}
-                            className={`bg-transparent border-b border-transparent hover:border-white/20 focus:border-blue-500 focus:outline-none text-xs font-bold w-full transition-colors ${styles.text}`}
-                        />
+                        isEditingTitle ? (
+                            <input
+                                autoFocus
+                                type="text"
+                                value={session.metadata.title}
+                                onChange={(e) => updateMetadata({ title: e.target.value })}
+                                onBlur={() => setIsEditingTitle(false)}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') setIsEditingTitle(false);
+                                }}
+                                className={`bg-transparent border-b border-blue-500 outline-none text-xs font-bold w-full ${styles.text}`}
+                            />
+                        ) : (
+                            <button
+                                onClick={() => setIsEditingTitle(true)}
+                                className={`flex items-center gap-2 group text-left w-full hover:bg-white/5 p-1 -ml-1 rounded transition-colors`}
+                            >
+                                <span className={`text-xs font-bold truncate ${styles.text}`}>
+                                    {session.metadata.title}
+                                </span>
+                                <Pencil className="w-3 h-3 opacity-0 group-hover:opacity-50 transition-opacity" />
+                            </button>
+                        )
                     ) : (
                         <span className={styles.text}>Session Recorder</span>
                     )}
