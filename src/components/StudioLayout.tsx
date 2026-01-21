@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
     ArrowLeft, Play, Pause, Scissors, Trash2, Download,
     Settings, Layers, Music, Type, Film, Pencil, Undo, Redo,
-    Image as ImageIcon, Monitor, Camera, ChevronDown
+    Image as ImageIcon, Monitor, Camera
 } from 'lucide-react';
 import { VideoTimeline } from './VideoTimeline';
 import type { useSessionRecorder } from '../hooks/useSessionRecorder';
