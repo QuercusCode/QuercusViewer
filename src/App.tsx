@@ -1046,22 +1046,30 @@ function App() {
     }
   }, [recorder.isRecording]);
 
+
   // Effect: Clear live blob when session is edited (trim/delete)
-  // We track the session.events array length to detect modifications
+  // We track both session ID and events length to distinguish edits from new recordings
+  const prevSessionIdRef = useRef<string | null>(null);
   const prevEventsLengthRef = useRef<number>(0);
   useEffect(() => {
     if (recorder.session) {
+      const currentId = recorder.session.id;
       const currentLength = recorder.session.events.length;
-      // If events array changed (trim/delete happened), clear the live blob
-      // This forces video export to use the render loop which respects edits
-      if (prevEventsLengthRef.current !== 0 && prevEventsLengthRef.current !== currentLength) {
+
+      // Only clear blob if this is the SAME session but events changed (edit occurred)
+      // Don't clear if it's a new session (different ID) - that's a fresh recording
+      if (prevSessionIdRef.current === currentId &&
+        prevEventsLengthRef.current !== currentLength) {
         setLiveVideoBlob(null);
       }
+
+      prevSessionIdRef.current = currentId;
       prevEventsLengthRef.current = currentLength;
     } else {
+      prevSessionIdRef.current = null;
       prevEventsLengthRef.current = 0;
     }
-  }, [recorder.session?.events.length]);
+  }, [recorder.session?.id, recorder.session?.events.length]);
 
 
   const handleExportVideo = useCallback(() => {
