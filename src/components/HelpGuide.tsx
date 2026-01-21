@@ -164,24 +164,58 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
                             <Users className="w-4 h-4 text-green-400" /> Remote Teaching & Research
                         </h4>
                         <p className="text-xs text-neutral-300 mb-4 leading-relaxed">
-                            Connect with colleagues or students instantly. Host a session, share the ID, and sync your view in real-time.
+                            Turn your viewer into a shared classroom or lab bench. All participants see exactly what you see, in real-time.
                         </p>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                            <div className="bg-black/20 p-2 rounded border border-white/5">
-                                <strong className="text-white block mb-1">Peer-to-Peer</strong>
-                                <span className="text-neutral-400">Direct, secure connection via PeerJS.</span>
+
+                        <div className="space-y-4">
+                            {/* How to Connect */}
+                            <div className="bg-black/20 p-3 rounded-lg border border-white/5">
+                                <h5 className="text-xs font-bold text-white mb-2 flex items-center gap-2">
+                                    <span className="w-4 h-4 flex items-center justify-center bg-green-500/20 text-green-400 rounded-full text-[10px]">1</span>
+                                    Start a Session
+                                </h5>
+                                <p className="text-[11px] text-neutral-400 mb-2 ml-6">
+                                    Click the <strong className="text-neutral-300">Share</strong> button in the top toolbar. You will be assigned a unique Session ID.
+                                </p>
+                                <p className="text-[11px] text-neutral-400 ml-6">
+                                    Copy the <strong className="text-neutral-300">Invite Link</strong> and send it to your students or colleagues. They just need to open the link to join.
+                                </p>
                             </div>
-                            <div className="bg-black/20 p-2 rounded border border-white/5">
-                                <strong className="text-white block mb-1">State Sync</strong>
-                                <span className="text-neutral-400">Camera, representation, and highlights are mirrored.</span>
+
+                            {/* What is Synced */}
+                            <div className="bg-black/20 p-3 rounded-lg border border-white/5">
+                                <h5 className="text-xs font-bold text-white mb-2 flex items-center gap-2">
+                                    <span className="w-4 h-4 flex items-center justify-center bg-blue-500/20 text-blue-400 rounded-full text-[10px]">2</span>
+                                    What is Synced?
+                                </h5>
+                                <ul className="ml-6 space-y-1.5 text-[11px] text-neutral-400 list-disc">
+                                    <li><strong className="text-neutral-300">Camera View:</strong> When you rotate or zoom, everyone follows.</li>
+                                    <li><strong className="text-neutral-300">Representation:</strong> Switch from Cartoon to Surface, and it updates for all.</li>
+                                    <li><strong className="text-neutral-300">Highlights:</strong> Hover over a residue to point it out to others.</li>
+                                    <li><strong className="text-neutral-300">Measurements:</strong> Distances you measure appear on everyone's screen.</li>
+                                </ul>
                             </div>
-                            <div className="bg-black/20 p-2 rounded border border-white/5">
-                                <strong className="text-white block mb-1">Communication</strong>
-                                <span className="text-neutral-400">Built-in Voice Room and Text Chat.</span>
-                            </div>
-                            <div className="bg-black/20 p-2 rounded border border-white/5">
-                                <strong className="text-white block mb-1">Interaction</strong>
-                                <span className="text-neutral-400">"Pass the Chalk" to let others drive.</span>
+
+                            {/* Interaction */}
+                            <div className="bg-black/20 p-3 rounded-lg border border-white/5">
+                                <h5 className="text-xs font-bold text-white mb-2 flex items-center gap-2">
+                                    <span className="w-4 h-4 flex items-center justify-center bg-purple-500/20 text-purple-400 rounded-full text-[10px]">3</span>
+                                    Interaction & Control
+                                </h5>
+                                <div className="ml-6 grid grid-cols-2 gap-3">
+                                    <div>
+                                        <strong className="text-white text-[11px] block">Pass the Chalk</strong>
+                                        <p className="text-[10px] text-neutral-500">
+                                            The Host controls the view by default. Click a user's name in the sidebar to give them control.
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <strong className="text-white text-[11px] block">Voice & Chat</strong>
+                                        <p className="text-[10px] text-neutral-500">
+                                            Use the built-in Text Chat or join the Voice Room to discuss findings in real-time.
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
