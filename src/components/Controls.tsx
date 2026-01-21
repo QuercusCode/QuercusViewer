@@ -45,33 +45,46 @@ import type { MotifMatch } from '../utils/searchUtils';
 import { MOTIF_LIBRARY } from '../data/motifLibrary';
 
 // Reusable Sidebar Section Component - Defined outside to prevent re-renders losing focus
-const SidebarSection = ({ title, icon: Icon, children, isOpen, onToggle, isLightMode, id }: { title: string, icon: any, children: React.ReactNode, isOpen: boolean, onToggle: () => void, isLightMode: boolean, id?: string }) => (
-    <div id={id} className={`rounded-xl overflow-hidden transition-colors ${isLightMode
-        ? 'border border-neutral-900 bg-white'
-        : 'border border-white/10 bg-black/20'
-        }`}>
-        <button
-            onClick={onToggle}
-            className={`w-full flex items-center justify-between p-3 text-xs font-bold uppercase tracking-wider transition-colors ${isLightMode
-                ? (isOpen ? 'bg-neutral-100 text-black' : 'hover:bg-neutral-50 text-neutral-900 hover:text-black')
-                : (isOpen ? 'bg-white/5 text-blue-400' : 'hover:bg-white/5 text-neutral-400')
-                }`}
-        >
-            <div className="flex items-center gap-2">
-                <Icon className="w-4 h-4" />
-                {title}
-            </div>
-            <div className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}>
-                <ChevronDown className="w-3 h-3" />
-            </div>
-        </button>
-        {isOpen && (
-            <div className={`p-3 space-y-3 border-t ${isLightMode ? 'border-neutral-900' : 'border-white/5'}`}>
-                {children}
-            </div>
-        )}
-    </div>
-);
+const SidebarSection = ({ title, icon: Icon, children, isOpen, onToggle, isLightMode, id }: { title: string, icon: any, children: React.ReactNode, isOpen: boolean, onToggle: () => void, isLightMode: boolean, id?: string }) => {
+    const sectionRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (isOpen && sectionRef.current) {
+            // Small timeout to allow content to render before scrolling
+            setTimeout(() => {
+                sectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 100);
+        }
+    }, [isOpen]);
+
+    return (
+        <div ref={sectionRef} id={id} className={`rounded-xl overflow-hidden transition-colors ${isLightMode
+            ? 'border border-neutral-900 bg-white'
+            : 'border border-white/10 bg-black/20'
+            }`}>
+            <button
+                onClick={onToggle}
+                className={`w-full flex items-center justify-between p-3 text-xs font-bold uppercase tracking-wider transition-colors ${isLightMode
+                    ? (isOpen ? 'bg-neutral-100 text-black' : 'hover:bg-neutral-50 text-neutral-900 hover:text-black')
+                    : (isOpen ? 'bg-white/5 text-blue-400' : 'hover:bg-white/5 text-neutral-400')
+                    }`}
+            >
+                <div className="flex items-center gap-2">
+                    <Icon className="w-4 h-4" />
+                    {title}
+                </div>
+                <div className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}>
+                    <ChevronDown className="w-3 h-3" />
+                </div>
+            </button>
+            {isOpen && (
+                <div className={`p-3 space-y-3 border-t ${isLightMode ? 'border-neutral-900' : 'border-white/5'}`}>
+                    {children}
+                </div>
+            )}
+        </div>
+    );
+};
 
 // Clean Structure Image Modal Component
 const StructureImageModal = ({ cid }: { cid: string }) => {
