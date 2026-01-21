@@ -1,8 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
-import type { RecordedSession } from '../types';
+import type { RecordedSession, TimelineSegment } from '../types';
 
 interface VideoTimelineProps {
     session: RecordedSession | null;
+    segments?: TimelineSegment[]; // NLE Support
+    onSegmentUpdate?: (id: string, updates: Partial<TimelineSegment>) => void;
     playbackTime: number;
     isPlaying: boolean;
     onSeek: (time: number) => void;
@@ -17,6 +19,8 @@ interface VideoTimelineProps {
 
 export const VideoTimeline = ({
     session,
+    segments = [],
+    onSegmentUpdate,
     playbackTime,
     onSeek,
     trimMode = false,
@@ -150,7 +154,7 @@ export const VideoTimeline = ({
         return `${m}:${s}`;
     };
 
-    // Group events into visual blocks
+    // Group events into visual blocks, respecting segments
     const getEventBlocks = () => {
         if (!session) return [];
 
@@ -161,26 +165,52 @@ export const VideoTimeline = ({
             count: number;
         }> = [];
 
-        // Group consecutive events of same type
-        session.events.forEach((event, idx) => {
-            const lastBlock = blocks[blocks.length - 1];
-            const nextEvent = session.events[idx + 1];
-            const eventEnd = nextEvent ? nextEvent.timestamp : duration;
+        // Helper to process a list of events
+        const processEvents = (events: { timestamp: number, type: string }[]) => {
+            events.sort((a, b) => a.timestamp - b.timestamp).forEach((event, idx) => {
+                const lastBlock = blocks[blocks.length - 1];
+                const nextEvent = events[idx + 1];
+                const eventEnd = nextEvent ? nextEvent.timestamp : duration;
 
-            if (lastBlock && lastBlock.type === event.type && event.timestamp - lastBlock.end < 1000) {
-                // Extend existing block
-                lastBlock.end = eventEnd;
-                lastBlock.count++;
-            } else {
-                // Create new block
-                blocks.push({
-                    type: event.type,
-                    start: event.timestamp,
-                    end: Math.min(event.timestamp + 500, eventEnd), // Minimum 500ms block
-                    count: 1
+                if (lastBlock && lastBlock.type === event.type && event.timestamp - lastBlock.end < 1000) {
+                    // Extend existing block
+                    lastBlock.end = eventEnd;
+                    lastBlock.count++;
+                } else {
+                    // Create new block
+                    blocks.push({
+                        type: event.type,
+                        start: event.timestamp,
+                        end: Math.min(event.timestamp + 500, eventEnd), // Minimum 500ms block
+                        count: 1
+                    });
+                }
+            });
+        };
+
+        if (segments.length > 0) {
+            // NLE Mode: Map source events to global time via segments
+            const virtualEvents: { timestamp: number, type: string }[] = [];
+
+            segments.forEach(seg => {
+                session.events.forEach(e => {
+                    // Check if event falls within the source range of this segment
+                    if (e.timestamp >= seg.sourceStartTime && e.timestamp < seg.sourceStartTime + seg.duration) {
+                        // Map to global time
+                        const offset = e.timestamp - seg.sourceStartTime;
+                        virtualEvents.push({
+                            timestamp: seg.startTime + offset,
+                            type: e.type
+                        });
+                    }
                 });
-            }
-        });
+            });
+
+            processEvents(virtualEvents);
+        } else {
+            // Legacy Mode (Linear)
+            processEvents(session.events);
+        }
 
         return blocks;
     };
@@ -236,6 +266,55 @@ export const VideoTimeline = ({
                             style={{ left: `${(i / (20 * Math.ceil(zoomLevel))) * 100}%` }}
                         />
                     ))}
+
+                    {/* Segment Blocks (Interactive) */}
+                    {segments.length > 0 && segments.map(seg => {
+                        const left = (seg.startTime / duration) * 100;
+                        const width = (seg.duration / duration) * 100;
+
+                        return (
+                            <div
+                                key={seg.id}
+                                className="absolute top-1 bottom-1 border-x border-white/20 bg-white/10 hover:bg-white/20 cursor-grab active:cursor-grabbing group transition-colors"
+                                style={{
+                                    left: `${left}%`,
+                                    width: `${width}%`
+                                }}
+                                onMouseDown={(e) => {
+                                    e.stopPropagation();
+                                    e.preventDefault();
+                                    const startX = e.clientX;
+                                    const originalStartTime = seg.startTime;
+
+                                    const handleMouseMove = (moveEvent: MouseEvent) => {
+                                        if (!timelineRef.current) return;
+                                        const rect = timelineRef.current.getBoundingClientRect();
+                                        const deltaX = moveEvent.clientX - startX;
+                                        const deltaTime = (deltaX / rect.width) * duration;
+
+                                        const newStartTime = Math.max(0, originalStartTime + deltaTime);
+
+                                        if (onSegmentUpdate) {
+                                            onSegmentUpdate(seg.id, { startTime: newStartTime });
+                                        }
+                                    };
+
+                                    const handleMouseUp = () => {
+                                        window.removeEventListener('mousemove', handleMouseMove);
+                                        window.removeEventListener('mouseup', handleMouseUp);
+                                        // Snap to grid or neighbors logic could go here
+                                    };
+
+                                    window.addEventListener('mousemove', handleMouseMove);
+                                    window.addEventListener('mouseup', handleMouseUp);
+                                }}
+                                title={`Segment: ${formatTime(seg.startTime)} - ${formatTime(seg.startTime + seg.duration)}`}
+                            >
+                                {/* Drag Handle Indicator */}
+                                <div className="absolute inset-x-2 top-1/2 h-0.5 bg-white/20 group-hover:bg-white/40" />
+                            </div>
+                        );
+                    })}
 
                     {/* Event Blocks */}
                     <div className="absolute top-0 left-0 right-0 h-12">

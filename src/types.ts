@@ -166,3 +166,19 @@ export interface RecordedSession {
     initialState: any; // Full SessionState
     events: RecordedEvent[];
 }
+
+export interface TimelineSegment {
+    id: string;
+    sessionId: string; // ID of the source session
+    startTime: number; // Global timeline position (ms)
+    duration: number; // Duration of this segment (ms)
+    sourceStartTime: number; // Start time within source recording (ms)
+    color?: string; // Optional color for visual distinction
+}
+
+export interface ProjectState {
+    id: string;
+    duration: number; // Total project duration
+    segments: TimelineSegment[];
+    sources: Record<string, RecordedSession>; // Map of source sessions by ID
+}

@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import {
     Play, Pause, Circle, Square,
-    Upload, Save, Film, Pencil, Scissors, ChevronDown, Trash2
+    Upload, Save, Film, Pencil, Scissors, ChevronDown, Trash2, Timer, Gauge
 } from 'lucide-react';
 import type { RecordedSession } from '../types';
 import { VideoTimeline } from './VideoTimeline';
@@ -12,6 +12,8 @@ interface RecorderControlsProps {
     recordingTime: number;
     playbackTime: number;
     session: RecordedSession | null;
+    segments?: any[]; // Typed as any[] to avoid import cycle for now, or use TimelineSegment
+    updateSegment?: (id: string, updates: any) => void;
     playbackSpeed: number;
 
     startRecording: () => void;
@@ -29,6 +31,7 @@ interface RecorderControlsProps {
     deleteEventsByType: (type: string, fromTime?: number, toTime?: number) => void;
     deleteEventsByTimeRange: (fromTime: number, toTime: number) => void;
     splitSession: (splitTime: number) => { firstSession: any; secondSession: any } | null;
+    adjustSessionSpeed: (startTime: number, endTime: number, speedFactor: number) => void;
 
     isLightMode: boolean;
     cardBg: string;
@@ -42,10 +45,10 @@ const formatTime = (ms: number) => {
 };
 
 export const RecorderControls = ({
-    isRecording, isPlaying, recordingTime, playbackTime, session, playbackSpeed,
+    isRecording, isPlaying, recordingTime, playbackTime, session, segments, updateSegment, playbackSpeed,
     startRecording, stopRecording, play, pause, seek, setPlaybackSpeed,
     exportSession, importSession, exportVideo, updateMetadata,
-    trimSession, deleteEvent, deleteEventsByType, deleteEventsByTimeRange, splitSession,
+    trimSession, deleteEvent, deleteEventsByType, deleteEventsByTimeRange, splitSession, adjustSessionSpeed,
     isLightMode, cardBg
 }: RecorderControlsProps) => {
 
@@ -57,6 +60,8 @@ export const RecorderControls = ({
 
     // Visual trim mode
     const [isTrimMode, setIsTrimMode] = useState(false);
+    const [isSpeedMode, setIsSpeedMode] = useState(false);
+    const [speedFactor, setSpeedFactor] = useState(2);
     const [tempTrimStart, setTempTrimStart] = useState<number>(0);
     const [tempTrimEnd, setTempTrimEnd] = useState<number>(0);
 
@@ -188,6 +193,8 @@ export const RecorderControls = ({
                 <div className="pt-2">
                     <VideoTimeline
                         session={session}
+                        segments={segments}
+                        onSegmentUpdate={updateSegment}
                         playbackTime={playbackTime}
                         isPlaying={isPlaying}
                         onSeek={seek}
@@ -361,11 +368,70 @@ export const RecorderControls = ({
                                     </span>
                                 </div>
                             </div>
+
+                            {/* Speed Control (Feature 3) */}
+                            <div className="space-y-2">
+                                <label className={`${styles.text} block`}>Playback Speed FX</label>
+                                <div className="flex gap-2 items-center flex-wrap">
+                                    <button
+                                        onClick={() => {
+                                            if (isTrimMode) setIsTrimMode(false);
+                                            setIsSpeedMode(!isSpeedMode);
+                                        }}
+                                        className={`px-3 py-1.5 rounded text-xs transition-colors flex items-center gap-1 ${isSpeedMode
+                                            ? 'bg-orange-600 hover:bg-orange-700 text-white'
+                                            : 'bg-orange-600/20 hover:bg-orange-600/40 border border-orange-600/30'
+                                            }`}
+                                    >
+                                        <Gauge className="w-3 h-3" />
+                                        {isSpeedMode ? 'Select Range' : 'Adjust Speed'}
+                                    </button>
+
+                                    {isSpeedMode && (
+                                        <>
+                                            <div className="flex bg-black/40 rounded p-1 gap-1">
+                                                {[0.5, 1.5, 2, 4].map(speed => (
+                                                    <button
+                                                        key={speed}
+                                                        onClick={() => setSpeedFactor(speed)}
+                                                        className={`px-2 py-0.5 rounded text-xs transition-colors ${speedFactor === speed
+                                                            ? 'bg-white/20 text-white'
+                                                            : 'hover:bg-white/10 text-white/50'
+                                                            }`}
+                                                    >
+                                                        {speed}x
+                                                    </button>
+                                                ))}
+                                            </div>
+
+                                            <button
+                                                onClick={() => {
+                                                    adjustSessionSpeed(tempTrimStart, tempTrimEnd, speedFactor);
+                                                    setIsSpeedMode(false);
+                                                    setIsEditPanelOpen(false);
+                                                }}
+                                                className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 rounded text-xs transition-colors"
+                                            >
+                                                Apply
+                                            </button>
+                                        </>
+                                    )}
+                                </div>
+                                {isSpeedMode && (
+                                    <div className="text-xs opacity-60 flex gap-2 items-center">
+                                        <Timer className="w-3 h-3" />
+                                        <span>
+                                            Applying {speedFactor}x speed from {formatTime(tempTrimStart)} to {formatTime(tempTrimEnd)}
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     )}
                 </div>
-            )}
-        </div>
+            )
+            }
+        </div >
     );
 };
 

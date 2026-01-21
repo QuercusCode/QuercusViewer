@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import type { RecordedSession, RecordedEvent } from '../types';
+import type { RecordedSession, RecordedEvent, TimelineSegment } from '../types';
 
 interface UseSessionRecorderProps {
     onPlaybackStateChange?: (state: any) => void;
@@ -13,6 +13,9 @@ export const useSessionRecorder = ({ onPlaybackStateChange, onPlaybackCameraChan
     const [playbackTime, setPlaybackTime] = useState(0);
     const [session, setSession] = useState<RecordedSession | null>(null);
     const [playbackSpeed, setPlaybackSpeed] = useState(1);
+
+    // NLE State
+    const [segments, setSegments] = useState<TimelineSegment[]>([]);
 
     const startTimeRef = useRef<number>(0);
     const eventsRef = useRef<RecordedEvent[]>([]);
@@ -61,6 +64,16 @@ export const useSessionRecorder = ({ onPlaybackStateChange, onPlaybackCameraChan
             events: eventsRef.current
         };
         setSession(newSession);
+
+        // NLE: Initialize with one full segment
+        setSegments([{
+            id: crypto.randomUUID(),
+            sessionId: newSession.id,
+            startTime: 0,
+            duration: newSession.metadata.duration,
+            sourceStartTime: 0
+        }]);
+
         setPlaybackTime(0); // Reset playback cursor
 
         // Reset optimization refs
@@ -100,61 +113,52 @@ export const useSessionRecorder = ({ onPlaybackStateChange, onPlaybackCameraChan
         applyFrameAt(time);
     }, [session]);
 
-    const applyFrameAt = useCallback((time: number) => {
-        if (!session) return;
+    const applyFrameAt = useCallback((globalTime: number) => {
+        if (!session || !onPlaybackStateChange || !onPlaybackCameraChange) return;
 
-        let state = accumulatedStateRef.current;
-        let camera = null;
-        let cursor = playbackCursorRef.current;
+        // Find which segment covers this global time
+        // Note: 'segments' state from upper scope
+        // We need to use state setter callback or refs if state is stale, 
+        // but here we depend on 'segments' in hook dependency array.
+        const activeSegment = segments.find(
+            s => globalTime >= s.startTime && globalTime < s.startTime + s.duration
+        );
 
-        // If backward seek or uninitialized, reset to Initial State
-        if (time < lastAppliedTimeRef.current || !state) {
-            state = { ...session.initialState };
-            cursor = 0;
+        if (!activeSegment) {
+            // Gap in timeline? Or end of playback?
+            return;
         }
 
-        // Forward Scan from Cursor
-        for (let i = cursor; i < session.events.length; i++) {
-            const event = session.events[i];
-            if (event.timestamp > time) break;
+        // Calculate time within the source recording
+        const timeInSegment = globalTime - activeSegment.startTime;
+        const sourceTime = activeSegment.sourceStartTime + timeInSegment;
 
-            // Apply Event
-            if (event.type === 'state') {
-                state = { ...state, ...event.payload };
-            } else if (event.type === 'camera') {
-                camera = event.payload;
+        // Rebuild state from scratch for now to ensure correctness across jumps
+        // Performance TODO: Optimization cursor needs to be segment-aware
+        let currentState = JSON.parse(JSON.stringify(session.initialState));
+        let currentCamera = null;
+
+        // Find events in source up to sourceTime
+        for (const event of session.events) {
+            if (event.timestamp <= sourceTime) {
+                if (event.type === 'state') {
+                    Object.assign(currentState, event.payload);
+                } else if (event.type === 'camera') {
+                    currentCamera = event.payload;
+                }
+            } else {
+                break; // Events are sorted
             }
-
-            cursor = i + 1; // Advance cursor past this event
         }
 
-        // Update Cache
-        accumulatedStateRef.current = state;
-        playbackCursorRef.current = cursor;
-        lastAppliedTimeRef.current = time;
-
-        // Apply to UI
-        if (onPlaybackStateChange) onPlaybackStateChange(state);
-        // Only trigger camera update if we actually found a NEW camera event in this window?
-        // Or if we sought backwards?
-        // Actually, logic above only sets 'camera' if we encountered an event.
-        // If we replay a segment with NO camera events, 'camera' is null.
-        // But we want to keep the camera where it was? Or interpolate?
-        // If 'camera' is null here, it means no *new* camera event happened in this specific step from cursor->time.
-        // BUT if we sought backwards, we reset state... but we lost the 'last known camera'.
-
-        // CORRECT LOGIC FOR SEEKING:
-        // If we sought backward, we must scan from 0 to time to find the LAST camera event.
-        // The loop above DOES scan from 0 if reset.
-        // So 'camera' will be the last camera event encountered.
-        // If NO camera event ever happened up to 'time', 'camera' remains null. 
-        // In that case, we should probably set it to initial camera (if captured?) or leave it.
-
-        if (onPlaybackCameraChange && camera) {
-            onPlaybackCameraChange(camera);
+        onPlaybackStateChange(currentState);
+        if (currentCamera && onPlaybackCameraChange) {
+            onPlaybackCameraChange(currentCamera);
         }
 
-    }, [session, onPlaybackStateChange, onPlaybackCameraChange]);
+        lastAppliedTimeRef.current = globalTime;
+    }, [session, segments, onPlaybackStateChange, onPlaybackCameraChange]);
+
 
     // Playback Loop
     useEffect(() => {
@@ -344,46 +348,94 @@ export const useSessionRecorder = ({ onPlaybackStateChange, onPlaybackCameraChan
         lastAppliedTimeRef.current = -1;
     }, []);
 
+    // NLE: Split the current segment at playbackTime
     const splitSession = useCallback((splitTime: number) => {
         if (!session) return null;
 
-        // Create first session (0 to splitTime)
-        const firstSessionEvents = session.events
-            .filter(e => e.timestamp < splitTime);
+        setSegments(prevSegments => {
+            const newSegments = [...prevSegments];
+            const segmentIndex = newSegments.findIndex(
+                s => splitTime >= s.startTime && splitTime < s.startTime + s.duration
+            );
 
-        const firstSession: RecordedSession = {
-            id: `${session.id}-part1`,
-            version: session.version,
+            if (segmentIndex === -1) return prevSegments;
+
+            const originalSegment = newSegments[segmentIndex];
+            const splitOffset = splitTime - originalSegment.startTime;
+
+            // Enforce minimum segment length (e.g., 500ms)
+            if (splitOffset < 500 || (originalSegment.duration - splitOffset) < 500) {
+                return prevSegments;
+            }
+
+            // Create two new segments
+            const segment1: TimelineSegment = {
+                ...originalSegment,
+                id: crypto.randomUUID(),
+                duration: splitOffset
+            };
+
+            const segment2: TimelineSegment = {
+                ...originalSegment,
+                id: crypto.randomUUID(),
+                startTime: originalSegment.startTime + splitOffset,
+                sourceStartTime: originalSegment.sourceStartTime + splitOffset,
+                duration: originalSegment.duration - splitOffset
+            };
+
+            // Replace original with new pieces
+            newSegments.splice(segmentIndex, 1, segment1, segment2);
+            return newSegments;
+        });
+
+        return null; // Return null to prevent download
+    }, [session]);
+
+    const adjustSessionSpeed = useCallback((startTime: number, endTime: number, speedFactor: number) => {
+        if (!session || speedFactor <= 0 || startTime >= endTime) return;
+
+        const start = Math.max(0, startTime);
+        const end = Math.min(session.metadata.duration, endTime);
+        const originalSectionDuration = end - start;
+        const newSectionDuration = originalSectionDuration / speedFactor;
+        const shiftAmount = newSectionDuration - originalSectionDuration;
+
+        const newEvents = session.events.map(event => {
+            if (event.timestamp < start) {
+                return event;
+            } else if (event.timestamp <= end) {
+                // Scale timestamp within the range
+                const offset = event.timestamp - start;
+                return {
+                    ...event,
+                    timestamp: start + (offset / speedFactor)
+                };
+            } else {
+                // Shift subsequent events
+                return {
+                    ...event,
+                    timestamp: event.timestamp + shiftAmount
+                };
+            }
+        });
+
+        // Update session
+        const newSession: RecordedSession = {
+            ...session,
             metadata: {
                 ...session.metadata,
-                title: `${session.metadata.title} (Part 1)`,
-                duration: splitTime
+                duration: session.metadata.duration + shiftAmount
             },
-            events: firstSessionEvents,
-            initialState: session.initialState
+            events: newEvents
         };
 
-        // Create second session (splitTime to end)
-        const secondSessionEvents = session.events
-            .filter(e => e.timestamp >= splitTime)
-            .map(e => ({
-                ...e,
-                timestamp: e.timestamp - splitTime // Adjust timestamps
-            }));
+        setSession(newSession);
 
-        const secondSession: RecordedSession = {
-            id: `${session.id}-part2`,
-            version: session.version,
-            metadata: {
-                ...session.metadata,
-                title: `${session.metadata.title} (Part 2)`,
-                duration: session.metadata.duration - splitTime
-            },
-            events: secondSessionEvents,
-            initialState: session.initialState
-        };
-
-        return { firstSession, secondSession };
+        // Reset playback to start of change to verify
+        setPlaybackTime(start);
+        playbackCursorRef.current = 0;
+        accumulatedStateRef.current = null;
+        lastAppliedTimeRef.current = -1;
     }, [session]);
 
     return {
@@ -407,6 +459,9 @@ export const useSessionRecorder = ({ onPlaybackStateChange, onPlaybackCameraChan
         deleteEvent,
         deleteEventsByType,
         deleteEventsByTimeRange,
-        splitSession
+        splitSession,
+        adjustSessionSpeed,
+        segments,
+        setSegments
     };
 };
