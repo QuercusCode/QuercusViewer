@@ -3069,6 +3069,18 @@ function App() {
         peerSession={peerSession}
       />
 
+      <GalleryModal
+        isOpen={isGalleryOpen}
+        onClose={() => setIsGalleryOpen(false)}
+        snapshots={snapshots}
+        movies={movies}
+        onDeleteSnapshot={handleDeleteSnapshot}
+        onDeleteMovie={handleDeleteMovie}
+        onDownloadSnapshot={handleDownloadSnapshot}
+        onDownloadMovie={handleDownloadMovie}
+        isLightMode={isLightMode}
+      />
+
 
 
       <LandingOverlay
