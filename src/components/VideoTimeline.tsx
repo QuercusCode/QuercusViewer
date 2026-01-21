@@ -387,22 +387,33 @@ export const VideoTimeline = ({
                             />
 
                             {/* Trim Handles */}
+                            {/* Start Handle - Grip faces Right (Inwards) */}
                             <div
-                                className="absolute top-0 bottom-0 w-1 bg-blue-500 cursor-ew-resize z-40 hover:w-1.5 transition-all"
+                                className="absolute top-0 bottom-0 w-1 bg-blue-500 cursor-ew-resize z-40 transition-all group/start"
                                 style={{ left: `${(trimStart / duration) * 100}%` }}
                                 onMouseDown={handleHandleMouseDown('start')}
                             >
-                                <div className="absolute top-1/2 -translate-y-1/2 -left-2 w-4 h-12 bg-blue-500 rounded-sm flex items-center justify-center scale-x-100 origin-center sticky left-0">
+                                <div className="absolute top-1/2 -translate-y-1/2 left-0 w-4 h-12 bg-blue-500 rounded-r-md rounded-l-none flex items-center justify-center shadow-lg shadow-black/20 group-hover/start:bg-blue-400 transition-colors">
                                     <div className="w-0.5 h-6 bg-white/50" />
                                 </div>
+                                {/* Label */}
+                                <div className="absolute -top-8 left-0 px-2 py-1 bg-blue-500 text-white text-[10px] rounded opacity-0 group-hover/start:opacity-100 transition-opacity whitespace-nowrap font-bold">
+                                    Start: {formatTime(trimStart)}
+                                </div>
                             </div>
+
+                            {/* End Handle - Grip faces Left (Inwards) */}
                             <div
-                                className="absolute top-0 bottom-0 w-1 bg-blue-500 cursor-ew-resize z-40 hover:w-1.5 transition-all"
+                                className="absolute top-0 bottom-0 w-1 bg-blue-500 cursor-ew-resize z-40 transition-all group/end"
                                 style={{ left: `${(trimEnd / duration) * 100}%` }}
                                 onMouseDown={handleHandleMouseDown('end')}
                             >
-                                <div className="absolute top-1/2 -translate-y-1/2 -left-2 w-4 h-12 bg-blue-500 rounded-sm flex items-center justify-center scale-x-100 origin-center sticky left-0">
+                                <div className="absolute top-1/2 -translate-y-1/2 right-0 w-4 h-12 bg-blue-500 rounded-l-md rounded-r-none flex items-center justify-center shadow-lg shadow-black/20 group-hover/end:bg-blue-400 transition-colors">
                                     <div className="w-0.5 h-6 bg-white/50" />
+                                </div>
+                                {/* Label */}
+                                <div className="absolute -top-8 right-0 px-2 py-1 bg-blue-500 text-white text-[10px] rounded opacity-0 group-hover/end:opacity-100 transition-opacity whitespace-nowrap font-bold">
+                                    End: {formatTime(trimEnd)}
                                 </div>
                             </div>
                         </>
