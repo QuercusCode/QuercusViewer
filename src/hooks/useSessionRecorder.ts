@@ -238,6 +238,19 @@ export const useSessionRecorder = ({ onPlaybackStateChange, onPlaybackCameraChan
         reader.readAsText(file);
     }, []);
 
+    const updateMetadata = useCallback((updates: Partial<RecordedSession['metadata']>) => {
+        setSession(prev => {
+            if (!prev) return null;
+            return {
+                ...prev,
+                metadata: {
+                    ...prev.metadata,
+                    ...updates
+                }
+            };
+        });
+    }, []);
+
     return {
         isRecording,
         isPlaying,
@@ -253,6 +266,7 @@ export const useSessionRecorder = ({ onPlaybackStateChange, onPlaybackCameraChan
         pause,
         seek,
         exportSession,
-        importSession
+        importSession,
+        updateMetadata
     };
 };

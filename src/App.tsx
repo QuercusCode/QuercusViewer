@@ -2526,6 +2526,7 @@ function App() {
                         exportSession={recorder.exportSession}
                         importSession={recorder.importSession}
                         exportVideo={handleExportVideo}
+                        updateMetadata={recorder.updateMetadata}
                         isLightMode={isLightMode}
                         cardBg={isLightMode ? 'bg-white' : 'bg-neutral-900'}
                       />

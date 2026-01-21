@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { useRef } from 'react';
 import {
     Play, Pause, Circle, Square,
     Upload, Save, Film
@@ -22,6 +22,7 @@ interface RecorderControlsProps {
     exportSession: () => void;
     importSession: (file: File) => void;
     exportVideo: () => void;
+    updateMetadata: (updates: any) => void;
 
     isLightMode: boolean;
     cardBg: string;
@@ -37,7 +38,7 @@ const formatTime = (ms: number) => {
 export const RecorderControls = ({
     isRecording, isPlaying, recordingTime, playbackTime, session, playbackSpeed,
     startRecording, stopRecording, play, pause, seek, setPlaybackSpeed,
-    exportSession, importSession, exportVideo,
+    exportSession, importSession, exportVideo, updateMetadata,
     isLightMode, cardBg
 }: RecorderControlsProps) => {
 
@@ -51,30 +52,6 @@ export const RecorderControls = ({
     };
 
     const fileInputRef = useRef<HTMLInputElement>(null);
-
-    // Keyboard Shortcuts
-    useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (!session || isRecording) return; // Only during playback/idle with session loaded
-
-            // Ignore if typing in an input
-            if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement).tagName)) return;
-
-            if (e.code === 'Space') {
-                e.preventDefault();
-                isPlaying ? pause() : play();
-            } else if (e.code === 'ArrowLeft') {
-                e.preventDefault();
-                seek(Math.max(0, playbackTime - 5000));
-            } else if (e.code === 'ArrowRight') {
-                e.preventDefault();
-                seek(Math.min(session.metadata.duration, playbackTime + 5000));
-            }
-        };
-
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [session, isRecording, isPlaying, playbackTime, play, pause, seek]);
 
     // Render Timeline Scrubber
     const renderScrubber = () => {
@@ -123,12 +100,19 @@ export const RecorderControls = ({
 
             {/* Header / Status */}
             <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-1 mr-2">
                     {isRecording ? (
                         <div className="flex items-center gap-2 text-red-500 animate-pulse">
                             <Circle className="w-3 h-3 fill-current" />
                             <span className="text-xs font-bold">REC {formatTime(recordingTime)}</span>
                         </div>
+                    ) : session ? (
+                        <input
+                            type="text"
+                            value={session.metadata.title}
+                            onChange={(e) => updateMetadata({ title: e.target.value })}
+                            className={`bg-transparent border-b border-transparent hover:border-white/20 focus:border-blue-500 focus:outline-none text-xs font-bold w-full transition-colors ${styles.text}`}
+                        />
                     ) : (
                         <span className={styles.text}>Session Recorder</span>
                     )}
