@@ -28,6 +28,7 @@ interface RecorderControlsProps {
     deleteEvent: (index: number) => void;
     deleteEventsByType: (type: string, fromTime?: number, toTime?: number) => void;
     deleteEventsByTimeRange: (fromTime: number, toTime: number) => void;
+    splitSession: (splitTime: number) => { firstSession: any; secondSession: any } | null;
 
     isLightMode: boolean;
     cardBg: string;
@@ -44,7 +45,7 @@ export const RecorderControls = ({
     isRecording, isPlaying, recordingTime, playbackTime, session, playbackSpeed,
     startRecording, stopRecording, play, pause, seek, setPlaybackSpeed,
     exportSession, importSession, exportVideo, updateMetadata,
-    trimSession, deleteEvent, deleteEventsByType, deleteEventsByTimeRange,
+    trimSession, deleteEvent, deleteEventsByType, deleteEventsByTimeRange, splitSession,
     isLightMode, cardBg
 }: RecorderControlsProps) => {
 
@@ -314,6 +315,50 @@ export const RecorderControls = ({
                                         <Trash2 className="w-3 h-3" />
                                         Delete Range
                                     </button>
+                                </div>
+                            </div>
+
+                            {/* Split Session */}
+                            <div className="space-y-2">
+                                <label className={`${styles.text} block`}>Split Session</label>
+                                <div className="flex gap-2 items-center flex-wrap">
+                                    <button
+                                        onClick={() => {
+                                            const splitTime = playbackTime;
+                                            const result = splitSession(splitTime);
+                                            if (result) {
+                                                // Download both sessions
+                                                const blob1 = new Blob([JSON.stringify(result.firstSession, null, 2)], { type: 'application/json' });
+                                                const blob2 = new Blob([JSON.stringify(result.secondSession, null, 2)], { type: 'application/json' });
+
+                                                const url1 = URL.createObjectURL(blob1);
+                                                const url2 = URL.createObjectURL(blob2);
+
+                                                const a1 = document.createElement('a');
+                                                a1.href = url1;
+                                                a1.download = `${result.firstSession.metadata.title}.json`;
+                                                a1.click();
+                                                URL.revokeObjectURL(url1);
+
+                                                setTimeout(() => {
+                                                    const a2 = document.createElement('a');
+                                                    a2.href = url2;
+                                                    a2.download = `${result.secondSession.metadata.title}.json`;
+                                                    a2.click();
+                                                    URL.revokeObjectURL(url2);
+                                                }, 500);
+
+                                                setIsEditPanelOpen(false);
+                                            }
+                                        }}
+                                        className="px-3 py-1.5 bg-green-600 hover:bg-green-700 rounded text-xs transition-colors flex items-center gap-1"
+                                    >
+                                        <Scissors className="w-3 h-3" />
+                                        Split at {formatTime(playbackTime)}
+                                    </button>
+                                    <span className="text-xs opacity-60">
+                                        Creates 2 separate sessions
+                                    </span>
                                 </div>
                             </div>
                         </div>

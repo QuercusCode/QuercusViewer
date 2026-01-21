@@ -344,6 +344,48 @@ export const useSessionRecorder = ({ onPlaybackStateChange, onPlaybackCameraChan
         lastAppliedTimeRef.current = -1;
     }, []);
 
+    const splitSession = useCallback((splitTime: number) => {
+        if (!session) return null;
+
+        // Create first session (0 to splitTime)
+        const firstSessionEvents = session.events
+            .filter(e => e.timestamp < splitTime);
+
+        const firstSession: RecordedSession = {
+            id: `${session.id}-part1`,
+            version: session.version,
+            metadata: {
+                ...session.metadata,
+                title: `${session.metadata.title} (Part 1)`,
+                duration: splitTime
+            },
+            events: firstSessionEvents,
+            initialState: session.initialState
+        };
+
+        // Create second session (splitTime to end)
+        const secondSessionEvents = session.events
+            .filter(e => e.timestamp >= splitTime)
+            .map(e => ({
+                ...e,
+                timestamp: e.timestamp - splitTime // Adjust timestamps
+            }));
+
+        const secondSession: RecordedSession = {
+            id: `${session.id}-part2`,
+            version: session.version,
+            metadata: {
+                ...session.metadata,
+                title: `${session.metadata.title} (Part 2)`,
+                duration: session.metadata.duration - splitTime
+            },
+            events: secondSessionEvents,
+            initialState: session.initialState
+        };
+
+        return { firstSession, secondSession };
+    }, [session]);
+
     return {
         isRecording,
         isPlaying,
@@ -364,6 +406,7 @@ export const useSessionRecorder = ({ onPlaybackStateChange, onPlaybackCameraChan
         trimSession,
         deleteEvent,
         deleteEventsByType,
-        deleteEventsByTimeRange
+        deleteEventsByTimeRange,
+        splitSession
     };
 };
