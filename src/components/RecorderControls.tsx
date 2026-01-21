@@ -57,6 +57,9 @@ export const RecorderControls = ({
 
         const progress = (playbackTime / session.metadata.duration) * 100;
 
+        // Filter out high-frequency camera events, keep state/annotation/chat
+        const markers = session.events.filter(e => e.type !== 'camera');
+
         return (
             <div className="w-full h-1.5 bg-neutral-200 dark:bg-neutral-800 rounded-full cursor-pointer relative group"
                 onClick={(e) => {
@@ -64,12 +67,26 @@ export const RecorderControls = ({
                     const p = (e.clientX - rect.left) / rect.width;
                     seek(p * session.metadata.duration);
                 }}>
+
+                {/* Visual Markers for Significant Events */}
+                {markers.map((event, idx) => {
+                    const left = (event.timestamp / session.metadata.duration) * 100;
+                    return (
+                        <div
+                            key={idx}
+                            className="absolute top-1/2 -translate-y-1/2 w-1 h-1 bg-yellow-500 rounded-full pointer-events-none opacity-50 z-10"
+                            style={{ left: `${left}%` }}
+                            title={`${event.type} change at ${formatTime(event.timestamp)}`}
+                        />
+                    );
+                })}
+
                 <div
-                    className="h-full bg-blue-500 rounded-full absolute top-0 left-0 pointer-events-none transition-all duration-100"
+                    className="h-full bg-blue-500 rounded-full absolute top-0 left-0 pointer-events-none transition-all duration-100 z-20"
                     style={{ width: `${progress}%` }}
                 />
                 <div
-                    className="w-3 h-3 bg-white shadow rounded-full absolute top-1/2 -translate-y-1/2 -translate-x-1/2 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="w-3 h-3 bg-white shadow rounded-full absolute top-1/2 -translate-y-1/2 -translate-x-1/2 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-30"
                     style={{ left: `${progress}%` }}
                 />
             </div>
