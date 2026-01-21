@@ -729,6 +729,13 @@ export const Controls: React.FC<ControlsProps> = ({
                                 >
                                     <BookOpen className="w-4 h-4" />
                                 </button>
+                                <button
+                                    onClick={() => setIsGalleryOpen(true)}
+                                    className={`p-2 rounded-lg transition-colors ${isLightMode ? 'text-neutral-600 hover:bg-neutral-100' : 'text-neutral-400 hover:bg-neutral-800'}`}
+                                    title="Media Gallery"
+                                >
+                                    <ImageIcon className="w-4 h-4" />
+                                </button>
                             </div>
 
                             {/* Divider */}
@@ -1735,33 +1742,13 @@ export const Controls: React.FC<ControlsProps> = ({
                             </div>
 
                             {/* Galleries */}
-                            {/* Galleries */}
-                            <div className="pt-2 border-t border-white/5">
-                                <button
-                                    id="media-gallery-btn"
-                                    onClick={() => setIsGalleryOpen(true)}
-                                    className={`w-full flex items-center justify-between p-3 rounded-lg border transition-all group ${isLightMode ? 'bg-neutral-50 border-neutral-200 hover:bg-neutral-100' : 'bg-white/5 border-white/10 hover:bg-white/10'}`}
-                                >
-                                    <div className="flex items-center gap-2">
-                                        <div className={`p-1.5 rounded-md ${isLightMode ? 'bg-white shadow-sm text-blue-600' : 'bg-black/40 text-blue-400'}`}>
-                                            <ImageIcon className="w-4 h-4" />
-                                        </div>
-                                        <div className="text-left">
-                                            <div className={`text-xs font-bold ${isLightMode ? 'text-neutral-900' : 'text-white'}`}>Media Gallery</div>
-                                            <div className={`text-[9px] ${subtleText}`}>{snapshots.length} images • {movies.length} videos</div>
-                                        </div>
-                                    </div>
-                                    <ChevronDown className="-rotate-90 w-3 h-3 opacity-50 group-hover:opacity-100 transition-opacity" />
-                                </button>
-                            </div>
-
                         </div>
                     </SidebarSection>
                 </div >
             </div >
 
             {/* Gallery Modal (Replaces old previews) */}
-            <GalleryModal
+            < GalleryModal
                 isOpen={isGalleryOpen}
                 onClose={() => setIsGalleryOpen(false)}
                 snapshots={snapshots}
