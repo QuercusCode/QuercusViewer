@@ -1,10 +1,11 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import {
     Play, Pause, Circle, Square,
     Upload, Save, Film, Pencil, Scissors, ChevronDown, Trash2, Timer, Gauge
 } from 'lucide-react';
 import type { RecordedSession } from '../types';
 import { VideoTimeline } from './VideoTimeline';
+import { formatTime, parseTimeString } from '../utils/format';
 
 interface RecorderControlsProps {
     isRecording: boolean;
@@ -12,7 +13,7 @@ interface RecorderControlsProps {
     recordingTime: number;
     playbackTime: number;
     session: RecordedSession | null;
-    segments?: any[]; // Typed as any[] to avoid import cycle for now, or use TimelineSegment
+    segments?: any[];
     updateSegment?: (id: string, updates: any) => void;
     selectedSegmentIds?: string[];
     toggleSegmentSelection?: (id: string, multi: boolean) => void;
@@ -38,14 +39,8 @@ interface RecorderControlsProps {
 
     isLightMode: boolean;
     cardBg: string;
+    onEnterStudio?: () => void;
 }
-
-const formatTime = (ms: number) => {
-    const seconds = Math.floor(ms / 1000);
-    const m = Math.floor(seconds / 60).toString().padStart(2, '0');
-    const s = (seconds % 60).toString().padStart(2, '0');
-    return `${m}:${s}`;
-};
 
 export const RecorderControls = ({
     isRecording, isPlaying, recordingTime, playbackTime, session, segments, updateSegment,
@@ -54,7 +49,7 @@ export const RecorderControls = ({
     startRecording, stopRecording, play, pause, seek, setPlaybackSpeed,
     exportSession, importSession, exportVideo, updateMetadata,
     trimSession, deleteEvent, deleteEventsByType, deleteEventsByTimeRange, splitSession, adjustSessionSpeed,
-    isLightMode, cardBg
+    isLightMode, cardBg, onEnterStudio
 }: RecorderControlsProps) => {
 
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -71,15 +66,14 @@ export const RecorderControls = ({
     const [tempTrimEnd, setTempTrimEnd] = useState<number>(0);
 
     // Update temp trim values when session changes
-    useState(() => {
+    useEffect(() => {
         if (session) {
             setTempTrimStart(0);
             setTempTrimEnd(session.metadata.duration);
         }
-    });
+    }, [session]);
 
-    // Only show full detailed controls if we have a session or are recording
-    // Otherwise show a compact "Start Recording" or "Load Session" button
+    // Styles
     const styles = {
         icon: "w-4 h-4",
         button: `p-2 rounded-lg border transition-all flex items-center justify-center gap-2 ${cardBg} ${isLightMode ? 'hover:bg-neutral-100 border-neutral-200' : 'hover:bg-white/10 border-white/10'}`,
@@ -220,6 +214,17 @@ export const RecorderControls = ({
             {/* Edit Panel (Only if session exists and not recording) */}
             {session && !isRecording && (
                 <div className="space-y-2">
+                    {/* STUDIO LAUNCHER */}
+                    {onEnterStudio && (
+                        <button
+                            onClick={onEnterStudio}
+                            className={`w-full flex items-center justify-center gap-2 p-3 rounded-xl mb-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-lg shadow-blue-900/20 transition-all hover:scale-[1.02] active:scale-[0.98]`}
+                        >
+                            <Film className="w-4 h-4" />
+                            <span className="text-xs font-bold uppercase tracking-wider">Launch Studio</span>
+                        </button>
+                    )}
+
                     <button
                         onClick={() => setIsEditPanelOpen(!isEditPanelOpen)}
                         className={`w-full flex items-center justify-between p-2 rounded ${styles.button} text-xs`}
@@ -454,17 +459,7 @@ export const RecorderControls = ({
                         </div>
                     )}
                 </div>
-            )
-            }
-        </div >
+            )}
+        </div>
     );
-};
-
-// Helper function to parse MM:SS format
-const parseTimeString = (timeStr: string): number => {
-    const parts = timeStr.split(':');
-    if (parts.length !== 2) return 0;
-    const minutes = parseInt(parts[0], 10) || 0;
-    const seconds = parseInt(parts[1], 10) || 0;
-    return (minutes * 60 + seconds) * 1000; // Convert to milliseconds
 };

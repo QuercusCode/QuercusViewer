@@ -57,6 +57,7 @@ import { useStructureMetadata } from './hooks/useStructureMetadata';
 import { initGA, logPageView, logEvent } from './utils/analytics';
 import { useSessionRecorder } from './hooks/useSessionRecorder';
 import { RecorderControls } from './components/RecorderControls';
+import { StudioLayout } from './components/StudioLayout';
 
 const deepEqual = (a: any, b: any): boolean => {
   if (a === b) return true;
@@ -227,6 +228,9 @@ function App() {
     type: 'snapshot' | 'record' | 'reset' | 'save' | 'load' | 'share';
     args?: any;
   } | null>(null);
+
+  // --- Studio Mode State ---
+  const [isStudioMode, setIsStudioMode] = useState(false);
 
   // --- Snapshot Modal State (unified viewport + quality selection) ---
   const [isSnapshotModalOpen, setIsSnapshotModalOpen] = useState(false);
@@ -2408,7 +2412,15 @@ function App() {
       {/* Audio Room (Invisible) */}
       <AudioRoom remoteStreams={peerSession.remoteStreams} />
 
-      {!showLanding && (
+      {/* STUDIO MODE OVERLAY */}
+      {isStudioMode && recorder.session && (
+        <StudioLayout
+          recorder={recorder}
+          onExit={() => setIsStudioMode(false)}
+        />
+      )}
+
+      {!showLanding && !isStudioMode && (
         <>
           <HUD
             hoveredResidue={hoveredResidue}
@@ -2546,6 +2558,7 @@ function App() {
                         selectedSegmentIds={recorder.selectedSegmentIds}
                         toggleSegmentSelection={recorder.toggleSegmentSelection}
                         deleteSelectedSegments={recorder.deleteSelectedSegments}
+                        onEnterStudio={() => setIsStudioMode(true)}
                         isLightMode={isLightMode}
                         cardBg={isLightMode ? 'bg-white' : 'bg-neutral-900'}
                       />
