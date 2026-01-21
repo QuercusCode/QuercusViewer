@@ -5,6 +5,8 @@ interface VideoTimelineProps {
     session: RecordedSession | null;
     segments?: TimelineSegment[]; // NLE Support
     onSegmentUpdate?: (id: string, updates: Partial<TimelineSegment>) => void;
+    selectedSegmentIds?: string[];
+    onSegmentSelect?: (id: string, multi: boolean) => void;
     playbackTime: number;
     isPlaying: boolean;
     onSeek: (time: number) => void;
@@ -21,6 +23,8 @@ export const VideoTimeline = ({
     session,
     segments = [],
     onSegmentUpdate,
+    selectedSegmentIds = [],
+    onSegmentSelect,
     playbackTime,
     onSeek,
     trimMode = false,
@@ -271,38 +275,59 @@ export const VideoTimeline = ({
                     {segments.length > 0 && segments.map(seg => {
                         const left = (seg.startTime / duration) * 100;
                         const width = (seg.duration / duration) * 100;
+                        const isSelected = selectedSegmentIds.includes(seg.id);
 
                         return (
                             <div
                                 key={seg.id}
-                                className="absolute top-1 bottom-1 border-x border-white/20 bg-white/10 hover:bg-white/20 cursor-grab active:cursor-grabbing group transition-colors"
+                                className={`absolute top-1 bottom-1 border-x transition-colors cursor-pointer group
+                                    ${isSelected
+                                        ? 'bg-blue-500/40 border-blue-400 z-20'
+                                        : 'bg-white/10 hover:bg-white/20 border-white/20 z-10'}
+                                `}
                                 style={{
                                     left: `${left}%`,
                                     width: `${width}%`
                                 }}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (onSegmentSelect) {
+                                        onSegmentSelect(seg.id, e.metaKey || e.shiftKey);
+                                    }
+                                }}
                                 onMouseDown={(e) => {
+                                    if (e.button !== 0) return; // Only Left Click
                                     e.stopPropagation();
                                     e.preventDefault();
                                     const startX = e.clientX;
                                     const originalStartTime = seg.startTime;
+                                    let hasMoved = false;
 
                                     const handleMouseMove = (moveEvent: MouseEvent) => {
                                         if (!timelineRef.current) return;
-                                        const rect = timelineRef.current.getBoundingClientRect();
-                                        const deltaX = moveEvent.clientX - startX;
-                                        const deltaTime = (deltaX / rect.width) * duration;
 
-                                        const newStartTime = Math.max(0, originalStartTime + deltaTime);
+                                        if (!hasMoved && Math.abs(moveEvent.clientX - startX) > 5) {
+                                            hasMoved = true;
+                                            if (!isSelected && onSegmentSelect) {
+                                                onSegmentSelect(seg.id, false);
+                                            }
+                                        }
 
-                                        if (onSegmentUpdate) {
-                                            onSegmentUpdate(seg.id, { startTime: newStartTime });
+                                        if (hasMoved) {
+                                            const rect = timelineRef.current.getBoundingClientRect();
+                                            const deltaX = moveEvent.clientX - startX;
+                                            const deltaTime = (deltaX / rect.width) * duration;
+                                            const newStartTime = Math.max(0, originalStartTime + deltaTime);
+
+                                            if (onSegmentUpdate) {
+                                                onSegmentUpdate(seg.id, { startTime: newStartTime });
+                                            }
                                         }
                                     };
 
                                     const handleMouseUp = () => {
                                         window.removeEventListener('mousemove', handleMouseMove);
                                         window.removeEventListener('mouseup', handleMouseUp);
-                                        // Snap to grid or neighbors logic could go here
                                     };
 
                                     window.addEventListener('mousemove', handleMouseMove);
@@ -311,7 +336,10 @@ export const VideoTimeline = ({
                                 title={`Segment: ${formatTime(seg.startTime)} - ${formatTime(seg.startTime + seg.duration)}`}
                             >
                                 {/* Drag Handle Indicator */}
-                                <div className="absolute inset-x-2 top-1/2 h-0.5 bg-white/20 group-hover:bg-white/40" />
+                                <div className={`absolute inset-x-2 top-1/2 h-0.5 ${isSelected ? 'bg-blue-200' : 'bg-white/20 group-hover:bg-white/40'}`} />
+
+                                {/* Selected Border */}
+                                {isSelected && <div className="absolute inset-0 border-2 border-blue-400 pointer-events-none" />}
                             </div>
                         );
                     })}

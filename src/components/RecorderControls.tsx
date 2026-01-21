@@ -14,6 +14,9 @@ interface RecorderControlsProps {
     session: RecordedSession | null;
     segments?: any[]; // Typed as any[] to avoid import cycle for now, or use TimelineSegment
     updateSegment?: (id: string, updates: any) => void;
+    selectedSegmentIds?: string[];
+    toggleSegmentSelection?: (id: string, multi: boolean) => void;
+    deleteSelectedSegments?: () => void;
     playbackSpeed: number;
 
     startRecording: () => void;
@@ -45,7 +48,9 @@ const formatTime = (ms: number) => {
 };
 
 export const RecorderControls = ({
-    isRecording, isPlaying, recordingTime, playbackTime, session, segments, updateSegment, playbackSpeed,
+    isRecording, isPlaying, recordingTime, playbackTime, session, segments, updateSegment,
+    selectedSegmentIds, toggleSegmentSelection, deleteSelectedSegments,
+    playbackSpeed,
     startRecording, stopRecording, play, pause, seek, setPlaybackSpeed,
     exportSession, importSession, exportVideo, updateMetadata,
     trimSession, deleteEvent, deleteEventsByType, deleteEventsByTimeRange, splitSession, adjustSessionSpeed,
@@ -195,6 +200,8 @@ export const RecorderControls = ({
                         session={session}
                         segments={segments}
                         onSegmentUpdate={updateSegment}
+                        selectedSegmentIds={selectedSegmentIds}
+                        onSegmentSelect={toggleSegmentSelection}
                         playbackTime={playbackTime}
                         isPlaying={isPlaying}
                         onSeek={seek}
@@ -366,6 +373,24 @@ export const RecorderControls = ({
                                     <span className="text-xs opacity-60">
                                         Creates 2 separate sessions
                                     </span>
+                                </div>
+                            </div>
+
+                            {/* Delete Selected Segment */}
+                            <div className="space-y-2">
+                                <label className={`${styles.text} block`}>Delete Segment</label>
+                                <div className="flex gap-2 items-center flex-wrap">
+                                    {selectedSegmentIds && selectedSegmentIds.length > 0 ? (
+                                        <button
+                                            onClick={deleteSelectedSegments}
+                                            className="px-3 py-1.5 bg-red-600 hover:bg-red-700 rounded text-xs transition-colors flex items-center gap-1 animate-in fade-in slide-in-from-left-2"
+                                        >
+                                            <span className="w-3 h-3 text-center font-bold">×</span>
+                                            Delete Selected ({selectedSegmentIds.length})
+                                        </button>
+                                    ) : (
+                                        <span className="text-xs opacity-40 italic">Select a segment to delete</span>
+                                    )}
                                 </div>
                             </div>
 

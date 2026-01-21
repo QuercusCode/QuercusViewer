@@ -437,6 +437,30 @@ export const useSessionRecorder = ({ onPlaybackStateChange, onPlaybackCameraChan
         accumulatedStateRef.current = null;
         lastAppliedTimeRef.current = -1;
     }, [session]);
+    // Selection State
+    const [selectedSegmentIds, setSelectedSegmentIds] = useState<string[]>([]);
+
+    const updateSegment = useCallback((segmentId: string, updates: Partial<TimelineSegment>) => {
+        setSegments(prev => prev.map(s =>
+            s.id === segmentId ? { ...s, ...updates } : s
+        ));
+    }, []);
+
+    const deleteSelectedSegments = useCallback(() => {
+        setSegments(prev => prev.filter(s => !selectedSegmentIds.includes(s.id)));
+        setSelectedSegmentIds([]);
+    }, [selectedSegmentIds]);
+
+    const toggleSegmentSelection = useCallback((segmentId: string, multiSelect: boolean) => {
+        setSelectedSegmentIds(prev => {
+            if (multiSelect) {
+                return prev.includes(segmentId)
+                    ? prev.filter(id => id !== segmentId)
+                    : [...prev, segmentId];
+            }
+            return prev.includes(segmentId) && prev.length === 1 ? [] : [segmentId];
+        });
+    }, []);
 
     return {
         isRecording,
@@ -462,6 +486,10 @@ export const useSessionRecorder = ({ onPlaybackStateChange, onPlaybackCameraChan
         splitSession,
         adjustSessionSpeed,
         segments,
-        setSegments
+        setSegments,
+        updateSegment,
+        selectedSegmentIds,
+        toggleSegmentSelection,
+        deleteSelectedSegments
     };
 };

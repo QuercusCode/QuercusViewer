@@ -2543,6 +2543,9 @@ function App() {
                         deleteEventsByType={recorder.deleteEventsByType}
                         deleteEventsByTimeRange={recorder.deleteEventsByTimeRange}
                         splitSession={recorder.splitSession}
+                        selectedSegmentIds={recorder.selectedSegmentIds}
+                        toggleSegmentSelection={recorder.toggleSegmentSelection}
+                        deleteSelectedSegments={recorder.deleteSelectedSegments}
                         isLightMode={isLightMode}
                         cardBg={isLightMode ? 'bg-white' : 'bg-neutral-900'}
                       />
