@@ -43,12 +43,26 @@ export const useSessionRecorder = ({ onPlaybackStateChange, onPlaybackCameraChan
         // Start audio recording if enabled
         if (isAudioEnabled) {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                // High-quality audio constraints
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true,
+                        sampleRate: 48000,  // Professional audio quality
+                        channelCount: 2     // Stereo
+                    }
+                });
+
                 const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
                     ? 'audio/webm;codecs=opus'
                     : 'audio/webm';
 
-                const recorder = new MediaRecorder(stream, { mimeType });
+                // High bitrate for professional quality (256kbps)
+                const recorder = new MediaRecorder(stream, {
+                    mimeType,
+                    audioBitsPerSecond: 256000  // 256kbps for excellent voice quality
+                });
                 audioChunksRef.current = [];
 
                 recorder.ondataavailable = (e) => {
