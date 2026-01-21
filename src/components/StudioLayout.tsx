@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
     ArrowLeft, Play, Pause, Scissors, Trash2, Download,
-    Settings, Layers, Music, Type, Film, Pencil
+    Settings, Layers, Music, Type, Film, Pencil, Undo, Redo
 } from 'lucide-react';
 import { VideoTimeline } from './VideoTimeline';
 import type { useSessionRecorder } from '../hooks/useSessionRecorder';
@@ -36,7 +36,11 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
         trimSession,
         adjustSessionSpeed,
         playbackSpeed,
-        setPlaybackSpeed
+        setPlaybackSpeed,
+        undo,
+        redo,
+        canUndo,
+        canRedo
     } = recorder;
 
     const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -61,6 +65,27 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
         }
     }, [session]);
 
+    // Undo/Redo Keyboard Shortcuts
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.metaKey || e.ctrlKey) {
+                // Redo: Shift+Cmd+Z or Cmd+Y (Windows common)
+                if ((e.shiftKey && e.key.toLowerCase() === 'z') || e.key.toLowerCase() === 'y') {
+                    e.preventDefault();
+                    if (canRedo) redo();
+                }
+                // Undo: Cmd+Z
+                else if (e.key.toLowerCase() === 'z') {
+                    e.preventDefault();
+                    if (canUndo) undo();
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [undo, redo, canUndo, canRedo]);
+
     if (!session) return null;
 
     return (
@@ -75,6 +100,32 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                     >
                         <ArrowLeft className="w-5 h-5" />
                     </button>
+
+                    {/* Divider */}
+                    <div className="h-6 w-px bg-white/10 mx-2" />
+
+                    {/* Undo/Redo */}
+                    <div className="flex items-center gap-1">
+                        <button
+                            onClick={undo}
+                            disabled={!canUndo}
+                            className={`p-2 rounded-full transition-colors ${canUndo ? 'hover:bg-white/10 text-white' : 'text-white/30 cursor-not-allowed'}`}
+                            title="Undo (Ctrl+Z)"
+                        >
+                            <Undo className="w-4 h-4" />
+                        </button>
+                        <button
+                            onClick={redo}
+                            disabled={!canRedo}
+                            className={`p-2 rounded-full transition-colors ${canRedo ? 'hover:bg-white/10 text-white' : 'text-white/30 cursor-not-allowed'}`}
+                            title="Redo (Ctrl+Shift+Z)"
+                        >
+                            <Redo className="w-4 h-4" />
+                        </button>
+                    </div>
+
+                    {/* Divider */}
+                    <div className="h-6 w-px bg-white/10 mx-2" />
 
                     {/* Editable Title */}
                     <div className="group">

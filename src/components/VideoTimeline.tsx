@@ -44,6 +44,11 @@ export const VideoTimeline = ({
     const [panStartX, setPanStartX] = useState(0);
     const [panStartScroll, setPanStartScroll] = useState(0);
 
+    // Optimized Dragging State
+    const [draggingSegmentId, setDraggingSegmentId] = useState<string | null>(null);
+    const [dragNewStartTime, setDragNewStartTime] = useState<number>(0);
+    const dragNewStartTimeRef = useRef<number>(0); // Ref to track latest value for closure access
+
     // Internal trim state (defaults to full duration)
     const duration = session?.metadata.duration || 1000;
     const trimStart = externalTrimStart ?? 0;
@@ -273,7 +278,12 @@ export const VideoTimeline = ({
 
                     {/* Segment Blocks (Interactive) */}
                     {segments.length > 0 && segments.map(seg => {
-                        const left = (seg.startTime / duration) * 100;
+                        // Check if this segment is currently being dragged
+                        const isDragging = draggingSegmentId === seg.id;
+                        // Use instantaneous time if dragging, otherwise committed time
+                        const currentStartTime = isDragging ? dragNewStartTime : seg.startTime;
+
+                        const left = (currentStartTime / duration) * 100;
                         const width = (seg.duration / duration) * 100;
                         const isSelected = selectedSegmentIds.includes(seg.id);
 
@@ -281,13 +291,16 @@ export const VideoTimeline = ({
                             <div
                                 key={seg.id}
                                 className={`absolute top-1 bottom-1 border-x transition-colors cursor-pointer group
-                                    ${isSelected
-                                        ? 'bg-blue-500/40 border-blue-400 z-20'
+                                    ${isSelected || isDragging
+                                        ? 'bg-blue-500/40 border-blue-400 z-20 shadow-lg'
                                         : 'bg-white/10 hover:bg-white/20 border-white/20 z-10'}
+                                    ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}
                                 `}
                                 style={{
                                     left: `${left}%`,
-                                    width: `${width}%`
+                                    width: `${width}%`,
+                                    // Disable transition while dragging for smooth movement
+                                    transition: isDragging ? 'none' : undefined
                                 }}
                                 onClick={(e) => {
                                     e.stopPropagation();
@@ -299,9 +312,15 @@ export const VideoTimeline = ({
                                     if (e.button !== 0) return; // Only Left Click
                                     e.stopPropagation();
                                     e.preventDefault();
+
                                     const startX = e.clientX;
                                     const originalStartTime = seg.startTime;
                                     let hasMoved = false;
+
+                                    // Start dragging
+                                    setDraggingSegmentId(seg.id);
+                                    setDragNewStartTime(originalStartTime);
+                                    dragNewStartTimeRef.current = originalStartTime;
 
                                     const handleMouseMove = (moveEvent: MouseEvent) => {
                                         if (!timelineRef.current) return;
@@ -313,27 +332,40 @@ export const VideoTimeline = ({
                                             }
                                         }
 
-                                        if (hasMoved) {
-                                            const rect = timelineRef.current.getBoundingClientRect();
-                                            const deltaX = moveEvent.clientX - startX;
-                                            const deltaTime = (deltaX / rect.width) * duration;
-                                            const newStartTime = Math.max(0, originalStartTime + deltaTime);
+                                        // Always calculate position even before threshold to avoid jumps
+                                        const rect = timelineRef.current.getBoundingClientRect();
+                                        const deltaX = moveEvent.clientX - startX;
+                                        const deltaTime = (deltaX / rect.width) * duration;
+                                        const newStartTime = Math.max(0, originalStartTime + deltaTime);
 
-                                            if (onSegmentUpdate) {
-                                                onSegmentUpdate(seg.id, { startTime: newStartTime });
-                                            }
-                                        }
+                                        // Update local state
+                                        setDragNewStartTime(newStartTime);
+                                        dragNewStartTimeRef.current = newStartTime;
                                     };
 
                                     const handleMouseUp = () => {
                                         window.removeEventListener('mousemove', handleMouseMove);
                                         window.removeEventListener('mouseup', handleMouseUp);
+
+                                        // Commit the change
+                                        if (hasMoved && onSegmentUpdate) {
+                                            onSegmentUpdate(seg.id, { startTime: dragNewStartTimeRef.current });
+                                        }
+
+                                        // Reset
+                                        setDraggingSegmentId(null);
                                     };
+
+                                    // Actually, let's fix the closure issue by using a mutable ref for the value
+                                    // But to render, we need state. So we update both.
+                                    // Ref is needed for access in handleMouseUp.
+
+                                    // See ref setup below.
 
                                     window.addEventListener('mousemove', handleMouseMove);
                                     window.addEventListener('mouseup', handleMouseUp);
                                 }}
-                                title={`Segment: ${formatTime(seg.startTime)} - ${formatTime(seg.startTime + seg.duration)}`}
+                                title={`Segment: ${formatTime(currentStartTime)} - ${formatTime(currentStartTime + seg.duration)}`}
                             >
                                 {/* Drag Handle Indicator */}
                                 <div className={`absolute inset-x-2 top-1/2 h-0.5 ${isSelected ? 'bg-blue-200' : 'bg-white/20 group-hover:bg-white/40'}`} />

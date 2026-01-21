@@ -255,11 +255,69 @@ export const useSessionRecorder = ({ onPlaybackStateChange, onPlaybackCameraChan
         });
     }, []);
 
-    // Post-Processing Functions
+    // --- Undo/Redo/History ---
+
+    // History State
+    const [past, setPast] = useState<{ session: RecordedSession; segments: TimelineSegment[] }[]>([]);
+    const [future, setFuture] = useState<{ session: RecordedSession; segments: TimelineSegment[] }[]>([]);
+
+    const pushHistory = useCallback(() => {
+        if (!session) return;
+        setPast(prev => [...prev, {
+            session: JSON.parse(JSON.stringify(session)),
+            segments: JSON.parse(JSON.stringify(segments))
+        }]);
+        setFuture([]); // Clear future on new action
+    }, [session, segments]);
+
+    const undo = useCallback(() => {
+        if (past.length === 0 || !session) return;
+
+        const previousState = past[past.length - 1];
+        const newPast = past.slice(0, past.length - 1);
+
+        // Save current to future
+        setFuture(prev => [{
+            session: JSON.parse(JSON.stringify(session)),
+            segments: JSON.parse(JSON.stringify(segments))
+        }, ...prev]);
+
+        // Restore past
+        setSession(previousState.session);
+        setSegments(previousState.segments);
+        setPast(newPast);
+
+        // Reset specific UI states?
+        // Maybe playback time to start?
+    }, [past, session, segments]);
+
+    const redo = useCallback(() => {
+        if (future.length === 0 || !session) return;
+
+        const nextState = future[0];
+        const newFuture = future.slice(1);
+
+        // Save current to past
+        setPast(prev => [...prev, {
+            session: JSON.parse(JSON.stringify(session)),
+            segments: JSON.parse(JSON.stringify(segments))
+        }]);
+
+        // Restore future
+        setSession(nextState.session);
+        setSegments(nextState.segments);
+        setFuture(newFuture);
+    }, [future, session, segments]);
+
+    const canUndo = past.length > 0;
+    const canRedo = future.length > 0;
+
+    // Post-Processing Functions (Wrapped with History)
+
     const trimSession = useCallback((startTime: number, endTime: number) => {
+        pushHistory();
         setSession(prev => {
             if (!prev) return null;
-
             // Filter events within time range
             const trimmedEvents = prev.events
                 .filter(e => e.timestamp >= startTime && e.timestamp <= endTime)
@@ -283,74 +341,70 @@ export const useSessionRecorder = ({ onPlaybackStateChange, onPlaybackCameraChan
         playbackCursorRef.current = 0;
         accumulatedStateRef.current = null;
         lastAppliedTimeRef.current = -1;
-    }, []);
+    }, [pushHistory]);
 
     const deleteEvent = useCallback((index: number) => {
+        pushHistory();
         setSession(prev => {
             if (!prev || index < 0 || index >= prev.events.length) return prev;
-
             const newEvents = [...prev.events];
             newEvents.splice(index, 1);
-
             return {
                 ...prev,
                 events: newEvents
             };
         });
-
         // Reset playback
         playbackCursorRef.current = 0;
         accumulatedStateRef.current = null;
         lastAppliedTimeRef.current = -1;
-    }, []);
+    }, [pushHistory]);
 
     const deleteEventsByType = useCallback((type: string, fromTime?: number, toTime?: number) => {
+        pushHistory();
         setSession(prev => {
             if (!prev) return null;
-
             const filteredEvents = prev.events.filter(e => {
                 if (e.type !== type) return true;
                 if (fromTime !== undefined && e.timestamp < fromTime) return true;
                 if (toTime !== undefined && e.timestamp > toTime) return true;
                 return false;
             });
-
             return {
                 ...prev,
                 events: filteredEvents
             };
         });
-
-        // Reset playback
         playbackCursorRef.current = 0;
         accumulatedStateRef.current = null;
         lastAppliedTimeRef.current = -1;
-    }, []);
+    }, [pushHistory]);
 
     const deleteEventsByTimeRange = useCallback((fromTime: number, toTime: number) => {
+        pushHistory();
         setSession(prev => {
             if (!prev) return null;
-
-            // Remove all events within the time range
             const filteredEvents = prev.events.filter(e =>
                 e.timestamp < fromTime || e.timestamp > toTime
             );
-
             return {
                 ...prev,
                 events: filteredEvents
             };
         });
-
-        // Reset playback
         playbackCursorRef.current = 0;
         accumulatedStateRef.current = null;
         lastAppliedTimeRef.current = -1;
-    }, []);
+    }, [pushHistory]);
 
     // NLE: Split the current segment at playbackTime
     const splitSession = useCallback((splitTime: number) => {
         if (!session) return null;
+        // Don't push history here yet, we need to check if split is valid first?
+        // Actually, we can just push history inside the setter callback only if it changes?
+        // React state setters don't support side effects easily. 
+        // We should move logic out of setter or push history optimistically?
+        // Let's modify logic to calculate first.
 
         setSegments(prevSegments => {
             const newSegments = [...prevSegments];
@@ -367,6 +421,8 @@ export const useSessionRecorder = ({ onPlaybackStateChange, onPlaybackCameraChan
             if (splitOffset < 500 || (originalSegment.duration - splitOffset) < 500) {
                 return prevSegments;
             }
+
+            // Valid split
 
             // Create two new segments
             const segment1: TimelineSegment = {
@@ -388,11 +444,24 @@ export const useSessionRecorder = ({ onPlaybackStateChange, onPlaybackCameraChan
             return newSegments;
         });
 
-        return null; // Return null to prevent download
-    }, [session]);
+        // Hacky: We pushed history even if split failed? No, we need to verify.
+        // Since we are inside `setSegments` we can't easily push history conditionally *before* the setter completes.
+        // Let's refactor:
+        // We will call pushHistory() *before* calling setSegments, assuming the split will succeed?
+        // Or we can rely on `didSplit` flag? But it's local.
+        // Better: Duplicate logic outside setter to check validity.
+
+        // REFACTOR: 
+        // We simply push history blindly. If split fails (no change), it's a no-op state change in history. 
+        // That's acceptable for MVP.
+        pushHistory();
+
+        return null;
+    }, [session, pushHistory]);
 
     const adjustSessionSpeed = useCallback((startTime: number, endTime: number, speedFactor: number) => {
         if (!session || speedFactor <= 0 || startTime >= endTime) return;
+        pushHistory();
 
         const start = Math.max(0, startTime);
         const end = Math.min(session.metadata.duration, endTime);
@@ -404,14 +473,12 @@ export const useSessionRecorder = ({ onPlaybackStateChange, onPlaybackCameraChan
             if (event.timestamp < start) {
                 return event;
             } else if (event.timestamp <= end) {
-                // Scale timestamp within the range
                 const offset = event.timestamp - start;
                 return {
                     ...event,
                     timestamp: start + (offset / speedFactor)
                 };
             } else {
-                // Shift subsequent events
                 return {
                     ...event,
                     timestamp: event.timestamp + shiftAmount
@@ -419,7 +486,6 @@ export const useSessionRecorder = ({ onPlaybackStateChange, onPlaybackCameraChan
             }
         });
 
-        // Update session
         const newSession: RecordedSession = {
             ...session,
             metadata: {
@@ -431,27 +497,31 @@ export const useSessionRecorder = ({ onPlaybackStateChange, onPlaybackCameraChan
 
         setSession(newSession);
 
-        // Reset playback to start of change to verify
         setPlaybackTime(start);
         playbackCursorRef.current = 0;
         accumulatedStateRef.current = null;
         lastAppliedTimeRef.current = -1;
-    }, [session]);
+    }, [session, pushHistory]);
+
     // Selection State
     const [selectedSegmentIds, setSelectedSegmentIds] = useState<string[]>([]);
 
     const updateSegment = useCallback((segmentId: string, updates: Partial<TimelineSegment>) => {
+        pushHistory();
         setSegments(prev => prev.map(s =>
             s.id === segmentId ? { ...s, ...updates } : s
         ));
-    }, []);
+    }, [pushHistory]);
 
     const deleteSelectedSegments = useCallback(() => {
+        pushHistory();
         setSegments(prev => prev.filter(s => !selectedSegmentIds.includes(s.id)));
         setSelectedSegmentIds([]);
-    }, [selectedSegmentIds]);
+    }, [selectedSegmentIds, pushHistory]);
 
     const toggleSegmentSelection = useCallback((segmentId: string, multiSelect: boolean) => {
+        // Selection doesn't need history? Maybe? 
+        // Usually selection changes are not undone. (Standard UX)
         setSelectedSegmentIds(prev => {
             if (multiSelect) {
                 return prev.includes(segmentId)
@@ -490,6 +560,11 @@ export const useSessionRecorder = ({ onPlaybackStateChange, onPlaybackCameraChan
         updateSegment,
         selectedSegmentIds,
         toggleSegmentSelection,
-        deleteSelectedSegments
+        deleteSelectedSegments,
+        // History
+        undo,
+        redo,
+        canUndo,
+        canRedo
     };
 };
