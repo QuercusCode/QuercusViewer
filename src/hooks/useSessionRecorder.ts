@@ -20,6 +20,11 @@ export const useSessionRecorder = ({ onPlaybackStateChange, onPlaybackCameraChan
     const animationFrameRef = useRef<number | null>(null);
     const lastPlaybackUpdateRef = useRef<number>(0);
 
+    // Optimization Refs
+    const playbackCursorRef = useRef<number>(0);
+    const accumulatedStateRef = useRef<any>(null);
+    const lastAppliedTimeRef = useRef<number>(-1);
+
     // --- Recording ---
 
     const startRecording = useCallback((initialState: any) => {
@@ -57,6 +62,11 @@ export const useSessionRecorder = ({ onPlaybackStateChange, onPlaybackCameraChan
         };
         setSession(newSession);
         setPlaybackTime(0); // Reset playback cursor
+
+        // Reset optimization refs
+        playbackCursorRef.current = 0;
+        accumulatedStateRef.current = null;
+        lastAppliedTimeRef.current = -1;
     }, []);
 
     const recordEvent = useCallback((type: 'state' | 'camera' | 'annotation' | 'chat', payload: any) => {
@@ -93,36 +103,56 @@ export const useSessionRecorder = ({ onPlaybackStateChange, onPlaybackCameraChan
     const applyFrameAt = useCallback((time: number) => {
         if (!session) return;
 
-        // 1. Reconstruct state up to 'time'
-        // This is "Event Sourcing". We start from initial state and replay all events <= time.
-        // Optimization: For long sessions, we'd want Keyframes.
-        // For MVP, we iterate.
+        let state = accumulatedStateRef.current;
+        let camera = null;
+        let cursor = playbackCursorRef.current;
 
-        // Actually, we can just find the *last* event of each type that happened before 'time'.
-        // Because our events are "Full State Snapshots" (from broadcastState), not diffs.
-        // broadcastState sends { pdbId: ... }, sending the whole object?
-        // No, broadcastState sends Partial<SessionState>.
-        // So we DO need to accumulate state.
-
-        let currentState = { ...session.initialState };
-        let lastCamera = null;
-
-        // Iterate all events up to current time
-        // Optimization needed for long sessions: binary search to find index, then iterate? 
-        // Or just lazy iteration if we assume linear playback. But 'seek' jumps.
-
-        for (const event of session.events) {
-            if (event.timestamp > time) break;
-
-            if (event.type === 'state') {
-                currentState = { ...currentState, ...event.payload };
-            } else if (event.type === 'camera') {
-                lastCamera = event.payload;
-            }
+        // If backward seek or uninitialized, reset to Initial State
+        if (time < lastAppliedTimeRef.current || !state) {
+            state = { ...session.initialState };
+            cursor = 0;
         }
 
-        if (onPlaybackStateChange) onPlaybackStateChange(currentState);
-        if (onPlaybackCameraChange && lastCamera) onPlaybackCameraChange(lastCamera);
+        // Forward Scan from Cursor
+        for (let i = cursor; i < session.events.length; i++) {
+            const event = session.events[i];
+            if (event.timestamp > time) break;
+
+            // Apply Event
+            if (event.type === 'state') {
+                state = { ...state, ...event.payload };
+            } else if (event.type === 'camera') {
+                camera = event.payload;
+            }
+
+            cursor = i + 1; // Advance cursor past this event
+        }
+
+        // Update Cache
+        accumulatedStateRef.current = state;
+        playbackCursorRef.current = cursor;
+        lastAppliedTimeRef.current = time;
+
+        // Apply to UI
+        if (onPlaybackStateChange) onPlaybackStateChange(state);
+        // Only trigger camera update if we actually found a NEW camera event in this window?
+        // Or if we sought backwards?
+        // Actually, logic above only sets 'camera' if we encountered an event.
+        // If we replay a segment with NO camera events, 'camera' is null.
+        // But we want to keep the camera where it was? Or interpolate?
+        // If 'camera' is null here, it means no *new* camera event happened in this specific step from cursor->time.
+        // BUT if we sought backwards, we reset state... but we lost the 'last known camera'.
+
+        // CORRECT LOGIC FOR SEEKING:
+        // If we sought backward, we must scan from 0 to time to find the LAST camera event.
+        // The loop above DOES scan from 0 if reset.
+        // So 'camera' will be the last camera event encountered.
+        // If NO camera event ever happened up to 'time', 'camera' remains null. 
+        // In that case, we should probably set it to initial camera (if captured?) or leave it.
+
+        if (onPlaybackCameraChange && camera) {
+            onPlaybackCameraChange(camera);
+        }
 
     }, [session, onPlaybackStateChange, onPlaybackCameraChange]);
 
@@ -193,7 +223,12 @@ export const useSessionRecorder = ({ onPlaybackStateChange, onPlaybackCameraChan
                 // Basic validation
                 if (data.events && data.metadata) {
                     setSession(data);
+                    setSession(data);
                     setPlaybackTime(0);
+                    // Reset cache
+                    playbackCursorRef.current = 0;
+                    accumulatedStateRef.current = null;
+                    lastAppliedTimeRef.current = -1;
                     setIsPlaying(false);
                 }
             } catch (err) {

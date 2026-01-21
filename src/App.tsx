@@ -297,18 +297,39 @@ function App() {
     const vpState = state.viewports[0];
     const ctrl = controllers[0];
 
+    // Core Data (pdbId first as it might trigger re-renders)
     if (vpState.pdbId && vpState.pdbId !== ctrl.pdbId) ctrl.setPdbId(vpState.pdbId);
+    if (vpState.dataSource && vpState.dataSource !== ctrl.dataSource) ctrl.setDataSource(vpState.dataSource);
+
+    // Visualization
     if (vpState.representation && vpState.representation !== ctrl.representation) ctrl.setRepresentation(vpState.representation as RepresentationType);
     if (vpState.coloring && vpState.coloring !== ctrl.coloring) ctrl.setColoring(vpState.coloring as ColoringType);
     if (vpState.isSpinning !== undefined && vpState.isSpinning !== ctrl.isSpinning) ctrl.setIsSpinning(vpState.isSpinning);
+
+    // Toggles
+    if (vpState.showLigands !== undefined && vpState.showLigands !== ctrl.showLigands) ctrl.setShowLigands(vpState.showLigands);
+    if (vpState.showSurface !== undefined && vpState.showSurface !== ctrl.showSurface) ctrl.setShowSurface(vpState.showSurface);
+    if (vpState.showIons !== undefined && vpState.showIons !== ctrl.showIons) ctrl.setShowIons(vpState.showIons);
+
+    // Custom Styles & Data
+    // JSON stringify comparison for deep objects to avoid loops/unnecessary updates
+    // if (vpState.customColors !== undefined && JSON.stringify(vpState.customColors) !== JSON.stringify(ctrl.customColors)) ctrl.setCustomColors(vpState.customColors);
+    if (vpState.customColors !== undefined) ctrl.setCustomColors(vpState.customColors);
+    if (vpState.customBackgroundColor !== undefined && vpState.customBackgroundColor !== ctrl.customBackgroundColor) ctrl.setCustomBackgroundColor(vpState.customBackgroundColor);
+
+    // Analysis/Measurements
+    if (vpState.measurements !== undefined) ctrl.setMeasurements(vpState.measurements);
     if (vpState.highlightedResidue !== undefined) ctrl.setHighlightedResidue(vpState.highlightedResidue);
+
+    // Metadata (chains/ligands might be derived, but good to ensure sync if manual override happened)
+    if (vpState.chains) ctrl.setChains(vpState.chains);
+    if (vpState.ligands) ctrl.setLigands(vpState.ligands);
+    if (vpState.proteinTitle && vpState.proteinTitle !== ctrl.proteinTitle) ctrl.setProteinTitle(vpState.proteinTitle);
 
     // Also apply Global props if needed
     if (state.viewMode && state.viewMode !== viewMode) setViewMode(state.viewMode);
 
-    // Camera is handled separately by onPlaybackCameraChange for 'camera' events, 
-    // BUT 'state' events might NOT contain camera info depending on implementation.
-    // My recorder uses separate 'camera' events.
+    // Camera is handled separately
   }, [controllers, viewMode]);
 
   const handlePlaybackCameraChange = useCallback((orientation: any) => {
