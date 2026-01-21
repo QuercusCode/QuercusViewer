@@ -2527,8 +2527,9 @@ function App() {
                         importSession={recorder.importSession}
                         exportVideo={handleExportVideo}
                         updateMetadata={recorder.updateMetadata}
-                        isAudioEnabled={recorder.isAudioEnabled}
-                        setIsAudioEnabled={recorder.setIsAudioEnabled}
+                        trimSession={recorder.trimSession}
+                        deleteEvent={recorder.deleteEvent}
+                        deleteEventsByType={recorder.deleteEventsByType}
                         isLightMode={isLightMode}
                         cardBg={isLightMode ? 'bg-white' : 'bg-neutral-900'}
                       />

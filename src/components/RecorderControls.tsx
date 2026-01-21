@@ -1,7 +1,7 @@
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState } from 'react';
 import {
     Play, Pause, Circle, Square,
-    Upload, Save, Film, Pencil, Mic
+    Upload, Save, Film, Pencil, Scissors, ChevronDown, Trash2
 } from 'lucide-react';
 import type { RecordedSession } from '../types';
 
@@ -23,9 +23,9 @@ interface RecorderControlsProps {
     importSession: (file: File) => void;
     exportVideo: () => void;
     updateMetadata: (updates: any) => void;
-
-    isAudioEnabled: boolean;
-    setIsAudioEnabled: (enabled: boolean) => void;
+    trimSession: (startTime: number, endTime: number) => void;
+    deleteEvent: (index: number) => void;
+    deleteEventsByType: (type: string, fromTime?: number, toTime?: number) => void;
 
     isLightMode: boolean;
     cardBg: string;
@@ -42,51 +42,15 @@ export const RecorderControls = ({
     isRecording, isPlaying, recordingTime, playbackTime, session, playbackSpeed,
     startRecording, stopRecording, play, pause, seek, setPlaybackSpeed,
     exportSession, importSession, exportVideo, updateMetadata,
-    isAudioEnabled, setIsAudioEnabled,
+    trimSession, deleteEvent, deleteEventsByType,
     isLightMode, cardBg
 }: RecorderControlsProps) => {
 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isEditingTitle, setIsEditingTitle] = useState(false);
-    const audioRef = useRef<HTMLAudioElement>(null);
-
-    // Audio playback sync
-    useEffect(() => {
-        if (!session?.metadata.audioData || !audioRef.current) return;
-
-        // Decode base64 and create audio blob
-        const audioBlob = new Blob(
-            [Uint8Array.from(atob(session.metadata.audioData), c => c.charCodeAt(0))],
-            { type: session.metadata.audioMimeType || 'audio/webm' }
-        );
-        const audioUrl = URL.createObjectURL(audioBlob);
-        audioRef.current.src = audioUrl;
-
-        return () => URL.revokeObjectURL(audioUrl);
-    }, [session]);
-
-    // Sync audio with playback
-    useEffect(() => {
-        if (!audioRef.current || !session?.metadata.audioData) return;
-
-        if (isPlaying) {
-            audioRef.current.play().catch(err => console.error('Audio play failed:', err));
-        } else {
-            audioRef.current.pause();
-        }
-    }, [isPlaying, session]);
-
-    // Sync audio seek
-    useEffect(() => {
-        if (!audioRef.current || !session?.metadata.audioData) return;
-        audioRef.current.currentTime = playbackTime / 1000; // Convert ms to seconds
-    }, [playbackTime, session]);
-
-    // Sync playback speed
-    useEffect(() => {
-        if (!audioRef.current || !session?.metadata.audioData) return;
-        audioRef.current.playbackRate = playbackSpeed;
-    }, [playbackSpeed, session]);
+    const [isEditPanelOpen, setIsEditPanelOpen] = useState(false);
+    const [trimStart, setTrimStart] = useState('00:00');
+    const [trimEnd, setTrimEnd] = useState('00:00');
 
     // Only show full detailed controls if we have a session or are recording
     // Otherwise show a compact "Start Recording" or "Load Session" button
@@ -182,14 +146,6 @@ export const RecorderControls = ({
                 {/* File Controls (Load/Save) */}
                 {!isRecording && (
                     <div className="flex gap-1">
-                        {/* Mic Toggle */}
-                        <button
-                            onClick={() => setIsAudioEnabled(!isAudioEnabled)}
-                            className={`p-1 transition-colors ${isAudioEnabled ? 'text-red-500' : 'hover:text-blue-500'}`}
-                            title={isAudioEnabled ? 'Microphone enabled' : 'Enable microphone'}
-                        >
-                            <Mic className="w-3.5 h-3.5" />
-                        </button>
                         <button
                             onClick={() => fileInputRef.current?.click()}
                             className="p-1 hover:text-blue-500 transition-colors"
@@ -264,8 +220,98 @@ export const RecorderControls = ({
                 </div>
             )}
 
-            {/* Hidden audio element for narration playback */}
-            <audio ref={audioRef} style={{ display: 'none' }} />
+            {/* Edit Panel (Only if session exists and not recording) */}
+            {session && !isRecording && (
+                <div className="space-y-2">
+                    <button
+                        onClick={() => setIsEditPanelOpen(!isEditPanelOpen)}
+                        className={`w-full flex items-center justify-between p-2 rounded ${styles.button} text-xs`}
+                    >
+                        <div className="flex items-center gap-2">
+                            <Scissors className="w-3.5 h-3.5" />
+                            <span className={styles.text}>Edit Recording</span>
+                        </div>
+                        <ChevronDown className={`w-3 h-3 transition-transform ${isEditPanelOpen ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    {isEditPanelOpen && (
+                        <div className="space-y-3 p-3 bg-black/20 rounded-lg">
+                            {/* Trim Controls */}
+                            <div className="space-y-2">
+                                <label className={`${styles.text} block`}>Trim</label>
+                                <div className="flex gap-2 items-center">
+                                    <input
+                                        type="text"
+                                        value={trimStart}
+                                        onChange={(e) => setTrimStart(e.target.value)}
+                                        placeholder="00:00"
+                                        className="bg-black/30 border border-white/10 rounded px-2 py-1 text-xs w-16 font-mono"
+                                    />
+                                    <span className="text-xs opacity-50">to</span>
+                                    <input
+                                        type="text"
+                                        value={trimEnd}
+                                        onChange={(e) => setTrimEnd(e.target.value)}
+                                        placeholder={formatTime(session.metadata.duration)}
+                                        className="bg-black/30 border border-white/10 rounded px-2 py-1 text-xs w-16 font-mono"
+                                    />
+                                    <button
+                                        onClick={() => {
+                                            const start = parseTimeString(trimStart);
+                                            const end = parseTimeString(trimEnd) || session.metadata.duration;
+                                            if (start < end) {
+                                                trimSession(start, end);
+                                                setIsEditPanelOpen(false);
+                                            }
+                                        }}
+                                        className="px-3 py-1 bg-purple-600 hover:bg-purple-700 rounded text-xs transition-colors"
+                                    >
+                                        Apply
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Event Deletion Controls */}
+                            <div className="space-y-2">
+                                <label className={`${styles.text} block`}>Delete Events</label>
+                                <div className="flex gap-2 flex-wrap">
+                                    <button
+                                        onClick={() => {
+                                            const lastIdx = session.events.length - 1;
+                                            if (lastIdx >= 0) deleteEvent(lastIdx);
+                                        }}
+                                        className="px-2 py-1 bg-red-600/20 hover:bg-red-600/40 border border-red-600/30 rounded text-xs transition-colors flex items-center gap-1"
+                                    >
+                                        <Trash2 className="w-3 h-3" />
+                                        Undo Last
+                                    </button>
+                                    <button
+                                        onClick={() => deleteEventsByType('camera')}
+                                        className="px-2 py-1 bg-blue-600/20 hover:bg-blue-600/40 border border-blue-600/30 rounded text-xs transition-colors"
+                                    >
+                                        Delete Camera
+                                    </button>
+                                    <button
+                                        onClick={() => deleteEventsByType('annotation')}
+                                        className="px-2 py-1 bg-yellow-600/20 hover:bg-yellow-600/40 border border-yellow-600/30 rounded text-xs transition-colors"
+                                    >
+                                        Delete Annotations
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
         </div>
     );
+};
+
+// Helper function to parse MM:SS format
+const parseTimeString = (timeStr: string): number => {
+    const parts = timeStr.split(':');
+    if (parts.length !== 2) return 0;
+    const minutes = parseInt(parts[0], 10) || 0;
+    const seconds = parseInt(parts[1], 10) || 0;
+    return (minutes * 60 + seconds) * 1000; // Convert to milliseconds
 };

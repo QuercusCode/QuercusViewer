@@ -162,8 +162,6 @@ export interface RecordedSession {
         author: string;
         date: string;
         duration: number;
-        audioData?: string; // base64-encoded audio blob
-        audioMimeType?: string; // e.g., 'audio/webm;codecs=opus'
     };
     initialState: any; // Full SessionState
     events: RecordedEvent[];

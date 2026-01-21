@@ -25,14 +25,9 @@ export const useSessionRecorder = ({ onPlaybackStateChange, onPlaybackCameraChan
     const accumulatedStateRef = useRef<any>(null);
     const lastAppliedTimeRef = useRef<number>(-1);
 
-    // Audio Recording Refs
-    const audioRecorderRef = useRef<MediaRecorder | null>(null);
-    const audioChunksRef = useRef<Blob[]>([]);
-    const [isAudioEnabled, setIsAudioEnabled] = useState(false);
-
     // --- Recording ---
 
-    const startRecording = useCallback(async (initialState: any) => {
+    const startRecording = useCallback((initialState: any) => {
         setIsRecording(true);
         setSession(null);
         eventsRef.current = [];
@@ -40,106 +35,33 @@ export const useSessionRecorder = ({ onPlaybackStateChange, onPlaybackCameraChan
         startTimeRef.current = Date.now();
         setRecordingTime(0);
 
-        // Start audio recording if enabled
-        if (isAudioEnabled) {
-            try {
-                // High-quality audio constraints
-                const stream = await navigator.mediaDevices.getUserMedia({
-                    audio: {
-                        echoCancellation: true,
-                        noiseSuppression: true,
-                        autoGainControl: true,
-                        sampleRate: 48000,  // Professional audio quality
-                        channelCount: 2     // Stereo
-                    }
-                });
-
-                const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-                    ? 'audio/webm;codecs=opus'
-                    : 'audio/webm';
-
-                // High bitrate for professional quality (256kbps)
-                const recorder = new MediaRecorder(stream, {
-                    mimeType,
-                    audioBitsPerSecond: 256000  // 256kbps for excellent voice quality
-                });
-                audioChunksRef.current = [];
-
-                recorder.ondataavailable = (e) => {
-                    if (e.data.size > 0) audioChunksRef.current.push(e.data);
-                };
-
-                recorder.start();
-                audioRecorderRef.current = recorder;
-            } catch (err) {
-                console.error('Failed to start audio recording:', err);
-                alert('Microphone access denied. Recording without audio.');
-            }
-        }
-
         // Start timer for UI
         const tick = () => {
             setRecordingTime(Date.now() - startTimeRef.current);
             animationFrameRef.current = requestAnimationFrame(tick);
         };
         animationFrameRef.current = requestAnimationFrame(tick);
-    }, [isAudioEnabled]);
+    }, []);
 
-    const stopRecording = useCallback(async () => {
+    const stopRecording = useCallback(() => {
         setIsRecording(false);
         if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
 
         const duration = Date.now() - startTimeRef.current;
-
-        // Stop audio recording and convert to base64
-        let audioData: string | undefined;
-        let audioMimeType: string | undefined;
-
-        if (audioRecorderRef.current && audioRecorderRef.current.state !== 'inactive') {
-            // Stop recorder and wait for final data
-            await new Promise<void>((resolve) => {
-                audioRecorderRef.current!.onstop = () => resolve();
-                audioRecorderRef.current!.stop();
-
-                // Stop all tracks
-                audioRecorderRef.current!.stream.getTracks().forEach(track => track.stop());
-            });
-
-            // Convert audio blob to base64
-            if (audioChunksRef.current.length > 0) {
-                const audioBlob = new Blob(audioChunksRef.current, {
-                    type: audioRecorderRef.current.mimeType
-                });
-                audioMimeType = audioRecorderRef.current.mimeType;
-
-                // Convert to base64
-                const reader = new FileReader();
-                audioData = await new Promise<string>((resolve) => {
-                    reader.onloadend = () => {
-                        const base64 = reader.result as string;
-                        resolve(base64.split(',')[1]); // Remove data:audio/webm;base64, prefix
-                    };
-                    reader.readAsDataURL(audioBlob);
-                });
-            }
-        }
-
         const newSession: RecordedSession = {
             id: crypto.randomUUID(),
             version: 1,
             metadata: {
                 title: `Recording ${new Date().toLocaleTimeString()}`,
-                author: 'User',
+                author: 'User', // Could be passed in
                 date: new Date().toISOString(),
-                duration,
-                audioData,
-                audioMimeType
+                duration
             },
             initialState: initialStateRef.current,
             events: eventsRef.current
         };
         setSession(newSession);
-        setPlaybackTime(0);
+        setPlaybackTime(0); // Reset playback cursor
 
         // Reset optimization refs
         playbackCursorRef.current = 0;
@@ -329,6 +251,78 @@ export const useSessionRecorder = ({ onPlaybackStateChange, onPlaybackCameraChan
         });
     }, []);
 
+    // Post-Processing Functions
+    const trimSession = useCallback((startTime: number, endTime: number) => {
+        setSession(prev => {
+            if (!prev) return null;
+
+            // Filter events within time range
+            const trimmedEvents = prev.events
+                .filter(e => e.timestamp >= startTime && e.timestamp <= endTime)
+                .map(e => ({
+                    ...e,
+                    timestamp: e.timestamp - startTime // Adjust timestamps
+                }));
+
+            return {
+                ...prev,
+                events: trimmedEvents,
+                metadata: {
+                    ...prev.metadata,
+                    duration: endTime - startTime
+                }
+            };
+        });
+
+        // Reset playback
+        setPlaybackTime(0);
+        playbackCursorRef.current = 0;
+        accumulatedStateRef.current = null;
+        lastAppliedTimeRef.current = -1;
+    }, []);
+
+    const deleteEvent = useCallback((index: number) => {
+        setSession(prev => {
+            if (!prev || index < 0 || index >= prev.events.length) return prev;
+
+            const newEvents = [...prev.events];
+            newEvents.splice(index, 1);
+
+            return {
+                ...prev,
+                events: newEvents
+            };
+        });
+
+        // Reset playback
+        playbackCursorRef.current = 0;
+        accumulatedStateRef.current = null;
+        lastAppliedTimeRef.current = -1;
+    }, []);
+
+    const deleteEventsByType = useCallback((type: string, fromTime?: number, toTime?: number) => {
+        setSession(prev => {
+            if (!prev) return null;
+
+            const filteredEvents = prev.events.filter(e => {
+                if (e.type !== type) return true;
+                if (fromTime !== undefined && e.timestamp < fromTime) return true;
+                if (toTime !== undefined && e.timestamp > toTime) return true;
+                return false;
+            });
+
+            return {
+                ...prev,
+                events: filteredEvents
+            };
+        });
+
+        // Reset playback
+        playbackCursorRef.current = 0;
+        accumulatedStateRef.current = null;
+        lastAppliedTimeRef.current = -1;
+    }, []);
+
     return {
         isRecording,
         isPlaying,
@@ -346,7 +340,8 @@ export const useSessionRecorder = ({ onPlaybackStateChange, onPlaybackCameraChan
         exportSession,
         importSession,
         updateMetadata,
-        isAudioEnabled,
-        setIsAudioEnabled
+        trimSession,
+        deleteEvent,
+        deleteEventsByType
     };
 };
