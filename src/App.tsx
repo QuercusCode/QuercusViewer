@@ -2527,6 +2527,8 @@ function App() {
                         importSession={recorder.importSession}
                         exportVideo={handleExportVideo}
                         updateMetadata={recorder.updateMetadata}
+                        isAudioEnabled={recorder.isAudioEnabled}
+                        setIsAudioEnabled={recorder.setIsAudioEnabled}
                         isLightMode={isLightMode}
                         cardBg={isLightMode ? 'bg-white' : 'bg-neutral-900'}
                       />

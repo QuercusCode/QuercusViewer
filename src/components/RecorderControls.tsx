@@ -1,7 +1,7 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import {
     Play, Pause, Circle, Square,
-    Upload, Save, Film, Pencil
+    Upload, Save, Film, Pencil, Mic
 } from 'lucide-react';
 import type { RecordedSession } from '../types';
 
@@ -24,6 +24,9 @@ interface RecorderControlsProps {
     exportVideo: () => void;
     updateMetadata: (updates: any) => void;
 
+    isAudioEnabled: boolean;
+    setIsAudioEnabled: (enabled: boolean) => void;
+
     isLightMode: boolean;
     cardBg: string;
 }
@@ -39,11 +42,51 @@ export const RecorderControls = ({
     isRecording, isPlaying, recordingTime, playbackTime, session, playbackSpeed,
     startRecording, stopRecording, play, pause, seek, setPlaybackSpeed,
     exportSession, importSession, exportVideo, updateMetadata,
+    isAudioEnabled, setIsAudioEnabled,
     isLightMode, cardBg
 }: RecorderControlsProps) => {
 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isEditingTitle, setIsEditingTitle] = useState(false);
+    const audioRef = useRef<HTMLAudioElement>(null);
+
+    // Audio playback sync
+    useEffect(() => {
+        if (!session?.metadata.audioData || !audioRef.current) return;
+
+        // Decode base64 and create audio blob
+        const audioBlob = new Blob(
+            [Uint8Array.from(atob(session.metadata.audioData), c => c.charCodeAt(0))],
+            { type: session.metadata.audioMimeType || 'audio/webm' }
+        );
+        const audioUrl = URL.createObjectURL(audioBlob);
+        audioRef.current.src = audioUrl;
+
+        return () => URL.revokeObjectURL(audioUrl);
+    }, [session]);
+
+    // Sync audio with playback
+    useEffect(() => {
+        if (!audioRef.current || !session?.metadata.audioData) return;
+
+        if (isPlaying) {
+            audioRef.current.play().catch(err => console.error('Audio play failed:', err));
+        } else {
+            audioRef.current.pause();
+        }
+    }, [isPlaying, session]);
+
+    // Sync audio seek
+    useEffect(() => {
+        if (!audioRef.current || !session?.metadata.audioData) return;
+        audioRef.current.currentTime = playbackTime / 1000; // Convert ms to seconds
+    }, [playbackTime, session]);
+
+    // Sync playback speed
+    useEffect(() => {
+        if (!audioRef.current || !session?.metadata.audioData) return;
+        audioRef.current.playbackRate = playbackSpeed;
+    }, [playbackSpeed, session]);
 
     // Only show full detailed controls if we have a session or are recording
     // Otherwise show a compact "Start Recording" or "Load Session" button
@@ -139,6 +182,14 @@ export const RecorderControls = ({
                 {/* File Controls (Load/Save) */}
                 {!isRecording && (
                     <div className="flex gap-1">
+                        {/* Mic Toggle */}
+                        <button
+                            onClick={() => setIsAudioEnabled(!isAudioEnabled)}
+                            className={`p-1 transition-colors ${isAudioEnabled ? 'text-red-500' : 'hover:text-blue-500'}`}
+                            title={isAudioEnabled ? 'Microphone enabled' : 'Enable microphone'}
+                        >
+                            <Mic className="w-3.5 h-3.5" />
+                        </button>
                         <button
                             onClick={() => fileInputRef.current?.click()}
                             className="p-1 hover:text-blue-500 transition-colors"
@@ -212,6 +263,9 @@ export const RecorderControls = ({
                     </div>
                 </div>
             )}
+
+            {/* Hidden audio element for narration playback */}
+            <audio ref={audioRef} style={{ display: 'none' }} />
         </div>
     );
 };

@@ -25,9 +25,14 @@ export const useSessionRecorder = ({ onPlaybackStateChange, onPlaybackCameraChan
     const accumulatedStateRef = useRef<any>(null);
     const lastAppliedTimeRef = useRef<number>(-1);
 
+    // Audio Recording Refs
+    const audioRecorderRef = useRef<MediaRecorder | null>(null);
+    const audioChunksRef = useRef<Blob[]>([]);
+    const [isAudioEnabled, setIsAudioEnabled] = useState(false);
+
     // --- Recording ---
 
-    const startRecording = useCallback((initialState: any) => {
+    const startRecording = useCallback(async (initialState: any) => {
         setIsRecording(true);
         setSession(null);
         eventsRef.current = [];
@@ -35,33 +40,92 @@ export const useSessionRecorder = ({ onPlaybackStateChange, onPlaybackCameraChan
         startTimeRef.current = Date.now();
         setRecordingTime(0);
 
+        // Start audio recording if enabled
+        if (isAudioEnabled) {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+                    ? 'audio/webm;codecs=opus'
+                    : 'audio/webm';
+
+                const recorder = new MediaRecorder(stream, { mimeType });
+                audioChunksRef.current = [];
+
+                recorder.ondataavailable = (e) => {
+                    if (e.data.size > 0) audioChunksRef.current.push(e.data);
+                };
+
+                recorder.start();
+                audioRecorderRef.current = recorder;
+            } catch (err) {
+                console.error('Failed to start audio recording:', err);
+                alert('Microphone access denied. Recording without audio.');
+            }
+        }
+
         // Start timer for UI
         const tick = () => {
             setRecordingTime(Date.now() - startTimeRef.current);
             animationFrameRef.current = requestAnimationFrame(tick);
         };
         animationFrameRef.current = requestAnimationFrame(tick);
-    }, []);
+    }, [isAudioEnabled]);
 
-    const stopRecording = useCallback(() => {
+    const stopRecording = useCallback(async () => {
         setIsRecording(false);
         if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
 
         const duration = Date.now() - startTimeRef.current;
+
+        // Stop audio recording and convert to base64
+        let audioData: string | undefined;
+        let audioMimeType: string | undefined;
+
+        if (audioRecorderRef.current && audioRecorderRef.current.state !== 'inactive') {
+            // Stop recorder and wait for final data
+            await new Promise<void>((resolve) => {
+                audioRecorderRef.current!.onstop = () => resolve();
+                audioRecorderRef.current!.stop();
+
+                // Stop all tracks
+                audioRecorderRef.current!.stream.getTracks().forEach(track => track.stop());
+            });
+
+            // Convert audio blob to base64
+            if (audioChunksRef.current.length > 0) {
+                const audioBlob = new Blob(audioChunksRef.current, {
+                    type: audioRecorderRef.current.mimeType
+                });
+                audioMimeType = audioRecorderRef.current.mimeType;
+
+                // Convert to base64
+                const reader = new FileReader();
+                audioData = await new Promise<string>((resolve) => {
+                    reader.onloadend = () => {
+                        const base64 = reader.result as string;
+                        resolve(base64.split(',')[1]); // Remove data:audio/webm;base64, prefix
+                    };
+                    reader.readAsDataURL(audioBlob);
+                });
+            }
+        }
+
         const newSession: RecordedSession = {
             id: crypto.randomUUID(),
             version: 1,
             metadata: {
                 title: `Recording ${new Date().toLocaleTimeString()}`,
-                author: 'User', // Could be passed in
+                author: 'User',
                 date: new Date().toISOString(),
-                duration
+                duration,
+                audioData,
+                audioMimeType
             },
             initialState: initialStateRef.current,
             events: eventsRef.current
         };
         setSession(newSession);
-        setPlaybackTime(0); // Reset playback cursor
+        setPlaybackTime(0);
 
         // Reset optimization refs
         playbackCursorRef.current = 0;
@@ -267,6 +331,8 @@ export const useSessionRecorder = ({ onPlaybackStateChange, onPlaybackCameraChan
         seek,
         exportSession,
         importSession,
-        updateMetadata
+        updateMetadata,
+        isAudioEnabled,
+        setIsAudioEnabled
     };
 };
