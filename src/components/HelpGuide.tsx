@@ -724,7 +724,7 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
                                     </button>
                                     <div>
                                         <h3 className="text-xl font-bold text-white">{activeFeature.title}</h3>
-                                        <p className="text-xs text-neutral-400 hidden sm:block">{activeFeature.description}</p>
+                                        <p className="text-sm text-neutral-400 hidden sm:block">{activeFeature.description}</p>
                                     </div>
                                 </div>
                                 <button
@@ -738,7 +738,7 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
                             {/* Scrollable Body */}
                             <div className="flex-1 overflow-y-auto p-4 md:p-8 scrollbar-thin scrollbar-thumb-neutral-700">
                                 <div className="max-w-3xl mx-auto">
-                                    <p className="sm:hidden text-xs text-neutral-500 mb-6 pb-4 border-b border-neutral-800/50">
+                                    <p className="sm:hidden text-sm text-neutral-500 mb-6 pb-4 border-b border-neutral-800/50">
                                         {activeFeature.description}
                                     </p>
                                     <div className="animate-in fade-in slide-in-from-right-4 duration-300">
