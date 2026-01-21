@@ -50,10 +50,10 @@ const SidebarSection = ({ title, icon: Icon, children, isOpen, onToggle, isLight
 
     useEffect(() => {
         if (isOpen && sectionRef.current) {
-            // Small timeout to allow content to render before scrolling
+            // Timeout to match transition duration (300ms) or allow render
             setTimeout(() => {
-                sectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            }, 100);
+                sectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 300);
         }
     }, [isOpen]);
 
