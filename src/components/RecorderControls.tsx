@@ -4,6 +4,7 @@ import {
     Upload, Save, Film, Pencil, Scissors, ChevronDown, Trash2
 } from 'lucide-react';
 import type { RecordedSession } from '../types';
+import { VideoTimeline } from './VideoTimeline';
 
 interface RecorderControlsProps {
     isRecording: boolean;
@@ -62,48 +63,6 @@ export const RecorderControls = ({
         button: `p-2 rounded-lg border transition-all flex items-center justify-center gap-2 ${cardBg} ${isLightMode ? 'hover:bg-neutral-100 border-neutral-200' : 'hover:bg-white/10 border-white/10'}`,
         activeButton: "bg-red-500 text-white border-red-600 animate-pulse",
         text: `text-[10px] font-bold uppercase tracking-wider ${isLightMode ? 'text-neutral-500' : 'text-neutral-400'}`
-    };
-
-    // Render Timeline Scrubber
-    const renderScrubber = () => {
-        if (!session) return null;
-
-        const progress = (playbackTime / session.metadata.duration) * 100;
-
-        // Filter out high-frequency camera events, keep state/annotation/chat
-        const markers = session.events.filter(e => e.type !== 'camera');
-
-        return (
-            <div className="w-full h-1.5 bg-neutral-200 dark:bg-neutral-800 rounded-full cursor-pointer relative group"
-                onClick={(e) => {
-                    const rect = e.currentTarget.getBoundingClientRect();
-                    const p = (e.clientX - rect.left) / rect.width;
-                    seek(p * session.metadata.duration);
-                }}>
-
-                {/* Visual Markers for Significant Events */}
-                {markers.map((event, idx) => {
-                    const left = (event.timestamp / session.metadata.duration) * 100;
-                    return (
-                        <div
-                            key={idx}
-                            className="absolute top-1/2 -translate-y-1/2 w-1 h-1 bg-yellow-500 rounded-full pointer-events-none opacity-50 z-10"
-                            style={{ left: `${left}%` }}
-                            title={`${event.type} change at ${formatTime(event.timestamp)}`}
-                        />
-                    );
-                })}
-
-                <div
-                    className="h-full bg-blue-500 rounded-full absolute top-0 left-0 pointer-events-none transition-all duration-100 z-20"
-                    style={{ width: `${progress}%` }}
-                />
-                <div
-                    className="w-3 h-3 bg-white shadow rounded-full absolute top-1/2 -translate-y-1/2 -translate-x-1/2 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-30"
-                    style={{ left: `${progress}%` }}
-                />
-            </div>
-        );
     };
 
     return (
@@ -212,14 +171,16 @@ export const RecorderControls = ({
                 )}
             </div>
 
-            {/* Timeline (Only if session exists) */}
+            {/* Visual Timeline (Only if session exists) */}
             {session && !isRecording && (
-                <div className="space-y-1 pt-1">
-                    {renderScrubber()}
-                    <div className="flex justify-between text-[9px] font-mono opacity-60">
-                        <span>{formatTime(playbackTime)}</span>
-                        <span>{formatTime(session.metadata.duration)}</span>
-                    </div>
+                <div className="pt-2">
+                    <VideoTimeline
+                        session={session}
+                        playbackTime={playbackTime}
+                        isPlaying={isPlaying}
+                        onSeek={seek}
+                        isLightMode={isLightMode}
+                    />
                 </div>
             )}
 
