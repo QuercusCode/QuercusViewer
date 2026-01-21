@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import {
     Play, Pause, Circle, Square,
     Upload, Save, Film
@@ -51,6 +51,30 @@ export const RecorderControls = ({
     };
 
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // Keyboard Shortcuts
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (!session || isRecording) return; // Only during playback/idle with session loaded
+
+            // Ignore if typing in an input
+            if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement).tagName)) return;
+
+            if (e.code === 'Space') {
+                e.preventDefault();
+                isPlaying ? pause() : play();
+            } else if (e.code === 'ArrowLeft') {
+                e.preventDefault();
+                seek(Math.max(0, playbackTime - 5000));
+            } else if (e.code === 'ArrowRight') {
+                e.preventDefault();
+                seek(Math.min(session.metadata.duration, playbackTime + 5000));
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [session, isRecording, isPlaying, playbackTime, play, pause, seek]);
 
     // Render Timeline Scrubber
     const renderScrubber = () => {
