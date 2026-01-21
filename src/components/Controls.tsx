@@ -381,6 +381,8 @@ interface ControlsProps {
     // Custom Coloring
     customColors?: CustomColorRule[];
     setCustomColors?: (colors: CustomColorRule[] | ((prev: CustomColorRule[]) => CustomColorRule[])) => void;
+
+    recorderContent?: React.ReactNode;
 }
 
 export const Controls: React.FC<ControlsProps> = ({
@@ -448,6 +450,7 @@ export const Controls: React.FC<ControlsProps> = ({
     onToggleShare,
     customBackgroundColor,
     setCustomBackgroundColor,
+    recorderContent, // Destructure prop
     onHighlightRegion,
     onDownloadPDB,
     onDownloadSequence,
@@ -1668,6 +1671,13 @@ export const Controls: React.FC<ControlsProps> = ({
                         id="export-tools"
                     >
                         <div className="space-y-3">
+                            {/* Session Recorder Controls */}
+                            {recorderContent && (
+                                <div className="mb-4">
+                                    {recorderContent}
+                                </div>
+                            )}
+
                             {/* Session Controls */}
                             <div>
                                 <label className={`text-[10px] font-bold uppercase tracking-wider block mb-2 ${subtleText}`}>Session</label>

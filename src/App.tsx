@@ -55,6 +55,8 @@ import { useStructureMetadata } from './hooks/useStructureMetadata';
 
 
 import { initGA, logPageView, logEvent } from './utils/analytics';
+import { useSessionRecorder } from './hooks/useSessionRecorder';
+import { RecorderControls } from './components/RecorderControls';
 
 const deepEqual = (a: any, b: any): boolean => {
   if (a === b) return true;
@@ -278,10 +280,34 @@ function App() {
 
   // Sync Incoming Camera
   useEffect(() => {
-    if (isCameraSynced && peerSession.lastReceivedCamera && viewerRefs[0].current) {
+    // Priority: Playback > Peer > Local
+    if (recorder.isPlaying && viewerRefs[0].current) {
+      // Handled by hook callback
+    } else if (isCameraSynced && peerSession.lastReceivedCamera && viewerRefs[0].current) {
       viewerRefs[0].current.setOrientation(peerSession.lastReceivedCamera);
     }
   }, [peerSession.lastReceivedCamera, isCameraSynced]);
+
+  // --- Session Recorder ---
+  const handlePlaybackStateChange = useCallback((state: any) => {
+    // Apply state to main controller (index 0 for now)
+    const ctrl = controllers[0];
+    if (state.pdbId && state.pdbId !== ctrl.pdbId) ctrl.setPdbId(state.pdbId);
+    if (state.representation && state.representation !== ctrl.representation) ctrl.setRepresentation(state.representation as RepresentationType);
+    if (state.coloring && state.coloring !== ctrl.coloring) ctrl.setColoring(state.coloring as ColoringType);
+    if (state.isSpinning !== undefined && state.isSpinning !== ctrl.isSpinning) ctrl.setIsSpinning(state.isSpinning);
+    if (state.highlightedResidue !== undefined) ctrl.setHighlightedResidue(state.highlightedResidue);
+    if (state.camera && viewerRefs[0].current) viewerRefs[0].current.setOrientation(state.camera);
+  }, [controllers]);
+
+  const handlePlaybackCameraChange = useCallback((orientation: any) => {
+    if (viewerRefs[0].current) viewerRefs[0].current.setOrientation(orientation);
+  }, []);
+
+  const recorder = useSessionRecorder({
+    onPlaybackStateChange: handlePlaybackStateChange,
+    onPlaybackCameraChange: handlePlaybackCameraChange
+  });
 
 
   // Broadcast Outgoing State
@@ -776,17 +802,9 @@ function App() {
   // Let's stick to simple default: Select All.
 
   // BROADCAST STATE EFFECT
-  // This broadcasts visual state changes to peers
-
+  // This broadcasts visual state changes to peers AND records them if recording
   useEffect(() => {
-    if (!peerSession.isConnected) return;
-
-    // ECHO CANCELLATION: If this update was caused by a remote message, DO NOT broadcast it back.
-    if (isApplyingRemoteUpdate.current) {
-      // console.log("Skipping broadcast due to remote update application");
-      return;
-    }
-
+    // 1. Gather State for all viewports
     const viewportsState = controllers.map((ctrl, index) => {
       if (!sharedViewportIndices.includes(index)) return {};
 
@@ -801,6 +819,11 @@ function App() {
         customColors: ctrl.customColors,
         dataSource: ctrl.dataSource,
         measurements: ctrl.measurements,
+        customBackgroundColor: ctrl.customBackgroundColor,
+        highlightedResidue: ctrl.highlightedResidue,
+        ligands: ctrl.ligands,
+        chains: ctrl.chains,
+        proteinTitle: ctrl.proteinTitle,
       };
     });
 
@@ -809,13 +832,25 @@ function App() {
       viewports: viewportsState
     };
 
-    // @ts-ignore
-    peerSession.broadcastState(multiViewState);
+    // 2. Broadcast if connected
+    if (peerSession.isConnected && !isApplyingRemoteUpdate.current) {
+      peerSession.broadcastState(multiViewState);
+    }
+
+    // 3. Record if recording
+    if (recorder.isRecording) {
+      recorder.recordEvent('state', multiViewState);
+      if (viewerRefs[0].current) {
+        recorder.recordEvent('camera', viewerRefs[0].current.getOrientation());
+      }
+    }
 
   }, [
     peerSession.isConnected,
+    recorder.isRecording,
     viewMode,
     sharedViewportIndices,
+    // Deep dependencies for change detection
     controllers.map(c => c.pdbId).join(','),
     controllers.map(c => c.representation).join(','),
     controllers.map(c => c.coloring).join(','),
@@ -881,6 +916,32 @@ function App() {
 
     setOpenSections(newSections);
   };
+
+  const handleStartRecording = useCallback(() => {
+    const viewportsState = controllers.map((ctrl, _index) => ({
+      pdbId: ctrl.pdbId,
+      representation: ctrl.representation,
+      coloring: ctrl.coloring,
+      isSpinning: ctrl.isSpinning,
+      showLigands: ctrl.showLigands,
+      showSurface: ctrl.showSurface,
+      showIons: ctrl.showIons,
+      customColors: ctrl.customColors,
+      dataSource: ctrl.dataSource,
+      measurements: ctrl.measurements,
+      customBackgroundColor: ctrl.customBackgroundColor,
+      highlightedResidue: ctrl.highlightedResidue,
+      ligands: ctrl.ligands,
+      chains: ctrl.chains,
+      proteinTitle: ctrl.proteinTitle,
+    }));
+
+    const fullState = {
+      viewMode,
+      viewports: viewportsState
+    };
+    recorder.startRecording(fullState);
+  }, [controllers, viewMode, recorder]);
 
   const handleStartTour = () => {
     // Determine context (simple check based on dataSource or explicit logic)
@@ -2263,6 +2324,14 @@ function App() {
                     }}
                     onDeleteMeasurement={handleDeleteMeasurement}
                     measurements={measurements}
+                    recorderContent={
+                      <RecorderControls
+                        {...recorder}
+                        startRecording={handleStartRecording}
+                        isLightMode={isLightMode}
+                        cardBg={isLightMode ? 'bg-white' : 'bg-neutral-900'}
+                      />
+                    }
                     isSharedSession={peerSession.isConnected}
                     isLightMode={isLightMode}
                     setIsLightMode={setIsLightMode}

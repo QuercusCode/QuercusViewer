@@ -147,3 +147,22 @@ export interface ChatMessage {
     timestamp: number;
     type: 'text' | 'system' | 'link';
 }
+
+export interface RecordedEvent {
+    timestamp: number; // Delta from start
+    type: 'state' | 'camera' | 'annotation' | 'chat';
+    payload: any;
+}
+
+export interface RecordedSession {
+    id: string;
+    version: number;
+    metadata: {
+        title: string;
+        author: string;
+        date: string;
+        duration: number;
+    };
+    initialState: any; // Full SessionState
+    events: RecordedEvent[];
+}
