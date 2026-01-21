@@ -11,6 +11,7 @@ import LibraryModal from './components/LibraryModal';
 import { ShareModal } from './components/ShareModal';
 import { SequenceTrack } from './components/SequenceTrack';
 import { DragDropOverlay } from './components/DragDropOverlay';
+import { GalleryModal } from './components/GalleryModal';
 import { CommandPalette, type CommandAction } from './components/CommandPalette';
 import { HUD } from './components/HUD';
 import { ReactionOverlay } from './components/ReactionOverlay';
@@ -98,6 +99,7 @@ function App() {
   // Feature: Nametags
   const [userName, setUserName] = useState<string | null>(null);
   const [isIdentityModalOpen, setIsIdentityModalOpen] = useState(false);
+  const [isGalleryOpen, setIsGalleryOpen] = useState(false); // Gallery State Lifted
 
   // Prompt for name when connecting (if not set)
   useEffect(() => {
@@ -2586,8 +2588,6 @@ function App() {
                     proteinTitle={proteinTitle}
                     snapshots={snapshots}
                     onSnapshot={handleSnapshot}
-                    onDownloadSnapshot={handleDownloadSnapshot}
-                    onDeleteSnapshot={handleDeleteSnapshot}
                     isSpinning={isSpinning}
                     setIsSpinning={setIsSpinning}
                     onSaveSession={() => handleToolAction('save')}
@@ -2597,8 +2597,6 @@ function App() {
                     onToggleContactMap={() => setShowContactMap(!showContactMap)}
                     onTakeSnapshot={handleSnapshot}
                     movies={movies}
-                    onDownloadMovie={handleDownloadMovie}
-                    onDeleteMovie={handleDeleteMovie}
                     isCleanMode={isCleanMode}
                     setIsCleanMode={setIsCleanMode}
                     onShare={() => handleToolAction('share')}
@@ -2644,6 +2642,9 @@ function App() {
                     // Custom Colors
                     customColors={customColors}
                     setCustomColors={setCustomColors}
+
+                    // Gallery
+                    onToggleGallery={() => setIsGalleryOpen(!isGalleryOpen)}
 
                     // Multi-View Mode
                     viewMode={viewMode}

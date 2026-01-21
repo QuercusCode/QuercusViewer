@@ -1,6 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Skeleton } from './Skeleton';
-import { GalleryModal } from './GalleryModal';
 import { MeasurementTable } from './MeasurementTable';
 import {
     Activity,
@@ -326,20 +325,15 @@ interface ControlsProps {
     proteinTitle: string | null;
     snapshots: Snapshot[];
     onSnapshot: (resolutionFactor: number, transparent: boolean) => void;
-    onDownloadSnapshot: (id: string) => void;
-    onDeleteSnapshot: (id: string) => void;
+    onTakeSnapshot: () => void; // Opens the unified snapshot modal
     isSpinning: boolean;
     setIsSpinning: (spinning: boolean) => void;
-
     isCleanMode: boolean;
     setIsCleanMode: (clean: boolean) => void;
     onSaveSession: () => void;
     onLoadSession: (file: File) => void;
     onToggleContactMap: () => void;
-    onTakeSnapshot: () => void; // Opens the unified snapshot modal
     movies: Movie[];
-    onDownloadMovie: (id: string) => void;
-    onDeleteMovie: (id: string) => void;
     colorPalette: ColorPalette;
     setColorPalette: (palette: ColorPalette) => void;
     isDyslexicFont: boolean;
@@ -373,6 +367,9 @@ interface ControlsProps {
     onRedo?: () => void;
     canUndo?: boolean;
     canRedo?: boolean;
+
+    // Gallery
+    onToggleGallery: () => void;
 
     // Multi-View Mode
     viewMode?: 'single' | 'dual' | 'triple' | 'quad';
@@ -427,19 +424,15 @@ export const Controls: React.FC<ControlsProps> = ({
     isRecording,
     proteinTitle,
     snapshots,
-    onDownloadSnapshot,
-    onDeleteSnapshot,
+    onTakeSnapshot,
     isSpinning,
     setIsSpinning,
     isCleanMode,
     setIsCleanMode,
     onSaveSession,
     onLoadSession,
-    movies,
-    onDownloadMovie,
-    onDeleteMovie,
     onToggleContactMap,
-    onTakeSnapshot,
+    movies,
     colorPalette,
     setColorPalette,
     isDyslexicFont,
@@ -464,6 +457,7 @@ export const Controls: React.FC<ControlsProps> = ({
     onOpenFavorites,
     onOpenHistory,
     history = [],
+    onToggleGallery,
     onUndo,
     onRedo,
     canUndo,
@@ -511,7 +505,6 @@ export const Controls: React.FC<ControlsProps> = ({
     const fileInputRef = useRef<HTMLInputElement>(null);
     const sessionInputRef = useRef<HTMLInputElement>(null);
     const [localPdbId, setLocalPdbId] = React.useState(pdbId);
-    const [isGalleryOpen, setIsGalleryOpen] = useState(false); // New state for Gallery
 
     // Recording State
     const [recordDuration, setRecordDuration] = useState(4000);
@@ -728,13 +721,6 @@ export const Controls: React.FC<ControlsProps> = ({
                                     title="Offline Library"
                                 >
                                     <BookOpen className="w-4 h-4" />
-                                </button>
-                                <button
-                                    onClick={() => setIsGalleryOpen(true)}
-                                    className={`p-2 rounded-lg transition-colors ${isLightMode ? 'text-neutral-600 hover:bg-neutral-100' : 'text-neutral-400 hover:bg-neutral-800'}`}
-                                    title="Media Gallery"
-                                >
-                                    <ImageIcon className="w-4 h-4" />
                                 </button>
                             </div>
 
@@ -1742,23 +1728,32 @@ export const Controls: React.FC<ControlsProps> = ({
                             </div>
 
                             {/* Galleries */}
+                            {/* Galleries */}
+                            <div className="pt-2 border-t border-white/5">
+                                <button
+                                    id="media-gallery-btn"
+                                    onClick={onToggleGallery}
+                                    className={`w-full flex items-center justify-between p-3 rounded-lg border transition-all group ${isLightMode ? 'bg-neutral-50 border-neutral-200 hover:bg-neutral-100' : 'bg-white/5 border-white/10 hover:bg-white/10'}`}
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <div className={`p-1.5 rounded-md ${isLightMode ? 'bg-white shadow-sm text-blue-600' : 'bg-black/40 text-blue-400'}`}>
+                                            <ImageIcon className="w-4 h-4" />
+                                        </div>
+                                        <div className="text-left">
+                                            <div className={`text-xs font-bold ${isLightMode ? 'text-neutral-900' : 'text-white'}`}>Media Gallery</div>
+                                            <div className={`text-[9px] ${subtleText}`}>{snapshots.length} images • {movies.length} videos</div>
+                                        </div>
+                                    </div>
+                                    <ChevronDown className="-rotate-90 w-3 h-3 opacity-50 group-hover:opacity-100 transition-opacity" />
+                                </button>
+                            </div>
+
                         </div>
                     </SidebarSection>
                 </div >
             </div >
 
-            {/* Gallery Modal (Replaces old previews) */}
-            < GalleryModal
-                isOpen={isGalleryOpen}
-                onClose={() => setIsGalleryOpen(false)}
-                snapshots={snapshots}
-                movies={movies}
-                onDeleteSnapshot={onDeleteSnapshot}
-                onDeleteMovie={onDeleteMovie}
-                onDownloadSnapshot={onDownloadSnapshot}
-                onDownloadMovie={onDownloadMovie}
-                isLightMode={isLightMode}
-            />
+            {/* <GalleryModal /> Removed: Lifted to App.tsx */}
         </>
     );
 };
