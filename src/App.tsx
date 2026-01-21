@@ -294,9 +294,15 @@ function App() {
 
   // --- Session Recorder ---
   // --- Session Recorder ---
+  /* eslint-disable react-hooks/exhaustive-deps */
   const handlePlaybackStateChange = useCallback((state: any) => {
     // The recorded state is "multiViewState" { viewMode, viewports: [] }
-    if (!state || !state.viewports || !state.viewports[0]) return;
+    if (!state || !state.viewports || !state.viewports[0]) {
+      console.warn("Playback: Invalid state or missing viewports", state);
+      return;
+    }
+
+    console.log("Playback: Applying State", state.viewports[0].pdbId);
 
     const vpState = state.viewports[0];
     const ctrl = controllers[0];
@@ -337,6 +343,7 @@ function App() {
   }, [controllers, viewMode]);
 
   const handlePlaybackCameraChange = useCallback((orientation: any) => {
+    // console.log("Playback: Camera Update", orientation);
     if (viewerRefs[0].current) viewerRefs[0].current.setOrientation(orientation);
   }, []);
 

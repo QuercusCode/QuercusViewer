@@ -140,7 +140,7 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                 </div>
 
                 {/* VISUAL AREA (The hole) */}
-                <div className="flex-1 relative">
+                <div className="flex-1 relative border-4 border-red-500 bg-transparent">
                     {/* Floating Transport Controls */}
                     <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-neutral-900/80 backdrop-blur-md rounded-full px-4 py-2 flex items-center gap-4 text-white pointer-events-auto border border-white/10 shadow-2xl z-50">
                         <span className="text-xs font-mono ml-2">{formatTime(playbackTime)}</span>
