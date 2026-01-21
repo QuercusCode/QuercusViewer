@@ -992,6 +992,81 @@ function App() {
     recorder.startRecording(fullState);
   }, [controllers, viewMode, recorder]);
 
+  // Video Export Logic
+  const [isExportingVideo, setIsExportingVideo] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordedChunksRef = useRef<Blob[]>([]);
+
+  const handleExportVideo = useCallback(() => {
+    // Correct access: viewerRefs is an array of refs, so viewerRefs[0].current
+    if (!recorder.session || !viewerRefs[0].current?.container) {
+      if (!viewerRefs[0].current?.container) alert("Canvas container not found");
+      return;
+    }
+
+    const canvas = viewerRefs[0].current.container.querySelector('canvas');
+    if (!canvas) {
+      alert("Could not find canvas for video export.");
+      return;
+    }
+
+    try {
+      // High quality capture (60fps)
+      const stream = canvas.captureStream(60);
+      // Prefer VP9 or H264
+      const mimeType = [
+        'video/webm;codecs=vp9',
+        'video/webm;codecs=h264',
+        'video/webm;codecs=vp8',
+        'video/webm'
+      ].find(type => MediaRecorder.isTypeSupported(type)) || 'video/webm';
+
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType,
+        videoBitsPerSecond: 8000000 // 8 Mbps high quality
+      });
+
+      mediaRecorderRef.current = mediaRecorder;
+      recordedChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) recordedChunksRef.current.push(e.data);
+      };
+
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(recordedChunksRef.current, { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${recorder.session?.metadata.title || 'session'}.webm`;
+        a.click();
+        URL.revokeObjectURL(url);
+        setIsExportingVideo(false);
+      };
+
+      // Start Workflow
+      setIsExportingVideo(true);
+      mediaRecorder.start();
+
+      // Reset and Play
+      recorder.seek(0);
+      recorder.play();
+
+    } catch (err) {
+      console.error("Export failed", err);
+      alert("Video export failed. See console.");
+      setIsExportingVideo(false);
+    }
+  }, [recorder]);
+
+  // Monitor Video Export Completion
+  useEffect(() => {
+    if (isExportingVideo && !recorder.isPlaying && recorder.playbackTime >= (recorder.session?.metadata.duration || 0)) {
+      // Playback finished naturally
+      mediaRecorderRef.current?.stop();
+    }
+  }, [isExportingVideo, recorder.isPlaying, recorder.playbackTime, recorder.session]);
+
   const handleStartTour = () => {
     // Determine context (simple check based on dataSource or explicit logic)
     const isChemicalContext = dataSource === 'pubchem';
@@ -2376,7 +2451,10 @@ function App() {
                     recorderContent={
                       <RecorderControls
                         {...recorder}
-                        startRecording={handleStartRecording}
+                        startRecording={handleStartRecording} // Explicitly pass the no-arg handler
+                        exportSession={recorder.exportSession}
+                        importSession={recorder.importSession}
+                        exportVideo={handleExportVideo}
                         isLightMode={isLightMode}
                         cardBg={isLightMode ? 'bg-white' : 'bg-neutral-900'}
                       />

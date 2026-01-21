@@ -1,7 +1,7 @@
 import { useRef } from 'react';
 import {
     Play, Pause, Circle, Square,
-    Upload, Save
+    Upload, Save, Film
 } from 'lucide-react';
 import type { RecordedSession } from '../types';
 
@@ -21,6 +21,7 @@ interface RecorderControlsProps {
     setPlaybackSpeed: (speed: number) => void;
     exportSession: () => void;
     importSession: (file: File) => void;
+    exportVideo: () => void;
 
     isLightMode: boolean;
     cardBg: string;
@@ -36,7 +37,7 @@ const formatTime = (ms: number) => {
 export const RecorderControls = ({
     isRecording, isPlaying, recordingTime, playbackTime, session, playbackSpeed,
     startRecording, stopRecording, play, pause, seek, setPlaybackSpeed,
-    exportSession, importSession,
+    exportSession, importSession, exportVideo,
     isLightMode, cardBg
 }: RecorderControlsProps) => {
 
@@ -127,13 +128,22 @@ export const RecorderControls = ({
                             onChange={(e) => e.target.files?.[0] && importSession(e.target.files[0])}
                         />
                         {session && (
-                            <button
-                                onClick={exportSession}
-                                className="p-1 hover:text-green-500 transition-colors"
-                                title="Save Session"
-                            >
-                                <Save className="w-3.5 h-3.5" />
-                            </button>
+                            <>
+                                <button
+                                    onClick={exportVideo}
+                                    className="p-1 hover:text-purple-500 transition-colors"
+                                    title="Export Video (WebM)"
+                                >
+                                    <Film className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                    onClick={exportSession}
+                                    className="p-1 hover:text-green-500 transition-colors"
+                                    title="Save Session (JSON)"
+                                >
+                                    <Save className="w-3.5 h-3.5" />
+                                </button>
+                            </>
                         )}
                     </div>
                 )}

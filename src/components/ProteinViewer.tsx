@@ -122,6 +122,7 @@ export interface ProteinViewerRef {
     getOrientation: () => any;
     setOrientation: (orientation: any) => void;
     getPdbBlob: () => Blob | null; // Method to extract current structure as blob
+    container: HTMLDivElement | null; // Expose container for canvas access
 }
 
 export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
@@ -732,6 +733,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                 return null;
             }
         },
+        container: containerRef.current,
         getOrientation: () => {
             if (!stageRef.current || !stageRef.current.viewerControls) return null;
             const orientation = stageRef.current.viewerControls.getOrientation();
