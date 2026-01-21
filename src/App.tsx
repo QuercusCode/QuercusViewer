@@ -903,7 +903,7 @@ function App() {
         // For now, let's just record. App is small.
         recorder.recordEvent('camera', orientation);
       }
-    }, 16); // ~60fps
+    }, 8); // ~120fps
 
     return () => clearInterval(interval);
   }, [recorder.isRecording]);
