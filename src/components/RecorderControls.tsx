@@ -26,6 +26,7 @@ interface RecorderControlsProps {
     trimSession: (startTime: number, endTime: number) => void;
     deleteEvent: (index: number) => void;
     deleteEventsByType: (type: string, fromTime?: number, toTime?: number) => void;
+    deleteEventsByTimeRange: (fromTime: number, toTime: number) => void;
 
     isLightMode: boolean;
     cardBg: string;
@@ -42,7 +43,7 @@ export const RecorderControls = ({
     isRecording, isPlaying, recordingTime, playbackTime, session, playbackSpeed,
     startRecording, stopRecording, play, pause, seek, setPlaybackSpeed,
     exportSession, importSession, exportVideo, updateMetadata,
-    trimSession, deleteEvent, deleteEventsByType,
+    trimSession, deleteEvent, deleteEventsByType, deleteEventsByTimeRange,
     isLightMode, cardBg
 }: RecorderControlsProps) => {
 
@@ -51,6 +52,8 @@ export const RecorderControls = ({
     const [isEditPanelOpen, setIsEditPanelOpen] = useState(false);
     const [trimStart, setTrimStart] = useState('00:00');
     const [trimEnd, setTrimEnd] = useState('00:00');
+    const [deleteRangeStart, setDeleteRangeStart] = useState('00:00');
+    const [deleteRangeEnd, setDeleteRangeEnd] = useState('00:00');
 
     // Only show full detailed controls if we have a session or are recording
     // Otherwise show a compact "Start Recording" or "Load Session" button
@@ -296,6 +299,43 @@ export const RecorderControls = ({
                                         className="px-2 py-1 bg-yellow-600/20 hover:bg-yellow-600/40 border border-yellow-600/30 rounded text-xs transition-colors"
                                     >
                                         Delete Annotations
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Delete by Time Range */}
+                            <div className="space-y-2">
+                                <label className={`${styles.text} block`}>Delete by Time Range</label>
+                                <div className="flex gap-2 items-center flex-wrap">
+                                    <input
+                                        type="text"
+                                        value={deleteRangeStart}
+                                        onChange={(e) => setDeleteRangeStart(e.target.value)}
+                                        placeholder="00:00"
+                                        className="bg-black/30 border border-white/10 rounded px-2 py-1 text-xs w-16 font-mono"
+                                    />
+                                    <span className="text-xs opacity-50">to</span>
+                                    <input
+                                        type="text"
+                                        value={deleteRangeEnd}
+                                        onChange={(e) => setDeleteRangeEnd(e.target.value)}
+                                        placeholder="00:00"
+                                        className="bg-black/30 border border-white/10 rounded px-2 py-1 text-xs w-16 font-mono"
+                                    />
+                                    <button
+                                        onClick={() => {
+                                            const start = parseTimeString(deleteRangeStart);
+                                            const end = parseTimeString(deleteRangeEnd);
+                                            if (start < end && end > 0) {
+                                                deleteEventsByTimeRange(start, end);
+                                                setDeleteRangeStart('00:00');
+                                                setDeleteRangeEnd('00:00');
+                                            }
+                                        }}
+                                        className="px-3 py-1 bg-orange-600 hover:bg-orange-700 rounded text-xs transition-colors flex items-center gap-1"
+                                    >
+                                        <Trash2 className="w-3 h-3" />
+                                        Delete Range
                                     </button>
                                 </div>
                             </div>

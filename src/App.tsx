@@ -2541,6 +2541,7 @@ function App() {
                         trimSession={recorder.trimSession}
                         deleteEvent={recorder.deleteEvent}
                         deleteEventsByType={recorder.deleteEventsByType}
+                        deleteEventsByTimeRange={recorder.deleteEventsByTimeRange}
                         isLightMode={isLightMode}
                         cardBg={isLightMode ? 'bg-white' : 'bg-neutral-900'}
                       />

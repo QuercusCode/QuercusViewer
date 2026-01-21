@@ -323,6 +323,27 @@ export const useSessionRecorder = ({ onPlaybackStateChange, onPlaybackCameraChan
         lastAppliedTimeRef.current = -1;
     }, []);
 
+    const deleteEventsByTimeRange = useCallback((fromTime: number, toTime: number) => {
+        setSession(prev => {
+            if (!prev) return null;
+
+            // Remove all events within the time range
+            const filteredEvents = prev.events.filter(e =>
+                e.timestamp < fromTime || e.timestamp > toTime
+            );
+
+            return {
+                ...prev,
+                events: filteredEvents
+            };
+        });
+
+        // Reset playback
+        playbackCursorRef.current = 0;
+        accumulatedStateRef.current = null;
+        lastAppliedTimeRef.current = -1;
+    }, []);
+
     return {
         isRecording,
         isPlaying,
@@ -342,6 +363,7 @@ export const useSessionRecorder = ({ onPlaybackStateChange, onPlaybackCameraChan
         updateMetadata,
         trimSession,
         deleteEvent,
-        deleteEventsByType
+        deleteEventsByType,
+        deleteEventsByTimeRange
     };
 };
