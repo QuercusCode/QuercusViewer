@@ -289,16 +289,27 @@ function App() {
   }, [peerSession.lastReceivedCamera, isCameraSynced]);
 
   // --- Session Recorder ---
+  // --- Session Recorder ---
   const handlePlaybackStateChange = useCallback((state: any) => {
-    // Apply state to main controller (index 0 for now)
+    // The recorded state is "multiViewState" { viewMode, viewports: [] }
+    if (!state || !state.viewports || !state.viewports[0]) return;
+
+    const vpState = state.viewports[0];
     const ctrl = controllers[0];
-    if (state.pdbId && state.pdbId !== ctrl.pdbId) ctrl.setPdbId(state.pdbId);
-    if (state.representation && state.representation !== ctrl.representation) ctrl.setRepresentation(state.representation as RepresentationType);
-    if (state.coloring && state.coloring !== ctrl.coloring) ctrl.setColoring(state.coloring as ColoringType);
-    if (state.isSpinning !== undefined && state.isSpinning !== ctrl.isSpinning) ctrl.setIsSpinning(state.isSpinning);
-    if (state.highlightedResidue !== undefined) ctrl.setHighlightedResidue(state.highlightedResidue);
-    if (state.camera && viewerRefs[0].current) viewerRefs[0].current.setOrientation(state.camera);
-  }, [controllers]);
+
+    if (vpState.pdbId && vpState.pdbId !== ctrl.pdbId) ctrl.setPdbId(vpState.pdbId);
+    if (vpState.representation && vpState.representation !== ctrl.representation) ctrl.setRepresentation(vpState.representation as RepresentationType);
+    if (vpState.coloring && vpState.coloring !== ctrl.coloring) ctrl.setColoring(vpState.coloring as ColoringType);
+    if (vpState.isSpinning !== undefined && vpState.isSpinning !== ctrl.isSpinning) ctrl.setIsSpinning(vpState.isSpinning);
+    if (vpState.highlightedResidue !== undefined) ctrl.setHighlightedResidue(vpState.highlightedResidue);
+
+    // Also apply Global props if needed
+    if (state.viewMode && state.viewMode !== viewMode) setViewMode(state.viewMode);
+
+    // Camera is handled separately by onPlaybackCameraChange for 'camera' events, 
+    // BUT 'state' events might NOT contain camera info depending on implementation.
+    // My recorder uses separate 'camera' events.
+  }, [controllers, viewMode]);
 
   const handlePlaybackCameraChange = useCallback((orientation: any) => {
     if (viewerRefs[0].current) viewerRefs[0].current.setOrientation(orientation);

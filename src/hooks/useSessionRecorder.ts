@@ -165,6 +165,14 @@ export const useSessionRecorder = ({ onPlaybackStateChange, onPlaybackCameraChan
         };
     }, []);
 
+    // Auto-apply initial frame when session is loaded or finished recording
+    useEffect(() => {
+        if (session && !isRecording && !isPlaying) {
+            // Small timeout to ensure state has settled and UI is ready
+            setTimeout(() => applyFrameAt(0), 50);
+        }
+    }, [session, isRecording]);
+
     // Export/Import
     const exportSession = useCallback(() => {
         if (!session) return;
