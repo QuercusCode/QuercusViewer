@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import {
     ArrowLeft, Play, Pause, Scissors, Trash2, Download,
-    Settings, Layers, Music, Type, Film, Pencil, Undo, Redo
+    Settings, Layers, Music, Type, Film, Pencil, Undo, Redo,
+    Image as ImageIcon, Monitor, Camera, ChevronDown
 } from 'lucide-react';
 import { VideoTimeline } from './VideoTimeline';
 import type { useSessionRecorder } from '../hooks/useSessionRecorder';
@@ -11,9 +12,10 @@ interface StudioLayoutProps {
     recorder: ReturnType<typeof useSessionRecorder>;
     onExit: () => void;
     exportVideo: () => void;
+    captureThumbnail?: () => Promise<string | null>;
 }
 
-export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, exportVideo }) => {
+export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, exportVideo, captureThumbnail }) => {
     const {
         session,
         isPlaying,
@@ -324,6 +326,83 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                             Drag timeline handles to set start/end
                                         </p>
                                     )}
+                                </div>
+
+                                {/* Description Field */}
+                                <div className="space-y-3 pt-4 border-t border-white/10">
+                                    <label className="text-xs text-white/70 font-semibold flex items-center gap-2">
+                                        <Type className="w-3 h-3" /> Description
+                                    </label>
+                                    <textarea
+                                        value={session.metadata.description || ''}
+                                        onChange={(e) => updateMetadata({ description: e.target.value })}
+                                        className="w-full h-20 bg-neutral-800 border border-white/10 rounded-lg p-3 text-xs text-white resize-none focus:ring-1 focus:ring-blue-500 outline-none"
+                                        placeholder="Add project notes..."
+                                    />
+                                </div>
+
+                                {/* Thumbnail */}
+                                <div className="space-y-3 pt-4 border-t border-white/10">
+                                    <label className="text-xs text-white/70 font-semibold flex items-center gap-2">
+                                        <ImageIcon className="w-3 h-3" /> Thumbnail
+                                    </label>
+                                    <div className="relative group rounded-lg overflow-hidden border border-white/10 bg-black/20 aspect-video flex items-center justify-center">
+                                        {session.metadata.thumbnail ? (
+                                            <img src={session.metadata.thumbnail} alt="Project Thumbnail" className="w-full h-full object-cover" />
+                                        ) : (
+                                            <div className="text-white/20 flex flex-col items-center">
+                                                <ImageIcon className="w-8 h-8 mb-2 opacity-50" />
+                                                <span className="text-[10px]">No Thumbnail</span>
+                                            </div>
+                                        )}
+                                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                            {captureThumbnail && (
+                                                <button
+                                                    onClick={async () => {
+                                                        const dataUrl = await captureThumbnail();
+                                                        if (dataUrl) updateMetadata({ thumbnail: dataUrl });
+                                                    }}
+                                                    className="px-3 py-1.5 bg-white text-black rounded text-xs font-bold hover:scale-105 transition-transform flex items-center gap-2"
+                                                >
+                                                    <Camera className="w-3 h-3" /> Capture Frame
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Export Settings */}
+                                <div className="space-y-3 pt-4 border-t border-white/10">
+                                    <label className="text-xs text-white/70 font-semibold flex items-center gap-2">
+                                        <Monitor className="w-3 h-3" /> Visual Settings
+                                    </label>
+                                    <div className="space-y-2">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-xs text-white/60">Export Quality</span>
+                                            <select
+                                                value={session.metadata.settings?.exportQuality || 'medium'}
+                                                onChange={(e) => updateMetadata({
+                                                    settings: { ...session.metadata.settings, exportQuality: e.target.value as any }
+                                                })}
+                                                className="bg-neutral-800 border-none text-xs text-white rounded px-2 py-1 outline-none cursor-pointer hover:bg-neutral-700"
+                                            >
+                                                <option value="low">Low (720p)</option>
+                                                <option value="medium">Medium (1080p)</option>
+                                                <option value="high">High (4K)</option>
+                                            </select>
+                                        </div>
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-xs text-white/60">Show Cursor</span>
+                                            <button
+                                                onClick={() => updateMetadata({
+                                                    settings: { ...session.metadata.settings, showCursor: !session.metadata.settings?.showCursor }
+                                                })}
+                                                className={`w-8 h-4 rounded-full transition-colors relative ${session.metadata.settings?.showCursor ? 'bg-blue-600' : 'bg-white/10'}`}
+                                            >
+                                                <div className={`absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full transition-transform ${session.metadata.settings?.showCursor ? 'translate-x-4' : 'translate-x-0'}`} />
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 {/* Bulk Delete */}

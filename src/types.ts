@@ -162,6 +162,14 @@ export interface RecordedSession {
         author: string;
         date: string;
         duration: number;
+        description?: string;
+        thumbnail?: string; // Data URL
+        settings?: {
+            showCursor?: boolean;
+            showWatermark?: boolean;
+            exportQuality?: 'low' | 'medium' | 'high';
+            exportFormat?: 'webm' | 'mp4';
+        };
     };
     initialState: any; // Full SessionState
     events: RecordedEvent[];

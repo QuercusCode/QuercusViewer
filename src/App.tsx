@@ -2421,6 +2421,17 @@ function App() {
           recorder={recorder}
           onExit={() => setIsStudioMode(false)}
           exportVideo={handleExportVideo}
+          captureThumbnail={async () => {
+            const viewer = viewerRef.current || viewerRefs[0].current;
+            if (!viewer) return null;
+            const blob = await viewer.getSnapshotBlob();
+            if (!blob) return null;
+            return new Promise<string>((resolve) => {
+              const reader = new FileReader();
+              reader.onloadend = () => resolve(reader.result as string);
+              reader.readAsDataURL(blob);
+            });
+          }}
         />
       )}
 
@@ -2553,6 +2564,12 @@ function App() {
                     recorderContent={
                       <RecorderControls
                         {...recorder}
+                        onEnterStudio={() => {
+                          if (recorder.isRecording) {
+                            recorder.stopRecording();
+                          }
+                          setIsStudioMode(true);
+                        }}
                         startRecording={handleStartRecording} // Explicitly pass the no-arg handler
                         exportSession={recorder.exportSession}
                         importSession={recorder.importSession}
@@ -2566,7 +2583,6 @@ function App() {
                         selectedSegmentIds={recorder.selectedSegmentIds}
                         toggleSegmentSelection={recorder.toggleSegmentSelection}
                         deleteSelectedSegments={recorder.deleteSelectedSegments}
-                        onEnterStudio={() => setIsStudioMode(true)}
                         isLightMode={isLightMode}
                         cardBg={isLightMode ? 'bg-white' : 'bg-neutral-900'}
                       />
