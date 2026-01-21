@@ -297,12 +297,7 @@ function App() {
   /* eslint-disable react-hooks/exhaustive-deps */
   const handlePlaybackStateChange = useCallback((state: any) => {
     // The recorded state is "multiViewState" { viewMode, viewports: [] }
-    if (!state || !state.viewports || !state.viewports[0]) {
-      console.warn("Playback: Invalid state or missing viewports", state);
-      return;
-    }
-
-    console.log("Playback: Applying State", state.viewports[0].pdbId);
+    if (!state || !state.viewports || !state.viewports[0]) return;
 
     const vpState = state.viewports[0];
     const ctrl = controllers[0];
@@ -343,7 +338,6 @@ function App() {
   }, [controllers, viewMode]);
 
   const handlePlaybackCameraChange = useCallback((orientation: any) => {
-    // console.log("Playback: Camera Update", orientation);
     if (viewerRefs[0].current) viewerRefs[0].current.setOrientation(orientation);
   }, []);
 
@@ -2494,7 +2488,11 @@ function App() {
             onRemoveOverlay={controllers[activeViewIndex].removeOverlay}
             onToggleOverlay={controllers[activeViewIndex].toggleOverlay}
           />
+        </>
+      )}
 
+      {!showLanding && (
+        <>
           {/* BACKGROUND (Dark Mode) */}
           {!isLightMode && !customBackgroundColor && activeViewIndex === 0 && viewMode === 'single' && (
             <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-black to-gray-950 -z-10" />
@@ -2507,7 +2505,7 @@ function App() {
 
             {/* Logic to determine if we are looking at a Chemical */}
             {(() => {
-              if (isEmbedMode) return null; // Hide Sidebar in Embed Mode
+              if (isEmbedMode || isStudioMode) return null; // Hide Sidebar in Embed OR Studio Mode
 
               const isChemical = dataSource === 'pubchem' ||
                 (file && /\.(sdf|mol|cif)$/i.test(file.name));
@@ -2951,6 +2949,8 @@ function App() {
             isOpen={isChatOpen}
             setIsOpen={setIsChatOpen}
           />
+
+          {/* End Main Content Flex Container */}
 
           {/* End Main Content Flex Container */}
 
