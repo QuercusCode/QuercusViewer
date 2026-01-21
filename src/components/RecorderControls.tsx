@@ -51,10 +51,21 @@ export const RecorderControls = ({
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const [isEditPanelOpen, setIsEditPanelOpen] = useState(false);
-    const [trimStart, setTrimStart] = useState('00:00');
-    const [trimEnd, setTrimEnd] = useState('00:00');
     const [deleteRangeStart, setDeleteRangeStart] = useState('00:00');
     const [deleteRangeEnd, setDeleteRangeEnd] = useState('00:00');
+
+    // Visual trim mode
+    const [isTrimMode, setIsTrimMode] = useState(false);
+    const [tempTrimStart, setTempTrimStart] = useState<number>(0);
+    const [tempTrimEnd, setTempTrimEnd] = useState<number>(0);
+
+    // Update temp trim values when session changes
+    useState(() => {
+        if (session) {
+            setTempTrimStart(0);
+            setTempTrimEnd(session.metadata.duration);
+        }
+    });
 
     // Only show full detailed controls if we have a session or are recording
     // Otherwise show a compact "Start Recording" or "Load Session" button
@@ -180,6 +191,13 @@ export const RecorderControls = ({
                         isPlaying={isPlaying}
                         onSeek={seek}
                         isLightMode={isLightMode}
+                        trimMode={isTrimMode}
+                        trimStart={tempTrimStart}
+                        trimEnd={tempTrimEnd}
+                        onTrimChange={(start, end) => {
+                            setTempTrimStart(start);
+                            setTempTrimEnd(end);
+                        }}
                     />
                 </div>
             )}
@@ -200,38 +218,36 @@ export const RecorderControls = ({
 
                     {isEditPanelOpen && (
                         <div className="space-y-3 p-3 bg-black/20 rounded-lg">
-                            {/* Trim Controls */}
+                            {/* Trim Controls - Visual Mode */}
                             <div className="space-y-2">
                                 <label className={`${styles.text} block`}>Trim</label>
-                                <div className="flex gap-2 items-center">
-                                    <input
-                                        type="text"
-                                        value={trimStart}
-                                        onChange={(e) => setTrimStart(e.target.value)}
-                                        placeholder="00:00"
-                                        className="bg-black/30 border border-white/10 rounded px-2 py-1 text-xs w-16 font-mono"
-                                    />
-                                    <span className="text-xs opacity-50">to</span>
-                                    <input
-                                        type="text"
-                                        value={trimEnd}
-                                        onChange={(e) => setTrimEnd(e.target.value)}
-                                        placeholder={formatTime(session.metadata.duration)}
-                                        className="bg-black/30 border border-white/10 rounded px-2 py-1 text-xs w-16 font-mono"
-                                    />
+                                <div className="flex gap-2 items-center flex-wrap">
                                     <button
-                                        onClick={() => {
-                                            const start = parseTimeString(trimStart);
-                                            const end = parseTimeString(trimEnd) || session.metadata.duration;
-                                            if (start < end) {
-                                                trimSession(start, end);
-                                                setIsEditPanelOpen(false);
-                                            }
-                                        }}
-                                        className="px-3 py-1 bg-purple-600 hover:bg-purple-700 rounded text-xs transition-colors"
+                                        onClick={() => setIsTrimMode(!isTrimMode)}
+                                        className={`px-3 py-1.5 rounded text-xs transition-colors ${isTrimMode
+                                            ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                                            : 'bg-blue-600/20 hover:bg-blue-600/40 border border-blue-600/30'
+                                            }`}
                                     >
-                                        Apply
+                                        {isTrimMode ? '✓ Trimming' : 'Start Trim'}
                                     </button>
+                                    {isTrimMode && (
+                                        <button
+                                            onClick={() => {
+                                                trimSession(tempTrimStart, tempTrimEnd);
+                                                setIsTrimMode(false);
+                                                setIsEditPanelOpen(false);
+                                            }}
+                                            className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 rounded text-xs transition-colors"
+                                        >
+                                            Apply Trim
+                                        </button>
+                                    )}
+                                    {isTrimMode && (
+                                        <span className="text-xs opacity-60">
+                                            Drag blue handles on timeline
+                                        </span>
+                                    )}
                                 </div>
                             </div>
 

@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import type { RecordedSession } from '../types';
 
 interface VideoTimelineProps {
@@ -7,17 +7,31 @@ interface VideoTimelineProps {
     isPlaying: boolean;
     onSeek: (time: number) => void;
     isLightMode?: boolean;
+
+    // Trim mode
+    trimMode?: boolean;
+    trimStart?: number;
+    trimEnd?: number;
+    onTrimChange?: (start: number, end: number) => void;
 }
 
 export const VideoTimeline = ({
     session,
     playbackTime,
-    onSeek
+    onSeek,
+    trimMode = false,
+    trimStart: externalTrimStart,
+    trimEnd: externalTrimEnd,
+    onTrimChange
 }: VideoTimelineProps) => {
     const timelineRef = useRef<HTMLDivElement>(null);
     const [hoveredTime, setHoveredTime] = useState<number | null>(null);
+    const [draggingHandle, setDraggingHandle] = useState<'start' | 'end' | null>(null);
 
+    // Internal trim state (defaults to full duration)
     const duration = session?.metadata.duration || 1000;
+    const trimStart = externalTrimStart ?? 0;
+    const trimEnd = externalTrimEnd ?? duration;
 
     // Event type colors (InShot-inspired)
     const eventColors = {
@@ -48,6 +62,39 @@ export const VideoTimeline = ({
     const handleMouseLeave = () => {
         setHoveredTime(null);
     };
+
+    // Trim handle dragging
+    const handleHandleMouseDown = (handle: 'start' | 'end') => (e: React.MouseEvent) => {
+        e.stopPropagation();
+        setDraggingHandle(handle);
+    };
+
+    useEffect(() => {
+        if (!draggingHandle || !trimMode) return;
+
+        const handleMouseMove = (e: MouseEvent) => {
+            const time = xToTime(e.clientX);
+            if (draggingHandle === 'start') {
+                const newStart = Math.max(0, Math.min(time, trimEnd - 1000));
+                onTrimChange?.(newStart, trimEnd);
+            } else {
+                const newEnd = Math.min(duration, Math.max(time, trimStart + 1000));
+                onTrimChange?.(trimStart, newEnd);
+            }
+        };
+
+        const handleMouseUp = () => {
+            setDraggingHandle(null);
+        };
+
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
+
+        return () => {
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+        };
+    }, [draggingHandle, trimMode, trimStart, trimEnd, duration, onTrimChange]);
 
     // Format time as MM:SS
     const formatTime = (ms: number) => {
@@ -135,6 +182,53 @@ export const VideoTimeline = ({
                         );
                     })}
                 </div>
+
+                {/* Trim Mode Overlays */}
+                {trimMode && (
+                    <>
+                        {/* Dimmed regions (to be removed) */}
+                        <div
+                            className="absolute top-0 bottom-0 bg-black/70 pointer-events-none"
+                            style={{
+                                left: 0,
+                                width: `${(trimStart / duration) * 100}%`
+                            }}
+                        />
+                        <div
+                            className="absolute top-0 bottom-0 bg-black/70 pointer-events-none"
+                            style={{
+                                left: `${(trimEnd / duration) * 100}%`,
+                                right: 0
+                            }}
+                        />
+
+                        {/* Trim Handles */}
+                        <div
+                            className="absolute top-0 bottom-0 w-1 bg-blue-500 cursor-ew-resize z-40 hover:w-1.5 transition-all"
+                            style={{ left: `${(trimStart / duration) * 100}%` }}
+                            onMouseDown={handleHandleMouseDown('start')}
+                        >
+                            <div className="absolute top-1/2 -translate-y-1/2 -left-2 w-4 h-12 bg-blue-500 rounded-sm flex items-center justify-center">
+                                <div className="w-0.5 h-6 bg-white/50" />
+                            </div>
+                            <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-blue-500 text-white text-xs rounded whitespace-nowrap font-mono">
+                                {formatTime(trimStart)}
+                            </div>
+                        </div>
+                        <div
+                            className="absolute top-0 bottom-0 w-1 bg-blue-500 cursor-ew-resize z-40 hover:w-1.5 transition-all"
+                            style={{ left: `${(trimEnd / duration) * 100}%` }}
+                            onMouseDown={handleHandleMouseDown('end')}
+                        >
+                            <div className="absolute top-1/2 -translate-y-1/2 -left-2 w-4 h-12 bg-blue-500 rounded-sm flex items-center justify-center">
+                                <div className="w-0.5 h-6 bg-white/50" />
+                            </div>
+                            <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-blue-500 text-white text-xs rounded whitespace-nowrap font-mono">
+                                {formatTime(trimEnd)}
+                            </div>
+                        </div>
+                    </>
+                )}
 
                 {/* Playhead (Current Time Indicator) */}
                 <div
