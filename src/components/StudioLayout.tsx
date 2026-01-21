@@ -64,7 +64,7 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
     if (!session) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex flex-col pointer-events-none bg-neutral-950">
+        <div className="fixed inset-0 z-50 flex flex-col pointer-events-none">
             {/* TOP BAR */}
             <div className="h-14 bg-neutral-900/95 backdrop-blur border-b border-white/10 flex items-center justify-between px-4 pointer-events-auto">
                 <div className="flex items-center gap-4">
