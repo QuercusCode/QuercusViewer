@@ -255,6 +255,16 @@ function App() {
   // --- Studio Mode State ---
   const [isStudioMode, setIsStudioMode] = useState(false);
 
+  // Auto-collapse sidebar in Mol* mode to prevent overlap with native controls
+  useEffect(() => {
+    if (visualizerEngine === 'molstar') {
+      setIsSidebarCollapsed(true);
+    } else {
+      // Optional: Auto-expand when returning to NGL? Maybe user prefers it.
+      // setIsSidebarCollapsed(false);
+    }
+  }, [visualizerEngine]);
+
   // --- Snapshot Modal State (unified viewport + quality selection) ---
   const [isSnapshotModalOpen, setIsSnapshotModalOpen] = useState(false);
 

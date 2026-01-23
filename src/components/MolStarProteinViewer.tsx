@@ -55,7 +55,9 @@ export const MolStarProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerPr
                 }
 
                 // Call onStructureLoaded if we had a PDB ID initially (or wait for prop change)
-                if (props.pdbId) {
+                if (props.file) {
+                    loadFile(props.file);
+                } else if (props.pdbId) {
                     loadStructure(props.pdbId, props.dataSource || 'rcsb');
                 }
 
@@ -83,8 +85,65 @@ export const MolStarProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerPr
         });
     }, [props.isLightMode]);
 
+    // Watchers for Data Source Changes
+    useEffect(() => {
+        if (props.file) {
+            loadFile(props.file);
+        } else if (props.pdbId) {
+            loadStructure(props.pdbId, props.dataSource || 'rcsb');
+        }
+    }, [props.file, props.pdbId, props.dataSource]);
+
+
+    const loadFile = async (file: File) => {
+        if (!pluginRef.current) return;
+        await pluginRef.current.clear();
+
+        const isBinary = file.name.endsWith('.bcif');
+        let format: 'pdb' | 'mmcif' | 'bcif' | 'sdf' | 'mol' = 'mmcif';
+
+        if (file.name.endsWith('.pdb') || file.name.endsWith('.ent')) format = 'pdb';
+        else if (file.name.endsWith('.sdf')) format = 'sdf';
+        else if (file.name.endsWith('.mol')) format = 'mol';
+        else if (file.name.endsWith('.bcif')) format = 'bcif';
+
+        const url = URL.createObjectURL(file);
+
+        try {
+            const data = await pluginRef.current.builders.data.download({ url, isBinary }, { state: { isGhost: true } });
+
+            let trajectory;
+            if (format === 'sdf' || format === 'mol') {
+                // Special handling for chemicals if needed, or standard trajectory
+                trajectory = await pluginRef.current.builders.structure.parseTrajectory(data, format as any); // Mol* might auto-detect or support these
+            } else {
+                trajectory = await pluginRef.current.builders.structure.parseTrajectory(data, format as any);
+            }
+
+            const presetResult = await pluginRef.current.builders.structure.hierarchy.applyPreset(trajectory, 'default');
+
+            if (presetResult?.structure) {
+                structureRef.current = presetResult.structure;
+                updateVisuals();
+                extractMetadata(presetResult.structure.obj?.data);
+            }
+
+            // Clean up
+            URL.revokeObjectURL(url);
+
+        } catch (e) {
+            console.error("Mol* File Load Error", e);
+            props.onError?.("Failed to load file: " + e);
+            URL.revokeObjectURL(url);
+        }
+    };
+
     const loadStructure = async (id: string, source: string) => {
         if (!pluginRef.current) return;
+        // Prevent reloading if we just loaded a file and pdbId hasn't changed meaningfully (or handle priority)
+        // Ideally we rely on the useEffect triggers.
+        // If props.file is present, useEffect above calls loadFile. 
+        // This function is for remote sources.
 
         await pluginRef.current.clear();
 
