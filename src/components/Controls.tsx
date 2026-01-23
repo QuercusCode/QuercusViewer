@@ -382,6 +382,9 @@ interface ControlsProps {
     setCustomColors?: (colors: CustomColorRule[] | ((prev: CustomColorRule[]) => CustomColorRule[])) => void;
 
     recorderContent?: React.ReactNode;
+    // Engine Switcher
+    visualizerEngine?: 'ngl' | 'molstar';
+    setVisualizerEngine?: (engine: 'ngl' | 'molstar') => void;
 }
 
 export const Controls: React.FC<ControlsProps> = ({
@@ -466,7 +469,9 @@ export const Controls: React.FC<ControlsProps> = ({
     canRedo,
     // onUpdateResidueColor // Future: allow changing colors of existing residues
     customColors,
-    setCustomColors
+    setCustomColors,
+    visualizerEngine,
+    setVisualizerEngine
 }) => {
     // Motif Search State
     const [searchPattern, setSearchPattern] = useState('');
@@ -1069,50 +1074,71 @@ export const Controls: React.FC<ControlsProps> = ({
                                         {/* Multi-View Mode Selector */}
                                         {onSetViewMode && (
                                             <div className="space-y-1" id="viewport-controls">
-                                                <label className={`text-[9px] font-bold uppercase tracking-wider block ${subtleText}`}>Layout</label>
-                                                <div className="grid grid-cols-2 gap-1.5">
-                                                    <button
-                                                        onClick={() => onSetViewMode('single')}
-                                                        className={`flex flex-col items-center justify-center gap-0.5 px-1 py-1.5 rounded-lg border transition-all ${viewMode === 'single' ? 'bg-indigo-600/10 border-indigo-500 text-indigo-500' : `${cardBg} border-neutral-700 opacity-80 hover:opacity-100`}`}
-                                                    >
-                                                        <div className="w-3 h-3 border rounded" />
-                                                        <span className="text-[9px] font-medium">Single</span>
-                                                    </button>
-                                                    <button
-                                                        onClick={() => onSetViewMode('dual')}
-                                                        className={`flex flex-col items-center justify-center gap-0.5 px-1 py-1.5 rounded-lg border transition-all ${viewMode === 'dual' ? 'bg-indigo-600/10 border-indigo-500 text-indigo-500' : `${cardBg} border-neutral-700 opacity-80 hover:opacity-100`}`}
-                                                    >
-                                                        <div className="flex gap-0.5">
-                                                            <div className="w-1.5 h-3 border rounded" />
-                                                            <div className="w-1.5 h-3 border rounded" />
-                                                        </div>
-                                                        <span className="text-[9px] font-medium">Dual</span>
-                                                    </button>
-                                                    <button
-                                                        onClick={() => onSetViewMode('triple')}
-                                                        className={`flex flex-col items-center justify-center gap-0.5 px-1 py-1.5 rounded-lg border transition-all ${viewMode === 'triple' ? 'bg-indigo-600/10 border-indigo-500 text-indigo-500' : `${cardBg} border-neutral-700 opacity-80 hover:opacity-100`}`}
-                                                    >
-                                                        <div className="flex flex-col gap-0.5">
-                                                            <div className="w-3 h-1.5 border rounded" />
+                                                <label className={`text-[9px] font-bold uppercase tracking-wider block ${subtleText}`}>Layout & Engine</label>
+                                                <div className="flex gap-2">
+                                                    {/* Column 1: Engine Switcher */}
+                                                    <div className="flex flex-col gap-1 w-[30%] shrink-0">
+                                                        <button
+                                                            onClick={() => setVisualizerEngine?.('ngl')}
+                                                            className={`flex-1 flex flex-col items-center justify-center rounded-lg border transition-all ${visualizerEngine === 'ngl' ? 'bg-indigo-600/10 border-indigo-500 text-indigo-500' : `${cardBg} border-neutral-700 opacity-60 hover:opacity-100`}`}
+                                                            title="Use NGL Viewer"
+                                                        >
+                                                            <span className="text-[10px] font-bold">NGL</span>
+                                                        </button>
+                                                        <button
+                                                            onClick={() => setVisualizerEngine?.('molstar')}
+                                                            className={`flex-1 flex flex-col items-center justify-center rounded-lg border transition-all ${visualizerEngine === 'molstar' ? 'bg-indigo-600/10 border-indigo-500 text-indigo-500' : `${cardBg} border-neutral-700 opacity-60 hover:opacity-100`}`}
+                                                            title="Use Mol* Viewer"
+                                                        >
+                                                            <span className="text-[10px] font-bold">Mol*</span>
+                                                        </button>
+                                                    </div>
+
+                                                    {/* Column 2: Layout Grid */}
+                                                    <div className="grid grid-cols-2 gap-1.5 flex-1">
+                                                        <button
+                                                            onClick={() => onSetViewMode('single')}
+                                                            className={`flex flex-col items-center justify-center gap-0.5 px-1 py-1.5 rounded-lg border transition-all ${viewMode === 'single' ? 'bg-indigo-600/10 border-indigo-500 text-indigo-500' : `${cardBg} border-neutral-700 opacity-80 hover:opacity-100`}`}
+                                                        >
+                                                            <div className="w-3 h-3 border rounded" />
+                                                            <span className="text-[9px] font-medium">Single</span>
+                                                        </button>
+                                                        <button
+                                                            onClick={() => onSetViewMode('dual')}
+                                                            className={`flex flex-col items-center justify-center gap-0.5 px-1 py-1.5 rounded-lg border transition-all ${viewMode === 'dual' ? 'bg-indigo-600/10 border-indigo-500 text-indigo-500' : `${cardBg} border-neutral-700 opacity-80 hover:opacity-100`}`}
+                                                        >
                                                             <div className="flex gap-0.5">
+                                                                <div className="w-1.5 h-3 border rounded" />
+                                                                <div className="w-1.5 h-3 border rounded" />
+                                                            </div>
+                                                            <span className="text-[9px] font-medium">Dual</span>
+                                                        </button>
+                                                        <button
+                                                            onClick={() => onSetViewMode('triple')}
+                                                            className={`flex flex-col items-center justify-center gap-0.5 px-1 py-1.5 rounded-lg border transition-all ${viewMode === 'triple' ? 'bg-indigo-600/10 border-indigo-500 text-indigo-500' : `${cardBg} border-neutral-700 opacity-80 hover:opacity-100`}`}
+                                                        >
+                                                            <div className="flex flex-col gap-0.5">
+                                                                <div className="w-3 h-1.5 border rounded" />
+                                                                <div className="flex gap-0.5">
+                                                                    <div className="w-1.5 h-1.5 border rounded" />
+                                                                    <div className="w-1.5 h-1.5 border rounded" />
+                                                                </div>
+                                                            </div>
+                                                            <span className="text-[9px] font-medium">Triple</span>
+                                                        </button>
+                                                        <button
+                                                            onClick={() => onSetViewMode('quad')}
+                                                            className={`flex flex-col items-center justify-center gap-0.5 px-1 py-1.5 rounded-lg border transition-all ${viewMode === 'quad' ? 'bg-indigo-600/10 border-indigo-500 text-indigo-500' : `${cardBg} border-neutral-700 opacity-80 hover:opacity-100`}`}
+                                                        >
+                                                            <div className="grid grid-cols-2 gap-0.5">
+                                                                <div className="w-1.5 h-1.5 border rounded" />
+                                                                <div className="w-1.5 h-1.5 border rounded" />
                                                                 <div className="w-1.5 h-1.5 border rounded" />
                                                                 <div className="w-1.5 h-1.5 border rounded" />
                                                             </div>
-                                                        </div>
-                                                        <span className="text-[9px] font-medium">Triple</span>
-                                                    </button>
-                                                    <button
-                                                        onClick={() => onSetViewMode('quad')}
-                                                        className={`flex flex-col items-center justify-center gap-0.5 px-1 py-1.5 rounded-lg border transition-all ${viewMode === 'quad' ? 'bg-indigo-600/10 border-indigo-500 text-indigo-500' : `${cardBg} border-neutral-700 opacity-80 hover:opacity-100`}`}
-                                                    >
-                                                        <div className="grid grid-cols-2 gap-0.5">
-                                                            <div className="w-1.5 h-1.5 border rounded" />
-                                                            <div className="w-1.5 h-1.5 border rounded" />
-                                                            <div className="w-1.5 h-1.5 border rounded" />
-                                                            <div className="w-1.5 h-1.5 border rounded" />
-                                                        </div>
-                                                        <span className="text-[9px] font-medium">Quad</span>
-                                                    </button>
+                                                            <span className="text-[9px] font-medium">Quad</span>
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </div>
                                         )}

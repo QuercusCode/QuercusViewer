@@ -2411,8 +2411,6 @@ function App() {
             isChatOpen={isChatOpen}
             onToggleChat={() => setIsChatOpen(!isChatOpen)}
             onOpenSettings={() => setIsSettingsOpen(true)}
-            visualizerEngine={visualizerEngine}
-            setVisualizerEngine={setVisualizerEngine}
           />
 
           <IdentityModal
@@ -2515,6 +2513,8 @@ function App() {
                     onUpload={handleFileUploadWithSync}
                     representation={representation}
                     setRepresentation={setRepresentation}
+                    visualizerEngine={visualizerEngine}
+                    setVisualizerEngine={setVisualizerEngine}
                     coloring={coloring}
                     setColoring={setColoring}
                     onResetView={() => handleToolAction('reset')}
