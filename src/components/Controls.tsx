@@ -1043,7 +1043,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                 <label className={`text-[10px] font-bold uppercase tracking-wider block ${subtleText}`}>Visualization</label>
                                 <div className="space-y-3">
                                     {/* Toggles Row */}
-                                    <div className="grid grid-cols-2 gap-2">
+                                    <div className="grid grid-cols-3 gap-2">
                                         {/* 6. Theme Toggle */}
                                         <button
                                             onClick={() => setShowSurface(!showSurface)}
