@@ -1075,7 +1075,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                         {onSetViewMode && (
                                             <div className="col-span-2 space-y-2" id="viewport-controls">
                                                 <label className={`text-[9px] font-bold uppercase tracking-wider block ${subtleText}`}>Layout & Engine</label>
-                                                <div className="grid grid-cols-[1fr_2fr] gap-3">
+                                                <div className="grid grid-cols-2 gap-3">
                                                     {/* Column 1: Engine Switcher */}
                                                     <div className="flex flex-col gap-2">
                                                         <button
