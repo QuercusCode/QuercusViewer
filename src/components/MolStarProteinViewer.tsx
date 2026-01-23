@@ -14,6 +14,10 @@ import type { ProteinViewerRef, ProteinViewerProps } from './ProteinViewer';
 export const MolStarProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>((props, ref) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const pluginRef = useRef<PluginUIContext | null>(null);
+    const onLayoutChangeRef = useRef(props.onLayoutChange);
+
+    // Update ref on render
+    onLayoutChangeRef.current = props.onLayoutChange;
 
     // Initialization
     useEffect(() => {
@@ -45,6 +49,15 @@ export const MolStarProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerPr
                         createRoot(container).render(component);
                     }
                 });
+
+                // Subscribe to Layout Changes to adjust UI overlay
+                pluginRef.current.layout.events.updated.subscribe(() => {
+                    const isExpanded = !!pluginRef.current?.layout.state.isExpanded;
+                    // Also check if controls are shown, as "Expanded" primarily controls the sidebars
+                    onLayoutChangeRef.current?.(isExpanded);
+                });
+                // Initial check
+                onLayoutChangeRef.current?.(!!pluginRef.current.layout.state.isExpanded);
 
                 // Set initial background
                 if (pluginRef.current.canvas3d) {
