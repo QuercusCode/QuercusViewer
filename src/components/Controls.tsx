@@ -1075,7 +1075,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                         {onSetViewMode && (
                                             <div className="space-y-1" id="viewport-controls">
                                                 <label className={`text-[9px] font-bold uppercase tracking-wider block ${subtleText}`}>Layout & Engine</label>
-                                                <div className="flex gap-2">
+                                                <div className="flex gap-2 w-full">
                                                     {/* Column 1: Engine Switcher */}
                                                     <div className="flex flex-col gap-1 w-[40%] shrink-0">
                                                         <button
@@ -1098,24 +1098,24 @@ export const Controls: React.FC<ControlsProps> = ({
                                                     <div className="grid grid-cols-2 gap-1.5 flex-1">
                                                         <button
                                                             onClick={() => onSetViewMode('single')}
-                                                            className={`flex flex-col items-center justify-center gap-0.5 px-1 py-1.5 rounded-lg border transition-all ${viewMode === 'single' ? 'bg-indigo-600/10 border-indigo-500 text-indigo-500' : `${cardBg} border-neutral-700 opacity-80 hover:opacity-100`}`}
+                                                            className={`w-full flex flex-col items-center justify-center gap-0.5 px-1 py-1.5 rounded-lg border transition-all ${viewMode === 'single' ? 'bg-indigo-600/10 border-indigo-500 text-indigo-500' : `${cardBg} border-neutral-700 opacity-80 hover:opacity-100`}`}
                                                         >
                                                             <div className="w-3 h-3 border rounded" />
-                                                            <span className="text-[9px] font-medium">Single</span>
+                                                            <span className="text-[9px] font-medium whitespace-nowrap">Single</span>
                                                         </button>
                                                         <button
                                                             onClick={() => onSetViewMode('dual')}
-                                                            className={`flex flex-col items-center justify-center gap-0.5 px-1 py-1.5 rounded-lg border transition-all ${viewMode === 'dual' ? 'bg-indigo-600/10 border-indigo-500 text-indigo-500' : `${cardBg} border-neutral-700 opacity-80 hover:opacity-100`}`}
+                                                            className={`w-full flex flex-col items-center justify-center gap-0.5 px-1 py-1.5 rounded-lg border transition-all ${viewMode === 'dual' ? 'bg-indigo-600/10 border-indigo-500 text-indigo-500' : `${cardBg} border-neutral-700 opacity-80 hover:opacity-100`}`}
                                                         >
                                                             <div className="flex gap-0.5">
                                                                 <div className="w-1.5 h-3 border rounded" />
                                                                 <div className="w-1.5 h-3 border rounded" />
                                                             </div>
-                                                            <span className="text-[9px] font-medium">Dual</span>
+                                                            <span className="text-[9px] font-medium whitespace-nowrap">Dual</span>
                                                         </button>
                                                         <button
                                                             onClick={() => onSetViewMode('triple')}
-                                                            className={`flex flex-col items-center justify-center gap-0.5 px-1 py-1.5 rounded-lg border transition-all ${viewMode === 'triple' ? 'bg-indigo-600/10 border-indigo-500 text-indigo-500' : `${cardBg} border-neutral-700 opacity-80 hover:opacity-100`}`}
+                                                            className={`w-full flex flex-col items-center justify-center gap-0.5 px-1 py-1.5 rounded-lg border transition-all ${viewMode === 'triple' ? 'bg-indigo-600/10 border-indigo-500 text-indigo-500' : `${cardBg} border-neutral-700 opacity-80 hover:opacity-100`}`}
                                                         >
                                                             <div className="flex flex-col gap-0.5">
                                                                 <div className="w-3 h-1.5 border rounded" />
@@ -1124,11 +1124,11 @@ export const Controls: React.FC<ControlsProps> = ({
                                                                     <div className="w-1.5 h-1.5 border rounded" />
                                                                 </div>
                                                             </div>
-                                                            <span className="text-[9px] font-medium">Triple</span>
+                                                            <span className="text-[9px] font-medium whitespace-nowrap">Triple</span>
                                                         </button>
                                                         <button
                                                             onClick={() => onSetViewMode('quad')}
-                                                            className={`flex flex-col items-center justify-center gap-0.5 px-1 py-1.5 rounded-lg border transition-all ${viewMode === 'quad' ? 'bg-indigo-600/10 border-indigo-500 text-indigo-500' : `${cardBg} border-neutral-700 opacity-80 hover:opacity-100`}`}
+                                                            className={`w-full flex flex-col items-center justify-center gap-0.5 px-1 py-1.5 rounded-lg border transition-all ${viewMode === 'quad' ? 'bg-indigo-600/10 border-indigo-500 text-indigo-500' : `${cardBg} border-neutral-700 opacity-80 hover:opacity-100`}`}
                                                         >
                                                             <div className="grid grid-cols-2 gap-0.5">
                                                                 <div className="w-1.5 h-1.5 border rounded" />
@@ -1136,7 +1136,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                                 <div className="w-1.5 h-1.5 border rounded" />
                                                                 <div className="w-1.5 h-1.5 border rounded" />
                                                             </div>
-                                                            <span className="text-[9px] font-medium">Quad</span>
+                                                            <span className="text-[9px] font-medium whitespace-nowrap">Quad</span>
                                                         </button>
                                                     </div>
                                                 </div>
