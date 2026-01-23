@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Image, Zap, Target, Sparkles } from 'lucide-react';
 import clsx from 'clsx';
 
-interface QualitySelectorProps {
+export interface QualitySelectorProps {
     isOpen: boolean;
     viewportCount: number; // Number of viewports being captured
     onConfirm: (factor: number) => void;

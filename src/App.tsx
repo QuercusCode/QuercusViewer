@@ -1,5 +1,8 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { ProteinViewer, type ProteinViewerRef } from './components/ProteinViewer';
+import { MolStarProteinViewer } from './components/MolStarProteinViewer'; // ENGINE: New Import
+
+
 import { LandingOverlay } from './components/LandingOverlay';
 import { Controls } from './components/Controls';
 import { ContactMap } from './components/ContactMap';
@@ -19,6 +22,7 @@ import { AudioRoom } from './components/AudioRoom';
 import { MeasurementPanel } from './components/MeasurementPanel';
 import { SuperpositionModal } from './components/SuperpositionModal';
 import { IdentityModal } from './components/IdentityModal';
+import { Settings } from './components/Settings';
 import { SessionChat } from './components/SessionChat';
 import { OFFLINE_LIBRARY } from './data/library';
 import { fetchPubChemMetadata } from './utils/pdbUtils';
@@ -37,7 +41,7 @@ import type {
 } from './types';
 import {
   Camera, RefreshCw, Upload,
-  Settings, Zap, Activity, Grid3X3, Palette,
+  Settings as SettingsIcon, Zap, Activity, Grid3X3, Palette,
   Share2, Save, FolderOpen, Video, Ruler, Maximize2, Star, Undo2, Redo2, BookOpen,
   ChevronLeft, ChevronRight, Menu, X
 } from 'lucide-react';
@@ -99,7 +103,24 @@ function App() {
   // Feature: Nametags
   const [userName, setUserName] = useState<string | null>(null);
   const [isIdentityModalOpen, setIsIdentityModalOpen] = useState(false);
+
+  // ...
+
   const [isGalleryOpen, setIsGalleryOpen] = useState(false); // Gallery State Lifted
+
+  // ENGINE: Visualizer Engine State
+  const [visualizerEngine, setVisualizerEngine] = useState<'ngl' | 'molstar'>('ngl');
+
+  // GRAPHICS SETTINGS
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [settings, setSettings] = useState<{ quality: 'low' | 'medium' | 'high'; ssao: boolean }>({
+    quality: 'medium',
+    ssao: true
+  });
+
+  const updateSetting = (key: keyof typeof settings, value: any) => {
+    setSettings(prev => ({ ...prev, [key]: value }));
+  };
 
   // Prompt for name when connecting (if not set)
   useEffect(() => {
@@ -2015,10 +2036,18 @@ function App() {
     {
       id: 'toggle-theme',
       label: isLightMode ? 'Switch to Dark Mode' : 'Switch to Light Mode',
-      icon: Settings,
+      icon: Palette,
       shortcut: 'T',
       category: 'View',
       perform: () => setIsLightMode(prev => !prev)
+    },
+    {
+      id: 'open-settings',
+      label: 'Open Settings',
+      icon: SettingsIcon,
+      shortcut: ',',
+      category: 'View',
+      perform: () => setIsSettingsOpen(true)
     },
 
     // --- Additional Representations ---
@@ -2412,6 +2441,19 @@ function App() {
             onRemoveOverlay={controllers[activeViewIndex].removeOverlay}
             onToggleOverlay={controllers[activeViewIndex].toggleOverlay}
           />
+
+          <Settings
+            isLightMode={isLightMode}
+            setIsLightMode={setIsLightMode}
+            quality={settings.quality}
+            setQuality={(q) => updateSetting('quality', q)}
+            ssao={settings.ssao}
+            setSsao={(s) => updateSetting('ssao', s)}
+            visualizerEngine={visualizerEngine}
+            setVisualizerEngine={setVisualizerEngine}
+            isOpen={isSettingsOpen}
+            onClose={() => setIsSettingsOpen(false)}
+          />
         </>
       )}
 
@@ -2621,6 +2663,9 @@ function App() {
                   const showHeader = viewMode !== 'single';
                   const viewportLabels = ['Viewport 1', 'Viewport 2', 'Viewport 3', 'Viewport 4'];
 
+                  // ENGINE: Choose Component based on state
+                  const ViewerComponent = visualizerEngine === 'molstar' ? MolStarProteinViewer : ProteinViewer;
+
                   return (
                     <div key={index} className={`flex flex-col h-full ${extraClasses}`}>
                       {/* Viewport Header */}
@@ -2734,7 +2779,7 @@ function App() {
                             </div>
                           </div>
                         ) : (
-                          <ProteinViewer
+                          <ViewerComponent
                             ref={ref}
                             pdbId={ctrl.pdbId}
                             dataSource={ctrl.dataSource}
@@ -2757,18 +2802,18 @@ function App() {
 
                             initialOrientation={index === 0 ? embedOrientation : undefined}
                             // Live Session: Broadcast camera changes if active view and connected
-                            onCameraChange={index === 0 && peerSession.isConnected ? (orient) => {
+                            onCameraChange={index === 0 && peerSession.isConnected ? (orient: any) => {
                               // Pass the Chalk: Only broadcast if I am allowed
                               if (controllerId && controllerId !== peerSession.peerId) return;
                               peerSession.broadcastCamera(orient);
                             } : undefined}
 
 
-                            onStructureLoaded={(info) => handleLoad(info, ctrl)}
-                            onAtomClick={(info) => handleAtomClick(info, index)}
+                            onStructureLoaded={(info: any) => handleLoad(info, ctrl)}
+                            onAtomClick={(info: any) => handleAtomClick(info, index)}
                             isMeasurementMode={isMeasurementMode}
                             measurements={ctrl.measurements}
-                            onAddMeasurement={(m) => {
+                            onAddMeasurement={(m: any) => {
                               ctrl.setMeasurements([...ctrl.measurements, m]);
                               ctrl.setIsMeasurementPanelOpen(true);
                               setActiveViewIndex(index);
