@@ -1077,7 +1077,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                 <label className={`text-[9px] font-bold uppercase tracking-wider block ${subtleText}`}>Layout & Engine</label>
                                                 <div className="flex gap-2">
                                                     {/* Column 1: Engine Switcher */}
-                                                    <div className="flex flex-col gap-1 w-[30%] shrink-0">
+                                                    <div className="flex flex-col gap-1 w-[40%] shrink-0">
                                                         <button
                                                             onClick={() => setVisualizerEngine?.('ngl')}
                                                             className={`flex-1 flex flex-col items-center justify-center rounded-lg border transition-all ${visualizerEngine === 'ngl' ? 'bg-indigo-600/10 border-indigo-500 text-indigo-500' : `${cardBg} border-neutral-700 opacity-60 hover:opacity-100`}`}
