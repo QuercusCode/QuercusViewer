@@ -12,7 +12,7 @@ type FeatureSection = {
     content: React.ReactNode;
 };
 
-export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, hasSequence?: boolean }> = ({ isVisible = true, isLightMode = false, hasSequence = false }) => {
+export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, hasSequence?: boolean, isMolStarActive?: boolean }> = ({ isVisible = true, isLightMode = false, hasSequence = false, isMolStarActive = false }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('start');
     const [showMobileList, setShowMobileList] = useState(true);
@@ -612,7 +612,7 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
     return (
         <>
             {/* Donation Dropdown (Floating next to Help) */}
-            <div className={`fixed top-4 z-40 group transition-all duration-300 ease-in-out ${hasSequence ? 'right-[80px] md:right-[176px]' : 'right-[80px]'}`}>
+            <div className={`fixed top-4 z-40 group transition-all duration-300 ease-in-out ${isMolStarActive ? 'right-[380px]' : (hasSequence ? 'right-[80px] md:right-[176px]' : 'right-[80px]')}`}>
                 <button
                     className={`h-10 px-4 rounded-full border shadow-lg backdrop-blur-md transition-all group-hover:bg-neutral-800 group-hover:text-white flex items-center gap-2 ${isLightMode ? 'bg-white/80 text-pink-600 border-black/10' : 'bg-neutral-900/80 text-pink-500 border-white/10'}`}
                 >
@@ -659,7 +659,7 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
             {/* Trigger Button */}
             <button
                 onClick={() => setIsOpen(true)}
-                className={`fixed top-4 z-40 h-10 w-10 flex items-center justify-center rounded-full border shadow-lg backdrop-blur-md transition-all duration-300 ease-in-out hover:scale-105 group ${hasSequence ? 'right-[27px] md:right-[123px]' : 'right-[27px]'} ${isLightMode ? 'bg-white/80 text-neutral-600 hover:text-blue-600 border-black/10 hover:bg-white' : 'bg-neutral-900/80 text-neutral-400 hover:text-white border-white/10'}`}
+                className={`fixed top-4 z-40 h-10 w-10 flex items-center justify-center rounded-full border shadow-lg backdrop-blur-md transition-all duration-300 ease-in-out hover:scale-105 group ${isMolStarActive ? 'right-[330px]' : (hasSequence ? 'right-[27px] md:right-[123px]' : 'right-[27px]')} ${isLightMode ? 'bg-white/80 text-neutral-600 hover:text-blue-600 border-black/10 hover:bg-white' : 'bg-neutral-900/80 text-neutral-400 hover:text-white border-white/10'}`}
                 title="Viewer Controls & Help"
             >
                 <CircleHelp className="w-5 h-5 group-hover:rotate-12 transition-transform" />

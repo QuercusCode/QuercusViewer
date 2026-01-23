@@ -3114,7 +3114,7 @@ function App() {
 
       {
         !isEmbedMode && (
-          <HelpGuide isVisible={!isCleanMode} isLightMode={isLightMode} hasSequence={chains.length > 0} />
+          <HelpGuide isVisible={!isCleanMode} isLightMode={isLightMode} hasSequence={chains.length > 0} isMolStarActive={visualizerEngine === 'molstar'} />
         )
       }
 
