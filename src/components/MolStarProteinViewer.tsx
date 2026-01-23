@@ -22,18 +22,12 @@ export const MolStarProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerPr
         const init = async () => {
             const spec = DefaultPluginUISpec();
 
-            // Customize Layout to fit our "Platform" approach (minimal controls, let App handle UI)
+            // Customize Layout to fit our "Platform" approach
+            // Use default layout to show full Mol* UI as requested
             spec.layout = {
                 initial: {
-                    isExpanded: false,
-                    showControls: false, // We hide sidebar controls
-                    controlsDisplay: 'reactive',
-                    regionState: {
-                        left: 'hidden',
-                        top: 'hidden',
-                        right: 'hidden',
-                        bottom: 'hidden',
-                    }
+                    isExpanded: true,
+                    showControls: true,
                 },
             };
 
