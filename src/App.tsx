@@ -2411,6 +2411,8 @@ function App() {
             isChatOpen={isChatOpen}
             onToggleChat={() => setIsChatOpen(!isChatOpen)}
             onOpenSettings={() => setIsSettingsOpen(true)}
+            visualizerEngine={visualizerEngine}
+            setVisualizerEngine={setVisualizerEngine}
           />
 
           <IdentityModal

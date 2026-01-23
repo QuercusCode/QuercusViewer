@@ -23,9 +23,12 @@ interface HUDProps {
     isChatOpen?: boolean;
     onToggleChat?: () => void;
     onOpenSettings?: () => void;
+    // Engine Switcher
+    visualizerEngine?: 'ngl' | 'molstar';
+    setVisualizerEngine?: (engine: 'ngl' | 'molstar') => void;
 }
 
-export function HUD({ hoveredResidue, pdbMetadata, pdbId, isLightMode, isEmbedMode = false, peerSession, remoteHoveredResidue, isHost, remoteUserName, peerNames = {}, controllerId, isCameraSynced, onToggleCameraSync, userName, unreadCount = 0, isChatOpen = false, onToggleChat, onOpenSettings }: HUDProps) {
+export function HUD({ hoveredResidue, pdbMetadata, pdbId, isLightMode, isEmbedMode = false, peerSession, remoteHoveredResidue, isHost, remoteUserName, peerNames = {}, controllerId, isCameraSynced, onToggleCameraSync, userName, unreadCount = 0, isChatOpen = false, onToggleChat, onOpenSettings, visualizerEngine, setVisualizerEngine }: HUDProps) {
     const textColor = isLightMode ? 'text-gray-800' : 'text-gray-200';
     const bgColor = isLightMode ? 'bg-white/80' : 'bg-black/80';
     const borderColor = isLightMode ? 'border-gray-200' : 'border-neutral-800';
@@ -150,6 +153,27 @@ export function HUD({ hoveredResidue, pdbMetadata, pdbId, isLightMode, isEmbedMo
 
             {/* Bottom Center HUD Container */}
             <div className={`absolute bottom-28 md:bottom-6 left-1/2 -translate-x-1/2 z-10 pointer-events-none select-none transition-all duration-300 font-sans flex flex-col items-center gap-3 w-full px-4`}>
+
+                {/* Engine Switcher (Persistent) - Newly Added */}
+                {/* Only show if we have a setVisualizerEngine callback (implies App supports it) */}
+                {setVisualizerEngine && (
+                    <div className={`pointer-events-auto backdrop-blur-md rounded-full border ${borderColor} ${bgColor} shadow-lg px-2 py-1 flex items-center justify-center gap-1 animate-in slide-in-from-bottom-2`}>
+                        <button
+                            onClick={() => setVisualizerEngine('ngl')}
+                            className={`px-3 py-1 rounded-full text-[10px] font-bold transition-all ${visualizerEngine === 'ngl' ? (isLightMode ? 'bg-black text-white' : 'bg-white text-black') : 'opacity-50 hover:opacity-100 dark:text-neutral-300 text-neutral-600'}`}
+                            title="Switch to NGL Viewer (Fast, Standard)"
+                        >
+                            NGL
+                        </button>
+                        <button
+                            onClick={() => setVisualizerEngine('molstar')}
+                            className={`px-3 py-1 rounded-full text-[10px] font-bold transition-all ${visualizerEngine === 'molstar' ? (isLightMode ? 'bg-black text-white' : 'bg-white text-black') : 'opacity-50 hover:opacity-100 dark:text-neutral-300 text-neutral-600'}`}
+                            title="Switch to Mol* Viewer (Advanced, High Quality)"
+                        >
+                            Mol*
+                        </button>
+                    </div>
+                )}
 
                 {/* Mobile: Reactions Floating Above Main Bar */}
                 {peerSession?.isConnected && (
