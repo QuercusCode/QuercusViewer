@@ -57,27 +57,29 @@ const SidebarSection = ({ title, icon: Icon, children, isOpen, onToggle, isLight
     }, [isOpen]);
 
     return (
-        <div ref={sectionRef} id={id} className={`rounded-xl overflow-hidden transition-colors ${isLightMode
-            ? 'border border-neutral-900 bg-white'
-            : 'border border-white/10 bg-black/20'
+        <div ref={sectionRef} id={id} className={`group rounded-xl overflow-hidden transition-all duration-300 ${isLightMode
+            ? 'border border-neutral-200 bg-white/50 backdrop-blur-sm shadow-sm hover:shadow-md hover:border-blue-400/30'
+            : 'border border-white/5 bg-neutral-900/40 backdrop-blur-md shadow-lg hover:border-white/10'
             }`}>
             <button
                 onClick={onToggle}
-                className={`w-full flex items-center justify-between p-3 text-xs font-bold uppercase tracking-wider transition-colors ${isLightMode
-                    ? (isOpen ? 'bg-neutral-100 text-black' : 'hover:bg-neutral-50 text-neutral-900 hover:text-black')
-                    : (isOpen ? 'bg-white/5 text-blue-400' : 'hover:bg-white/5 text-neutral-400')
+                className={`w-full flex items-center justify-between p-3.5 text-xs font-bold uppercase tracking-wider transition-all duration-200 ${isLightMode
+                    ? (isOpen ? 'bg-blue-50/50 text-blue-600' : 'hover:bg-black/5 text-neutral-600 hover:text-black')
+                    : (isOpen ? 'bg-gradient-to-r from-indigo-500/10 to-transparent text-indigo-400 border-l-2 border-indigo-500' : 'hover:bg-white/5 text-neutral-400 hover:text-white border-l-2 border-transparent')
                     }`}
             >
-                <div className="flex items-center gap-2">
-                    <Icon className="w-4 h-4" />
+                <div className="flex items-center gap-2.5">
+                    <div className={`p-1 rounded-md transition-colors ${isOpen ? (isLightMode ? 'bg-blue-100' : 'bg-indigo-500/20') : 'bg-transparent'}`}>
+                        <Icon className={`w-3.5 h-3.5 ${isOpen ? (isLightMode ? 'text-blue-600' : 'text-indigo-400') : 'opacity-70'}`} />
+                    </div>
                     {title}
                 </div>
-                <div className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}>
-                    <ChevronDown className="w-3 h-3" />
+                <div className={`transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}>
+                    <ChevronDown className="w-3 h-3 opacity-50" />
                 </div>
             </button>
             {isOpen && (
-                <div className={`p-3 space-y-3 border-t ${isLightMode ? 'border-neutral-900' : 'border-white/5'}`}>
+                <div className={`p-3 space-y-3 border-t ${isLightMode ? 'border-blue-100/50' : 'border-white/5 bg-neutral-900/20'}`}>
                     {children}
                 </div>
             )}
@@ -542,9 +544,9 @@ export const Controls: React.FC<ControlsProps> = ({
     };
 
     // Styles
-    const cardBg = isLightMode ? 'bg-white' : 'bg-neutral-900';
-    const subtleText = isLightMode ? 'text-neutral-950 font-medium' : 'text-neutral-400';
-    const inputBg = isLightMode ? 'bg-white border-neutral-900 text-black focus:ring-black' : 'bg-neutral-800 border-neutral-700 text-white focus:ring-blue-500';
+    const cardBg = isLightMode ? 'bg-white/80 backdrop-blur-md' : 'bg-neutral-900/40 backdrop-blur-md';
+    const subtleText = isLightMode ? 'text-neutral-600 font-medium' : 'text-neutral-400';
+    const inputBg = isLightMode ? 'bg-white border-neutral-200 text-black focus:ring-blue-500 shadow-inner' : 'bg-black/20 border-white/10 text-white focus:ring-indigo-500 shadow-inner hover:bg-black/30 transition-colors';
 
 
 
@@ -728,10 +730,13 @@ export const Controls: React.FC<ControlsProps> = ({
                             <div className="hidden sm:block w-px h-5 bg-gray-200 dark:bg-neutral-700" />
 
                             {/* Group 3: System */}
-                            <div className="flex items-center gap-1">
+                            <div className="flex items-center gap-1.5">
                                 <button
                                     onClick={onStartTour}
-                                    className={`p-2 rounded-lg transition-colors ${isLightMode ? 'text-neutral-600 hover:bg-neutral-100' : 'text-neutral-400 hover:bg-neutral-800'}`}
+                                    className={`p-2 rounded-xl border transition-all hover:scale-105 active:scale-95 ${isLightMode
+                                        ? 'border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50 shadow-sm'
+                                        : 'border-white/10 bg-neutral-800/50 text-neutral-400 hover:bg-neutral-800 hover:text-white hover:border-white/20'
+                                        }`}
                                     title="Interactive Tour"
                                     id="help-button"
                                 >
@@ -739,7 +744,10 @@ export const Controls: React.FC<ControlsProps> = ({
                                 </button>
                                 <button
                                     onClick={() => setIsLightMode(!isLightMode)}
-                                    className={`p-2 rounded-lg transition-colors ${isLightMode ? 'text-amber-500 hover:bg-neutral-100' : 'text-blue-400 hover:bg-neutral-800'}`}
+                                    className={`p-2 rounded-xl border transition-all hover:scale-105 active:scale-95 ${isLightMode
+                                        ? 'border-amber-200 bg-amber-50 text-amber-500 hover:bg-amber-100 shadow-sm'
+                                        : 'border-white/10 bg-neutral-800/50 text-indigo-400 hover:bg-neutral-800 hover:text-indigo-300 hover:border-indigo-500/30'
+                                        }`}
                                     title="Toggle Theme"
                                 >
                                     {isLightMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
@@ -756,13 +764,13 @@ export const Controls: React.FC<ControlsProps> = ({
                     <div className="space-y-3 mb-2" id="upload-section">
                         <form onSubmit={handleSubmit} className="flex flex-col gap-2">
                             {/* Datasource Selector */}
-                            <div className={`grid grid-cols-2 gap-1 p-1 rounded-lg border ${isLightMode ? 'bg-neutral-100 border-neutral-200' : 'bg-black/20 border-white/5'}`}>
+                            <div className={`grid grid-cols-2 gap-1 p-1 rounded-xl border ${isLightMode ? 'bg-neutral-100/50 border-neutral-200' : 'bg-black/20 border-white/5'}`}>
                                 <button
                                     type="button"
                                     onClick={() => setDataSource('pdb')}
-                                    className={`text-xs font-medium py-1.5 rounded-md transition-all ${dataSource === 'pdb'
-                                        ? 'bg-blue-600 text-white shadow-sm'
-                                        : `${subtleText} hover:bg-black/5 dark:hover:bg-white/10`
+                                    className={`text-xs font-bold py-1.5 rounded-lg transition-all ${dataSource === 'pdb'
+                                        ? 'bg-blue-600 text-white shadow-md shadow-blue-900/20'
+                                        : `${subtleText} hover:bg-black/5 dark:hover:bg-white/5 opacity-70 hover:opacity-100`
                                         }`}
                                 >
                                     RCSB PDB
@@ -770,9 +778,9 @@ export const Controls: React.FC<ControlsProps> = ({
                                 <button
                                     type="button"
                                     onClick={() => setDataSource('pubchem')}
-                                    className={`text-xs font-medium py-1.5 rounded-md transition-all ${dataSource === 'pubchem'
-                                        ? 'bg-blue-600 text-white shadow-sm'
-                                        : `${subtleText} hover:bg-black/5 dark:hover:bg-white/10`
+                                    className={`text-xs font-bold py-1.5 rounded-lg transition-all ${dataSource === 'pubchem'
+                                        ? 'bg-indigo-600 text-white shadow-md shadow-indigo-900/20'
+                                        : `${subtleText} hover:bg-black/5 dark:hover:bg-white/5 opacity-70 hover:opacity-100`
                                         }`}
                                 >
                                     PubChem

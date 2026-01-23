@@ -24,18 +24,18 @@ export function Settings({
 
     if (!isOpen) return null;
 
-    const bgColor = isLightMode ? 'bg-white' : 'bg-neutral-900';
+    const bgColor = isLightMode ? 'bg-white/90 backdrop-blur-xl' : 'bg-[#0a0a0a]/90 backdrop-blur-xl';
     const textColor = isLightMode ? 'text-neutral-900' : 'text-white';
-    const borderColor = isLightMode ? 'border-neutral-200' : 'border-neutral-800';
+    const borderColor = isLightMode ? 'border-white/40' : 'border-white/10';
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
-            <div className={`w-full max-w-md rounded-xl shadow-2xl ${bgColor} ${textColor} border ${borderColor} overflow-hidden font-sans`} onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300" onClick={onClose}>
+            <div className={`w-full max-w-md rounded-2xl shadow-2xl ${bgColor} ${textColor} border ${borderColor} overflow-hidden font-sans scale-100 transition-transform`} onClick={e => e.stopPropagation()}>
 
                 {/* Header */}
-                <div className={`flex items-center justify-between p-4 border-b ${borderColor}`}>
-                    <h2 className="text-lg font-bold">Settings</h2>
-                    <button onClick={onClose} className="p-1 rounded opacity-50 hover:opacity-100 transition-opacity">
+                <div className={`flex items-center justify-between p-5 border-b ${borderColor} ${isLightMode ? 'bg-gradient-to-r from-blue-50/50 to-transparent' : 'bg-gradient-to-r from-neutral-900 to-black'}`}>
+                    <h2 className="text-lg font-bold tracking-tight">Settings</h2>
+                    <button onClick={onClose} className={`p-1.5 rounded-lg opacity-60 hover:opacity-100 transition-all ${isLightMode ? 'hover:bg-black/5' : 'hover:bg-white/10'}`}>
                         <X className="w-5 h-5" />
                     </button>
                 </div>
@@ -45,27 +45,27 @@ export function Settings({
 
                     {/* Visualizer Engine */}
                     <div className="space-y-3">
-                        <h3 className="text-sm font-semibold opacity-70 uppercase tracking-wide">Rendering Engine</h3>
-                        <div className="grid grid-cols-2 gap-2">
+                        <h3 className="text-xs font-bold opacity-60 uppercase tracking-widest pl-1">Rendering Engine</h3>
+                        <div className="grid grid-cols-2 gap-3">
                             {['ngl', 'molstar'].map((engine) => (
                                 <button
                                     key={engine}
                                     onClick={() => setVisualizerEngine(engine as any)}
-                                    className={`relative px-4 py-3 rounded-lg border text-sm font-medium transition-all ${visualizerEngine === engine
-                                        ? 'bg-blue-600 border-blue-600 text-white shadow-md'
-                                        : `bg-transparent ${borderColor} opacity-60 hover:opacity-100 hover:bg-neutral-100/10`
+                                    className={`relative px-4 py-3.5 rounded-xl border text-sm font-bold transition-all duration-200 ${visualizerEngine === engine
+                                        ? 'bg-gradient-to-br from-blue-600 to-blue-700 border-blue-500 text-white shadow-lg shadow-blue-900/20 scale-[1.02]'
+                                        : `bg-transparent ${borderColor} opacity-70 hover:opacity-100 hover:bg-neutral-500/5`
                                         }`}
                                 >
                                     {engine === 'ngl' ? 'NGL Viewer' : 'Mol* Viewer'}
                                     {visualizerEngine === engine && (
-                                        <div className="absolute top-1 right-1">
-                                            <Check className="w-3 h-3" />
+                                        <div className="absolute top-2 right-2 bg-white/20 p-0.5 rounded-full">
+                                            <Check className="w-2.5 h-2.5" />
                                         </div>
                                     )}
                                 </button>
                             ))}
                         </div>
-                        <p className="text-xs opacity-50">
+                        <p className="text-xs opacity-50 pl-1">
                             Switch between the NGL viewer (Legacy) and Mol* (Advanced).
                         </p>
                     </div>
@@ -74,14 +74,14 @@ export function Settings({
 
                     {/* Theme */}
                     <div className="space-y-3">
-                        <h3 className="text-sm font-semibold opacity-70 uppercase tracking-wide">Appearance</h3>
-                        <div className="flex items-center justify-between">
-                            <span className="text-sm">Dark Mode</span>
+                        <h3 className="text-xs font-bold opacity-60 uppercase tracking-widest pl-1">Appearance</h3>
+                        <div className="flex items-center justify-between p-1">
+                            <span className="text-sm font-medium">Dark Mode</span>
                             <button
                                 onClick={() => setIsLightMode(!isLightMode)}
-                                className={`w-12 h-6 rounded-full transition-colors relative ${!isLightMode ? 'bg-blue-600' : 'bg-neutral-300'}`}
+                                className={`w-14 h-7 rounded-full transition-all duration-300 relative shadow-inner ${!isLightMode ? 'bg-indigo-600' : 'bg-neutral-200'}`}
                             >
-                                <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${!isLightMode ? 'left-7' : 'left-1'}`} />
+                                <div className={`absolute top-1 w-5 h-5 rounded-full bg-white shadow-md transition-transform duration-300 ${!isLightMode ? 'translate-x-8' : 'translate-x-1'}`} />
                             </button>
                         </div>
                     </div>
@@ -91,16 +91,16 @@ export function Settings({
 
                     {/* Graphics */}
                     <div className="space-y-3">
-                        <h3 className="text-sm font-semibold opacity-70 uppercase tracking-wide">Graphics Quality</h3>
+                        <h3 className="text-xs font-bold opacity-60 uppercase tracking-widest pl-1">Graphics Quality</h3>
 
                         <div className="grid grid-cols-3 gap-2">
                             {['low', 'medium', 'high'].map(q => (
                                 <button
                                     key={q}
                                     onClick={() => setQuality(q as any)}
-                                    className={`px-3 py-2 text-xs font-semibold uppercase rounded border ${quality === q
-                                        ? 'bg-blue-600 text-white border-blue-600'
-                                        : `${borderColor} hover:bg-neutral-100 dark:hover:bg-neutral-800`
+                                    className={`px-3 py-2.5 text-xs font-bold uppercase rounded-lg border transition-all ${quality === q
+                                        ? 'bg-blue-600 text-white border-blue-500 shadow-md transform scale-105'
+                                        : `${borderColor} hover:bg-neutral-500/5 opacity-70 hover:opacity-100`
                                         }`}
                                 >
                                     {q}
@@ -108,21 +108,24 @@ export function Settings({
                             ))}
                         </div>
 
-                        <label className="flex items-center justify-between cursor-pointer pt-2">
-                            <span className="text-sm">Ambient Occlusion (SSAO)</span>
+                        <label className="flex items-center justify-between cursor-pointer pt-2 p-1 hover:opacity-80 transition-opacity">
+                            <span className="text-sm font-medium">Ambient Occlusion (SSAO)</span>
+                            <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${ssao ? 'bg-blue-600 border-blue-600' : 'border-neutral-500'}`}>
+                                {ssao && <Check className="w-3.5 h-3.5 text-white" />}
+                            </div>
                             <input
                                 type="checkbox"
                                 checked={ssao}
                                 onChange={e => setSsao(e.target.checked)}
-                                className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                className="hidden"
                             />
                         </label>
                     </div>
                 </div>
 
                 {/* Footer */}
-                <div className={`p-4 bg-opacity-5 ${isLightMode ? 'bg-black' : 'bg-white'} text-xs text-center opacity-50`}>
-                    Protein Viewer v2.0
+                <div className={`p-4 border-t ${borderColor} ${isLightMode ? 'bg-neutral-50/50' : 'bg-black/30'} text-[10px] text-center opacity-40 uppercase tracking-wider font-mono`}>
+                    Quercus Viewer v2.0
                 </div>
 
             </div>
