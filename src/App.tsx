@@ -2880,7 +2880,7 @@ function App() {
               })()}
             </div>
             {/* Right Sidebar: Sequence Track */}
-            {!isCleanMode && (
+            {!isCleanMode && visualizerEngine === 'ngl' && (
               <SequenceTrack
                 id="sequence-track"
                 chains={chains}
