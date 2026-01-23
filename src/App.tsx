@@ -2397,6 +2397,7 @@ function App() {
             unreadCount={unreadCount}
             isChatOpen={isChatOpen}
             onToggleChat={() => setIsChatOpen(!isChatOpen)}
+            onOpenSettings={() => setIsSettingsOpen(true)}
           />
 
           <IdentityModal

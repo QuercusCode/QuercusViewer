@@ -22,9 +22,10 @@ interface HUDProps {
     unreadCount?: number;
     isChatOpen?: boolean;
     onToggleChat?: () => void;
+    onOpenSettings?: () => void;
 }
 
-export function HUD({ hoveredResidue, pdbMetadata, pdbId, isLightMode, isEmbedMode = false, peerSession, remoteHoveredResidue, isHost, remoteUserName, peerNames = {}, controllerId, isCameraSynced, onToggleCameraSync, userName, unreadCount = 0, isChatOpen = false, onToggleChat }: HUDProps) {
+export function HUD({ hoveredResidue, pdbMetadata, pdbId, isLightMode, isEmbedMode = false, peerSession, remoteHoveredResidue, isHost, remoteUserName, peerNames = {}, controllerId, isCameraSynced, onToggleCameraSync, userName, unreadCount = 0, isChatOpen = false, onToggleChat, onOpenSettings }: HUDProps) {
     const textColor = isLightMode ? 'text-gray-800' : 'text-gray-200';
     const bgColor = isLightMode ? 'bg-white/80' : 'bg-black/80';
     const borderColor = isLightMode ? 'border-gray-200' : 'border-neutral-800';
@@ -102,7 +103,13 @@ export function HUD({ hoveredResidue, pdbMetadata, pdbId, isLightMode, isEmbedMo
                                     <span className={`text-xs font-medium ${textColor}`}>You {isHost ? '(Host)' : ''}</span>
                                 </div>
                                 {controllerId === peerSession.peerId && (
-                                    <Wrench className="w-3 h-3 text-amber-500" />
+                                    <button
+                                        onClick={onOpenSettings}
+                                        className="hover:bg-amber-500/10 p-1 rounded-md transition-colors cursor-pointer"
+                                        title="Open Settings"
+                                    >
+                                        <Wrench className="w-3 h-3 text-amber-500" />
+                                    </button>
                                 )}
                             </div>
 
