@@ -1,0 +1,19 @@
+/* Hide Default Mol* Viewport Controls (Reset, Camera, etc) as we provide our own UI */
+.msp-viewport-controls {
+    display: none !important;
+}
+
+/* Hide Mol* State/Snapshot overlay if present */
+.msp-state-controls {
+    display: none !important;
+}
+
+/* Ensure Canvas is full background matches our theme */
+.msp-plugin-content {
+    background-color: transparent !important;
+}
+
+/* Optional: Hide other Mol* floating overlays to prevent clutter */
+.msp-help-text {
+    display: none !important;
+}

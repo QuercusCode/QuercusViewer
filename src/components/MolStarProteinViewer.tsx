@@ -4,6 +4,7 @@ import { createPluginUI } from 'molstar/lib/commonjs/mol-plugin-ui';
 import { DefaultPluginUISpec } from 'molstar/lib/commonjs/mol-plugin-ui/spec';
 import { PluginUIContext } from 'molstar/lib/commonjs/mol-plugin-ui/context';
 import 'molstar/lib/commonjs/mol-plugin-ui/skin/light.scss';
+import '../molstar-overrides.css';
 import { Script } from 'molstar/lib/commonjs/mol-script/script';
 import { MolScriptBuilder as MS } from 'molstar/lib/commonjs/mol-script/language/builder';
 import { StateTransforms } from 'molstar/lib/commonjs/mol-plugin-state/transforms';
