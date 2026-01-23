@@ -612,7 +612,7 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
     return (
         <>
             {/* Donation Dropdown (Floating next to Help) */}
-            <div className={`fixed top-4 z-40 group transition-all duration-300 ease-in-out ${isMolStarActive ? 'right-[380px]' : (hasSequence ? 'right-[80px] md:right-[176px]' : 'right-[80px]')}`}>
+            <div className={`fixed z-40 group transition-all duration-300 ease-in-out ${isMolStarActive ? 'bottom-20 right-[380px]' : `top-4 ${hasSequence ? 'right-[80px] md:right-[176px]' : 'right-[80px]'}`}`}>
                 <button
                     className={`h-10 px-4 rounded-full border shadow-lg backdrop-blur-md transition-all group-hover:bg-neutral-800 group-hover:text-white flex items-center gap-2 ${isLightMode ? 'bg-white/80 text-pink-600 border-black/10' : 'bg-neutral-900/80 text-pink-500 border-white/10'}`}
                 >
@@ -620,8 +620,8 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
                     <span className="text-xs font-bold hidden sm:block">Donate</span>
                 </button>
 
-                {/* Dropdown Menu */}
-                <div className="absolute right-0 top-12 w-48 py-2 bg-neutral-900/90 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform translate-y-[-10px] group-hover:translate-y-0 flex flex-col overflow-hidden">
+                {/* Dropdown Menu - Upward or Downward depending on position */}
+                <div className={`absolute right-0 w-48 py-2 bg-neutral-900/90 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform flex flex-col overflow-hidden ${isMolStarActive ? 'bottom-12 translate-y-[10px] group-hover:translate-y-0' : 'top-12 translate-y-[-10px] group-hover:translate-y-0'}`}>
                     {/* Buy Me A Coffee */}
                     <a
                         href="https://buymeacoffee.com/amirmcheraghali"
@@ -659,7 +659,7 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
             {/* Trigger Button */}
             <button
                 onClick={() => setIsOpen(true)}
-                className={`fixed top-4 z-40 h-10 w-10 flex items-center justify-center rounded-full border shadow-lg backdrop-blur-md transition-all duration-300 ease-in-out hover:scale-105 group ${isMolStarActive ? 'right-[330px]' : (hasSequence ? 'right-[27px] md:right-[123px]' : 'right-[27px]')} ${isLightMode ? 'bg-white/80 text-neutral-600 hover:text-blue-600 border-black/10 hover:bg-white' : 'bg-neutral-900/80 text-neutral-400 hover:text-white border-white/10'}`}
+                className={`fixed z-40 h-10 w-10 flex items-center justify-center rounded-full border shadow-lg backdrop-blur-md transition-all duration-300 ease-in-out hover:scale-105 group ${isMolStarActive ? 'bottom-20 right-[330px]' : `top-4 ${hasSequence ? 'right-[27px] md:right-[123px]' : 'right-[27px]'}`} ${isLightMode ? 'bg-white/80 text-neutral-600 hover:text-blue-600 border-black/10 hover:bg-white' : 'bg-neutral-900/80 text-neutral-400 hover:text-white border-white/10'}`}
                 title="Viewer Controls & Help"
             >
                 <CircleHelp className="w-5 h-5 group-hover:rotate-12 transition-transform" />
