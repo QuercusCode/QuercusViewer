@@ -53,6 +53,7 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
     const [isTrimMode, setIsTrimMode] = useState(false);
     const [tempTrimStart, setTempTrimStart] = useState<number>(0);
     const [tempTrimEnd, setTempTrimEnd] = useState<number>(0);
+    const [activeTool, setActiveTool] = useState<'default' | 'settings' | 'tracks' | 'audio' | 'text'>('default');
 
     // Segment/Range Edit Modes
     const [speedFactor, setSpeedFactor] = useState(2);
@@ -188,10 +189,30 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
             <div className="flex-1 flex min-h-0">
                 {/* LEFT TOOLBAR */}
                 <div className="w-16 bg-neutral-900/95 backdrop-blur border-r border-white/10 flex flex-col items-center py-4 gap-4 pointer-events-auto">
-                    <ToolButton icon={<Settings className="w-5 h-5" />} label="Settings" />
-                    <ToolButton icon={<Layers className="w-5 h-5" />} label="Tracks" active />
-                    <ToolButton icon={<Music className="w-5 h-5" />} label="Audio" />
-                    <ToolButton icon={<Type className="w-5 h-5" />} label="Text" />
+                    <ToolButton
+                        icon={<Settings className="w-5 h-5" />}
+                        label="Settings"
+                        active={activeTool === 'settings'}
+                        onClick={() => setActiveTool('settings')}
+                    />
+                    <ToolButton
+                        icon={<Layers className="w-5 h-5" />}
+                        label="Tracks"
+                        active={activeTool === 'tracks'}
+                        onClick={() => setActiveTool('tracks')}
+                    />
+                    <ToolButton
+                        icon={<Music className="w-5 h-5" />}
+                        label="Audio"
+                        active={activeTool === 'audio'}
+                        onClick={() => setActiveTool('audio')}
+                    />
+                    <ToolButton
+                        icon={<Type className="w-5 h-5" />}
+                        label="Text"
+                        active={activeTool === 'text'}
+                        onClick={() => setActiveTool('text')}
+                    />
                 </div>
 
                 {/* VISUAL AREA (The hole) */}
@@ -228,7 +249,11 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                 <div className="w-80 bg-neutral-900/95 backdrop-blur border-l border-white/10 flex flex-col pointer-events-auto">
                     <div className="p-4 border-b border-white/10">
                         <h2 className="text-xs font-bold text-white/50 uppercase tracking-wider">
-                            {selectedSegmentIds.length > 0 ? 'Clip Properties' : 'Project Properties'}
+                            {activeTool === 'settings' && 'Studio Settings'}
+                            {activeTool === 'tracks' && 'Timeline Tracks'}
+                            {activeTool === 'audio' && 'Audio Mixer'}
+                            {activeTool === 'text' && 'Text Overlays'}
+                            {activeTool === 'default' && (selectedSegmentIds.length > 0 ? 'Clip Properties' : 'Project Properties')}
                         </h2>
                     </div>
 
@@ -610,8 +635,12 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
     );
 };
 
-const ToolButton = ({ icon, label, active = false }: { icon: React.ReactNode, label: string, active?: boolean }) => (
-    <button className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${active ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-white/40 hover:bg-white/5 hover:text-white'}`} title={label}>
+const ToolButton = ({ icon, label, active = false, onClick }: { icon: React.ReactNode, label: string, active?: boolean, onClick?: () => void }) => (
+    <button
+        onClick={onClick}
+        className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${active ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-white/40 hover:bg-white/5 hover:text-white'}`}
+        title={label}
+    >
         {icon}
     </button>
 );
