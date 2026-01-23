@@ -4,6 +4,11 @@ import { createPluginUI } from 'molstar/lib/commonjs/mol-plugin-ui';
 import { DefaultPluginUISpec } from 'molstar/lib/commonjs/mol-plugin-ui/spec';
 import { PluginUIContext } from 'molstar/lib/commonjs/mol-plugin-ui/context';
 import 'molstar/lib/commonjs/mol-plugin-ui/skin/light.scss';
+import { Script } from 'molstar/lib/commonjs/mol-script/script';
+import { MolScriptBuilder as MS } from 'molstar/lib/commonjs/mol-script/language/builder';
+import { StateTransforms } from 'molstar/lib/commonjs/mol-plugin-state/transforms';
+import { StateObjectSelector, StateSelection } from 'molstar/lib/commonjs/mol-state';
+
 import type { ProteinViewerRef, ProteinViewerProps } from './ProteinViewer';
 
 export const MolStarProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>((props, ref) => {
@@ -69,8 +74,7 @@ export const MolStarProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerPr
         init();
 
         return () => {
-            // Cleanup if necessary
-            // pluginRef.current?.dispose(); // Mol* cleanup might be complex, careful here
+            containerRef.current = null;
         };
     }, []);
 
@@ -107,23 +111,177 @@ export const MolStarProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerPr
         try {
             const data = await pluginRef.current.builders.data.download({ url, isBinary }, { state: { isGhost: true } });
             const trajectory = await pluginRef.current.builders.structure.parseTrajectory(data, format);
-            await pluginRef.current.builders.structure.hierarchy.applyPreset(trajectory, 'default');
 
-            // Notify Parent
-            // We need to extract stats. Mol* hierarchy access is deep.
-            // props.onStructureLoaded?.({ ... }); 
+            // Store reference to the Model/Structure for updates
+            const presetResult = await pluginRef.current.builders.structure.hierarchy.applyPreset(trajectory, 'default');
+
+            if (presetResult?.structure) {
+                structureRef.current = presetResult.structure;
+
+                // Immediately apply props
+                updateVisuals();
+            }
+
         } catch (e) {
             console.error("Mol* Load Error", e);
-            props.onError?.("Failed to load structure");
+            props.onError?.("Failed to load structure: " + e);
         }
     };
 
-    useEffect(() => {
-        if (props.pdbId && pluginRef.current) {
-            loadStructure(props.pdbId, props.dataSource || 'rcsb');
-        }
-    }, [props.pdbId, props.dataSource]);
+    // State to track current hierarchy
+    const structureRef = useRef<any>(null);
 
+    // Watchers for props - Visuals
+    useEffect(() => {
+        if (!pluginRef.current || !structureRef.current) return;
+        updateVisuals();
+    }, [props.representation, props.coloring, props.customColors, props.showSurface, props.showLigands]);
+
+
+    const updateVisuals = async () => {
+        if (!pluginRef.current || !structureRef.current) return;
+        const plugin = pluginRef.current;
+
+        // This is a simplified approach: Re-apply preset or update components.
+        // Re-applying preset is the most robust way to ensure consistency without managing complex state tree transitions manually.
+        const root = structureRef.current; // This should be the StructureObject
+
+        // Map Coloring
+        let colorTheme = 'polymer-id'; // Default (Chain ID)
+        // Map App Coloring -> Mol* Coloring
+        switch (props.coloring) {
+            case 'chainid': colorTheme = 'chain-id'; break;
+            case 'residue': colorTheme = 'residue-name'; break;
+
+            case 'secondary': colorTheme = 'secondary-structure'; break;
+            case 'hydrophobicity': colorTheme = 'hydrophobicity'; break; // standard?
+            case 'bfactor': colorTheme = 'uncertainty'; break; // explicit?
+            case 'element': colorTheme = 'element-symbol'; break;
+            case 'structure': colorTheme = 'secondary-structure'; break;
+            case 'custom': colorTheme = 'uniform'; break; // Base for overpaint
+            default: colorTheme = 'chain-id';
+        }
+
+        // Map Representation
+        let type = 'cartoon';
+        switch (props.representation) {
+            case 'cartoon': type = 'cartoon'; break;
+            case 'licorice': type = 'ball-and-stick'; break; // approx
+            case 'ball+stick': type = 'ball-and-stick'; break;
+            case 'surface': type = 'molecular-surface'; break;
+            case 'spacefill': type = 'spacefill'; break;
+            case 'backbone': type = 'backbone'; break; // simplistic
+            case 'line': type = 'line'; break; // simplistic
+            default: type = 'cartoon';
+        }
+
+        // Strategy: Manually remove existing representations
+        const state = plugin.state.data;
+        // root is likely a StateObjectSelector. We need its ref for ancestor query.
+        const rootRef = root.ref || root.transform?.ref; // Robust check
+
+        if (!rootRef) return;
+
+        const potentialReps = state.select(
+            StateSelection.Generators.ofTransformer(StateTransforms.Representation.StructureRepresentation3D)
+                .ancestor(rootRef)
+        );
+
+        for (const r of potentialReps) {
+            await state.build().delete(r.transform.ref).commit();
+        }
+
+        const structure = root.obj?.data;
+        if (!structure) return;
+
+        // Main Representation
+        const mainRep = await plugin.builders.structure.representation.addRepresentation(root, {
+            type: type as any,
+            typeParams: { alpha: props.isLightMode ? 1.0 : 1.0 }, // Adjust params if needed
+            color: colorTheme as any,
+            colorParams: {}
+        });
+
+        // Custom Colors (Overpaint)
+        if (props.coloring === 'custom' && props.customColors) {
+            // Apply Overpaint
+            // We need to build a bundle for specific residues
+            await applyCustomColors(mainRep, props.customColors);
+        }
+
+        // Optional: Surface override
+        if (props.showSurface && props.representation !== 'surface') {
+            await plugin.builders.structure.representation.addRepresentation(root, {
+                type: 'molecular-surface',
+                color: colorTheme as any,
+                typeParams: { alpha: 0.5 } // Transparent surface usually
+            });
+        }
+    };
+
+    // Helper: NGL Selection -> MolScript
+    const parseNGLSelection = (selection: string) => {
+        try {
+            // Supported: ":A", "10", "10:A", "10-20", "10-20:A"
+            const parts = selection.split(' and ');
+            const token = parts[0].trim();
+
+            let chainStr = '';
+            let resStr = '';
+
+            if (token.includes(':')) {
+                const [r, c] = token.split(':');
+                resStr = r;
+                chainStr = c;
+            } else {
+                if (/^\d/.test(token)) resStr = token;
+                else if (token.startsWith(':')) chainStr = token.substring(1);
+            }
+
+            const tests: any = {};
+            if (chainStr) tests['chain-test'] = MS.core.rel.eq([MS.struct.atomProperty.macromolecular.auth_asym_id(), chainStr]);
+            if (resStr) {
+                if (resStr.includes('-')) {
+                    const [start, end] = resStr.split('-').map(Number);
+                    tests['residue-test'] = MS.core.logic.and([
+                        MS.core.rel.gre([MS.struct.atomProperty.macromolecular.auth_seq_id(), start]),
+                        MS.core.rel.lte([MS.struct.atomProperty.macromolecular.auth_seq_id(), end])
+                    ]);
+                } else {
+                    tests['residue-test'] = MS.core.rel.eq([MS.struct.atomProperty.macromolecular.auth_seq_id(), Number(resStr)]);
+                }
+            }
+
+            return MS.struct.generator.atomGroups(tests);
+
+        } catch (e) {
+            console.error("Parse NGL failed", e);
+            return MS.struct.generator.empty();
+        }
+    };
+
+    const applyCustomColors = async (repr: StateObjectSelector, rules: any[]) => {
+        if (!pluginRef.current || !repr) return;
+
+        const layers: any[] = [];
+
+        for (const rule of rules) {
+            const colorVal = Number(rule.color.replace('#', '0x'));
+            const color = colorVal as any; // Bypass TS check for branded type vs function
+            const query = parseNGLSelection(rule.selection);
+
+            layers.push({
+                script: { language: 'mol-script', expression: query } as Script,
+                color: color
+            });
+        }
+
+        if (layers.length > 0) {
+            await pluginRef.current.build().to(repr).apply(StateTransforms.Representation.OverpaintStructureRepresentation3DFromScript, {
+                layers: layers
+            }).commit();
+        }
+    };
 
     // Imperative Handle (The Contract)
     useImperativeHandle(ref, () => ({
