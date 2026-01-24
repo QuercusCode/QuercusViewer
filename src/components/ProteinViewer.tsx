@@ -2520,6 +2520,9 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
         const period = 3000; // 3 seconds for full oscillation
         const maxAngle = 15 * (Math.PI / 180); // ±15 degrees in radians
 
+        // Capture initial orientation
+        const initialOrientation = stage.viewerControls.getOrientation().clone();
+
         // Disable spin when rocking
         if (stage.spinAnimation && !stage.spinAnimation.paused) {
             stage.setSpin(false);
@@ -2529,12 +2532,13 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
             const elapsed = performance.now() - startTime;
             const angle = Math.sin((elapsed / period) * 2 * Math.PI) * maxAngle;
 
-            // Apply rotation around Y-axis
-            const newRotation = new window.NGL.Matrix4();
-            newRotation.makeRotationY(angle);
+            // Create rotation matrix for this frame
+            const rotation = new window.NGL.Matrix4();
+            rotation.makeRotationY(angle);
 
-            // Combine with current orientation
-            stage.viewerControls.orient(newRotation);
+            // Apply rotation relative to initial orientation
+            const newOrientation = initialOrientation.clone().multiply(rotation);
+            stage.viewerControls.orient(newOrientation);
 
             animationId = requestAnimationFrame(animate);
         };
