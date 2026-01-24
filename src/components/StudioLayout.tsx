@@ -258,7 +258,9 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                     </div>
 
                     <div className="p-4 space-y-6 overflow-y-auto flex-1 custom-scrollbar">
-                        {selectedSegmentIds.length > 0 ? (
+                        {/* Segment Tools - Show when segments selected AND tool is default (or force override?) */}
+                        {/* Let's prioritize explicit Tool selection. If user clicks Settings, show Settings even if segment selected. */}
+                        {activeTool === 'default' && selectedSegmentIds.length > 0 ? (
                             // SEGMENT TOOLS
                             <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-200">
                                 <div className="space-y-2">
@@ -317,46 +319,37 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                         Applies to range {formatTime(tempTrimStart)} - {formatTime(tempTrimEnd)}
                                     </p>
                                 </div>
-                            </div>
-                        ) : (
-                            // GLOBAL / PROJECT TOOLS
-                            <div className="space-y-6">
-                                {/* Trim Tool */}
-                                <div className="space-y-3">
-                                    <label className="text-xs text-white/70 font-semibold flex items-center gap-2">
-                                        <Scissors className="w-3 h-3" /> Trim Project
-                                    </label>
-                                    <div className="flex gap-2">
-                                        <button
-                                            onClick={() => setIsTrimMode(!isTrimMode)}
-                                            className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${isTrimMode
-                                                ? 'bg-blue-600 text-white ring-2 ring-blue-400/50'
-                                                : 'bg-neutral-800 text-white hover:bg-neutral-700'
-                                                }`}
-                                        >
-                                            {isTrimMode ? 'Done' : 'Select Range'}
-                                        </button>
-                                        {isTrimMode && (
-                                            <button
-                                                onClick={() => {
-                                                    trimSession(tempTrimStart, tempTrimEnd);
-                                                    setIsTrimMode(false);
-                                                }}
-                                                className="flex-1 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-xs font-bold transition-colors"
-                                            >
-                                                Apply
-                                            </button>
-                                        )}
+                                <div className="space-y-3 mb-4">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-white font-bold truncate">Segment Settings</span>
                                     </div>
-                                    {isTrimMode && (
-                                        <p className="text-[10px] text-blue-400">
-                                            Drag timeline handles to set start/end
-                                        </p>
+
+                                    {selectedSegments.length === 1 && (
+                                        <div className="space-y-3 mb-4">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-xs text-white/60">Fade In/Out</span>
+                                                <button
+                                                    onClick={() => {
+                                                        const seg = selectedSegments[0];
+                                                        const hasFade = !!seg.transition;
+                                                        updateSegment(seg.id, {
+                                                            transition: hasFade ? undefined : { type: 'fade', duration: 1000 }
+                                                        });
+                                                    }}
+                                                    className={`w-8 h-4 rounded-full transition-colors relative ${selectedSegments[0].transition ? 'bg-purple-600' : 'bg-white/10'}`}
+                                                >
+                                                    <div className={`absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full transition-transform ${selectedSegments[0].transition ? 'translate-x-4' : 'translate-x-0'}`} />
+                                                </button>
+                                            </div>
+                                        </div>
                                     )}
                                 </div>
-
+                            </div>
+                        ) : activeTool === 'settings' ? (
+                            // SETTINGS PANEL
+                            <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-200">
                                 {/* Description Field */}
-                                <div className="space-y-3 pt-4 border-t border-white/10">
+                                <div className="space-y-3">
                                     <label className="text-xs text-white/70 font-semibold flex items-center gap-2">
                                         <Type className="w-3 h-3" /> Description
                                     </label>
@@ -398,7 +391,7 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                     </div>
                                 </div>
 
-                                {/* Export Settings */}
+                                {/* Visual Settings */}
                                 <div className="space-y-3 pt-4 border-t border-white/10">
                                     <label className="text-xs text-white/70 font-semibold flex items-center gap-2">
                                         <Monitor className="w-3 h-3" /> Visual Settings
@@ -452,9 +445,11 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                         )}
                                     </div>
                                 </div>
-
-                                {/* Text Overlays */}
-                                <div className="space-y-3 pt-4 border-t border-white/10">
+                            </div>
+                        ) : activeTool === 'text' ? (
+                            // TEXT OVERLAYS PANEL
+                            <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-200">
+                                <div className="space-y-3">
                                     <div className="flex items-center justify-between">
                                         <label className="text-xs text-white/70 font-semibold flex items-center gap-2">
                                             <Type className="w-3 h-3" /> Overlays
@@ -473,86 +468,75 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                                     textOverlays: [...(session.metadata.textOverlays || []), newOverlay]
                                                 });
                                             }}
-                                            className="p-1 bg-white/10 hover:bg-white/20 rounded text-white"
+                                            className="p-1.5 bg-blue-600 hover:bg-blue-500 rounded text-white flex items-center gap-1.5 text-[10px] font-bold"
                                             title="Add Text Overlay at current time"
                                         >
-                                            <Plus className="w-3 h-3" />
+                                            <Plus className="w-3 h-3" /> Add Text
                                         </button>
                                     </div>
-                                    <div className="max-h-32 overflow-y-auto space-y-1">
-                                        {(session.metadata.textOverlays || []).map((overlay) => (
-                                            <div key={overlay.id} className="flex items-center gap-2 text-[10px] bg-neutral-800 p-2 rounded">
-                                                <input
-                                                    type="text"
-                                                    value={overlay.text}
-                                                    onChange={(e) => {
-                                                        const updated = (session.metadata.textOverlays || []).map(o =>
-                                                            o.id === overlay.id ? { ...o, text: e.target.value } : o
-                                                        );
-                                                        updateMetadata({ textOverlays: updated });
-                                                    }}
-                                                    className="flex-1 bg-transparent border-none text-white outline-none"
-                                                />
-                                                <button
-                                                    onClick={() => {
-                                                        const updated = (session.metadata.textOverlays || []).filter(o => o.id !== overlay.id);
-                                                        updateMetadata({ textOverlays: updated });
-                                                    }}
-                                                    className="text-white/40 hover:text-red-400"
-                                                >
-                                                    <Trash2 className="w-3 h-3" />
-                                                </button>
+                                    <div className="space-y-2">
+                                        {(session.metadata.textOverlays || []).length > 0 ? (session.metadata.textOverlays || []).map((overlay) => (
+                                            <div key={overlay.id} className="bg-neutral-800 p-3 rounded-lg border border-white/5 space-y-2">
+                                                <div className="flex items-center gap-2">
+                                                    <input
+                                                        type="text"
+                                                        value={overlay.text}
+                                                        onChange={(e) => {
+                                                            const updated = (session.metadata.textOverlays || []).map(o =>
+                                                                o.id === overlay.id ? { ...o, text: e.target.value } : o
+                                                            );
+                                                            updateMetadata({ textOverlays: updated });
+                                                        }}
+                                                        className="flex-1 bg-transparent border-b border-white/10 text-xs text-white outline-none focus:border-blue-500 pb-1"
+                                                    />
+                                                    <button
+                                                        onClick={() => {
+                                                            const updated = (session.metadata.textOverlays || []).filter(o => o.id !== overlay.id);
+                                                            updateMetadata({ textOverlays: updated });
+                                                        }}
+                                                        className="text-white/40 hover:text-red-400 p-1"
+                                                    >
+                                                        <Trash2 className="w-3 h-3" />
+                                                    </button>
+                                                </div>
+                                                <div className="flex justify-between text-[10px] text-white/40 font-mono">
+                                                    <span>{formatTime(overlay.start)}</span>
+                                                    <span>→</span>
+                                                    <span>{formatTime(overlay.end)}</span>
+                                                </div>
                                             </div>
-                                        ))}
-                                        {(!session.metadata.textOverlays || session.metadata.textOverlays.length === 0) && (
-                                            <p className="text-[10px] text-white/30 text-center italic">No text overlays</p>
+                                        )) : (
+                                            <div className="py-8 text-center border ring-1 ring-white/5 border-dashed border-white/10 rounded-lg">
+                                                <p className="text-[10px] text-white/30 italic">No text overlays added yet.</p>
+                                                <p className="text-[10px] text-white/20 mt-1">Click "Add Text" to start.</p>
+                                            </div>
                                         )}
                                     </div>
                                 </div>
-
-                                {/* Bulk Delete */}
-                                <div className="space-y-3 pt-4 border-t border-white/10">
+                            </div>
+                        ) : activeTool === 'tracks' ? (
+                            // TRACKS / LAYERS PANEL
+                            <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-200">
+                                {/* Bulk Delete / Clean up */}
+                                <div className="space-y-3">
                                     <label className="text-xs text-white/70 font-semibold flex items-center gap-2">
-                                        <Trash2 className="w-3 h-3" /> Bulk Delete
+                                        <Trash2 className="w-3 h-3" /> Bulk Actions
                                     </label>
-                                    <div className="space-y-3 mb-4">
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-white font-bold truncate">Segment Settings</span>
-                                        </div>
-
-                                        {selectedSegments.length === 1 && (
-                                            <div className="space-y-3 mb-4">
-                                                <div className="flex items-center justify-between">
-                                                    <span className="text-xs text-white/60">Fade In/Out</span>
-                                                    <button
-                                                        onClick={() => {
-                                                            const seg = selectedSegments[0];
-                                                            const hasFade = !!seg.transition;
-                                                            updateSegment(seg.id, {
-                                                                transition: hasFade ? undefined : { type: 'fade', duration: 1000 }
-                                                            });
-                                                        }}
-                                                        className={`w-8 h-4 rounded-full transition-colors relative ${selectedSegments[0].transition ? 'bg-purple-600' : 'bg-white/10'}`}
-                                                    >
-                                                        <div className={`absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full transition-transform ${selectedSegments[0].transition ? 'translate-x-4' : 'translate-x-0'}`} />
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
 
                                     <div className="grid grid-cols-2 gap-2">
                                         <button
                                             onClick={() => deleteEventsByType('camera')}
-                                            className="p-2 bg-neutral-800 hover:bg-neutral-700 text-white/80 rounded block text-xs transition-colors"
+                                            className="p-3 bg-neutral-800 hover:bg-neutral-700 text-white/80 rounded block text-xs transition-colors border border-white/5 text-left"
                                         >
-                                            Camera Events
+                                            <span className="block font-bold mb-1">Clear Camera</span>
+                                            <span className="text-[10px] opacity-50 block">Removes all camera moves</span>
                                         </button>
                                         <button
                                             onClick={() => deleteEventsByType('annotation')}
-                                            className="p-2 bg-neutral-800 hover:bg-neutral-700 text-white/80 rounded block text-xs transition-colors"
+                                            className="p-3 bg-neutral-800 hover:bg-neutral-700 text-white/80 rounded block text-xs transition-colors border border-white/5 text-left"
                                         >
-                                            Annotations
+                                            <span className="block font-bold mb-1">Clear Notes</span>
+                                            <span className="text-[10px] opacity-50 block">Removes all annotations</span>
                                         </button>
                                     </div>
 
@@ -561,7 +545,7 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                             const lastIdx = session.events.length - 1;
                                             if (lastIdx >= 0) deleteEvent(lastIdx);
                                         }}
-                                        className="w-full p-2 bg-neutral-800 hover:bg-red-900/30 hover:text-red-400 text-white/60 rounded text-xs transition-colors flex items-center justify-center gap-2"
+                                        className="w-full p-2 bg-neutral-800 hover:bg-red-900/30 hover:text-red-400 text-white/60 rounded text-xs transition-colors flex items-center justify-center gap-2 mt-2"
                                     >
                                         <ArrowLeft className="w-3 h-3" /> Undo Last Event
                                     </button>
@@ -595,12 +579,60 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                                 deleteEventsByTimeRange(start, end);
                                                 setDeleteRangeStart('00:00');
                                                 setDeleteRangeEnd('00:00');
+                                                setActiveTool('default');
                                             }
                                         }}
                                         className="w-full py-2 bg-red-600/10 hover:bg-red-600/20 text-red-500 border border-red-500/20 rounded text-xs font-bold transition-colors"
                                     >
                                         Delete In Range
                                     </button>
+                                </div>
+                            </div>
+                        ) : activeTool === 'audio' ? (
+                            // AUDIO PANEL (Placeholder)
+                            <div className="flex flex-col items-center justify-center py-12 text-center animate-in fade-in slide-in-from-right-4 duration-200">
+                                <Music className="w-12 h-12 text-white/10 mb-4" />
+                                <h3 className="text-sm font-bold text-white/50">Audio Mixer</h3>
+                                <p className="text-xs text-white/30 mt-2 px-8">Background music and narration tracks coming soon.</p>
+                            </div>
+                        ) : (
+                            // GLOBAL / PROJECT TOOLS (Default View)
+                            <div className="space-y-6">
+                                {/* Trim Tool */}
+                                <div className="space-y-3">
+                                    <label className="text-xs text-white/70 font-semibold flex items-center gap-2">
+                                        <Scissors className="w-3 h-3" /> Trim Project
+                                    </label>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => setIsTrimMode(!isTrimMode)}
+                                            className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${isTrimMode
+                                                ? 'bg-blue-600 text-white ring-2 ring-blue-400/50'
+                                                : 'bg-neutral-800 text-white hover:bg-neutral-700'
+                                                }`}
+                                        >
+                                            {isTrimMode ? 'Done' : 'Select Range'}
+                                        </button>
+                                        {isTrimMode && (
+                                            <button
+                                                onClick={() => {
+                                                    trimSession(tempTrimStart, tempTrimEnd);
+                                                    setIsTrimMode(false);
+                                                }}
+                                                className="flex-1 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-xs font-bold transition-colors"
+                                            >
+                                                Apply
+                                            </button>
+                                        )}
+                                    </div>
+                                    {isTrimMode && (
+                                        <p className="text-[10px] text-blue-400">
+                                            Drag timeline handles to set start/end
+                                        </p>
+                                    )}
+                                </div>
+                                <div className="pt-8 text-center">
+                                    <p className="text-[10px] text-white/30">Select a tool from the sidebar to edit settings, text, or layers.</p>
                                 </div>
                             </div>
                         )}
