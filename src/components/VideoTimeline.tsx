@@ -494,13 +494,24 @@ export const VideoTimeline = ({
                     )}
 
                     {/* Playhead - Interactive & Larger Target */}
+                    {/* Playhead - Interactive & Larger Target */}
                     <div
-                        className="absolute top-0 bottom-0 w-0.5 bg-red-500 z-50 pointer-events-none" // pointer-events-none lets clicks pass to track, but we handle scrubbing globally
+                        className="absolute top-0 bottom-0 w-0.5 bg-red-500 z-50 group/playhead"
                         style={{ left: `${(playbackTime / duration) * 100}%` }}
                     >
+                        {/* Safe Zone (Larger Hit Area for easy grabbing) */}
+                        <div
+                            className="absolute -top-2 -bottom-2 -left-4 -right-4 cursor-ew-resize z-50 flex justify-center"
+                            onMouseDown={(e) => {
+                                e.stopPropagation(); // Prevent grabbing underlying segments
+                                e.preventDefault();
+                                setIsScrubbing(true);
+                            }}
+                            title="Drag to scrub"
+                        />
+
                         {/* Visual Handle */}
-                        <div className="absolute -top-1.5 -left-2 w-4 h-4 bg-red-500 rounded-full shadow-md border-2 border-white ring-2 ring-red-500/30" />
-                        {/* Hit Area for grabbing (if we wanted specific handle grab, but track grab is easier) */}
+                        <div className="absolute -top-1.5 -left-2 w-4 h-4 bg-red-500 rounded-full shadow-md border-2 border-white ring-2 ring-red-500/30 pointer-events-none transition-transform group-hover/playhead:scale-110" />
                     </div>
 
                     {/* Hover Indicator */}
