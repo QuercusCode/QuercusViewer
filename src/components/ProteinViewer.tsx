@@ -2530,7 +2530,6 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
             const angle = Math.sin((elapsed / period) * 2 * Math.PI) * maxAngle;
 
             // Apply rotation around Y-axis
-            const currentRotation = stage.viewerControls.getOrientation();
             const newRotation = new window.NGL.Matrix4();
             newRotation.makeRotationY(angle);
 
