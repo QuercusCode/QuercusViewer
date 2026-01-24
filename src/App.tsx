@@ -2824,6 +2824,7 @@ function App() {
                             initialOrientation={index === 0 ? embedOrientation : undefined}
 
                             // Layout Sync (from Mol*)
+                            isMultiView={viewMode !== 'single'}
                             onLayoutChange={setIsMolStarSidebarExpanded}
                             // Live Session: Broadcast camera changes if active view and connected
                             onCameraChange={index === 0 && peerSession.isConnected ? (orient: any) => {

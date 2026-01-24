@@ -27,11 +27,10 @@ export const MolStarProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerPr
             const spec = DefaultPluginUISpec();
 
             // Customize Layout to fit our "Platform" approach
-            // Use default layout to show full Mol* UI as requested
             spec.layout = {
                 initial: {
-                    isExpanded: true,
-                    showControls: true,
+                    isExpanded: !props.isMultiView, // Collapse expanded UI in multi-view
+                    showControls: !props.isMultiView, // Hide full controls in multi-view to save space
                 },
             };
 

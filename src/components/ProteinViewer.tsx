@@ -97,6 +97,7 @@ export interface ProteinViewerProps {
     remoteHoveredResidue?: ResidueInfo | null;
 
     // Layout
+    isMultiView?: boolean;
     onLayoutChange?: (isExpanded: boolean) => void;
 }
 
