@@ -528,7 +528,7 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                             return (
                                                 <div
                                                     key={seg.id}
-                                                    onClick={() => toggleSegmentSelection(seg.id)}
+                                                    onClick={(e) => toggleSegmentSelection(seg.id, e.shiftKey || e.metaKey || e.ctrlKey)}
                                                     className={`p-2 rounded flex items-center gap-2 text-xs border transition-colors cursor-pointer ${isSelected
                                                         ? 'bg-blue-600/20 border-blue-500/50 text-white'
                                                         : 'bg-neutral-800 border-white/5 text-white/70 hover:bg-white/5'
