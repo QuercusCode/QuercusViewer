@@ -90,12 +90,33 @@ export const MolStarProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerPr
     // Watchers for props
     useEffect(() => {
         if (!pluginRef.current?.canvas3d) return;
-        const bgColor = props.isLightMode ? 0xFFFFFF : 0x000000;
-        // Mol* uses 0xRRGGBB format
+
+        let bgColor = 0x000000;
+        if (props.backgroundColor) {
+            bgColor = Number(props.backgroundColor.replace('#', '0x'));
+        } else {
+            bgColor = props.isLightMode ? 0xFFFFFF : 0x000000;
+        }
+
         pluginRef.current.canvas3d.setProps({
             renderer: { backgroundColor: bgColor as any }
         });
-    }, [props.isLightMode]);
+    }, [props.isLightMode, props.backgroundColor]);
+
+    // Watchers for Visual Quality (SSAO & Resolution)
+    useEffect(() => {
+        if (!pluginRef.current?.canvas3d) return;
+
+        const pixelScale = props.quality === 'high' ? 2 : props.quality === 'low' ? 0.5 : 1;
+        const occlusionState = props.enableAmbientOcclusion ? 'on' : 'off';
+
+        pluginRef.current.canvas3d.setProps({
+            pixelScale: pixelScale,
+            postprocessing: {
+                occlusion: { name: occlusionState as any, params: {} }
+            }
+        } as any);
+    }, [props.quality, props.enableAmbientOcclusion]);
 
     // Watchers for Data Source Changes
     useEffect(() => {
@@ -462,8 +483,39 @@ export const MolStarProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerPr
         recordTurntable: async (_duration) => {
             return new Blob([]);
         },
-        recordMovie: async (_duration, _options) => {
-            return new Blob([]);
+        recordMovie: async (duration, options: any) => {
+            if (!pluginRef.current?.canvas3d) return new Blob([]);
+            const plugin = pluginRef.current;
+            const canvas = plugin.canvas3d?.webgl?.gl?.canvas as HTMLCanvasElement;
+            if (!canvas) return new Blob([]);
+
+            return new Promise((resolve) => {
+                const fps = options?.fps || 30;
+                const stream = canvas.captureStream(fps);
+                const mimeType = 'video/webm;codecs=vp9';
+                const chunks: Blob[] = [];
+
+                // Basic MediaRecorder
+                const mediaRecorder = new MediaRecorder(stream, {
+                    mimeType: MediaRecorder.isTypeSupported(mimeType) ? mimeType : 'video/webm'
+                });
+
+                mediaRecorder.ondataavailable = (e) => {
+                    if (e.data.size > 0) chunks.push(e.data);
+                };
+
+                mediaRecorder.onstop = () => {
+                    resolve(new Blob(chunks, { type: chunks[0]?.type || 'video/webm' }));
+                };
+
+                mediaRecorder.start();
+
+                // If transitions/animations passed in options, we should ideally play them here
+                // For now, we allow the caller (App) to drive animation, or we just wait if it's passive
+                setTimeout(() => {
+                    mediaRecorder.stop();
+                }, duration);
+            });
         },
         resetCamera: () => {
             pluginRef.current?.canvas3d?.requestCameraReset();

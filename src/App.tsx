@@ -1496,6 +1496,7 @@ function App() {
       const overlays = recorder.session.metadata.textOverlays; // Already matches expected format
 
       // Map transitions from segments
+      // Map transitions from segments
       const transitions = recorder.segments
         .filter(s => s.transition)
         .map(s => {
@@ -1507,17 +1508,22 @@ function App() {
           };
         });
 
+      const settings = recorder.session.metadata.settings;
+      const fps = settings?.fps || 30;
+
       const blob = await viewer.recordMovie(duration, {
         watermark,
         overlays,
-        transitions
-      });
+        transitions,
+        fps // Pass FPS
+      } as any);
 
       // Prompt download
+      const ext = settings?.exportFormat === 'gif' ? 'gif' : 'webm';
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `recording-${Date.now()}.webm`;
+      a.download = `recording-${Date.now()}.${ext}`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -2817,7 +2823,11 @@ function App() {
                             coloring={ctrl.coloring}
                             customColors={ctrl.customColors}
                             palette={colorPalette}
-                            backgroundColor={ctrl.customBackgroundColor || (isLightMode ? 'white' : 'black')}
+                            backgroundColor={
+                              (isStudioMode && recorder.session?.metadata?.settings?.backgroundColor)
+                                ? recorder.session.metadata.settings.backgroundColor
+                                : (ctrl.customBackgroundColor || (isLightMode ? 'white' : 'black'))
+                            }
                             measurementTextColor={measurementTextColorMode}
                             overlays={ctrl.overlays}
 
@@ -2852,7 +2862,16 @@ function App() {
 
 
                             // Action bindings for this viewport
-                            quality={isPublicationMode ? 'high' : 'medium'}
+                            quality={
+                              (isStudioMode && recorder.session?.metadata?.settings?.exportQuality)
+                                ? recorder.session.metadata.settings.exportQuality
+                                : (isPublicationMode ? 'high' : settings.quality)
+                            }
+                            enableAmbientOcclusion={
+                              (isStudioMode && recorder.session?.metadata?.settings?.ssao !== undefined)
+                                ? recorder.session.metadata.settings.ssao
+                                : settings.ssao
+                            }
                             resetCamera={ctrl.resetKey}
                             disableScroll={!isScrollEnabled} // Scroll Protection
 
