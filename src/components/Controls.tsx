@@ -476,7 +476,6 @@ export const Controls: React.FC<ControlsProps> = ({
     setCustomColors,
     visualizerEngine,
     setVisualizerEngine,
-    onResetCamera,
     isRocking,
     setIsRocking
 }) => {
@@ -1108,16 +1107,15 @@ export const Controls: React.FC<ControlsProps> = ({
                                             <span className="text-[10px] font-bold">Mol*</span>
                                         </button>
 
-                                        {onResetCamera && (
-                                            <button
-                                                onClick={onResetCamera}
-                                                className={`col-span-2 h-10 flex items-center justify-center gap-2 rounded-lg border transition-all ${cardBg} opacity-80 hover:opacity-100 hover:bg-white/5 border-neutral-700/50`}
-                                                title="Reset camera to default view"
-                                            >
-                                                <RotateCcw className="w-3.5 h-3.5" />
-                                                <span className="text-[10px] font-medium">Reset View</span>
-                                            </button>
-                                        )}
+                                        {/* Share Button - Replaces Reset View */}
+                                        <button
+                                            onClick={onToggleShare}
+                                            className={`col-span-2 h-10 flex items-center justify-center gap-2 rounded-lg border transition-all bg-green-500/10 border-green-500/50 text-green-500 hover:bg-green-500/20 hover:border-green-500`}
+                                            title="Share Live Session"
+                                        >
+                                            <Share2 className="w-3.5 h-3.5" />
+                                            <span className="text-[10px] font-bold">Share</span>
+                                        </button>
 
                                         {/* ROW 3: Layout Grid - Spread across 4 columns */}
                                         {onSetViewMode && (
