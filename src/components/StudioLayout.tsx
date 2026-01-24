@@ -351,12 +351,19 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                 {/* Description Field */}
                                 <div className="space-y-3">
                                     <label className="text-xs text-white/70 font-semibold flex items-center gap-2">
-                                        <Type className="w-3 h-3" /> Description
+                                        <Type className="w-3 h-3" /> Project Info
                                     </label>
+                                    <input
+                                        type="text"
+                                        value={session.metadata.title}
+                                        onChange={(e) => updateMetadata({ title: e.target.value })}
+                                        className="w-full bg-neutral-800 border border-white/10 rounded px-2 py-1.5 text-xs text-white outline-none focus:border-blue-500 font-bold"
+                                        placeholder="Project Title"
+                                    />
                                     <textarea
                                         value={session.metadata.description || ''}
                                         onChange={(e) => updateMetadata({ description: e.target.value })}
-                                        className="w-full h-20 bg-neutral-800 border border-white/10 rounded-lg p-3 text-xs text-white resize-none focus:ring-1 focus:ring-blue-500 outline-none"
+                                        className="w-full h-16 bg-neutral-800 border border-white/10 rounded-lg p-3 text-xs text-white resize-none focus:ring-1 focus:ring-blue-500 outline-none"
                                         placeholder="Add project notes..."
                                     />
                                 </div>
@@ -391,27 +398,115 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                     </div>
                                 </div>
 
-                                {/* Visual Settings */}
+                                {/* Output Settings */}
                                 <div className="space-y-3 pt-4 border-t border-white/10">
                                     <label className="text-xs text-white/70 font-semibold flex items-center gap-2">
-                                        <Monitor className="w-3 h-3" /> Visual Settings
+                                        <Film className="w-3 h-3" /> Output Settings
                                     </label>
-                                    <div className="space-y-2">
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-xs text-white/60">Export Quality</span>
+
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div className="space-y-1">
+                                            <span className="text-[10px] text-white/40 uppercase font-bold">Format</span>
+                                            <select
+                                                value={session.metadata.settings?.exportFormat || 'mp4'}
+                                                onChange={(e) => updateMetadata({
+                                                    settings: { ...session.metadata.settings, exportFormat: e.target.value as any }
+                                                })}
+                                                className="w-full bg-neutral-800 border-none text-xs text-white rounded px-2 py-1.5 outline-none cursor-pointer hover:bg-neutral-700 font-mono"
+                                            >
+                                                <option value="mp4">MP4 Video</option>
+                                                <option value="webm">WebM Video</option>
+                                                <option value="gif">Animated GIF</option>
+                                            </select>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <span className="text-[10px] text-white/40 uppercase font-bold">Framerate</span>
+                                            <select
+                                                value={session.metadata.settings?.fps || 30}
+                                                onChange={(e) => updateMetadata({
+                                                    settings: { ...session.metadata.settings, fps: Number(e.target.value) as any }
+                                                })}
+                                                className="w-full bg-neutral-800 border-none text-xs text-white rounded px-2 py-1.5 outline-none cursor-pointer hover:bg-neutral-700 font-mono"
+                                            >
+                                                <option value="24">24 FPS (Film)</option>
+                                                <option value="30">30 FPS (Std)</option>
+                                                <option value="60">60 FPS (HFR)</option>
+                                            </select>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <span className="text-[10px] text-white/40 uppercase font-bold">Aspect Ratio</span>
+                                            <select
+                                                value={session.metadata.settings?.aspectRatio || '16:9'}
+                                                onChange={(e) => updateMetadata({
+                                                    settings: { ...session.metadata.settings, aspectRatio: e.target.value as any }
+                                                })}
+                                                className="w-full bg-neutral-800 border-none text-xs text-white rounded px-2 py-1.5 outline-none cursor-pointer hover:bg-neutral-700 font-mono"
+                                            >
+                                                <option value="16:9">16:9 (Landscape)</option>
+                                                <option value="9:16">9:16 (Portrait)</option>
+                                                <option value="1:1">1:1 (Square)</option>
+                                            </select>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <span className="text-[10px] text-white/40 uppercase font-bold">Quality</span>
                                             <select
                                                 value={session.metadata.settings?.exportQuality || 'medium'}
                                                 onChange={(e) => updateMetadata({
                                                     settings: { ...session.metadata.settings, exportQuality: e.target.value as any }
                                                 })}
-                                                className="bg-neutral-800 border-none text-xs text-white rounded px-2 py-1 outline-none cursor-pointer hover:bg-neutral-700"
+                                                className="w-full bg-neutral-800 border-none text-xs text-white rounded px-2 py-1.5 outline-none cursor-pointer hover:bg-neutral-700 font-mono"
                                             >
                                                 <option value="low">Low (720p)</option>
                                                 <option value="medium">Medium (1080p)</option>
                                                 <option value="high">High (4K)</option>
                                             </select>
                                         </div>
+                                    </div>
+                                </div>
+
+                                {/* Visual Settings */}
+                                <div className="space-y-3 pt-4 border-t border-white/10">
+                                    <label className="text-xs text-white/70 font-semibold flex items-center gap-2">
+                                        <Monitor className="w-3 h-3" /> Visuals
+                                    </label>
+
+                                    <div className="space-y-2">
                                         <div className="flex items-center justify-between">
+                                            <span className="text-xs text-white/60">Ambient Occlusion</span>
+                                            <button
+                                                onClick={() => updateMetadata({
+                                                    settings: { ...session.metadata.settings, ssao: !session.metadata.settings?.ssao }
+                                                })}
+                                                className={`w-8 h-4 rounded-full transition-colors relative ${session.metadata.settings?.ssao ? 'bg-green-500' : 'bg-white/10'}`}
+                                            >
+                                                <div className={`absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full transition-transform ${session.metadata.settings?.ssao ? 'translate-x-4' : 'translate-x-0'}`} />
+                                            </button>
+                                        </div>
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-xs text-white/60">High-Res Render (2x)</span>
+                                            <button
+                                                onClick={() => updateMetadata({
+                                                    settings: { ...session.metadata.settings, resolutionScale: session.metadata.settings?.resolutionScale === 2 ? 1 : 2 }
+                                                })}
+                                                className={`w-8 h-4 rounded-full transition-colors relative ${session.metadata.settings?.resolutionScale === 2 ? 'bg-purple-600' : 'bg-white/10'}`}
+                                            >
+                                                <div className={`absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full transition-transform ${session.metadata.settings?.resolutionScale === 2 ? 'translate-x-4' : 'translate-x-0'}`} />
+                                            </button>
+                                        </div>
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-xs text-white/60">Background</span>
+                                            <div className="flex items-center gap-2">
+                                                <input
+                                                    type="color"
+                                                    value={session.metadata.settings?.backgroundColor || '#000000'}
+                                                    onChange={(e) => updateMetadata({
+                                                        settings: { ...session.metadata.settings, backgroundColor: e.target.value }
+                                                    })}
+                                                    className="w-12 h-6 bg-transparent rounded cursor-pointer"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center justify-between pt-2 border-t border-white/5">
                                             <span className="text-xs text-white/60">Show Cursor</span>
                                             <button
                                                 onClick={() => updateMetadata({
@@ -422,7 +517,16 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                                 <div className={`absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full transition-transform ${session.metadata.settings?.showCursor ? 'translate-x-4' : 'translate-x-0'}`} />
                                             </button>
                                         </div>
-                                        {/* Watermark Toggle */}
+                                    </div>
+                                </div>
+
+                                {/* Branding */}
+                                <div className="space-y-3 pt-4 border-t border-white/10">
+                                    <label className="text-xs text-white/70 font-semibold flex items-center gap-2">
+                                        <ImageIcon className="w-3 h-3" /> Branding
+                                    </label>
+
+                                    <div className="space-y-2">
                                         <div className="flex items-center justify-between">
                                             <span className="text-xs text-white/60">Watermark</span>
                                             <button
@@ -434,15 +538,39 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                                 <div className={`absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full transition-transform ${session.metadata.settings?.showWatermark ? 'translate-x-4' : 'translate-x-0'}`} />
                                             </button>
                                         </div>
+
                                         {session.metadata.settings?.showWatermark && (
-                                            <input
-                                                type="text"
-                                                value={session.metadata.watermarkText || ''}
-                                                onChange={(e) => updateMetadata({ watermarkText: e.target.value })}
-                                                className="w-full bg-neutral-800 border border-white/10 rounded px-2 py-1 text-xs text-white"
-                                                placeholder="Custom Watermark..."
-                                            />
+                                            <div className="space-y-2 animate-in fade-in duration-200">
+                                                <input
+                                                    type="text"
+                                                    value={session.metadata.watermarkText || ''}
+                                                    onChange={(e) => updateMetadata({ watermarkText: e.target.value })}
+                                                    className="w-full bg-neutral-800 border border-white/10 rounded px-2 py-1 text-xs text-white"
+                                                    placeholder="Watermark Text..."
+                                                />
+                                                <div className="flex items-center justify-between px-1">
+                                                    <span className="text-[10px] text-white/40">Position</span>
+                                                    <div className="grid grid-cols-2 gap-1 w-12 h-8">
+                                                        {['top-left', 'top-right', 'bottom-left', 'bottom-right'].map(pos => (
+                                                            <button
+                                                                key={pos}
+                                                                onClick={() => updateMetadata({
+                                                                    settings: { ...session.metadata.settings, watermarkPosition: pos as any }
+                                                                })}
+                                                                className={`rounded border ${session.metadata.settings?.watermarkPosition === pos ? 'bg-blue-500 border-blue-400' : 'bg-neutral-800 border-white/10 hover:bg-neutral-700'}`}
+                                                            />
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </div>
                                         )}
+
+                                        <div className="flex items-center justify-between pt-2">
+                                            <span className="text-xs text-white/60">Upload Logo</span>
+                                            <button className="text-[10px] text-blue-400 hover:underline flex items-center gap-1">
+                                                <Plus className="w-3 h-3" /> Select Image
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

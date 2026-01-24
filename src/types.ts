@@ -176,8 +176,16 @@ export interface RecordedSession {
         settings?: {
             showCursor?: boolean;
             showWatermark?: boolean;
+            watermarkText?: string; // Moved/Duplicated for clarity in storage? No, kept in metadata root, but position here?
+            watermarkPosition?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+            watermarkImage?: string; // Data URL for logo
             exportQuality?: 'low' | 'medium' | 'high';
-            exportFormat?: 'webm' | 'mp4';
+            exportFormat?: 'webm' | 'mp4' | 'gif';
+            fps?: 24 | 30 | 60;
+            aspectRatio?: '16:9' | '9:16' | '1:1';
+            backgroundColor?: string;
+            ssao?: boolean;
+            resolutionScale?: 1 | 2;
         };
     };
     initialState: any; // Full SessionState
