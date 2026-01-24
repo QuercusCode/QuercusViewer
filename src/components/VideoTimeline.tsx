@@ -148,14 +148,26 @@ export const VideoTimeline = ({
         }
     }, [isScrubbing, onSeek, duration, zoomLevel, scrollLeft]); // Re-attach if deps change
 
-    // Handle Zoom (Wheel)
-    const handleWheel = (e: React.WheelEvent) => {
-        if (e.ctrlKey || e.metaKey) {
-            e.preventDefault();
-            const delta = -e.deltaY;
-            setZoomLevel(prev => Math.max(1, Math.min(10, prev + delta * 0.001)));
-        }
-    };
+    // Handle Zoom (Wheel) - Non-passive listener to prevent page zoom
+    useEffect(() => {
+        const container = containerRef.current;
+        if (!container) return;
+
+        const onWheel = (e: WheelEvent) => {
+            if (e.ctrlKey || e.metaKey) {
+                e.preventDefault();
+                const delta = -e.deltaY;
+                setZoomLevel(prev => Math.max(1, Math.min(10, prev + delta * 0.01))); // Increased sensitivity slightly
+            }
+        };
+
+        container.addEventListener('wheel', onWheel, { passive: false });
+        // Also handle gesture events for Safari if needed (gesturestart/change/end) logic could go here
+
+        return () => {
+            container.removeEventListener('wheel', onWheel);
+        };
+    }, []);
 
     // Trim handle dragging
     const handleHandleMouseDown = (handle: 'start' | 'end') => (e: React.MouseEvent) => {
@@ -288,7 +300,7 @@ export const VideoTimeline = ({
                 onMouseMove={handleMouseMove}
                 onMouseUp={handleMouseUp}
                 onMouseLeave={handleMouseLeave}
-                onWheel={handleWheel}
+                // onWheel removed - handled by non-passive ref listener
                 onScroll={(e) => setScrollLeft(e.currentTarget.scrollLeft)}
             >
                 {/* Scrollable Content */}
