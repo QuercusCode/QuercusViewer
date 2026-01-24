@@ -559,14 +559,14 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                     </label>
                                     <div className="grid grid-cols-2 gap-2">
                                         <button
-                                            onClick={() => deleteEventsByType('camera')}
+                                            onClick={() => deleteEventsByType('camera', undefined)}
                                             className="p-3 bg-neutral-800 hover:bg-neutral-700 text-white/80 rounded block text-xs transition-colors border border-white/5 text-left"
                                         >
                                             <span className="block font-bold mb-1">Clear Camera</span>
                                             <span className="text-[10px] opacity-50 block">Removes all camera moves</span>
                                         </button>
                                         <button
-                                            onClick={() => deleteEventsByType('annotation')}
+                                            onClick={() => deleteEventsByType('annotation', undefined)}
                                             className="p-3 bg-neutral-800 hover:bg-neutral-700 text-white/80 rounded block text-xs transition-colors border border-white/5 text-left"
                                         >
                                             <span className="block font-bold mb-1">Clear Notes</span>
