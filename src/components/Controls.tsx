@@ -18,6 +18,7 @@ import {
     Menu,
     Minimize,
     Moon,
+    MoveHorizontal,
     Plus,
     Redo2,
     RefreshCw,
@@ -330,6 +331,8 @@ interface ControlsProps {
     onTakeSnapshot: () => void; // Opens the unified snapshot modal
     isSpinning: boolean;
     setIsSpinning: (spinning: boolean) => void;
+    isRocking: boolean;
+    setIsRocking: (rocking: boolean) => void;
     isCleanMode: boolean;
     setIsCleanMode: (clean: boolean) => void;
     onSaveSession: () => void;
@@ -385,6 +388,7 @@ interface ControlsProps {
     // Engine Switcher
     visualizerEngine?: 'ngl' | 'molstar';
     setVisualizerEngine?: (engine: 'ngl' | 'molstar') => void;
+    onResetCamera?: () => void;
 }
 
 export const Controls: React.FC<ControlsProps> = ({
@@ -471,7 +475,10 @@ export const Controls: React.FC<ControlsProps> = ({
     customColors,
     setCustomColors,
     visualizerEngine,
-    setVisualizerEngine
+    setVisualizerEngine,
+    onResetCamera,
+    isRocking,
+    setIsRocking
 }) => {
     // Motif Search State
     const [searchPattern, setSearchPattern] = useState('');
@@ -1042,8 +1049,8 @@ export const Controls: React.FC<ControlsProps> = ({
                             <div className="space-y-2">
                                 <label className={`text-[10px] font-bold uppercase tracking-wider block ${subtleText}`}>Visualization</label>
                                 <div className="space-y-3">
-                                    {/* Toggles Row */}
-                                    <div className="grid grid-cols-3 gap-2">
+                                    {/* Toggles Row - Changed to 4 columns to include Rock */}
+                                    <div className="grid grid-cols-4 gap-2">
                                         {/* 6. Theme Toggle */}
                                         <button
                                             onClick={() => setShowSurface(!showSurface)}
@@ -1054,12 +1061,27 @@ export const Controls: React.FC<ControlsProps> = ({
                                             <div className={`w-1 h-1 rounded-full mt-0.5 ${showSurface ? 'bg-blue-500' : 'bg-neutral-500'}`} />
                                         </button>
                                         <button
-                                            onClick={() => setIsSpinning(!isSpinning)}
+                                            onClick={() => {
+                                                setIsSpinning(!isSpinning);
+                                                if (!isSpinning && isRocking) setIsRocking(false); // Disable rock when enabling spin
+                                            }}
                                             className={`flex flex-col items-center justify-center gap-1 px-1 py-2 rounded-lg border transition-all ${isSpinning ? 'bg-blue-500/10 border-blue-500 text-blue-500' : `${cardBg} opacity-80 hover:opacity-100`}`}
                                         >
                                             <RefreshCw className={`w-3.5 h-3.5 ${isSpinning ? 'animate-spin' : ''}`} />
                                             <span className="text-[10px] font-medium">Spin</span>
                                             <div className={`w-1 h-1 rounded-full mt-0.5 ${isSpinning ? 'bg-blue-500' : 'bg-neutral-500'}`} />
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                setIsRocking(!isRocking);
+                                                if (!isRocking && isSpinning) setIsSpinning(false); // Disable spin when enabling rock
+                                            }}
+                                            className={`flex flex-col items-center justify-center gap-1 px-1 py-2 rounded-lg border transition-all ${isRocking ? 'bg-blue-500/10 border-blue-500 text-blue-500' : `${cardBg} opacity-80 hover:opacity-100`}`}
+                                            title="Rock rotation (oscillate)"
+                                        >
+                                            <MoveHorizontal className="w-3.5 h-3.5" />
+                                            <span className="text-[10px] font-medium">Rock</span>
+                                            <div className={`w-1 h-1 rounded-full mt-0.5 ${isRocking ? 'bg-blue-500' : 'bg-neutral-500'}`} />
                                         </button>
                                         <button
                                             onClick={() => setIsDyslexicFont(!isDyslexicFont)}
@@ -1140,6 +1162,18 @@ export const Controls: React.FC<ControlsProps> = ({
                                                         </button>
                                                     </div>
                                                 </div>
+
+                                                {/* Reset View Button */}
+                                                {onResetCamera && (
+                                                    <button
+                                                        onClick={onResetCamera}
+                                                        className={`w-full h-10 flex items-center justify-center gap-2 rounded-lg border-2 font-medium text-sm transition-all ${cardBg} border-neutral-700/50 opacity-80 hover:opacity-100 hover:border-neutral-600 hover:bg-white/5`}
+                                                        title="Reset camera to default view"
+                                                    >
+                                                        <RotateCcw className="w-4 h-4" />
+                                                        <span>Reset View</span>
+                                                    </button>
+                                                )}
                                             </div>
                                         )}
                                     </div>

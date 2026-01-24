@@ -584,6 +584,7 @@ function App() {
     coloring, setColoring,
     customColors, setCustomColors,
     isSpinning, setIsSpinning,
+    isRocking, setIsRocking,
     showSurface, setShowSurface,
     showLigands, setShowLigands,
     showIons, setShowIons,
@@ -2575,6 +2576,9 @@ function App() {
                     onSnapshot={handleSnapshot}
                     isSpinning={isSpinning}
                     setIsSpinning={setIsSpinning}
+                    isRocking={isRocking}
+                    setIsRocking={setIsRocking}
+                    onResetCamera={() => viewerRefs[0].current?.resetCamera()}
                     onSaveSession={() => handleToolAction('save')}
                     onLoadSession={handleLoadSession}
                     onDownloadPDB={handleDownloadPDB}
@@ -2803,6 +2807,7 @@ function App() {
                             fileType={ctrl.fileType}
                             isLightMode={isLightMode}
                             isSpinning={viewMode === 'single' ? controllers[0].isSpinning : false} // Only spin in single view for now
+                            isRocking={viewMode === 'single' ? controllers[index].isRocking : false}
                             // Interactive if: Not connected OR Is Host OR Not Synced OR Is Active Controller
                             isInteractive={!peerSession.isConnected || peerSession.isHost || !isCameraSynced || (!!controllerId && controllerId === peerSession.peerId)}
                             representation={ctrl.representation}

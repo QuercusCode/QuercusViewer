@@ -41,6 +41,7 @@ export interface ProteinViewerProps {
     // Appearance
     isLightMode: boolean;
     isSpinning: boolean;
+    isRocking?: boolean;
     theme?: 'light' | 'dark';
     backgroundColor?: string;
     representation: RepresentationType;
@@ -156,6 +157,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
     showLigands = false,
     showIons = false,
     isSpinning = false,
+    isRocking = false,
     isMeasurementMode = false,
     measurements,
     onAddMeasurement,
@@ -2507,6 +2509,44 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
             try { stageRef.current.autoView(); } catch (e) { }
         }
     }, [resetCamera]);
+
+    // Rock Animation Effect
+    useEffect(() => {
+        if (!stageRef.current || !isRocking) return;
+
+        const stage = stageRef.current;
+        let animationId: number;
+        const startTime = performance.now();
+        const period = 3000; // 3 seconds for full oscillation
+        const maxAngle = 15 * (Math.PI / 180); // ±15 degrees in radians
+
+        // Disable spin when rocking
+        if (stage.spinAnimation && !stage.spinAnimation.paused) {
+            stage.setSpin(false);
+        }
+
+        const animate = () => {
+            const elapsed = performance.now() - startTime;
+            const angle = Math.sin((elapsed / period) * 2 * Math.PI) * maxAngle;
+
+            // Apply rotation around Y-axis
+            const currentRotation = stage.viewerControls.getOrientation();
+            const newRotation = new window.NGL.Matrix4();
+            newRotation.makeRotationY(angle);
+
+            // Combine with current orientation
+            stage.viewerControls.orient(newRotation);
+
+            animationId = requestAnimationFrame(animate);
+        };
+
+        animationId = requestAnimationFrame(animate);
+
+        return () => {
+            if (animationId) cancelAnimationFrame(animationId);
+        };
+    }, [isRocking]);
+
 
     // Handle Scroll Protection
     useEffect(() => {
