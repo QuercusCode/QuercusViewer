@@ -293,7 +293,7 @@ interface ControlsProps {
     setRepresentation: (type: RepresentationType) => void;
     coloring: ColoringType;
     setColoring: (type: ColoringType) => void;
-    onResetView: () => void;
+
     chains: ChainInfo[];
     ligands: string[];
 
@@ -404,7 +404,7 @@ export const Controls: React.FC<ControlsProps> = ({
     setRepresentation,
     coloring,
     setColoring,
-    onResetView,
+
     chains,
     ligands,
 
@@ -476,6 +476,7 @@ export const Controls: React.FC<ControlsProps> = ({
     setCustomColors,
     visualizerEngine,
     setVisualizerEngine,
+    onResetCamera,
     isRocking,
     setIsRocking
 }) => {
@@ -1107,15 +1108,16 @@ export const Controls: React.FC<ControlsProps> = ({
                                             <span className="text-[10px] font-bold">Mol*</span>
                                         </button>
 
-                                        {/* Share Button - Replaces Reset View */}
-                                        <button
-                                            onClick={onToggleShare}
-                                            className={`col-span-2 h-10 flex items-center justify-center gap-2 rounded-lg border transition-all bg-green-500/10 border-green-500/50 text-green-500 hover:bg-green-500/20 hover:border-green-500`}
-                                            title="Share Live Session"
-                                        >
-                                            <Share2 className="w-3.5 h-3.5" />
-                                            <span className="text-[10px] font-bold">Share</span>
-                                        </button>
+                                        {onResetCamera && (
+                                            <button
+                                                onClick={onResetCamera}
+                                                className={`col-span-2 h-10 flex items-center justify-center gap-2 rounded-lg border transition-all ${cardBg} opacity-80 hover:opacity-100 hover:bg-white/5 border-neutral-700/50`}
+                                                title="Reset camera to default view"
+                                            >
+                                                <RotateCcw className="w-3.5 h-3.5" />
+                                                <span className="text-[10px] font-medium">Reset View</span>
+                                            </button>
+                                        )}
 
                                         {/* ROW 3: Layout Grid - Spread across 4 columns */}
                                         {onSetViewMode && (
@@ -1745,14 +1747,11 @@ export const Controls: React.FC<ControlsProps> = ({
                                 <label className={`text-[10px] font-bold uppercase tracking-wider block mb-2 ${subtleText}`}>Actions & Recording</label>
                                 <div className="space-y-2">
                                     <div className="flex gap-2">
-                                        <button onClick={onResetView} className={`flex-1 flex items-center justify-center gap-2 border py-2 rounded-lg transition-all ${cardBg} hover:opacity-80`}>
-                                            <RotateCcw className="w-3.5 h-3.5" /> <span className="text-xs">Reset</span>
+                                        <button onClick={onToggleShare} className={`flex-1 flex items-center justify-center gap-2 border py-2 rounded-lg transition-all ${cardBg} hover:text-green-500 hover:border-green-500/50`}>
+                                            <Share2 className="w-3.5 h-3.5" /> <span className="text-xs">Live Session</span>
                                         </button>
                                         <button onClick={onTakeSnapshot} className={`flex-1 flex items-center justify-center gap-1 border py-2 rounded-lg transition-all ${cardBg} hover:text-blue-500 hover:border-blue-500/50`}>
                                             <Camera className="w-3.5 h-3.5" /> <span className="text-xs">Snapshot</span>
-                                        </button>
-                                        <button onClick={onToggleShare} className={`flex-1 flex items-center justify-center gap-2 border py-2 rounded-lg transition-all ${cardBg} hover:text-green-500 hover:border-green-500/50`}>
-                                            <Share2 className="w-3.5 h-3.5" /> <span className="text-xs">Share</span>
                                         </button>
                                     </div>
 

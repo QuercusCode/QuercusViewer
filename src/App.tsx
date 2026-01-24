@@ -2518,7 +2518,7 @@ function App() {
                     setVisualizerEngine={setVisualizerEngine}
                     coloring={coloring}
                     setColoring={setColoring}
-                    onResetView={() => handleToolAction('reset')}
+                    onResetCamera={() => handleToolAction('reset')}
                     chains={chains}
                     ligands={ligands}
                     isMeasurementMode={isMeasurementMode}
@@ -2578,7 +2578,7 @@ function App() {
                     setIsSpinning={setIsSpinning}
                     isRocking={isRocking}
                     setIsRocking={setIsRocking}
-                    onResetCamera={() => viewerRefs[0].current?.resetCamera()}
+
                     onSaveSession={() => handleToolAction('save')}
                     onLoadSession={handleLoadSession}
                     onDownloadPDB={handleDownloadPDB}
