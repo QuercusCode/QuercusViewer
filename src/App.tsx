@@ -2806,8 +2806,8 @@ function App() {
                             file={ctrl.file || undefined}
                             fileType={ctrl.fileType}
                             isLightMode={isLightMode}
-                            isSpinning={viewMode === 'single' ? controllers[0].isSpinning : false} // Only spin in single view for now
-                            isRocking={viewMode === 'single' ? controllers[index].isRocking : false}
+                            isSpinning={controllers[index].isSpinning}
+                            isRocking={controllers[index].isRocking}
                             // Interactive if: Not connected OR Is Host OR Not Synced OR Is Active Controller
                             isInteractive={!peerSession.isConnected || peerSession.isHost || !isCameraSynced || (!!controllerId && controllerId === peerSession.peerId)}
                             representation={ctrl.representation}
