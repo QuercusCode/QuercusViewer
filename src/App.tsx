@@ -1511,12 +1511,30 @@ function App() {
       const settings = recorder.session.metadata.settings;
       const fps = settings?.fps || 30;
 
-      const blob = await viewer.recordMovie(duration, {
+      // 1. Reset timeline to start
+      recorder.seek(0);
+      await new Promise(r => setTimeout(r, 100)); // Wait for seek to apply
+
+      // 2. Start Recording (Async) - wraps the recording duration
+      const recordingPromise = viewer.recordMovie(duration, {
         watermark,
         overlays,
         transitions,
         fps // Pass FPS
       } as any);
+
+      // 3. Start Playback (Concurrent)
+      // Delay slightly to ensure MediaRecorder is active
+      setTimeout(() => {
+        recorder.play();
+      }, 50);
+
+      // 4. Wait for recording to finish
+      const blob = await recordingPromise;
+
+      // 5. Stop playback
+      recorder.pause();
+
 
       // Prompt download
       const ext = settings?.exportFormat === 'gif' ? 'gif' : 'webm';
