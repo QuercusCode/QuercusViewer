@@ -188,7 +188,7 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
             {/* MAIN CONTENT AREA */}
             <div className="flex-1 flex min-h-0">
                 {/* LEFT TOOLBAR */}
-                <div className="w-16 bg-neutral-900/95 backdrop-blur border-r border-white/10 flex flex-col items-center py-4 gap-4 pointer-events-auto">
+                <div className="w-16 bg-neutral-900/95 backdrop-blur border-r border-white/10 flex flex-col items-center py-4 gap-4 pointer-events-auto z-50">
                     <ToolButton
                         icon={<Settings className="w-5 h-5" />}
                         label="Settings"
@@ -517,12 +517,46 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                         ) : activeTool === 'tracks' ? (
                             // TRACKS / LAYERS PANEL
                             <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-200">
-                                {/* Bulk Delete / Clean up */}
+                                {/* Segment List */}
                                 <div className="space-y-3">
+                                    <label className="text-xs text-white/70 font-semibold flex items-center gap-2">
+                                        <Layers className="w-3 h-3" /> Timeline Segments ({segments.length})
+                                    </label>
+                                    <div className="max-h-60 overflow-y-auto space-y-1">
+                                        {segments.map((seg, idx) => {
+                                            const isSelected = selectedSegmentIds.includes(seg.id);
+                                            return (
+                                                <div
+                                                    key={seg.id}
+                                                    onClick={() => toggleSegmentSelection(seg.id)}
+                                                    className={`p-2 rounded flex items-center gap-2 text-xs border transition-colors cursor-pointer ${isSelected
+                                                        ? 'bg-blue-600/20 border-blue-500/50 text-white'
+                                                        : 'bg-neutral-800 border-white/5 text-white/70 hover:bg-white/5'
+                                                        }`}
+                                                >
+                                                    <span className="font-mono text-white/30 text-[10px] w-4">{idx + 1}</span>
+                                                    <div className="flex-1 truncate">
+                                                        <span className="font-semibold">Clip {idx + 1}</span>
+                                                        <span className="mx-1 opacity-50">•</span>
+                                                        <span>{formatTime(seg.startTime)}</span>
+                                                    </div>
+                                                    {isSelected && (
+                                                        <div className="w-2 h-2 rounded-full bg-blue-500" />
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                        {segments.length === 0 && (
+                                            <p className="text-[10px] text-white/30 text-center italic py-4">No segments in timeline</p>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Bulk Delete / Clean up */}
+                                <div className="space-y-3 pt-4 border-t border-white/10">
                                     <label className="text-xs text-white/70 font-semibold flex items-center gap-2">
                                         <Trash2 className="w-3 h-3" /> Bulk Actions
                                     </label>
-
                                     <div className="grid grid-cols-2 gap-2">
                                         <button
                                             onClick={() => deleteEventsByType('camera')}
@@ -539,7 +573,6 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                             <span className="text-[10px] opacity-50 block">Removes all annotations</span>
                                         </button>
                                     </div>
-
                                     <button
                                         onClick={() => {
                                             const lastIdx = session.events.length - 1;
@@ -579,7 +612,6 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                                 deleteEventsByTimeRange(start, end);
                                                 setDeleteRangeStart('00:00');
                                                 setDeleteRangeEnd('00:00');
-                                                setActiveTool('default');
                                             }
                                         }}
                                         className="w-full py-2 bg-red-600/10 hover:bg-red-600/20 text-red-500 border border-red-500/20 rounded text-xs font-bold transition-colors"
@@ -589,11 +621,50 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                 </div>
                             </div>
                         ) : activeTool === 'audio' ? (
-                            // AUDIO PANEL (Placeholder)
-                            <div className="flex flex-col items-center justify-center py-12 text-center animate-in fade-in slide-in-from-right-4 duration-200">
-                                <Music className="w-12 h-12 text-white/10 mb-4" />
-                                <h3 className="text-sm font-bold text-white/50">Audio Mixer</h3>
-                                <p className="text-xs text-white/30 mt-2 px-8">Background music and narration tracks coming soon.</p>
+                            // AUDIO PANEL
+                            <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-200">
+                                <div className="space-y-3">
+                                    <label className="text-xs text-white/70 font-semibold flex items-center gap-2">
+                                        <Music className="w-3 h-3" /> Audio Mixer
+                                    </label>
+
+                                    {/* Emulate Audio Channels */}
+                                    <div className="bg-neutral-800 p-3 rounded-lg border border-white/5 space-y-3">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-xs font-bold text-white">Master Volume</span>
+                                            <span className="text-[10px] text-blue-400">100%</span>
+                                        </div>
+                                        <input type="range" className="w-full h-1 bg-neutral-700 rounded-lg appearance-none cursor-pointer accent-blue-500" />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-xs text-white/60">Music Track</span>
+                                            <button className="text-[10px] text-blue-400 hover:underline">+ Add File</button>
+                                        </div>
+                                        <div className="bg-neutral-800/50 p-2 rounded border border-white/5 flex items-center gap-3">
+                                            <div className="w-8 h-8 bg-neutral-700 rounded flex items-center justify-center">
+                                                <Music className="w-4 h-4 text-white/30" />
+                                            </div>
+                                            <div className="flex-1">
+                                                <div className="h-1.5 bg-neutral-700 rounded-full overflow-hidden">
+                                                    <div className="h-full bg-blue-500/50 w-full" />
+                                                </div>
+                                            </div>
+                                            <span className="text-[10px] text-white/30">Empty</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-xs text-white/60">Sound Effects</span>
+                                            <span className="text-[10px] text-white/20">None</span>
+                                        </div>
+                                        <button className="w-full py-2 border border-dashed border-white/10 rounded text-[10px] text-white/40 hover:bg-white/5 hover:text-white transition-colors">
+                                            Browse SFX Library
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         ) : (
                             // GLOBAL / PROJECT TOOLS (Default View)
