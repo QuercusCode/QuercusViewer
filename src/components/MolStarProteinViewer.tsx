@@ -99,8 +99,9 @@ export const MolStarProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerPr
         }
 
         pluginRef.current.canvas3d.setProps({
-            renderer: { backgroundColor: bgColor as any }
-        });
+            renderer: { backgroundColor: bgColor as any },
+            transparentBackground: false // Force Opaque (Root prop)
+        } as any);
     }, [props.isLightMode, props.backgroundColor]);
 
     // Watchers for Visual Quality (SSAO & Resolution)
@@ -492,7 +493,8 @@ export const MolStarProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerPr
             return new Promise((resolve) => {
                 const fps = options?.fps || 30;
                 const stream = canvas.captureStream(fps);
-                const mimeType = 'video/webm;codecs=vp9';
+                // Simplify MIME type to avoid codec issues. Browser will pick best available.
+                const mimeType = 'video/webm';
                 const chunks: Blob[] = [];
 
                 // Basic MediaRecorder
