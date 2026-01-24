@@ -78,9 +78,11 @@ export const VideoTimeline = ({
         return Math.max(0, Math.min(duration, (relativeX / width) * duration));
     };
 
+    const [isScrubbing, setIsScrubbing] = useState(false);
+
     const handleTimelineMouseDown = (e: React.MouseEvent) => {
-        if (trimMode) return; // Don't pan in trim mode to avoid conflict with handles
-        if (e.button === 1 || (e.button === 0 && e.altKey)) { // Middle click or Alt+Left click to pan
+        if (trimMode) return;
+        if (e.button === 1 || (e.button === 0 && e.altKey)) {
             e.preventDefault();
             setIsPanning(true);
             setPanStartX(e.clientX);
@@ -88,7 +90,8 @@ export const VideoTimeline = ({
                 setPanStartScroll(containerRef.current.scrollLeft);
             }
         } else if (e.button === 0) {
-            // Normal click to seek
+            // Scrubbing Start
+            setIsScrubbing(true);
             const time = xToTime(e.clientX);
             onSeek(time);
         }
@@ -103,16 +106,47 @@ export const VideoTimeline = ({
             containerRef.current.scrollLeft = panStartScroll - delta;
             setScrollLeft(containerRef.current.scrollLeft);
         }
+
+        if (isScrubbing) {
+            onSeek(time);
+        }
     };
 
     const handleMouseLeave = () => {
         setHoveredTime(null);
         setIsPanning(false);
+        // Don't stop scrubbing on leave, let global mouse up handle it? 
+        // Or if we leave the track, maybe we should stop scrubbing if we didn't capture pointer?
+        // Since we are using simple div events, let's keep it simple: Stop scrubbing on leave or global up.
+        // Better UX: add global listener for scrubbing.
     };
 
     const handleMouseUp = () => {
         setIsPanning(false);
+        setIsScrubbing(false);
     };
+
+    // Global Mouse Up to catching dragging outside
+    useEffect(() => {
+        if (isScrubbing) {
+            const handleGlobalUp = () => setIsScrubbing(false);
+            const handleGlobalMove = (e: MouseEvent) => {
+                // Calculate time relative to container
+                if (containerRef.current) {
+                    // Logic duplicated from xToTime but needs clientX
+                    // We can reuse xToTime if we pass clientX
+                    const time = xToTime(e.clientX);
+                    onSeek(time);
+                }
+            };
+            window.addEventListener('mouseup', handleGlobalUp);
+            window.addEventListener('mousemove', handleGlobalMove);
+            return () => {
+                window.removeEventListener('mouseup', handleGlobalUp);
+                window.removeEventListener('mousemove', handleGlobalMove);
+            };
+        }
+    }, [isScrubbing, onSeek, duration, zoomLevel, scrollLeft]); // Re-attach if deps change
 
     // Handle Zoom (Wheel)
     const handleWheel = (e: React.WheelEvent) => {
@@ -447,12 +481,14 @@ export const VideoTimeline = ({
                         </>
                     )}
 
-                    {/* Playhead */}
+                    {/* Playhead - Interactive & Larger Target */}
                     <div
-                        className="absolute top-0 bottom-0 w-0.5 bg-red-500 z-30"
+                        className="absolute top-0 bottom-0 w-0.5 bg-red-500 z-50 pointer-events-none" // pointer-events-none lets clicks pass to track, but we handle scrubbing globally
                         style={{ left: `${(playbackTime / duration) * 100}%` }}
                     >
-                        <div className="absolute -top-1 -left-1.5 w-3 h-3 bg-red-500 rounded-full sticky left-0" />
+                        {/* Visual Handle */}
+                        <div className="absolute -top-1.5 -left-2 w-4 h-4 bg-red-500 rounded-full shadow-md border-2 border-white ring-2 ring-red-500/30" />
+                        {/* Hit Area for grabbing (if we wanted specific handle grab, but track grab is easier) */}
                     </div>
 
                     {/* Hover Indicator */}
