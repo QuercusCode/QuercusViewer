@@ -47,8 +47,14 @@ import { MOTIF_LIBRARY } from '../data/motifLibrary';
 // Reusable Sidebar Section Component - Defined outside to prevent re-renders losing focus
 const SidebarSection = ({ title, icon: Icon, children, isOpen, onToggle, isLightMode, id }: { title: string, icon: any, children: React.ReactNode, isOpen: boolean, onToggle: () => void, isLightMode: boolean, id?: string }) => {
     const sectionRef = useRef<HTMLDivElement>(null);
+    const hasMounted = useRef(false);
 
     useEffect(() => {
+        if (!hasMounted.current) {
+            hasMounted.current = true;
+            return;
+        }
+
         if (isOpen && sectionRef.current) {
             // Timeout to match transition duration (300ms) or allow render
             setTimeout(() => {
