@@ -563,6 +563,11 @@ export const MolStarProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerPr
 
                     // A. Draw WebGL Content
                     // Note: preserveDrawingBuffer: true is required for this to work (handled by hijack)
+
+                    // CRITICAL FIX: Clear composite buffer to prevent "hall of mirrors" / ghosting artifacts
+                    ctx.clearRect(0, 0, width, height);
+
+                    // Draw clean frame
                     ctx.drawImage(canvas, 0, 0);
 
                     // B. Draw Watermark
