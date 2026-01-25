@@ -500,32 +500,46 @@ export const MolStarProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerPr
             return new Blob([]);
         },
         recordMovie: async (duration, options: any) => {
-            if (!pluginRef.current?.canvas3d) return new Blob([]);
-            const plugin = pluginRef.current;
-            const canvas = plugin.canvas3d?.webgl?.gl?.canvas as HTMLCanvasElement;
-            if (!canvas) return new Blob([]);
+            return new Promise((resolve, reject) => {
+                if (!pluginRef.current?.canvas3d) {
+                    resolve(new Blob([]));
+                    return;
+                }
 
-            return new Promise((resolve) => {
-                const fps = options?.fps || 30;
-                const stream = canvas.captureStream(fps);
+                const canvas = pluginRef.current.canvas3d.webgl.gl.canvas as HTMLCanvasElement;
+                const width = canvas.width;
+                const height = canvas.height;
+
+                // 1. Setup Composite Canvas
+                const compositeCanvas = document.createElement('canvas');
+                compositeCanvas.width = width;
+                compositeCanvas.height = height;
+                const ctx = compositeCanvas.getContext('2d');
+
+                if (!ctx) {
+                    reject(new Error("Failed to create composite context"));
+                    return;
+                }
+
+                // 2. Setup Stream from Composite (Solid 2D Buffer)
+                const stream = compositeCanvas.captureStream(options?.fps || 30);
 
                 // Prioritize high-quality codecs
                 const mimeTypes = [
                     'video/webm;codecs=vp9',
                     'video/webm;codecs=vp8',
                     'video/webm',
-                    'video/mp4' // Minimal support on some browsers
+                    'video/mp4'
                 ];
 
                 const mimeType = mimeTypes.find(type => MediaRecorder.isTypeSupported(type)) || 'video/webm';
 
-                const chunks: Blob[] = [];
-
-                // High bitrate for "perfect" quality (25 Mbps)
                 const mediaRecorder = new MediaRecorder(stream, {
                     mimeType,
-                    videoBitsPerSecond: 25000000
+                    videoBitsPerSecond: 25000000 // 25 Mbps
                 });
+
+                const chunks: Blob[] = [];
 
                 mediaRecorder.ondataavailable = (e) => {
                     if (e.data.size > 0) chunks.push(e.data);
@@ -537,9 +551,69 @@ export const MolStarProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerPr
 
                 mediaRecorder.start();
 
-                setTimeout(() => {
-                    mediaRecorder.stop();
-                }, duration);
+                // 3. Animation Loop
+                const startTime = performance.now();
+
+                const animate = () => {
+                    const elapsed = performance.now() - startTime;
+                    if (elapsed >= duration) {
+                        mediaRecorder.stop();
+                        return;
+                    }
+
+                    // A. Draw WebGL Content
+                    // Note: preserveDrawingBuffer: true is required for this to work (handled by hijack)
+                    ctx.drawImage(canvas, 0, 0);
+
+                    // B. Draw Watermark
+                    if (options.watermark?.show && options.watermark.text) {
+                        const fontSize = Math.max(20, Math.floor(height * 0.03));
+                        ctx.font = `700 ${fontSize}px "Inter", sans-serif`;
+                        ctx.textAlign = 'right';
+                        ctx.textBaseline = 'bottom';
+                        ctx.shadowColor = 'rgba(0,0,0,0.6)';
+                        ctx.shadowBlur = 4;
+                        ctx.shadowOffsetX = 1;
+                        ctx.shadowOffsetY = 1;
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                        const margin = Math.floor(width * 0.02);
+                        ctx.fillText(options.watermark.text, width - margin, height - margin);
+                    }
+
+                    // C. Draw Overlays
+                    if (options.overlays) {
+                        options.overlays.forEach((overlay: any) => {
+                            if (elapsed >= overlay.start && elapsed <= overlay.end) {
+                                const fontSize = Math.max(24, Math.floor(height * 0.05));
+                                ctx.font = `800 ${fontSize}px "Inter", sans-serif`;
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'middle';
+                                ctx.fillStyle = 'white';
+                                ctx.shadowColor = 'black';
+                                ctx.shadowBlur = 6;
+                                ctx.fillText(overlay.text, width * overlay.x, height * overlay.y);
+                            }
+                        });
+                    }
+
+                    // D. Draw Transitions
+                    if (options.transitions) {
+                        options.transitions.forEach((t: any) => {
+                            let opacity = 0;
+                            if (t.start === 0 && elapsed < t.duration) {
+                                opacity = 1 - (elapsed / t.duration);
+                            }
+                            if (opacity > 0) {
+                                ctx.fillStyle = `rgba(0, 0, 0, ${opacity})`;
+                                ctx.fillRect(0, 0, width, height);
+                            }
+                        });
+                    }
+
+                    requestAnimationFrame(animate);
+                };
+
+                requestAnimationFrame(animate);
             });
         },
         resetCamera: () => {
