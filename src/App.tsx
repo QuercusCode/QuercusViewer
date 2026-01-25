@@ -1527,7 +1527,7 @@ function App() {
       // Delay slightly to ensure MediaRecorder is active
       setTimeout(() => {
         recorder.play();
-      }, 50);
+      }, 10);
 
       // 4. Wait for recording to finish
       const blob = await recordingPromise;

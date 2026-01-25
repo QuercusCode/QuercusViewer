@@ -122,7 +122,8 @@ export const MolStarProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerPr
     useEffect(() => {
         if (!pluginRef.current?.canvas3d) return;
 
-        const pixelScale = props.quality === 'high' ? 2 : props.quality === 'low' ? 0.5 : 1;
+        const dpr = typeof window !== 'undefined' ? window.devicePixelRatio : 1;
+        const pixelScale = props.quality === 'high' ? Math.max(2, dpr) : props.quality === 'low' ? 0.5 : 1;
         const occlusionState = props.enableAmbientOcclusion ? 'on' : 'off';
 
         pluginRef.current.canvas3d.setProps({
@@ -507,13 +508,23 @@ export const MolStarProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerPr
             return new Promise((resolve) => {
                 const fps = options?.fps || 30;
                 const stream = canvas.captureStream(fps);
-                // Simplify MIME type to avoid codec issues. Browser will pick best available.
-                const mimeType = 'video/webm';
+
+                // Prioritize high-quality codecs
+                const mimeTypes = [
+                    'video/webm;codecs=vp9',
+                    'video/webm;codecs=vp8',
+                    'video/webm',
+                    'video/mp4' // Minimal support on some browsers
+                ];
+
+                const mimeType = mimeTypes.find(type => MediaRecorder.isTypeSupported(type)) || 'video/webm';
+
                 const chunks: Blob[] = [];
 
-                // Basic MediaRecorder
+                // High bitrate for "perfect" quality (25 Mbps)
                 const mediaRecorder = new MediaRecorder(stream, {
-                    mimeType: MediaRecorder.isTypeSupported(mimeType) ? mimeType : 'video/webm'
+                    mimeType,
+                    videoBitsPerSecond: 25000000
                 });
 
                 mediaRecorder.ondataavailable = (e) => {
@@ -521,13 +532,11 @@ export const MolStarProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerPr
                 };
 
                 mediaRecorder.onstop = () => {
-                    resolve(new Blob(chunks, { type: chunks[0]?.type || 'video/webm' }));
+                    resolve(new Blob(chunks, { type: chunks[0]?.type || mimeType }));
                 };
 
                 mediaRecorder.start();
 
-                // If transitions/animations passed in options, we should ideally play them here
-                // For now, we allow the caller (App) to drive animation, or we just wait if it's passive
                 setTimeout(() => {
                     mediaRecorder.stop();
                 }, duration);
