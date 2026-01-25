@@ -41,6 +41,16 @@ export const MolStarProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerPr
             ];
 
             try {
+                // HACK: Force preserveDrawingBuffer: true for WebGL context to ensure video recording works (prevents tearing/flickering)
+                const originalGetContext = HTMLCanvasElement.prototype.getContext;
+                // @ts-ignore
+                HTMLCanvasElement.prototype.getContext = function (type: string, attributes?: any) {
+                    if (type === 'webgl' || type === 'webgl2') {
+                        attributes = { ...(attributes || {}), preserveDrawingBuffer: true, alpha: false }; // Also force alpha: false for solid background
+                    }
+                    return originalGetContext.call(this, type, attributes);
+                };
+
                 pluginRef.current = await createPluginUI({
                     target: containerRef.current!,
                     spec,
@@ -48,6 +58,10 @@ export const MolStarProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerPr
                         createRoot(container).render(component);
                     }
                 });
+
+                // Restore original getContext
+                HTMLCanvasElement.prototype.getContext = originalGetContext;
+
 
                 // Subscribe to Layout Changes to adjust UI overlay
                 pluginRef.current.layout.events.updated.subscribe(() => {
