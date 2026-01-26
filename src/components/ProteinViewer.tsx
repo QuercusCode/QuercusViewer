@@ -2539,8 +2539,6 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
 
     useEffect(() => {
         updateRepresentation();
-    useEffect(() => {
-        updateRepresentation();
     }, [representation, coloring, showSurface, showLigands, showIons, colorPalette, customColors, chainStyles]);
 
     useEffect(() => {
