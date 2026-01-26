@@ -2431,8 +2431,9 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                 quality: 'high'
             };
 
+            let globalParams = { ...params };
             if (repType === 'cartoon') {
-                Object.assign(params, cartoonParams);
+                Object.assign(globalParams, cartoonParams);
                 try { component.structure.eachModel((m: any) => m.calculateSecondaryStructure?.()); } catch (e) { }
             }
 
@@ -2446,7 +2447,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
 
             // Add the default representation (for non-overridden chains)
             if (defaultSelection !== "not ()" && defaultSelection !== "none") {
-                component.addRepresentation(repType, { ...params, sele: defaultSelection });
+                component.addRepresentation(repType, { ...globalParams, sele: defaultSelection });
             }
 
             // --- 5. RENDER CHAIN-SPECIFIC STYLES ---
@@ -2454,9 +2455,9 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                 Object.entries(chainStyles).forEach(([chain, style]) => {
                     if (!style) return;
                     
-                    const chainParams = {
-                        ...params,
-                        color: finalColor, // Inherit coloring scheme (or allow override later)
+                    const chainParams: any = {
+                        ...params, // Use clean params (without accumulated cartoon properties)
+                        color: finalColor,
                         sele: `:${chain}`
                     };
 
