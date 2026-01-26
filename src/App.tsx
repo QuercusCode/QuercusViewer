@@ -2847,6 +2847,7 @@ function App() {
                             coloring={ctrl.coloring}
                             customColors={ctrl.customColors}
                             chainStyles={ctrl.chainStyles}
+                            customStyles={ctrl.customStyles}
                             palette={colorPalette}
                             backgroundColor={
                               (isStudioMode && recorder.session?.metadata?.settings?.backgroundColor)
