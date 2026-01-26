@@ -15,6 +15,13 @@ export interface CustomColorRule {
     representation?: RepresentationType;
 }
 
+export interface CustomStyleRule {
+    id: string; // unique ID for deletion
+    chain: string;
+    residues: string; // e.g. "50-60"
+    style: RepresentationType;
+}
+
 export interface AtomInfo {
     serial: number;
     name: string;

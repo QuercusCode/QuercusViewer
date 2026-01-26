@@ -13,7 +13,8 @@ import type {
     AtomInfo,
     CustomColorRule,
     SuperposedStructure,
-    Annotation
+    Annotation,
+    CustomStyleRule
 } from '../types';
 import { type DataSource, getStructureUrl } from '../utils/pdbUtils';
 
@@ -52,6 +53,7 @@ export interface ProteinViewerProps {
     palette: ColorPalette;
     customColors?: CustomColorRule[];
     chainStyles?: Record<string, RepresentationType>; // New Prop
+    customStyles?: CustomStyleRule[]; // New Prop
     measurementTextColor?: MeasurementTextColor; // Added prop
     overlays?: SuperposedStructure[];
 
@@ -143,6 +145,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
     coloring = 'chainid',
     customColors,
     chainStyles, // Destructure
+    customStyles,
     overlays,
 
     palette: colorPalette = 'standard', // Rename to matches internal usage
@@ -2437,15 +2440,29 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                 try { component.structure.eachModel((m: any) => m.calculateSecondaryStructure?.()); } catch (e) { }
             }
 
-            // --- 4. RENDER SINGLE REPRESENTATION ---
+            // --- 3.5 PREPARE CUSTOM STYLE SELECTIONS ---
+            // We need to exclude these custom residues from Global and Chain representations to avoid overlaps.
+            const customStyleSelections = customStyles?.map(rule => {
+                const chainPart = rule.chain === 'All' ? '' : `:${rule.chain}`;
+                const resPart = rule.residues ? (rule.chain === 'All' ? rule.residues : ` and ${rule.residues}`) : '';
+                return `(${chainPart}${resPart})`; // e.g. "(:A and 50-60)"
+            }) || [];
+            
+            const customExclusion = customStyleSelections.length > 0 
+                ? ` and not (${customStyleSelections.join(' or ')})` 
+                : "";
+
+            // --- 4. RENDER SINGLE REPRESENTATION (GLOBAL) ---
             
             // Build exclusion list for default representation
             const excludedChains = chainStyles ? Object.keys(chainStyles) : [];
-            const defaultSelection = excludedChains.length > 0
-                ? `not (:${excludedChains.join(' or :')})`
-                : "*";
+            const chainExclusion = excludedChains.length > 0
+                ? ` and not (:${excludedChains.join(' or :')})`
+                : "";
+                
+            const defaultSelection = `*${chainExclusion}${customExclusion}`;
 
-            // Add the default representation (for non-overridden chains)
+            // Add the default representation (for non-overridden atoms)
             if (defaultSelection !== "not ()" && defaultSelection !== "none") {
                 component.addRepresentation(repType, { ...globalParams, sele: defaultSelection });
             }
@@ -2458,7 +2475,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                     const chainParams: any = {
                         ...params, // Use clean params (without accumulated cartoon properties)
                         color: finalColor,
-                        sele: `:${chain}`
+                        sele: `:${chain}${customExclusion}` // Apply custom exclusion here too
                     };
 
                     // Specific adjustments based on style
@@ -2471,6 +2488,27 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                     }
 
                     component.addRepresentation(style, chainParams);
+                });
+            }
+
+            // --- 6. RENDER CUSTOM RESIDUE STYLES ---
+            if (customStyles) {
+                customStyles.forEach(rule => {
+                    const chainPart = rule.chain === 'All' ? '*' : `:${rule.chain}`;
+                    const resPart = rule.residues ? (rule.chain === 'All' ? ` and ${rule.residues}` : ` and ${rule.residues}`) : '';
+                    const selection = `${chainPart}${resPart}`; // e.g. ":A and 50-60"
+
+                    const ruleParams: any = {
+                        ...params, // Use clean params
+                        color: finalColor,
+                        sele: selection
+                    };
+
+                    // Apply specific style adjustments
+                    if (rule.style === 'cartoon') Object.assign(ruleParams, cartoonParams);
+                    if (rule.style === 'licorice') ruleParams.scale = 2.0;
+                    
+                    component.addRepresentation(rule.style, ruleParams);
                 });
             }
 
@@ -2542,7 +2580,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
 
     useEffect(() => {
         updateRepresentation();
-    }, [representation, coloring, showSurface, showLigands, showIons, colorPalette, customColors, chainStyles]);
+    }, [representation, coloring, showSurface, showLigands, showIons, colorPalette, customColors, chainStyles, customStyles]);
 
     useEffect(() => {
         if (stageRef.current) {

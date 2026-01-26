@@ -36,7 +36,7 @@ import {
     Wrench,
     X
 } from 'lucide-react';
-import type { RepresentationType, ColoringType, ChainInfo, Snapshot, Movie, ColorPalette, PDBMetadata, CustomColorRule, Measurement } from '../types';
+import type { RepresentationType, ColoringType, ChainInfo, Snapshot, Movie, ColorPalette, PDBMetadata, CustomColorRule, CustomStyleRule, Measurement } from '../types';
 import type { DataSource } from '../utils/pdbUtils';
 import type { HistoryItem } from '../hooks/useHistory';
 import { formatChemicalId } from '../utils/pdbUtils';
@@ -397,6 +397,10 @@ interface ControlsProps {
     visualizerEngine?: 'ngl' | 'molstar';
     setVisualizerEngine?: (engine: 'ngl' | 'molstar') => void;
     onResetCamera?: () => void;
+
+    // Custom Residue Styles
+    customStyles?: CustomStyleRule[];
+    setCustomStyles?: (styles: CustomStyleRule[] | ((prev: CustomStyleRule[]) => CustomStyleRule[])) => void;
 }
 
 export const Controls: React.FC<ControlsProps> = ({
@@ -416,6 +420,8 @@ export const Controls: React.FC<ControlsProps> = ({
     setCustomColors,
     chainStyles, // Destructure
     setChainStyle, // Destructure
+    customStyles,
+    setCustomStyles,
 
     chains,
     ligands,
@@ -500,6 +506,23 @@ export const Controls: React.FC<ControlsProps> = ({
     // Chain Styling State
     const [selectedChainForStyle, setSelectedChainForStyle] = useState<string>("");
     const [selectedStyleForChain, setSelectedStyleForChain] = useState<RepresentationType>("cartoon");
+
+    // Custom Residue Style State
+    const [customResStyleChain, setCustomResStyleChain] = useState<string>("All");
+    const [customResStyleRange, setCustomResStyleRange] = useState<string>("");
+    const [customResStyleType, setCustomResStyleType] = useState<RepresentationType>("spacefill");
+
+    const handleAddCustomStyle = () => {
+        if (!setCustomStyles || !customResStyleRange) return;
+        const newRule: CustomStyleRule = {
+            id: crypto.randomUUID(),
+            chain: customResStyleChain,
+            residues: customResStyleRange,
+            style: customResStyleType
+        };
+        setCustomStyles((prev: CustomStyleRule[]) => [...prev, newRule]);
+        setCustomResStyleRange('');
+    };
 
     // State for Residue-Specific Coloring UI
 
@@ -1464,23 +1487,118 @@ export const Controls: React.FC<ControlsProps> = ({
 
                                                     {/* Active Chain Styles List */}
                                                     {Object.keys(chainStyles).length > 0 && (
-                                                        <div className="space-y-1 pt-2 border-t border-dashed border-neutral-200 dark:border-neutral-800">
-                                                            <div className="flex justify-between items-center mb-2">
-                                                                <span className={`text-[9px] font-bold uppercase tracking-wider ${subtleText}`}>Overrides ({Object.keys(chainStyles).length})</span>
-                                                            </div>
-                                                            <div className="space-y-1.5 max-h-32 overflow-y-auto pr-1 scrollbar-thin">
+                                                        <div className="space-y-1 pt-1">
+                                                            <div className={`text-[9px] font-bold uppercase tracking-wider ${subtleText} opacity-70`}>Active Styles</div>
+                                                            <div className="space-y-1">
                                                                 {Object.entries(chainStyles).map(([chain, style]) => (
-                                                                    <div key={chain} className={`group flex items-center justify-between text-xs p-2 rounded-lg border transition-all ${isLightMode ? 'bg-white border-neutral-200 hover:border-blue-300' : 'bg-white/5 border-transparent hover:bg-white/10'}`}>
-                                                                        <div className="flex items-center gap-3">
-                                                                            <span className={`font-mono font-bold ${isLightMode ? 'text-black' : 'text-white'}`}>:{chain}</span>
-                                                                            <span className={`text-[10px] opacity-70 uppercase tracking-wide ${isLightMode ? 'text-neutral-600' : 'text-neutral-400'}`}>{style}</span>
+                                                                    <div key={chain} className={`flex items-center justify-between p-2 rounded border ${isLightMode ? 'bg-white border-neutral-200' : 'bg-neutral-800 border-white/5'}`}>
+                                                                        <div className="flex items-center gap-2">
+                                                                            <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold ${isLightMode ? 'bg-neutral-100 text-neutral-700' : 'bg-neutral-700 text-neutral-300'}`}>:{chain}</span>
+                                                                            <span className="text-[10px] capitalize">{style}</span>
                                                                         </div>
                                                                         <button
                                                                             onClick={() => setChainStyle(chain, null)}
-                                                                            className="opacity-0 group-hover:opacity-100 text-neutral-400 hover:text-red-500 transition-all p-1 hover:bg-red-500/10 rounded"
-                                                                            title="Remove Override"
+                                                                            className="p-1 hover:bg-red-500/20 text-neutral-400 hover:text-red-500 rounded transition-colors"
                                                                         >
-                                                                            <X className="w-3 h-3" />
+                                                                            <X size={12} />
+                                                                        </button>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Custom Residue/Range Styles UI */}
+                                        {setCustomStyles && customStyles && (
+                                            <div className="col-span-2 pt-2 border-t border-white/5 space-y-2">
+                                                <div className={`w-full text-[10px] font-bold uppercase tracking-wider ${subtleText} opacity-80 mb-1`}>
+                                                    Custom Residue Styles
+                                                </div>
+
+                                                <div className={`p-3 rounded-xl border space-y-3 ${isLightMode ? 'bg-neutral-50/50 border-neutral-200' : 'bg-black/20 border-white/5'}`}>
+                                                    <div className="flex gap-2">
+                                                        <div className="w-[80px]">
+                                                            <label className={`text-[9px] font-bold uppercase tracking-wider mb-1 block ${subtleText} opacity-70`}>Chain</label>
+                                                            <div className={`relative flex items-center rounded-lg border transition-all ${inputBg}`}>
+                                                                <select
+                                                                    value={customResStyleChain}
+                                                                    onChange={(e) => setCustomResStyleChain(e.target.value)}
+                                                                    className="w-full appearance-none bg-transparent py-1.5 pl-2 pr-4 text-xs font-mono outline-none"
+                                                                >
+                                                                    <option value="All">All</option>
+                                                                    {chains.map(c => (
+                                                                        <option key={c.name} value={c.name}>:{c.name}</option>
+                                                                    ))}
+                                                                </select>
+                                                                <ChevronDown className="absolute right-1 top-1/2 -translate-y-1/2 w-3 h-3 opacity-50 pointer-events-none" />
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex-1">
+                                                            <label className={`text-[9px] font-bold uppercase tracking-wider mb-1 block ${subtleText} opacity-70`}>Residues</label>
+                                                            <input
+                                                                type="text"
+                                                                value={customResStyleRange}
+                                                                onChange={(e) => setCustomResStyleRange(e.target.value)}
+                                                                placeholder="e.g. 50-60"
+                                                                className={`w-full py-1.5 px-2 rounded-lg border text-xs outline-none transition-all ${inputBg}`}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div className="flex gap-2 items-end">
+                                                         <div className="flex-1">
+                                                            <label className={`text-[9px] font-bold uppercase tracking-wider mb-1 block ${subtleText} opacity-70`}>Style</label>
+                                                            <div className={`relative flex items-center rounded-lg border transition-all ${inputBg}`}>
+                                                                <select
+                                                                    value={customResStyleType}
+                                                                    onChange={(e) => setCustomResStyleType(e.target.value as RepresentationType)}
+                                                                    className="w-full appearance-none bg-transparent py-1.5 pl-2 pr-6 text-xs outline-none"
+                                                                >
+                                                                    <option value="cartoon">Cartoon</option>
+                                                                    <option value="ball+stick">Ball & Stick</option>
+                                                                    <option value="licorice">Licorice</option>
+                                                                    <option value="spacefill">Spacefill</option>
+                                                                    <option value="surface">Surface</option>
+                                                                    <option value="line">Line</option>
+                                                                </select>
+                                                                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 opacity-50 pointer-events-none" />
+                                                            </div>
+                                                        </div>
+                                                        <button
+                                                            onClick={handleAddCustomStyle}
+                                                            disabled={!customResStyleRange}
+                                                            className="h-[30px] px-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg text-xs font-bold transition-all shadow-sm active:scale-95 flex items-center justify-center shrink-0"
+                                                        >
+                                                            <Plus size={14} className="mr-1" />
+                                                            Add
+                                                        </button>
+                                                    </div>
+
+                                                    {/* Active Custom Styles List */}
+                                                    {customStyles.length > 0 && (
+                                                        <div className="space-y-1 pt-1">
+                                                            <div className={`text-[9px] font-bold uppercase tracking-wider ${subtleText} opacity-70`}>Active Rules</div>
+                                                            <div className="space-y-1 max-h-[100px] overflow-y-auto custom-scrollbar">
+                                                                {customStyles.map((rule: CustomStyleRule) => (
+                                                                    <div key={rule.id} className={`flex items-center justify-between p-2 rounded border ${isLightMode ? 'bg-white border-neutral-200' : 'bg-neutral-800 border-white/5'}`}>
+                                                                        <div className="flex flex-col gap-0.5">
+                                                                            <div className="flex items-center gap-2">
+                                                                                <span className={`px-1.5 py-0.5 rounded text-[9px] font-mono font-bold ${isLightMode ? 'bg-neutral-100 text-neutral-700' : 'bg-neutral-700 text-neutral-300'}`}>
+                                                                                    {rule.chain === 'All' ? '*' : `:${rule.chain}`}
+                                                                                </span>
+                                                                                 <span className="text-[10px] opacity-70 font-mono">{rule.residues}</span>
+                                                                            </div>
+                                                                            <span className="text-[9px] capitalize text-blue-500 font-medium">{rule.style}</span>
+                                                                        </div>
+                                                                        <button
+                                                                            onClick={() => setCustomStyles!((prev: CustomStyleRule[]) => prev.filter((r: CustomStyleRule) => r.id !== rule.id))}
+                                                                            className="p-1 hover:bg-red-500/20 text-neutral-400 hover:text-red-500 rounded transition-colors"
+                                                                        >
+                                                                             <Trash2 size={12} />
                                                                         </button>
                                                                     </div>
                                                                 ))}
@@ -1490,6 +1608,8 @@ export const Controls: React.FC<ControlsProps> = ({
                                                 </div>
                                             </div>
                                         )}
+
+
 
                                     </div>
 

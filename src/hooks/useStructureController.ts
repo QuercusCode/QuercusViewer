@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import type { RepresentationType, ColoringType, ResidueInfo, Measurement, PDBMetadata, ChainInfo, CustomColorRule, SuperposedStructure } from '../types';
+import type { RepresentationType, ColoringType, ResidueInfo, Measurement, PDBMetadata, ChainInfo, CustomColorRule, CustomStyleRule, SuperposedStructure } from '../types';
 import type { DataSource } from '../utils/pdbUtils';
 
 // Types for the Controller Return Value
@@ -22,6 +22,8 @@ export interface StructureController {
     setCustomColors: (colors: CustomColorRule[] | ((prev: CustomColorRule[]) => CustomColorRule[])) => void;
     chainStyles: Record<string, RepresentationType>;
     setChainStyle: (chain: string, style: RepresentationType | null) => void;
+    customStyles: CustomStyleRule[];
+    setCustomStyles: (styles: CustomStyleRule[] | ((prev: CustomStyleRule[]) => CustomStyleRule[])) => void;
     isSpinning: boolean;
     setIsSpinning: (spinning: boolean | ((prev: boolean) => boolean)) => void;
     isRocking: boolean;
@@ -116,6 +118,9 @@ export const useStructureController = (initialState: any = {}): StructureControl
         });
     }, []);
 
+    // Custom Residue Styles
+    const [customStyles, setCustomStyles] = useState<CustomStyleRule[]>([]);
+
     // -- Handlers --
 
     const handleResetView = useCallback(() => {
@@ -190,6 +195,7 @@ export const useStructureController = (initialState: any = {}): StructureControl
         coloring, setColoring,
         customColors, setCustomColors,
         chainStyles, setChainStyle,
+        customStyles, setCustomStyles,
         isSpinning, setIsSpinning,
         isRocking, setIsRocking,
         showSurface, setShowSurface,
