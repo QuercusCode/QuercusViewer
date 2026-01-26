@@ -2466,10 +2466,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                     if (style === 'licorice') {
                         chainParams.scale = 2.0;
                     } else if (style === 'ball+stick') {
-                        chainParams.aspectRatio = 2.0;
-                        chainParams.radiusScale = 2.0;
-                        // Force smaller scale if defaulting to large VDW
-                        chainParams.scale = 1.0; 
+                       // No overrides - use global defaults
                     }
 
                     component.addRepresentation(style, chainParams);
