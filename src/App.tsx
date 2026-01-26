@@ -584,6 +584,7 @@ function App() {
     coloring, setColoring,
     customColors, setCustomColors,
     chainStyles, setChainStyle, // Destructure
+    customStyles, setCustomStyles,
     isSpinning, setIsSpinning,
     isRocking, setIsRocking,
     showSurface, setShowSurface,
@@ -2547,6 +2548,8 @@ function App() {
                     setCustomColors={setCustomColors}
                     chainStyles={chainStyles}
                     setChainStyle={setChainStyle}
+                    customStyles={customStyles}
+                    setCustomStyles={setCustomStyles}
                     onResetCamera={() => handleToolAction('reset')}
                     chains={chains}
                     ligands={ligands}
