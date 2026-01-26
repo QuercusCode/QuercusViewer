@@ -2657,9 +2657,7 @@ function App() {
                     canUndo={canUndo}
                     canRedo={canRedo}
 
-                    // Custom Colors
-                    customColors={customColors}
-                    setCustomColors={setCustomColors}
+
 
                     // Gallery
                     onToggleGallery={() => setIsGalleryOpen(!isGalleryOpen)}

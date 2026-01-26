@@ -484,8 +484,7 @@ export const Controls: React.FC<ControlsProps> = ({
     canUndo,
     canRedo,
     // onUpdateResidueColor // Future: allow changing colors of existing residues
-    customColors,
-    setCustomColors,
+
     visualizerEngine,
     setVisualizerEngine,
     onResetCamera,
@@ -497,6 +496,10 @@ export const Controls: React.FC<ControlsProps> = ({
     const [searchResults, setSearchResults] = useState<MotifMatch[]>([]);
     const [isSearching, setIsSearching] = useState(false);
     const [isSearchFocused, setIsSearchFocused] = useState(false);
+
+    // Chain Styling State
+    const [selectedChainForStyle, setSelectedChainForStyle] = useState<string>("");
+    const [selectedStyleForChain, setSelectedStyleForChain] = useState<RepresentationType>("cartoon");
 
     // State for Residue-Specific Coloring UI
 
