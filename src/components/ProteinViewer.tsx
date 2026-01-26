@@ -2430,7 +2430,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                 aspectRatio: 6.0,
                 subdiv: 12,
                 radialSegments: 20,
-                smoothSheet: false,
+                smoothSheet: true,
                 quality: 'high'
             };
 
@@ -2442,7 +2442,11 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
 
             // --- 3.5 PREPARE CUSTOM STYLE SELECTIONS ---
             // We need to exclude these custom residues from Global and Chain representations to avoid overlaps.
-            const customStyleSelections = customStyles?.map(rule => {
+            // Define backbone styles that should replace the default representation in that region
+            // Non-backbone styles (like licorice, ball+stick, spacefill) should OVERLAY the default representation
+            const backboneStyles = new Set(['cartoon', 'backbone', 'trace', 'tube', 'ribbon', 'rocket', 'rope']);
+
+            const customStyleSelections = customStyles?.filter(rule => backboneStyles.has(rule.style)).map(rule => {
                 const chainPart = rule.chain === 'All' ? '' : `:${rule.chain}`;
                 const resPart = rule.residues ? (rule.chain === 'All' ? rule.residues : ` and ${rule.residues}`) : '';
                 return `(${chainPart}${resPart})`; // e.g. "(:A and 50-60)"
