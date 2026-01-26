@@ -2465,6 +2465,8 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                     // For atomic/bond representations, ensure reasonable defaults
                     if (style === 'licorice') {
                         chainParams.scale = 2.0;
+                    } else if (style === 'ball+stick') {
+                        chainParams.scale = 0.3;
                     }
 
                     component.addRepresentation(style, chainParams);
