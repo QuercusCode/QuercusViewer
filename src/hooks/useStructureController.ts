@@ -63,6 +63,9 @@ export interface StructureController {
     removeOverlay: (id: string) => void;
     toggleOverlay: (id: string) => void;
 
+    smoothSheetEnabled: boolean;
+    setSmoothSheetEnabled: (enabled: boolean | ((prev: boolean) => boolean)) => void;
+
     // Actions
     handleUpload: (file: File, isCif?: boolean, preservePdbId?: boolean) => void;
     handleResetView: () => void;
@@ -85,6 +88,7 @@ export const useStructureController = (initialState: any = {}): StructureControl
     const [showSurface, setShowSurface] = useState(false);
     const [showLigands, setShowLigands] = useState(false);
     const [showIons, setShowIons] = useState(initialState.showIons ?? false);
+    const [smoothSheetEnabled, setSmoothSheetEnabled] = useState(initialState.smoothSheetEnabled ?? true);
 
     const [customBackgroundColor, setCustomBackgroundColor] = useState<string | null>(null);
     // Analysis
@@ -202,6 +206,8 @@ export const useStructureController = (initialState: any = {}): StructureControl
         showLigands, setShowLigands,
         showIons,
         setShowIons,
+        smoothSheetEnabled,
+        setSmoothSheetEnabled,
 
         customBackgroundColor, setCustomBackgroundColor,
         chains, setChains,

@@ -60,6 +60,7 @@ export interface ProteinViewerProps {
     // Quality
     quality?: 'low' | 'medium' | 'high';
     enableAmbientOcclusion?: boolean;
+    smoothSheetEnabled?: boolean; // New toggle
     initialOrientation?: any; // New prop for setting start view
 
 
@@ -146,6 +147,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
     customColors,
     chainStyles, // Destructure
     customStyles,
+    smoothSheetEnabled = true,
     overlays,
 
     palette: colorPalette = 'standard', // Rename to matches internal usage
@@ -2430,7 +2432,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                 aspectRatio: 6.0,
                 subdiv: 12,
                 radialSegments: 20,
-                smoothSheet: true,
+                smoothSheet: smoothSheetEnabled,
                 quality: 'high'
             };
 

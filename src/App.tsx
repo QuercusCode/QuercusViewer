@@ -585,6 +585,7 @@ function App() {
     customColors, setCustomColors,
     chainStyles, setChainStyle, // Destructure
     customStyles, setCustomStyles,
+    smoothSheetEnabled, setSmoothSheetEnabled,
     isSpinning, setIsSpinning,
     isRocking, setIsRocking,
     showSurface, setShowSurface,
@@ -2550,6 +2551,8 @@ function App() {
                     setChainStyle={setChainStyle}
                     customStyles={customStyles}
                     setCustomStyles={setCustomStyles}
+                    smoothSheetEnabled={smoothSheetEnabled}
+                    setSmoothSheetEnabled={setSmoothSheetEnabled}
                     onResetCamera={() => handleToolAction('reset')}
                     chains={chains}
                     ligands={ligands}

@@ -401,6 +401,9 @@ interface ControlsProps {
     // Custom Residue Styles
     customStyles?: CustomStyleRule[];
     setCustomStyles?: (styles: CustomStyleRule[] | ((prev: CustomStyleRule[]) => CustomStyleRule[])) => void;
+
+    smoothSheetEnabled?: boolean;
+    setSmoothSheetEnabled?: (enabled: boolean | ((prev: boolean) => boolean)) => void;
 }
 
 export const Controls: React.FC<ControlsProps> = ({
@@ -447,6 +450,8 @@ export const Controls: React.FC<ControlsProps> = ({
     setShowLigands,
     showIons,
     setShowIons,
+    smoothSheetEnabled,
+    setSmoothSheetEnabled,
     onRecordMovie,
     isRecording,
     proteinTitle,
@@ -1609,10 +1614,24 @@ export const Controls: React.FC<ControlsProps> = ({
                                             </div>
                                         )}
 
-
-
+                                        {/* Smooth Sheet Toggle (NGL Only) */}
+                                        {visualizerEngine === 'ngl' && setSmoothSheetEnabled && representation === 'cartoon' && (
+                                            <div className="flex items-center gap-2 mt-2">
+                                                <input
+                                                    type="checkbox"
+                                                    id="smoothSheetToggle"
+                                                    checked={smoothSheetEnabled}
+                                                    onChange={(e) => setSmoothSheetEnabled && setSmoothSheetEnabled(e.target.checked)}
+                                                    className="w-3 h-3 rounded border-neutral-300 text-blue-500 focus:ring-blue-500 bg-transparent"
+                                                />
+                                                <label htmlFor="smoothSheetToggle" className={`text-xs select-none cursor-pointer ${subtleText}`}>
+                                                    Smooth Cartoon Sheets
+                                                </label>
+                                            </div>
+                                        )}
                                     </div>
 
+                                    {/* Color Style */}
                                     {/* Tools: Publication & Measure */}
                                     <div className="pt-2 border-t border-white/5 space-y-2">
                                         <button
