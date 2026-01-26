@@ -583,6 +583,7 @@ function App() {
     representation, setRepresentation,
     coloring, setColoring,
     customColors, setCustomColors,
+    chainStyles, setChainStyle, // Destructure
     isSpinning, setIsSpinning,
     isRocking, setIsRocking,
     showSurface, setShowSurface,
@@ -2542,6 +2543,10 @@ function App() {
                     setVisualizerEngine={setVisualizerEngine}
                     coloring={coloring}
                     setColoring={setColoring}
+                    customColors={customColors}
+                    setCustomColors={setCustomColors}
+                    chainStyles={chainStyles}
+                    setChainStyle={setChainStyle}
                     onResetCamera={() => handleToolAction('reset')}
                     chains={chains}
                     ligands={ligands}
@@ -2840,6 +2845,7 @@ function App() {
                             showIons={ctrl.showIons}
                             coloring={ctrl.coloring}
                             customColors={ctrl.customColors}
+                            chainStyles={ctrl.chainStyles}
                             palette={colorPalette}
                             backgroundColor={
                               (isStudioMode && recorder.session?.metadata?.settings?.backgroundColor)

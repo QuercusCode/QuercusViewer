@@ -20,6 +20,8 @@ export interface StructureController {
     setColoring: (type: ColoringType) => void;
     customColors: CustomColorRule[];
     setCustomColors: (colors: CustomColorRule[] | ((prev: CustomColorRule[]) => CustomColorRule[])) => void;
+    chainStyles: Record<string, RepresentationType>;
+    setChainStyle: (chain: string, style: RepresentationType | null) => void;
     isSpinning: boolean;
     setIsSpinning: (spinning: boolean | ((prev: boolean) => boolean)) => void;
     isRocking: boolean;
@@ -100,6 +102,20 @@ export const useStructureController = (initialState: any = {}): StructureControl
     // View Control
     const [resetKey, setResetKey] = useState(0);
 
+    // Chain Styling
+    const [chainStyles, setChainStyles] = useState<Record<string, RepresentationType>>({});
+
+    const setChainStyle = useCallback((chain: string, style: RepresentationType | null) => {
+        setChainStyles(prev => {
+            if (style === null) {
+                const next = { ...prev };
+                delete next[chain];
+                return next;
+            }
+            return { ...prev, [chain]: style };
+        });
+    }, []);
+
     // -- Handlers --
 
     const handleResetView = useCallback(() => {
@@ -173,6 +189,7 @@ export const useStructureController = (initialState: any = {}): StructureControl
         representation, setRepresentation,
         coloring, setColoring,
         customColors, setCustomColors,
+        chainStyles, setChainStyle,
         isSpinning, setIsSpinning,
         isRocking, setIsRocking,
         showSurface, setShowSurface,

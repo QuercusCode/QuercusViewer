@@ -51,6 +51,7 @@ export interface ProteinViewerProps {
     coloring: ColoringType;
     palette: ColorPalette;
     customColors?: CustomColorRule[];
+    chainStyles?: Record<string, RepresentationType>; // New Prop
     measurementTextColor?: MeasurementTextColor; // Added prop
     overlays?: SuperposedStructure[];
 
@@ -141,6 +142,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
     representation = 'cartoon',
     coloring = 'chainid',
     customColors,
+    chainStyles, // Destructure
     overlays,
 
     palette: colorPalette = 'standard', // Rename to matches internal usage
@@ -2434,8 +2436,40 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                 try { component.structure.eachModel((m: any) => m.calculateSecondaryStructure?.()); } catch (e) { }
             }
 
-            // Add the single, unified representation
-            component.addRepresentation(repType, params);
+            // --- 4. RENDER SINGLE REPRESENTATION ---
+            
+            // Build exclusion list for default representation
+            const excludedChains = chainStyles ? Object.keys(chainStyles) : [];
+            const defaultSelection = excludedChains.length > 0
+                ? `not (:${excludedChains.join(' or :')})`
+                : "*";
+
+            // Add the default representation (for non-overridden chains)
+            if (defaultSelection !== "not ()" && defaultSelection !== "none") {
+                component.addRepresentation(repType, { ...params, sele: defaultSelection });
+            }
+
+            // --- 5. RENDER CHAIN-SPECIFIC STYLES ---
+            if (chainStyles) {
+                Object.entries(chainStyles).forEach(([chain, style]) => {
+                    if (!style) return;
+                    
+                    const chainParams = {
+                        ...params,
+                        color: finalColor, // Inherit coloring scheme (or allow override later)
+                        sele: `:${chain}`
+                    };
+
+                    // Specific adjustments based on style
+                    if (style === 'cartoon') Object.assign(chainParams, cartoonParams);
+                    // For atomic/bond representations, ensure reasonable defaults
+                    if (['ball+stick', 'licorice'].includes(style)) {
+                        chainParams.scale = 2.0;
+                    }
+
+                    component.addRepresentation(style, chainParams);
+                });
+            }
 
             // 2. Add Custom Representations (Overlay)
 
@@ -2505,7 +2539,9 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
 
     useEffect(() => {
         updateRepresentation();
-    }, [representation, coloring, showSurface, showLigands, showIons, colorPalette, customColors]);
+    useEffect(() => {
+        updateRepresentation();
+    }, [representation, coloring, showSurface, showLigands, showIons, colorPalette, customColors, chainStyles]);
 
     useEffect(() => {
         if (stageRef.current) {

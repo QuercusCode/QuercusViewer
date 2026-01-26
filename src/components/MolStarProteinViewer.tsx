@@ -561,16 +561,19 @@ export const MolStarProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerPr
                         return;
                     }
 
-                    // A. Draw WebGL Content
-                    // Note: preserveDrawingBuffer: true is required for this to work (handled by hijack)
+                    // A. Render fresh WebGL frame
+                    // CRITICAL: Request Mol* to render the current frame state
+                    if (pluginRef.current?.canvas3d) {
+                        pluginRef.current.canvas3d.requestDraw();
+                    }
 
-                    // CRITICAL FIX: Clear composite buffer to prevent "hall of mirrors" / ghosting artifacts
+                    // B. Clear composite buffer to prevent "hall of mirrors" / ghosting artifacts
                     ctx.clearRect(0, 0, width, height);
 
-                    // Draw clean frame
+                    // C. Draw clean frame
                     ctx.drawImage(canvas, 0, 0);
 
-                    // B. Draw Watermark
+                    // D. Draw Watermark
                     if (options.watermark?.show && options.watermark.text) {
                         const fontSize = Math.max(20, Math.floor(height * 0.03));
                         ctx.font = `700 ${fontSize}px "Inter", sans-serif`;
@@ -585,7 +588,7 @@ export const MolStarProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerPr
                         ctx.fillText(options.watermark.text, width - margin, height - margin);
                     }
 
-                    // C. Draw Overlays
+                    // E. Draw Overlays
                     if (options.overlays) {
                         options.overlays.forEach((overlay: any) => {
                             if (elapsed >= overlay.start && elapsed <= overlay.end) {
@@ -601,7 +604,7 @@ export const MolStarProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerPr
                         });
                     }
 
-                    // D. Draw Transitions
+                    // F. Draw Transitions
                     if (options.transitions) {
                         options.transitions.forEach((t: any) => {
                             let opacity = 0;

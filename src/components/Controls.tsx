@@ -389,6 +389,8 @@ interface ControlsProps {
     // Custom Coloring
     customColors?: CustomColorRule[];
     setCustomColors?: (colors: CustomColorRule[] | ((prev: CustomColorRule[]) => CustomColorRule[])) => void;
+    chainStyles?: Record<string, RepresentationType>;
+    setChainStyle?: (chain: string, style: RepresentationType | null) => void;
 
     recorderContent?: React.ReactNode;
     // Engine Switcher
@@ -410,6 +412,10 @@ export const Controls: React.FC<ControlsProps> = ({
     setRepresentation,
     coloring,
     setColoring,
+    customColors,
+    setCustomColors,
+    chainStyles, // Destructure
+    setChainStyle, // Destructure
 
     chains,
     ligands,
@@ -1392,6 +1398,93 @@ export const Controls: React.FC<ControlsProps> = ({
                                                     )}
                                                 </div>
 
+                                            </div>
+                                        )}
+
+                                        {/* Chain-Specific Styles UI */}
+                                        {setChainStyle && chainStyles && chains.length > 0 && (
+                                            <div className="col-span-2 pt-2 border-t border-white/5 space-y-2">
+                                                <div className={`w-full text-[10px] font-bold uppercase tracking-wider ${subtleText} opacity-80 mb-1`}>
+                                                    Per-Chain Styles
+                                                </div>
+
+                                                <div className={`p-3 rounded-xl border space-y-3 ${isLightMode ? 'bg-neutral-50/50 border-neutral-200' : 'bg-black/20 border-white/5'}`}>
+                                                    <div className="flex gap-2">
+                                                        <div className="w-1/3">
+                                                            <label className={`text-[9px] font-bold uppercase tracking-wider mb-1 block ${subtleText} opacity-70`}>Chain</label>
+                                                            <div className={`relative flex items-center rounded-lg border transition-all ${inputBg}`}>
+                                                                <select
+                                                                    value={selectedChainForStyle}
+                                                                    onChange={(e) => setSelectedChainForStyle(e.target.value)}
+                                                                    className="w-full appearance-none bg-transparent py-1.5 pl-2 pr-6 text-xs font-mono outline-none"
+                                                                >
+                                                                    <option value="" disabled>Select</option>
+                                                                    {chains.map(c => (
+                                                                        <option key={c.name} value={c.name}>:{c.name}</option>
+                                                                    ))}
+                                                                </select>
+                                                                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 opacity-50 pointer-events-none" />
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex-1">
+                                                            <label className={`text-[9px] font-bold uppercase tracking-wider mb-1 block ${subtleText} opacity-70`}>Style</label>
+                                                            <div className="flex gap-2">
+                                                                <div className={`relative flex-1 flex items-center rounded-lg border transition-all ${inputBg}`}>
+                                                                    <select
+                                                                        value={selectedStyleForChain}
+                                                                        onChange={(e) => setSelectedStyleForChain(e.target.value as RepresentationType)}
+                                                                        className="w-full appearance-none bg-transparent py-1.5 pl-2 pr-6 text-xs outline-none"
+                                                                    >
+                                                                        <option value="cartoon">Cartoon</option>
+                                                                        <option value="ball+stick">Ball & Stick</option>
+                                                                        <option value="licorice">Licorice</option>
+                                                                        <option value="spacefill">Spacefill</option>
+                                                                        <option value="surface">Surface</option>
+                                                                        <option value="line">Line</option>
+                                                                    </select>
+                                                                    <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 opacity-50 pointer-events-none" />
+                                                                </div>
+                                                                <button
+                                                                    onClick={() => {
+                                                                        if (selectedChainForStyle) {
+                                                                            setChainStyle(selectedChainForStyle, selectedStyleForChain);
+                                                                        }
+                                                                    }}
+                                                                    disabled={!selectedChainForStyle}
+                                                                    className="px-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg text-xs font-bold transition-all shadow-sm active:scale-95 flex items-center justify-center"
+                                                                >
+                                                                    Set
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Active Chain Styles List */}
+                                                    {Object.keys(chainStyles).length > 0 && (
+                                                        <div className="space-y-1 pt-2 border-t border-dashed border-neutral-200 dark:border-neutral-800">
+                                                            <div className="flex justify-between items-center mb-2">
+                                                                <span className={`text-[9px] font-bold uppercase tracking-wider ${subtleText}`}>Overrides ({Object.keys(chainStyles).length})</span>
+                                                            </div>
+                                                            <div className="space-y-1.5 max-h-32 overflow-y-auto pr-1 scrollbar-thin">
+                                                                {Object.entries(chainStyles).map(([chain, style]) => (
+                                                                    <div key={chain} className={`group flex items-center justify-between text-xs p-2 rounded-lg border transition-all ${isLightMode ? 'bg-white border-neutral-200 hover:border-blue-300' : 'bg-white/5 border-transparent hover:bg-white/10'}`}>
+                                                                        <div className="flex items-center gap-3">
+                                                                            <span className={`font-mono font-bold ${isLightMode ? 'text-black' : 'text-white'}`}>:{chain}</span>
+                                                                            <span className={`text-[10px] opacity-70 uppercase tracking-wide ${isLightMode ? 'text-neutral-600' : 'text-neutral-400'}`}>{style}</span>
+                                                                        </div>
+                                                                        <button
+                                                                            onClick={() => setChainStyle(chain, null)}
+                                                                            className="opacity-0 group-hover:opacity-100 text-neutral-400 hover:text-red-500 transition-all p-1 hover:bg-red-500/10 rounded"
+                                                                            title="Remove Override"
+                                                                        >
+                                                                            <X className="w-3 h-3" />
+                                                                        </button>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
                                         )}
 
