@@ -2463,7 +2463,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                     // Specific adjustments based on style
                     if (style === 'cartoon') Object.assign(chainParams, cartoonParams);
                     // For atomic/bond representations, ensure reasonable defaults
-                    if (['ball+stick', 'licorice'].includes(style)) {
+                    if (style === 'licorice') {
                         chainParams.scale = 2.0;
                     }
 
