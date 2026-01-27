@@ -1151,14 +1151,27 @@ export const Controls: React.FC<ControlsProps> = ({
                                             <span className="text-[10px] font-bold">Mol*</span>
                                         </button>
 
+                                        {/* Smooth Sheet Toggle */}
+                                         <button
+                                            onClick={() => setSmoothSheetEnabled && setSmoothSheetEnabled(!smoothSheetEnabled)}
+                                            disabled={visualizerEngine !== 'ngl' || representation !== 'cartoon'}
+                                            className={`h-10 flex items-center justify-center gap-1 rounded-lg border transition-all ${smoothSheetEnabled && visualizerEngine === 'ngl' && representation === 'cartoon'
+                                                ? 'bg-blue-500/10 border-blue-500 text-blue-500' 
+                                                : `${cardBg} border-neutral-700/50 opacity-70 hover:opacity-100 hover:border-neutral-600 disabled:opacity-30 disabled:cursor-not-allowed`}`}
+                                            title={visualizerEngine === 'ngl' ? "Toggle Smooth Cartoon Sheets" : "Only available in NGL Viewer"}
+                                        >
+                                            <Activity className="w-3.5 h-3.5" />
+                                            <span className="text-[10px] font-bold">Smooth</span>
+                                        </button>
+
                                         {onResetCamera && (
                                             <button
                                                 onClick={onResetCamera}
-                                                className={`col-span-2 h-10 flex items-center justify-center gap-2 rounded-lg border transition-all ${cardBg} opacity-80 hover:opacity-100 hover:bg-white/5 border-neutral-700/50`}
+                                                className={`h-10 flex items-center justify-center gap-2 rounded-lg border transition-all ${cardBg} opacity-80 hover:opacity-100 hover:bg-white/5 border-neutral-700/50`}
                                                 title="Reset camera to default view"
                                             >
                                                 <RotateCcw className="w-3.5 h-3.5" />
-                                                <span className="text-[10px] font-medium">Reset View</span>
+                                                <span className="text-[10px] font-medium">Reset</span>
                                             </button>
                                         )}
 
@@ -1235,57 +1248,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                     </div>
                                 </div>
 
-                                {/* Background Controls */}
-                                <div className="space-y-2 pt-2 border-t border-white/5">
-                                    <label className={`text-[10px] font-bold uppercase tracking-wider block ${subtleText}`}>Background</label>
-                                    <div className="grid grid-cols-6 gap-1">
-                                        {[
-                                            { color: '#000000', label: 'Black' },
-                                            { color: '#ffffff', label: 'White' },
-                                            { color: '#1a1a1a', label: 'Dark' },
-                                            { color: '#f5f5f5', label: 'Light' },
-                                            { color: '#000020', label: 'Navy' },
-                                            { color: 'transparent', label: 'Transparent' },
-                                        ].map((preset) => (
-                                            <button
-                                                key={preset.color}
-                                                onClick={() => setCustomBackgroundColor?.(preset.color)}
-                                                className={`h-6 rounded border transition-all ${customBackgroundColor === preset.color ? 'ring-2 ring-blue-500 ring-offset-1 ring-offset-black' : 'hover:scale-105'}`}
-                                                style={preset.color === 'transparent'
-                                                    ? {
-                                                        backgroundImage: 'linear-gradient(45deg, #808080 25%, transparent 25%), linear-gradient(-45deg, #808080 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #808080 75%), linear-gradient(-45deg, transparent 75%, #808080 75%)',
-                                                        backgroundSize: '8px 8px',
-                                                        backgroundPosition: '0 0, 0 4px, 4px -4px, -4px 0px',
-                                                        borderColor: isLightMode ? '#e5e5e5' : '#333'
-                                                    }
-                                                    : { backgroundColor: preset.color, borderColor: isLightMode ? '#e5e5e5' : '#333' }
-                                                }
-                                                title={preset.label}
-                                            />
-                                        ))}
-                                    </div>
-                                    <div className="flex gap-2">
-                                        <div className={`flex-1 flex items-center gap-2 px-2 py-1.5 rounded border ${inputBg}`}>
-                                            <input
-                                                type="color"
-                                                value={customBackgroundColor || (isLightMode ? '#ffffff' : '#000000')}
-                                                onChange={(e) => setCustomBackgroundColor?.(e.target.value)}
-                                                className="w-5 h-5 rounded cursor-pointer bg-transparent border-none p-0"
-                                            />
-                                            <span className="text-[10px] font-mono opacity-70 uppercase">
-                                                {customBackgroundColor || 'Auto'}
-                                            </span>
-                                        </div>
-                                        {customBackgroundColor && (
-                                            <button
-                                                onClick={() => setCustomBackgroundColor?.(null)}
-                                                className={`px-3 py-1.5 rounded border text-[10px] font-bold uppercase transition-colors hover:bg-red-500/10 hover:text-red-500 ${isLightMode ? 'border-neutral-900 text-black bg-white' : 'border-neutral-700 text-neutral-400'}`}
-                                            >
-                                                Reset
-                                            </button>
-                                        )}
-                                    </div>
-                                </div>
+
 
                                 <div className="space-y-2">
                                     <div className="grid grid-cols-2 gap-2">
@@ -1614,21 +1577,57 @@ export const Controls: React.FC<ControlsProps> = ({
                                             </div>
                                         )}
 
-                                        {/* Smooth Sheet Toggle (NGL Only) */}
-                                        {visualizerEngine === 'ngl' && setSmoothSheetEnabled && representation === 'cartoon' && (
-                                            <div className="flex items-center gap-2 mt-2">
-                                                <input
-                                                    type="checkbox"
-                                                    id="smoothSheetToggle"
-                                                    checked={smoothSheetEnabled}
-                                                    onChange={(e) => setSmoothSheetEnabled && setSmoothSheetEnabled(e.target.checked)}
-                                                    className="w-3 h-3 rounded border-neutral-300 text-blue-500 focus:ring-blue-500 bg-transparent"
-                                                />
-                                                <label htmlFor="smoothSheetToggle" className={`text-xs select-none cursor-pointer ${subtleText}`}>
-                                                    Smooth Cartoon Sheets
-                                                </label>
+                                        {/* Background Controls (Moved to Bottom) */}
+                                        <div className="space-y-2 pt-2 border-t border-white/5">
+                                            <label className={`text-[10px] font-bold uppercase tracking-wider block ${subtleText}`}>Background</label>
+                                            <div className="grid grid-cols-6 gap-1">
+                                                {[
+                                                    { color: '#000000', label: 'Black' },
+                                                    { color: '#ffffff', label: 'White' },
+                                                    { color: '#1a1a1a', label: 'Dark' },
+                                                    { color: '#f5f5f5', label: 'Light' },
+                                                    { color: '#000020', label: 'Navy' },
+                                                    { color: 'transparent', label: 'Transparent' },
+                                                ].map((preset) => (
+                                                    <button
+                                                        key={preset.color}
+                                                        onClick={() => setCustomBackgroundColor?.(preset.color)}
+                                                        className={`h-6 rounded border transition-all ${customBackgroundColor === preset.color ? 'ring-2 ring-blue-500 ring-offset-1 ring-offset-black' : 'hover:scale-105'}`}
+                                                        style={preset.color === 'transparent'
+                                                            ? {
+                                                                backgroundImage: 'linear-gradient(45deg, #808080 25%, transparent 25%), linear-gradient(-45deg, #808080 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #808080 75%), linear-gradient(-45deg, transparent 75%, #808080 75%)',
+                                                                backgroundSize: '8px 8px',
+                                                                backgroundPosition: '0 0, 0 4px, 4px -4px, -4px 0px',
+                                                                borderColor: isLightMode ? '#e5e5e5' : '#333'
+                                                            }
+                                                            : { backgroundColor: preset.color, borderColor: isLightMode ? '#e5e5e5' : '#333' }
+                                                        }
+                                                        title={preset.label}
+                                                    />
+                                                ))}
                                             </div>
-                                        )}
+                                            <div className="flex gap-2">
+                                                <div className={`flex-1 flex items-center gap-2 px-2 py-1.5 rounded border ${inputBg}`}>
+                                                    <input
+                                                        type="color"
+                                                        value={customBackgroundColor || (isLightMode ? '#ffffff' : '#000000')}
+                                                        onChange={(e) => setCustomBackgroundColor?.(e.target.value)}
+                                                        className="w-5 h-5 rounded cursor-pointer bg-transparent border-none p-0"
+                                                    />
+                                                    <span className="text-[10px] font-mono opacity-70 uppercase">
+                                                        {customBackgroundColor || 'Auto'}
+                                                    </span>
+                                                </div>
+                                                {customBackgroundColor && (
+                                                    <button
+                                                        onClick={() => setCustomBackgroundColor?.(null)}
+                                                        className={`px-3 py-1.5 rounded border text-[10px] font-bold uppercase transition-colors hover:bg-red-500/10 hover:text-red-500 ${isLightMode ? 'border-neutral-900 text-black bg-white' : 'border-neutral-700 text-neutral-400'}`}
+                                                    >
+                                                        Reset
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
                                     </div>
 
                                     {/* Color Style */}
