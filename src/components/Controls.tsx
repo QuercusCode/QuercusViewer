@@ -693,12 +693,12 @@ export const Controls: React.FC<ControlsProps> = ({
 
             <div className={`
                 absolute top-0 left-0 z-50
-                h-[100dvh] w-full sm:w-80 
+                h-[100dvh] w-full sm:w-[340px] 
                 backdrop-blur-xl border-r shadow-2xl
                 transition-transform duration-300 ease-in-out
                 flex flex-col
                 ${isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-                md:relative md:translate-x-0 md:h-full md:w-80 md:rounded-none md:z-10 md:shrink-0
+                md:relative md:translate-x-0 md:h-full md:w-[340px] md:rounded-none md:z-10 md:shrink-0
                 ${isLightMode ? 'bg-white border-neutral-900 shadow-none' : 'bg-neutral-900/80 border-white/10 md:bg-neutral-900 md:shadow-none'}
             `}>
                 {/* Header - Fixed */}
@@ -1662,7 +1662,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                             <label className={`text-[10px] font-bold uppercase tracking-wider block ${subtleText}`}>Background</label>
                                         <div className="space-y-2">
                                                 {/* Row 1: Presets - Spread full width */}
-                                                <div className="grid grid-cols-6 -mx-3">
+                                                <div className="grid grid-cols-6">
                                                     {[
                                                         { color: '#000000', label: 'Black' },
                                                         { color: '#ffffff', label: 'White' },
