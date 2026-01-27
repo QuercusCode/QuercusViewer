@@ -2430,7 +2430,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
 
             const cartoonParams = {
                 aspectRatio: 6.0,
-                subdiv: smoothSheetEnabled ? 12 : 6,
+                subdiv: smoothSheetEnabled ? 20 : 1, // Extreme values to FORCE visible difference
                 radialSegments: 20,
                 smoothSheet: !!smoothSheetEnabled
             };
@@ -2438,8 +2438,9 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
 
             let globalParams = { ...params };
             if (repType === 'cartoon') {
-                delete globalParams.quality; // START_FIX: Remove quality preset to ensure smoothSheet/subdiv take precedence
+                delete globalParams.quality;
                 Object.assign(globalParams, cartoonParams);
+                console.log("DEBUG: globalParams (Final)", globalParams);
                 try { component.structure.eachModel((m: any) => m.calculateSecondaryStructure?.()); } catch (e) { }
             }
 
