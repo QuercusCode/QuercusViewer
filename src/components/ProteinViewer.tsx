@@ -2429,19 +2429,18 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
             }
 
             const cartoonParams = {
-                aspectRatio: smoothSheetEnabled ? 6.0 : 1.0, // Wide vs Narrow
-                subdiv: smoothSheetEnabled ? 12 : 1, // Smooth vs Jagged path
-                radialSegments: smoothSheetEnabled ? 20 : 3, // Round vs Triangular cross-section
-                smoothSheet: !!smoothSheetEnabled,
-                flatShaded: !smoothSheetEnabled // Smooth vs Faceted shading
+                aspectRatio: 6.0,
+                subdiv: smoothSheetEnabled ? 12 : 6,
+                radialSegments: smoothSheetEnabled ? 20 : 10,
+                smoothSheet: !!smoothSheetEnabled
             };
-            console.log("DEBUG: cartoonParams (Extreme Test)", cartoonParams);
+            // console.log("DEBUG: cartoonParams", cartoonParams);
 
             let globalParams = { ...params };
             if (repType === 'cartoon') {
                 delete globalParams.quality;
                 Object.assign(globalParams, cartoonParams);
-                console.log("DEBUG: globalParams (Final)", globalParams);
+                // console.log("DEBUG: globalParams (Final)", globalParams);
                 try { component.structure.eachModel((m: any) => m.calculateSecondaryStructure?.()); } catch (e) { }
             }
 
