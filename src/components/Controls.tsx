@@ -1658,7 +1658,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                         ) : null}
 
                                         {/* Background Controls (Moved to Bottom) */}
-                                        <div className="space-y-2 pt-2 border-t border-white/5">
+                                        <div className="col-span-2 space-y-2 pt-2 border-t border-white/5">
                                             <label className={`text-[10px] font-bold uppercase tracking-wider block ${subtleText}`}>Background</label>
 
                                             {/* Row 1: Presets - Spread full width */}
