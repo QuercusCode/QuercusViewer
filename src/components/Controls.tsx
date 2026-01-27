@@ -1224,30 +1224,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                         )}
                                     </div>
 
-                                    {/* Color Palettes Grid */}
-                                    <div className="space-y-1">
-                                        <label className={`text-[9px] font-bold uppercase tracking-wider block ${subtleText}`}>Color Palette</label>
-                                        <div className="grid grid-cols-1 gap-1.5">
-                                            {[
-                                                { id: 'standard', label: 'Standard', gradient: 'linear-gradient(to right, #3b82f6, #ef4444)' },
-                                                { id: 'viridis', label: 'Viridis', gradient: 'linear-gradient(to right, #440154, #31688e, #35b779, #fde725)' },
-                                                { id: 'magma', label: 'Magma', gradient: 'linear-gradient(to right, #000004, #51127c, #b73779, #fcfdbf)' },
-                                                { id: 'cividis', label: 'Cividis', gradient: 'linear-gradient(to right, #00204d, #7c7b78, #fdea45)' },
-                                            ].map((p) => (
-                                                <button
-                                                    key={p.id}
-                                                    onClick={() => setColorPalette(p.id as ColorPalette)}
-                                                    className={`flex items-center gap-2 px-2 py-1.5 rounded border transition-all ${colorPalette === p.id
-                                                        ? 'border-blue-500 bg-blue-500/10 text-blue-500'
-                                                        : `border-transparent ${isLightMode ? 'hover:bg-neutral-100' : 'hover:bg-white/5'} opacity-70 hover:opacity-100`}`}
-                                                >
-                                                    <div className="h-3 w-12 rounded-sm border border-black/10 shadow-sm" style={{ background: p.gradient }} />
-                                                    <span className="text-[10px] font-medium uppercase tracking-wider">{p.label}</span>
-                                                    {colorPalette === p.id && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-500" />}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
+
                                 </div>
 
 
