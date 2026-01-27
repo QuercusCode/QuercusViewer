@@ -438,8 +438,6 @@ export const Controls: React.FC<ControlsProps> = ({
     onOpenSuperposition,
     measurements,
     onDeleteMeasurement,
-    isPublicationMode,
-    onTogglePublicationMode,
     pdbMetadata,
     isLightMode,
     setIsLightMode,
