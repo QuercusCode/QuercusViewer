@@ -2434,9 +2434,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                 radialSegments: smoothSheetEnabled ? 20 : 10,
                 smoothSheet: !!smoothSheetEnabled
             };
-            console.log("[ProteinViewer] Update - smoothSheetEnabled:", smoothSheetEnabled);
-            console.log("[ProteinViewer] Update - cartoonParams:", JSON.stringify(cartoonParams));
-
+            
             let globalParams = { ...params };
             if (repType === 'cartoon') {
                 delete globalParams.quality;

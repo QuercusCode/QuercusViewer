@@ -2851,6 +2851,7 @@ function App() {
                             customColors={ctrl.customColors}
                             chainStyles={ctrl.chainStyles}
                             customStyles={ctrl.customStyles}
+                            smoothSheetEnabled={ctrl.smoothSheetEnabled}
                             palette={colorPalette}
                             backgroundColor={
                               (isStudioMode && recorder.session?.metadata?.settings?.backgroundColor)
