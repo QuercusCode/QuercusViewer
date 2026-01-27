@@ -2435,6 +2435,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                 smoothSheet: smoothSheetEnabled,
                 quality: 'high'
             };
+            console.log("DEBUG: cartoonParams", cartoonParams);
 
             let globalParams = { ...params };
             if (repType === 'cartoon') {
