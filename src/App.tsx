@@ -642,6 +642,9 @@ function App() {
   // Ref to prevent "echo" loops (receiving state -> updating local -> triggering broadcast -> sending back)
   const isApplyingRemoteUpdate = useRef(false);
 
+  // LOCK: Timestamp of last local measurement update to prevent race conditions
+  const lastLocalMeasurementUpdate = useRef(0);
+
   // Sync Incoming State
   useEffect(() => {
     if (peerSession.lastReceivedState) {
@@ -663,7 +666,13 @@ function App() {
           if (vp.coloring && vp.coloring !== ctrl.coloring) ctrl.setColoring(vp.coloring as ColoringType);
           if (vp.isSpinning !== undefined && vp.isSpinning !== ctrl.isSpinning) ctrl.setIsSpinning(vp.isSpinning);
           if (vp.customColors) ctrl.setCustomColors(vp.customColors);
-          if (vp.measurements) ctrl.setMeasurements(vp.measurements);
+          if (vp.customColors) ctrl.setCustomColors(vp.customColors);
+
+          // GUARD: Only update measurements if we haven't touched them locally recently (2s lock)
+          if (vp.measurements && (Date.now() - lastLocalMeasurementUpdate.current > 2000)) {
+            ctrl.setMeasurements(vp.measurements);
+          }
+
           if (vp.customBackgroundColor) ctrl.setCustomBackgroundColor(vp.customBackgroundColor);
         });
       }
@@ -675,7 +684,11 @@ function App() {
         if (s.coloring && s.coloring !== ctrl.coloring) ctrl.setColoring(s.coloring as ColoringType);
         if (s.isSpinning !== undefined && s.isSpinning !== ctrl.isSpinning) ctrl.setIsSpinning(s.isSpinning);
         if (s.highlightedResidue !== undefined) ctrl.setHighlightedResidue(s.highlightedResidue);
-        if (s.measurements) ctrl.setMeasurements(s.measurements);
+
+        // GUARD: Only update measurements if we haven't touched them locally recently (2s lock)
+        if (s.measurements && (Date.now() - lastLocalMeasurementUpdate.current > 2000)) {
+          ctrl.setMeasurements(s.measurements);
+        }
       }
 
       // Reset flag after render
@@ -2456,9 +2469,16 @@ function App() {
             <MeasurementPanel
               isOpen={isMeasurementPanelOpen}
               measurements={measurements}
-              onUpdate={handleUpdateMeasurement}
-              onDelete={handleDeleteMeasurement}
+              onUpdate={(id, updates) => {
+                lastLocalMeasurementUpdate.current = Date.now();
+                handleUpdateMeasurement(id, updates);
+              }}
+              onDelete={(id) => {
+                lastLocalMeasurementUpdate.current = Date.now();
+                handleDeleteMeasurement(id);
+              }}
               onClearAll={() => {
+                lastLocalMeasurementUpdate.current = Date.now();
                 setMeasurements([]);
                 viewerRef.current?.clearMeasurements();
               }}
@@ -2561,10 +2581,14 @@ function App() {
                     isPublicationMode={isPublicationMode}
                     onTogglePublicationMode={togglePublicationMode}
                     onClearMeasurements={() => {
+                      lastLocalMeasurementUpdate.current = Date.now();
                       setMeasurements([]);
                       viewerRef.current?.clearMeasurements();
                     }}
-                    onDeleteMeasurement={handleDeleteMeasurement}
+                    onDeleteMeasurement={(id) => {
+                      lastLocalMeasurementUpdate.current = Date.now();
+                      handleDeleteMeasurement(id);
+                    }}
                     measurements={measurements}
                     recorderContent={
                       <RecorderControls
@@ -2879,6 +2903,8 @@ function App() {
                             isMeasurementMode={isMeasurementMode}
                             measurements={ctrl.measurements}
                             onAddMeasurement={(m: any) => {
+                              // LOCK: Mark local update to prevent overwrite by stale remote state
+                              lastLocalMeasurementUpdate.current = Date.now();
                               ctrl.setMeasurements([...ctrl.measurements, m]);
                               ctrl.setIsMeasurementPanelOpen(true);
                               setActiveViewIndex(index);
