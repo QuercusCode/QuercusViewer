@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { X, Copy, Download, Check, Linkedin, Settings2, Camera, Users, Radio, Globe, Link } from 'lucide-react';
+import { X, Copy, Download, Check, Settings2, Camera, Users, Radio, Globe, Link } from 'lucide-react';
 import QRCode from 'qrcode';
 import { logEvent } from '../utils/analytics';
 import type { PeerSession } from '../hooks/usePeerSession';
@@ -379,20 +379,32 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, isLight
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             onClick={() => logEvent('share_twitter')}
-                                            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-bold bg-black text-white hover:bg-neutral-800 transition-colors border border-white/10"
+                                            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-bold transition-all ${isLightMode
+                                                ? 'bg-neutral-100 hover:bg-neutral-200 border border-neutral-200'
+                                                : 'bg-neutral-900 hover:bg-neutral-800 border border-neutral-700'
+                                                }`}
                                         >
-                                            <span className="text-xl">𝕏</span>
-                                            <span className="text-xs">Post</span>
+                                            <img
+                                                src={isLightMode ? '/new logo/full two line black.png' : '/new logo/full two line white.png'}
+                                                alt="Share on X"
+                                                className="h-6 object-contain"
+                                            />
                                         </a>
                                         <a
                                             href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             onClick={() => logEvent('share_linkedin')}
-                                            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-bold bg-[#0077b5] text-white hover:bg-[#006396] transition-colors"
+                                            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-bold transition-all ${isLightMode
+                                                ? 'bg-neutral-100 hover:bg-neutral-200 border border-neutral-200'
+                                                : 'bg-neutral-900 hover:bg-neutral-800 border border-neutral-700'
+                                                }`}
                                         >
-                                            <Linkedin className="w-4 h-4" />
-                                            <span className="text-xs">Share</span>
+                                            <img
+                                                src={isLightMode ? '/new logo/full two line black.png' : '/new logo/full two line white.png'}
+                                                alt="Share on LinkedIn"
+                                                className="h-6 object-contain"
+                                            />
                                         </a>
                                     </div>
                                 </div>
