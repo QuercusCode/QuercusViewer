@@ -1705,14 +1705,16 @@ export const Controls: React.FC<ControlsProps> = ({
                         id="analysis-tools"
                     >
 
-                        {/* Ligands */}
+                        {/* Ligands & Ions */}
                         {
-                            ligands.length > 0 && (
+                            (ligands.length > 0 || setShowIons) && (
                                 <div className={`p-2 rounded-lg border ${cardBg}`}>
                                     <div className="flex items-center justify-between mb-2">
                                         <div className="flex items-center gap-2">
                                             <Hexagon className="w-3.5 h-3.5 text-blue-500" />
-                                            <span className={`text-xs font-bold ${isLightMode ? 'text-neutral-900' : 'text-white'}`}>Ligands ({ligands.length})</span>
+                                            <span className={`text-xs font-bold ${isLightMode ? 'text-neutral-900' : 'text-white'}`}>
+                                                {ligands.length > 0 ? `Ligands (${ligands.length})` : 'Ligands & Ions'}
+                                            </span>
                                         </div>
                                     </div>
 
