@@ -571,9 +571,10 @@ export const Controls: React.FC<ControlsProps> = ({
     const [viewSequenceChain, setViewSequenceChain] = useState('');
 
     // Custom Color State
-    const [customSelection, setCustomSelection] = useState('');
-    const [customChain, setCustomChain] = useState('');
-    const [customColorValue, setCustomColorValue] = useState('#ff0000');
+    const [customChain, setCustomChain] = useState<string>("");
+    const [customSelection, setCustomSelection] = useState<string>("");
+    const [customColorValue, setCustomColorValue] = useState<string>("#ff0000");
+    const [customColorMode, setCustomColorMode] = useState<'chain' | 'residue'>('chain');
 
     const handleAddCustomColor = () => {
         let selectionString = '';
@@ -1284,85 +1285,160 @@ export const Controls: React.FC<ControlsProps> = ({
                                             </select>
                                         </div>
 
-                                        {/* Residue-Specific Coloring UI */}
+                                        {/* ADVANCED COLORS WRAPPER */}
                                         {setCustomColors && (
                                             <div className="col-span-2 pt-2 border-t border-white/5 space-y-2">
-                                                <div className={`w-full text-[10px] font-bold uppercase tracking-wider ${subtleText} opacity-80 mb-1`}>
-                                                    Custom Residue Colors
+                                                <div className="flex items-center justify-between mb-1">
+                                                    <div className={`text-[10px] font-bold uppercase tracking-wider ${subtleText} opacity-80`}>
+                                                        Advanced Colors
+                                                    </div>
+                                                    {/* Mode Toggle */}
+                                                    <div className={`flex p-0.5 rounded-lg border ${isLightMode ? 'bg-neutral-100 border-neutral-200' : 'bg-black/20 border-white/5'}`}>
+                                                        <button
+                                                            onClick={() => setCustomColorMode('chain')}
+                                                            className={`px-2 py-0.5 text-[9px] font-bold rounded-md transition-all ${customColorMode === 'chain'
+                                                                ? (isLightMode ? 'bg-white shadow text-blue-600' : 'bg-neutral-700 text-white shadow')
+                                                                : 'text-neutral-400 hover:text-neutral-500'}`}
+                                                        >
+                                                            Per-Chain
+                                                        </button>
+                                                        <button
+                                                            onClick={() => setCustomColorMode('residue')}
+                                                            className={`px-2 py-0.5 text-[9px] font-bold rounded-md transition-all ${customColorMode === 'residue'
+                                                                ? (isLightMode ? 'bg-white shadow text-blue-600' : 'bg-neutral-700 text-white shadow')
+                                                                : 'text-neutral-400 hover:text-neutral-500'}`}
+                                                        >
+                                                            Residue
+                                                        </button>
+                                                    </div>
                                                 </div>
 
                                                 <div className={`p-3 rounded-xl border space-y-3 ${isLightMode ? 'bg-neutral-50/50 border-neutral-200' : 'bg-black/20 border-white/5'}`}>
-                                                    {/* Row 1: Selection Inputs */}
-                                                    <div>
-                                                        <div className="flex items-center gap-2">
-                                                            <div className="w-24 shrink-0">
-                                                                <label className={`text-[9px] font-bold uppercase tracking-wider mb-1 block ${subtleText} opacity-70`}>Chain</label>
-                                                                <div className={`relative flex items-center rounded-lg border transition-all hover:border-blue-500/50 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500/20 ${inputBg}`}>
-                                                                    <select
-                                                                        value={customChain}
-                                                                        onChange={(e) => setCustomChain(e.target.value)}
-                                                                        className="w-full appearance-none bg-transparent py-1.5 pl-2 pr-6 text-xs font-mono outline-none"
-                                                                    >
-                                                                        <option value="">All</option>
-                                                                        {chains.map(c => (
-                                                                            <option key={c.name} value={c.name}>:{c.name}</option>
-                                                                        ))}
-                                                                    </select>
-                                                                    <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 opacity-50 pointer-events-none" />
+                                                    
+                                                    {/* MODE: CHAIN COLORS */}
+                                                    {customColorMode === 'chain' && (
+                                                        <>
+                                                            <div className="flex gap-2 h-9 items-end">
+                                                                <div className="w-1/3">
+                                                                    <label className={`text-[9px] font-bold uppercase tracking-wider mb-1 block ${subtleText} opacity-70`}>Chain</label>
+                                                                    <div className={`relative flex items-center rounded-lg border transition-all ${inputBg}`}>
+                                                                        <select
+                                                                            value={customChain}
+                                                                            onChange={(e) => {
+                                                                                setCustomChain(e.target.value);
+                                                                                setCustomSelection(''); // Clear residue selection for chain mode
+                                                                            }}
+                                                                            className="w-full appearance-none bg-transparent py-1.5 pl-2 pr-6 text-xs font-mono outline-none"
+                                                                        >
+                                                                            <option value="" disabled>Select</option>
+                                                                            {chains.map(c => (
+                                                                                <option key={c.name} value={c.name}>:{c.name}</option>
+                                                                            ))}
+                                                                        </select>
+                                                                        <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 opacity-50 pointer-events-none" />
+                                                                    </div>
                                                                 </div>
-                                                            </div>
-                                                            <div className="flex-1">
-                                                                <div className="flex justify-between items-center mb-1">
-                                                                    <label className={`text-[9px] font-bold uppercase tracking-wider ${subtleText} opacity-70`}>Residues</label>
-                                                                    {customChain && chains.find(c => c.name === customChain)?.min !== undefined && (
-                                                                        <span className={`text-[9px] font-mono ${subtleText} opacity-50`}>
-                                                                            {chains.find(c => c.name === customChain)?.min}-{chains.find(c => c.name === customChain)?.max}
-                                                                        </span>
-                                                                    )}
-                                                                </div>
-                                                                <input
-                                                                    type="text"
-                                                                    value={customSelection}
-                                                                    onChange={(e) => setCustomSelection(e.target.value)}
-                                                                    placeholder="e.g. 50-60"
-                                                                    className={`w-full rounded-lg px-3 py-1.5 text-xs border outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-all font-mono placeholder:text-neutral-500 ${inputBg}`}
-                                                                />
-                                                            </div>
-                                                        </div>
-                                                    </div>
 
-                                                    {/* Row 2: Color & Action */}
-                                                    <div>
-                                                        <label className={`text-[9px] font-bold uppercase tracking-wider mb-1 block ${subtleText} opacity-70`}>Color & Action</label>
-                                                        <div className="flex gap-2 h-9">
-                                                            {/* Color Picker */}
-                                                            <div className={`flex-1 flex items-center gap-2 px-3 rounded-lg border transition-all hover:border-neutral-400 dark:hover:border-neutral-600 ${inputBg}`}>
-                                                                <div className="relative w-5 h-5 rounded-full overflow-hidden border border-white/10 ring-1 ring-black/5 shrink-0 shadow-sm">
+                                                                {/* Color Picker */}
+                                                                <div className="flex-1">
+                                                                    <label className={`text-[9px] font-bold uppercase tracking-wider mb-1 block ${subtleText} opacity-70`}>Color</label>
+                                                                    <div className={`flex items-center gap-2 px-3 py-1 rounded-lg border transition-all ${inputBg} h-[30px]`}>
+                                                                        <div className="relative w-4 h-4 rounded-full overflow-hidden border border-white/10 ring-1 ring-black/5 shrink-0 shadow-sm">
+                                                                            <input
+                                                                                type="color"
+                                                                                value={customColorValue}
+                                                                                onChange={(e) => setCustomColorValue(e.target.value)}
+                                                                                className="absolute inset-[-50%] w-[200%] h-[200%] cursor-pointer p-0 m-0"
+                                                                            />
+                                                                        </div>
+                                                                        <span className="text-[10px] font-mono opacity-80 uppercase tracking-wide">
+                                                                            {customColorValue}
+                                                                        </span>
+                                                                    </div>
+                                                                </div>
+                                                                
+                                                                {/* Add Button */}
+                                                                <button
+                                                                    onClick={handleAddCustomColor}
+                                                                    disabled={!customChain}
+                                                                    className="h-[30px] px-4 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg text-xs font-bold transition-all shadow-sm active:scale-95 flex items-center justify-center gap-1.5"
+                                                                >
+                                                                    Set
+                                                                </button>
+                                                            </div>
+                                                        </>
+                                                    )}
+
+                                                    {/* MODE: RESIDUE COLORS */}
+                                                    {customColorMode === 'residue' && (
+                                                        <>
+                                                            <div className="flex gap-2">
+                                                                <div className="w-24 shrink-0">
+                                                                    <label className={`text-[9px] font-bold uppercase tracking-wider mb-1 block ${subtleText} opacity-70`}>Chain</label>
+                                                                    <div className={`relative flex items-center rounded-lg border transition-all ${inputBg}`}>
+                                                                        <select
+                                                                            value={customChain}
+                                                                            onChange={(e) => setCustomChain(e.target.value)}
+                                                                            className="w-full appearance-none bg-transparent py-1.5 pl-2 pr-6 text-xs font-mono outline-none"
+                                                                        >
+                                                                            <option value="">All</option>
+                                                                            {chains.map(c => (
+                                                                                <option key={c.name} value={c.name}>:{c.name}</option>
+                                                                            ))}
+                                                                        </select>
+                                                                        <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 opacity-50 pointer-events-none" />
+                                                                    </div>
+                                                                </div>
+                                                                <div className="flex-1">
+                                                                    <div className="flex justify-between items-center mb-1">
+                                                                        <label className={`text-[9px] font-bold uppercase tracking-wider ${subtleText} opacity-70`}>Residues</label>
+                                                                        {customChain && chains.find(c => c.name === customChain)?.min !== undefined && (
+                                                                            <span className={`text-[9px] font-mono ${subtleText} opacity-50`}>
+                                                                                {chains.find(c => c.name === customChain)?.min}-{chains.find(c => c.name === customChain)?.max}
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
                                                                     <input
-                                                                        type="color"
-                                                                        value={customColorValue}
-                                                                        onChange={(e) => setCustomColorValue(e.target.value)}
-                                                                        className="absolute inset-[-50%] w-[200%] h-[200%] cursor-pointer p-0 m-0"
+                                                                        type="text"
+                                                                        value={customSelection}
+                                                                        onChange={(e) => setCustomSelection(e.target.value)}
+                                                                        placeholder="e.g. 50-60"
+                                                                        className={`w-full rounded-lg px-3 py-1.5 text-xs border outline-none font-mono placeholder:text-neutral-500 ${inputBg}`}
                                                                     />
                                                                 </div>
-                                                                <span className="text-[10px] font-mono opacity-80 uppercase tracking-wide">
-                                                                    {customColorValue}
-                                                                </span>
                                                             </div>
 
+                                                            <div>
+                                                                <label className={`text-[9px] font-bold uppercase tracking-wider mb-1 block ${subtleText} opacity-70`}>Color & Action</label>
+                                                                <div className="flex gap-2 h-9">
+                                                                    {/* Color Picker */}
+                                                                    <div className={`flex-1 flex items-center gap-2 px-3 rounded-lg border transition-all ${inputBg}`}>
+                                                                        <div className="relative w-5 h-5 rounded-full overflow-hidden border border-white/10 ring-1 ring-black/5 shrink-0 shadow-sm">
+                                                                            <input
+                                                                                type="color"
+                                                                                value={customColorValue}
+                                                                                onChange={(e) => setCustomColorValue(e.target.value)}
+                                                                                className="absolute inset-[-50%] w-[200%] h-[200%] cursor-pointer p-0 m-0"
+                                                                            />
+                                                                        </div>
+                                                                        <span className="text-[10px] font-mono opacity-80 uppercase tracking-wide">
+                                                                            {customColorValue}
+                                                                        </span>
+                                                                    </div>
 
-
-                                                            {/* Add Button */}
-                                                            <button
-                                                                onClick={handleAddCustomColor}
-                                                                disabled={(!customSelection && !customChain)}
-                                                                className="px-6 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg text-xs font-bold transition-all shadow-sm active:scale-95 flex items-center justify-center gap-1.5"
-                                                            >
-                                                                <Plus className="w-3.5 h-3.5" />
-                                                                <span>Add</span>
-                                                            </button>
-                                                        </div>
-                                                    </div>
+                                                                    {/* Add Button */}
+                                                                    <button
+                                                                        onClick={handleAddCustomColor}
+                                                                        disabled={(!customSelection && !customChain)}
+                                                                        className="px-6 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg text-xs font-bold transition-all shadow-sm active:scale-95 flex items-center justify-center gap-1.5"
+                                                                    >
+                                                                        <Plus className="w-3.5 h-3.5" />
+                                                                        <span>Add</span>
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </>
+                                                    )}
 
                                                     {/* Active Rules List */}
                                                     {customColors && customColors.length > 0 && (
