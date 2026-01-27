@@ -1662,7 +1662,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                             <label className={`text-[10px] font-bold uppercase tracking-wider block ${subtleText}`}>Background</label>
                                         <div className="space-y-2">
                                                 {/* Row 1: Presets - Spread full width */}
-                                                <div className="grid grid-cols-6 gap-1">
+                                                <div className="grid grid-cols-5 gap-1">
                                                     {[
                                                         { color: '#000000', label: 'Black' },
                                                         { color: '#ffffff', label: 'White' },
