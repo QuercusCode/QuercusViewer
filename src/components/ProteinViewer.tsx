@@ -2430,10 +2430,9 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
 
             const cartoonParams = {
                 aspectRatio: 6.0,
-                subdiv: 12,
+                subdiv: smoothSheetEnabled ? 12 : 6,
                 radialSegments: 20,
-                smoothSheet: smoothSheetEnabled,
-                quality: 'high'
+                smoothSheet: !!smoothSheetEnabled
             };
             console.log("DEBUG: cartoonParams", cartoonParams);
 
