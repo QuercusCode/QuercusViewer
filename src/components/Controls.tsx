@@ -465,8 +465,6 @@ export const Controls: React.FC<ControlsProps> = ({
     onLoadSession,
     onToggleContactMap,
     movies,
-    colorPalette,
-    setColorPalette,
     isDyslexicFont,
     setIsDyslexicFont,
     // onToggleAISidebar,
