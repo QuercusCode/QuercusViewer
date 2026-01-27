@@ -43,6 +43,7 @@ import { formatChemicalId } from '../utils/pdbUtils';
 import { findMotifs } from '../utils/searchUtils';
 import type { MotifMatch } from '../utils/searchUtils';
 import { MOTIF_LIBRARY } from '../data/motifLibrary';
+import { HexColorPicker } from 'react-colorful';
 
 // Reusable Sidebar Section Component - Defined outside to prevent re-renders losing focus
 const SidebarSection = ({ title, icon: Icon, children, isOpen, onToggle, isLightMode, id }: { title: string, icon: any, children: React.ReactNode, isOpen: boolean, onToggle: () => void, isLightMode: boolean, id?: string }) => {
@@ -516,6 +517,10 @@ export const Controls: React.FC<ControlsProps> = ({
     const [customResStyleRange, setCustomResStyleRange] = useState<string>("");
     const [customResStyleType, setCustomResStyleType] = useState<RepresentationType>("spacefill");
 
+    // Background Color Picker Popover State
+    const [showBgColorPicker, setShowBgColorPicker] = useState(false);
+    const bgColorPickerRef = useRef<HTMLDivElement>(null);
+
     const handleAddCustomStyle = () => {
         if (!setCustomStyles || !customResStyleRange) return;
         const newRule: CustomStyleRule = {
@@ -630,6 +635,20 @@ export const Controls: React.FC<ControlsProps> = ({
     useEffect(() => {
         setLocalPdbId(pdbId);
     }, [pdbId]);
+
+    // Close background color picker popover when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (bgColorPickerRef.current && !bgColorPickerRef.current.contains(event.target as Node)) {
+                setShowBgColorPicker(false);
+            }
+        };
+
+        if (showBgColorPicker) {
+            document.addEventListener('mousedown', handleClickOutside);
+            return () => document.removeEventListener('mousedown', handleClickOutside);
+        }
+    }, [showBgColorPicker]);
 
     // Auto-scroll to highlighted residue
     useEffect(() => {
@@ -1294,14 +1313,11 @@ export const Controls: React.FC<ControlsProps> = ({
 
                                             {/* Unified Main Button for Auto/Custom */}
                                             <div className="flex gap-2">
-                                                <div className={`relative flex-1 h-8 rounded-lg border transition-all overflow-hidden group ${customBackgroundColor ? 'ring-2 ring-blue-500 ring-offset-1 ring-offset-black' : `${cardBg} border-neutral-700/50 hover:border-neutral-500`}`}>
-                                                    <input
-                                                        type="color"
-                                                        value={customBackgroundColor || (isLightMode ? '#ffffff' : '#000000')}
-                                                        onChange={(e) => setCustomBackgroundColor?.(e.target.value)}
-                                                        className="absolute inset-[-50%] w-[200%] h-[200%] cursor-pointer p-0 m-0 opacity-0"
-                                                    />
-                                                    <div className="absolute inset-0 flex items-center justify-center gap-2 pointer-events-none">
+                                                <div ref={bgColorPickerRef} className="relative flex-1">
+                                                    <button
+                                                        onClick={() => setShowBgColorPicker(!showBgColorPicker)}
+                                                        className={`w-full h-8 rounded-lg border transition-all flex items-center justify-center gap-2 ${customBackgroundColor ? 'ring-2 ring-blue-500 ring-offset-1 ring-offset-black' : `${cardBg} border-neutral-700/50 hover:border-neutral-500`}`}
+                                                    >
                                                         {customBackgroundColor ? (
                                                             <>
                                                                 <div className="w-3 h-3 rounded-full border border-white/20 shadow-sm"
@@ -1312,7 +1328,29 @@ export const Controls: React.FC<ControlsProps> = ({
                                                         ) : (
                                                             <span className="text-[10px] font-bold opacity-70">Auto (Default)</span>
                                                         )}
-                                                    </div>
+                                                    </button>
+
+                                                    {/* Color Picker Popover */}
+                                                    {showBgColorPicker && (
+                                                        <div className={`absolute top-full left-0 mt-2 p-3 rounded-xl border shadow-2xl z-50 ${isLightMode ? 'bg-white border-neutral-200' : 'bg-neutral-900 border-neutral-700'}`}>
+                                                            <HexColorPicker
+                                                                color={customBackgroundColor || (isLightMode ? '#ffffff' : '#000000')}
+                                                                onChange={(color) => setCustomBackgroundColor?.(color)}
+                                                            />
+                                                            <input
+                                                                type="text"
+                                                                value={customBackgroundColor || ''}
+                                                                onChange={(e) => {
+                                                                    const value = e.target.value;
+                                                                    if (/^#[0-9A-F]{6}$/i.test(value) || value === '') {
+                                                                        setCustomBackgroundColor?.(value || null);
+                                                                    }
+                                                                }}
+                                                                placeholder="#HEX"
+                                                                className={`mt-2 w-full px-2 py-1 rounded border text-xs font-mono uppercase outline-none ${inputBg}`}
+                                                            />
+                                                        </div>
+                                                    )}
                                                 </div>
                                                 {customBackgroundColor && (
                                                     <button
