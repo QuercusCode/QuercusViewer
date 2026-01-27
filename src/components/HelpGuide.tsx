@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
     CircleHelp, X, MousePointer2, Keyboard, Sparkles,
-    BookOpen, Layers, Activity, Share2, FileUp, ArrowLeft, Wrench, Palette, Mail, Github, MessageSquare, ExternalLink, Linkedin, Heart, Users
+    BookOpen, Layers, Activity, Share2, FileUp, ArrowLeft, Wrench, Palette, Mail, Github, MessageSquare, ExternalLink, Linkedin, Heart, Users, Video
 } from 'lucide-react';
 
 type FeatureSection = {
@@ -191,8 +191,8 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
                                 <ul className="ml-6 space-y-1.5 text-[11px] text-neutral-400 list-disc">
                                     <li><strong className="text-neutral-300">Camera View:</strong> When you rotate or zoom, everyone follows.</li>
                                     <li><strong className="text-neutral-300">Representation:</strong> Switch from Cartoon to Surface, and it updates for all.</li>
+                                    <li><strong className="text-neutral-300">Measurements:</strong> Distances you measure (M) appear instantly on everyone's screen.</li>
                                     <li><strong className="text-neutral-300">Highlights:</strong> Hover over a residue to point it out to others.</li>
-                                    <li><strong className="text-neutral-300">Measurements:</strong> Distances you measure appear on everyone's screen.</li>
                                 </ul>
                             </div>
 
@@ -206,13 +206,13 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
                                     <div>
                                         <strong className="text-white text-[11px] block">Pass the Chalk</strong>
                                         <p className="text-[10px] text-neutral-500">
-                                            The Host controls the view by default. Click a user's name in the sidebar to give them control.
+                                            The Host controls the view by default. Click a user's Nametag in the sidebar to give them control.
                                         </p>
                                     </div>
                                     <div>
-                                        <strong className="text-white text-[11px] block">Voice & Chat</strong>
+                                        <strong className="text-white text-[11px] block">Live Chat</strong>
                                         <p className="text-[10px] text-neutral-500">
-                                            Use the built-in Text Chat or join the Voice Room to discuss findings in real-time.
+                                            Discuss findings in real-time with the built-in text chat and always-on nametags.
                                         </p>
                                     </div>
                                 </div>
@@ -445,7 +445,7 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
                             <div className="bg-black/20 p-3 rounded-lg hover:bg-black/30 transition-colors">
                                 <div className="text-2xl mb-1">🎬</div>
                                 <div className="font-bold text-white">Movie</div>
-                                <div className="text-neutral-500 scale-90">360° Animation</div>
+                                <div className="text-neutral-500 scale-90">Studio Mode</div>
                             </div>
                             <div className="bg-black/20 p-3 rounded-lg hover:bg-black/30 transition-colors">
                                 <div className="text-2xl mb-1">💾</div>
@@ -453,6 +453,29 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
                                 <div className="text-neutral-500 scale-90">Save JSON State</div>
                             </div>
                         </div>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-pink-500/10 to-rose-500/10 border border-pink-500/20 p-4 rounded-xl">
+                        <h4 className="text-sm font-bold text-white mb-2 flex items-center gap-2">
+                            <Video className="w-4 h-4 text-pink-400" /> Studio Mode
+                        </h4>
+                        <p className="text-xs text-neutral-300 mb-3 leading-relaxed">
+                            Create professional molecular animations directly in the browser.
+                        </p>
+                        <ul className="grid grid-cols-2 gap-2 text-[11px] text-neutral-400">
+                            <li className="flex items-center gap-2">
+                                <span className="w-1.5 h-1.5 rounded-full bg-pink-500" /> Keyframe Animation
+                            </li>
+                            <li className="flex items-center gap-2">
+                                <span className="w-1.5 h-1.5 rounded-full bg-pink-500" /> Camera Movements
+                            </li>
+                            <li className="flex items-center gap-2">
+                                <span className="w-1.5 h-1.5 rounded-full bg-pink-500" /> Transition Effects
+                            </li>
+                            <li className="flex items-center gap-2">
+                                <span className="w-1.5 h-1.5 rounded-full bg-pink-500" /> HD Video Export
+                            </li>
+                        </ul>
                     </div>
                 </div>
             )
