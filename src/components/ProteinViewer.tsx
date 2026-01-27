@@ -2434,14 +2434,14 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                 radialSegments: smoothSheetEnabled ? 20 : 10,
                 smoothSheet: !!smoothSheetEnabled
             };
-            // console.log("DEBUG: cartoonParams", cartoonParams);
+            console.log("[ProteinViewer] Update - smoothSheetEnabled:", smoothSheetEnabled);
+            console.log("[ProteinViewer] Update - cartoonParams:", JSON.stringify(cartoonParams));
 
             let globalParams = { ...params };
             if (repType === 'cartoon') {
                 delete globalParams.quality;
                 Object.assign(globalParams, cartoonParams);
-                // console.log("DEBUG: globalParams (Final)", globalParams);
-                try { component.structure.eachModel((m: any) => m.calculateSecondaryStructure?.()); } catch (e) { }
+                // try { component.structure.eachModel((m: any) => m.calculateSecondaryStructure?.()); } catch (e) { }
             }
 
             // --- 3.5 PREPARE CUSTOM STYLE SELECTIONS ---
