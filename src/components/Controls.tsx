@@ -1689,19 +1689,9 @@ export const Controls: React.FC<ControlsProps> = ({
                                                     ))}
                                                 </div>
 
-                                                {/* Row 2: Auto & Custom Picker */}
+                                                {/* Unified Main Button for Auto/Custom */}
                                                 <div className="flex gap-2">
-                                                    <button
-                                                        onClick={() => setCustomBackgroundColor?.(null)}
-                                                        className={`flex-1 h-8 flex items-center justify-center rounded-lg border transition-all ${!customBackgroundColor 
-                                                            ? 'bg-blue-500/10 border-blue-500 text-blue-500 font-bold' 
-                                                            : `${cardBg} border-neutral-700/50 opacity-70 hover:opacity-100 hover:border-neutral-600`}`}
-                                                        title="Use Theme Default"
-                                                    >
-                                                        <span className="text-[10px]">Auto</span>
-                                                    </button>
-
-                                                    <div className={`flex-1 relative h-8 rounded-lg border transition-all overflow-hidden group ${customBackgroundColor && !['#000000', '#ffffff', '#1a1a1a', '#f5f5f5', '#000020', 'transparent'].includes(customBackgroundColor) ? 'ring-2 ring-blue-500 ring-offset-1 ring-offset-black' : `${cardBg} border-neutral-700/50 opacity-100 hover:border-neutral-500`}`}>
+                                                    <div className={`relative flex-1 h-8 rounded-lg border transition-all overflow-hidden group ${customBackgroundColor ? 'ring-2 ring-blue-500 ring-offset-1 ring-offset-black' : `${cardBg} border-neutral-700/50 hover:border-neutral-500`}`}>
                                                         <input
                                                             type="color"
                                                             value={customBackgroundColor || (isLightMode ? '#ffffff' : '#000000')}
@@ -1709,12 +1699,27 @@ export const Controls: React.FC<ControlsProps> = ({
                                                             className="absolute inset-[-50%] w-[200%] h-[200%] cursor-pointer p-0 m-0 opacity-0"
                                                         />
                                                         <div className="absolute inset-0 flex items-center justify-center gap-2 pointer-events-none">
-                                                            <div className="w-3 h-3 rounded-full border border-white/20 shadow-sm"
-                                                                style={{ background: customBackgroundColor || 'linear-gradient(135deg, #FF0080, #7928CA)' }}
-                                                            />
-                                                            <span className="text-[10px] font-mono opacity-70 uppercase">Custom</span>
+                                                            {customBackgroundColor ? (
+                                                                <>
+                                                                    <div className="w-3 h-3 rounded-full border border-white/20 shadow-sm"
+                                                                        style={{ background: customBackgroundColor }}
+                                                                    />
+                                                                    <span className="text-[10px] font-mono uppercase">{customBackgroundColor}</span>
+                                                                </>
+                                                            ) : (
+                                                                <span className="text-[10px] font-bold opacity-70">Auto (Default)</span>
+                                                            )}
                                                         </div>
                                                     </div>
+                                                    {customBackgroundColor && (
+                                                        <button
+                                                            onClick={() => setCustomBackgroundColor?.(null)}
+                                                            className={`px-3 rounded-lg border text-[10px] font-bold uppercase transition-colors hover:bg-red-500/10 hover:text-red-500 ${isLightMode ? 'border-neutral-200 text-neutral-500 bg-white' : 'border-neutral-700 text-neutral-400 bg-neutral-800'}`}
+                                                            title="Reset to Auto"
+                                                        >
+                                                            Auto
+                                                        </button>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>
