@@ -1277,6 +1277,20 @@ export const Controls: React.FC<ControlsProps> = ({
                                             </select>
                                         </div>
 
+                                        {/* Color Explanation */}
+                                        <p className={`text-[9px] opacity-70 leading-relaxed col-span-2 ${subtleText}`}>
+                                            {({
+                                                chainid: "Distinct colors for each chain.",
+                                                resname: "Standard amino acid colors (RasMol).",
+                                                residue: "Standard amino acid colors.",
+                                                structure: "Helices (Magenta), Sheets (Yellow), Loops (White).",
+                                                hydrophobicity: "Blue (Hydrophilic) → Red (Hydrophobic).",
+                                                bfactor: "Blue (Stable) → Red (Flexible/Mobile).",
+                                                secondary: "Secondary structure delineation.",
+                                                residueindex: "Rainbow gradient by residue position."
+                                            } as Record<string, string>)[coloring]}
+                                        </p>
+
                                         {/* Background Controls */}
                                         <div className="col-span-2 space-y-2 pt-2 border-t border-white/5">
                                             <label className={`text-[10px] font-bold uppercase tracking-wider block ${subtleText}`}>Background</label>
@@ -1765,19 +1779,6 @@ export const Controls: React.FC<ControlsProps> = ({
 
 
                             </div>
-
-                            <p className={`text-[9px] mt-1.5 opacity-70 leading-relaxed ${subtleText}`}>
-                                {({
-                                    chainid: "Distinct colors for each chain.",
-                                    resname: "Standard amino acid colors (RasMol).",
-                                    residue: "Standard amino acid colors.",
-                                    structure: "Helices (Magenta), Sheets (Yellow), Loops (White).",
-                                    hydrophobicity: "Blue (Hydrophilic) → Red (Hydrophobic).",
-                                    bfactor: "Blue (Stable) → Red (Flexible/Mobile).",
-                                    secondary: "Secondary structure delineation.",
-                                    residueindex: "Rainbow gradient by residue position."
-                                } as Record<string, string>)[coloring]}
-                            </p>
 
                             {/* Custom Rules */}
                         </div>
