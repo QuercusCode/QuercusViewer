@@ -1409,7 +1409,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                     {/* MODE: CHAIN COLORS */}
                                                     {customColorMode === 'chain' && (
                                                         <>
-                                                            <div className="flex gap-2 h-9 items-end">
+                                                            <div className="flex gap-2">
                                                                 <div className="w-1/3">
                                                                     <label className={`text-[9px] font-bold uppercase tracking-wider mb-1 block ${subtleText} opacity-70`}>Chain</label>
                                                                     <div className={`relative flex items-center rounded-lg border transition-all ${inputBg}`}>
@@ -1433,7 +1433,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                                 {/* Color Picker */}
                                                                 <div className="flex-1">
                                                                     <label className={`text-[9px] font-bold uppercase tracking-wider mb-1 block ${subtleText} opacity-70`}>Color</label>
-                                                                    <div className={`flex items-center gap-2 px-3 py-1 rounded-lg border transition-all ${inputBg} h-[30px]`}>
+                                                                    <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all ${inputBg}`}>
                                                                         <div className="relative w-4 h-4 rounded-full overflow-hidden border border-white/10 ring-1 ring-black/5 shrink-0 shadow-sm">
                                                                             <input
                                                                                 type="color"
@@ -1452,7 +1452,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                                 <button
                                                                     onClick={handleAddCustomColor}
                                                                     disabled={!customChain}
-                                                                    className="h-[30px] px-4 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg text-xs font-bold transition-all shadow-sm active:scale-95 flex items-center justify-center gap-1.5"
+                                                                    className="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg text-xs font-bold transition-all shadow-sm active:scale-95 flex items-center justify-center gap-1.5"
                                                                 >
                                                                     Set
                                                                 </button>
