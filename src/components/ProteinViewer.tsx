@@ -2429,12 +2429,13 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
             }
 
             const cartoonParams = {
-                aspectRatio: 6.0,
-                subdiv: smoothSheetEnabled ? 20 : 1, // Extreme values to FORCE visible difference
-                radialSegments: 20,
-                smoothSheet: !!smoothSheetEnabled
+                aspectRatio: smoothSheetEnabled ? 6.0 : 1.0, // Wide vs Narrow
+                subdiv: smoothSheetEnabled ? 12 : 1, // Smooth vs Jagged path
+                radialSegments: smoothSheetEnabled ? 20 : 3, // Round vs Triangular cross-section
+                smoothSheet: !!smoothSheetEnabled,
+                flatShaded: !smoothSheetEnabled // Smooth vs Faceted shading
             };
-            console.log("DEBUG: cartoonParams", cartoonParams);
+            console.log("DEBUG: cartoonParams (Extreme Test)", cartoonParams);
 
             let globalParams = { ...params };
             if (repType === 'cartoon') {
