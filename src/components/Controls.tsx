@@ -1152,11 +1152,11 @@ export const Controls: React.FC<ControlsProps> = ({
                                         </button>
 
                                         {/* Smooth Sheet Toggle */}
-                                         <button
+                                        <button
                                             onClick={() => setSmoothSheetEnabled && setSmoothSheetEnabled(!smoothSheetEnabled)}
                                             disabled={visualizerEngine !== 'ngl' || representation !== 'cartoon'}
                                             className={`h-10 flex items-center justify-center gap-1 rounded-lg border transition-all ${smoothSheetEnabled && visualizerEngine === 'ngl' && representation === 'cartoon'
-                                                ? 'bg-blue-500/10 border-blue-500 text-blue-500' 
+                                                ? 'bg-blue-500/10 border-blue-500 text-blue-500'
                                                 : `${cardBg} border-neutral-700/50 opacity-70 hover:opacity-100 hover:border-neutral-600 disabled:opacity-30 disabled:cursor-not-allowed`}`}
                                             title={visualizerEngine === 'ngl' ? "Toggle Smooth Cartoon Sheets" : "Only available in NGL Viewer"}
                                         >
@@ -1289,7 +1289,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                 </div>
 
                                                 <div className={`p-3 rounded-xl border space-y-3 ${isLightMode ? 'bg-neutral-50/50 border-neutral-200' : 'bg-black/20 border-white/5'}`}>
-                                                    
+
                                                     {/* MODE: CHAIN COLORS */}
                                                     {customColorMode === 'chain' && (
                                                         <>
@@ -1331,7 +1331,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                                         </span>
                                                                     </div>
                                                                 </div>
-                                                                
+
                                                                 {/* Add Button */}
                                                                 <button
                                                                     onClick={handleAddCustomColor}
@@ -1660,9 +1660,9 @@ export const Controls: React.FC<ControlsProps> = ({
                                         {/* Background Controls (Moved to Bottom) */}
                                         <div className="space-y-2 pt-2 border-t border-white/5">
                                             <label className={`text-[10px] font-bold uppercase tracking-wider block ${subtleText}`}>Background</label>
-                                        <div className="space-y-2">
+                                            <div className="space-y-2">
                                                 {/* Row 1: Presets - Spread full width */}
-                                                <div className="grid grid-cols-6">
+                                                <div className="grid grid-cols-6 gap-1.5">
                                                     {[
                                                         { color: '#000000', label: 'Black' },
                                                         { color: '#ffffff', label: 'White' },
