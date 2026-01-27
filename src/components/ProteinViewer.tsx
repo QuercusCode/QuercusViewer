@@ -147,7 +147,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
     customColors,
     chainStyles, // Destructure
     customStyles,
-    smoothSheetEnabled = true,
+    smoothSheetEnabled = false,
     overlays,
 
     palette: colorPalette = 'standard', // Rename to matches internal usage
