@@ -1660,67 +1660,66 @@ export const Controls: React.FC<ControlsProps> = ({
                                         {/* Background Controls (Moved to Bottom) */}
                                         <div className="space-y-2 pt-2 border-t border-white/5">
                                             <label className={`text-[10px] font-bold uppercase tracking-wider block ${subtleText}`}>Background</label>
-                                            <div className="space-y-2">
-                                                {/* Row 1: Presets - Spread full width */}
-                                                <div className="grid grid-cols-6 gap-1.5">
-                                                    {[
-                                                        { color: '#000000', label: 'Black' },
-                                                        { color: '#ffffff', label: 'White' },
-                                                        { color: '#1a1a1a', label: 'Dark' },
-                                                        { color: '#f5f5f5', label: 'Light' },
-                                                        { color: '#000020', label: 'Navy' },
-                                                        { color: 'transparent', label: 'Transparent' },
-                                                    ].map((preset) => (
-                                                        <button
-                                                            key={preset.color}
-                                                            onClick={() => setCustomBackgroundColor?.(preset.color)}
-                                                            className={`h-6 rounded border transition-all ${customBackgroundColor === preset.color ? 'ring-2 ring-blue-500 ring-offset-1 ring-offset-black' : 'hover:scale-105'}`}
-                                                            style={preset.color === 'transparent'
-                                                                ? {
-                                                                    backgroundImage: 'linear-gradient(45deg, #808080 25%, transparent 25%), linear-gradient(-45deg, #808080 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #808080 75%), linear-gradient(-45deg, transparent 75%, #808080 75%)',
-                                                                    backgroundSize: '8px 8px',
-                                                                    backgroundPosition: '0 0, 0 4px, 4px -4px, -4px 0px',
-                                                                    borderColor: isLightMode ? '#e5e5e5' : '#333'
-                                                                }
-                                                                : { backgroundColor: preset.color, borderColor: isLightMode ? '#e5e5e5' : '#333' }
-                                                            }
-                                                            title={preset.label}
-                                                        />
-                                                    ))}
-                                                </div>
 
-                                                {/* Unified Main Button for Auto/Custom */}
-                                                <div className="flex gap-2">
-                                                    <div className={`relative flex-1 h-8 rounded-lg border transition-all overflow-hidden group ${customBackgroundColor ? 'ring-2 ring-blue-500 ring-offset-1 ring-offset-black' : `${cardBg} border-neutral-700/50 hover:border-neutral-500`}`}>
-                                                        <input
-                                                            type="color"
-                                                            value={customBackgroundColor || (isLightMode ? '#ffffff' : '#000000')}
-                                                            onChange={(e) => setCustomBackgroundColor?.(e.target.value)}
-                                                            className="absolute inset-[-50%] w-[200%] h-[200%] cursor-pointer p-0 m-0 opacity-0"
-                                                        />
-                                                        <div className="absolute inset-0 flex items-center justify-center gap-2 pointer-events-none">
-                                                            {customBackgroundColor ? (
-                                                                <>
-                                                                    <div className="w-3 h-3 rounded-full border border-white/20 shadow-sm"
-                                                                        style={{ background: customBackgroundColor }}
-                                                                    />
-                                                                    <span className="text-[10px] font-mono uppercase">{customBackgroundColor}</span>
-                                                                </>
-                                                            ) : (
-                                                                <span className="text-[10px] font-bold opacity-70">Auto (Default)</span>
-                                                            )}
-                                                        </div>
+                                            {/* Row 1: Presets - Spread full width */}
+                                            <div className="grid grid-cols-6 gap-1.5">
+                                                {[
+                                                    { color: '#000000', label: 'Black' },
+                                                    { color: '#ffffff', label: 'White' },
+                                                    { color: '#1a1a1a', label: 'Dark' },
+                                                    { color: '#f5f5f5', label: 'Light' },
+                                                    { color: '#000020', label: 'Navy' },
+                                                    { color: 'transparent', label: 'Transparent' },
+                                                ].map((preset) => (
+                                                    <button
+                                                        key={preset.color}
+                                                        onClick={() => setCustomBackgroundColor?.(preset.color)}
+                                                        className={`h-6 rounded border transition-all ${customBackgroundColor === preset.color ? 'ring-2 ring-blue-500 ring-offset-1 ring-offset-black' : 'hover:scale-105'}`}
+                                                        style={preset.color === 'transparent'
+                                                            ? {
+                                                                backgroundImage: 'linear-gradient(45deg, #808080 25%, transparent 25%), linear-gradient(-45deg, #808080 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #808080 75%), linear-gradient(-45deg, transparent 75%, #808080 75%)',
+                                                                backgroundSize: '8px 8px',
+                                                                backgroundPosition: '0 0, 0 4px, 4px -4px, -4px 0px',
+                                                                borderColor: isLightMode ? '#e5e5e5' : '#333'
+                                                            }
+                                                            : { backgroundColor: preset.color, borderColor: isLightMode ? '#e5e5e5' : '#333' }
+                                                        }
+                                                        title={preset.label}
+                                                    />
+                                                ))}
+                                            </div>
+
+                                            {/* Unified Main Button for Auto/Custom */}
+                                            <div className="flex gap-2">
+                                                <div className={`relative flex-1 h-8 rounded-lg border transition-all overflow-hidden group ${customBackgroundColor ? 'ring-2 ring-blue-500 ring-offset-1 ring-offset-black' : `${cardBg} border-neutral-700/50 hover:border-neutral-500`}`}>
+                                                    <input
+                                                        type="color"
+                                                        value={customBackgroundColor || (isLightMode ? '#ffffff' : '#000000')}
+                                                        onChange={(e) => setCustomBackgroundColor?.(e.target.value)}
+                                                        className="absolute inset-[-50%] w-[200%] h-[200%] cursor-pointer p-0 m-0 opacity-0"
+                                                    />
+                                                    <div className="absolute inset-0 flex items-center justify-center gap-2 pointer-events-none">
+                                                        {customBackgroundColor ? (
+                                                            <>
+                                                                <div className="w-3 h-3 rounded-full border border-white/20 shadow-sm"
+                                                                    style={{ background: customBackgroundColor }}
+                                                                />
+                                                                <span className="text-[10px] font-mono uppercase">{customBackgroundColor}</span>
+                                                            </>
+                                                        ) : (
+                                                            <span className="text-[10px] font-bold opacity-70">Auto (Default)</span>
+                                                        )}
                                                     </div>
-                                                    {customBackgroundColor && (
-                                                        <button
-                                                            onClick={() => setCustomBackgroundColor?.(null)}
-                                                            className={`px-3 rounded-lg border text-[10px] font-bold uppercase transition-colors hover:bg-red-500/10 hover:text-red-500 ${isLightMode ? 'border-neutral-200 text-neutral-500 bg-white' : 'border-neutral-700 text-neutral-400 bg-neutral-800'}`}
-                                                            title="Reset to Auto"
-                                                        >
-                                                            Auto
-                                                        </button>
-                                                    )}
                                                 </div>
+                                                {customBackgroundColor && (
+                                                    <button
+                                                        onClick={() => setCustomBackgroundColor?.(null)}
+                                                        className={`px-3 rounded-lg border text-[10px] font-bold uppercase transition-colors hover:bg-red-500/10 hover:text-red-500 ${isLightMode ? 'border-neutral-200 text-neutral-500 bg-white' : 'border-neutral-700 text-neutral-400 bg-neutral-800'}`}
+                                                        title="Reset to Auto"
+                                                    >
+                                                        Auto
+                                                    </button>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
