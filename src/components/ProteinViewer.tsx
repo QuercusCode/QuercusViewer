@@ -2438,6 +2438,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
 
             let globalParams = { ...params };
             if (repType === 'cartoon') {
+                delete globalParams.quality; // START_FIX: Remove quality preset to ensure smoothSheet/subdiv take precedence
                 Object.assign(globalParams, cartoonParams);
                 try { component.structure.eachModel((m: any) => m.calculateSecondaryStructure?.()); } catch (e) { }
             }
