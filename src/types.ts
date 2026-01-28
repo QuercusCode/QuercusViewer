@@ -169,6 +169,7 @@ export interface AudioClip {
     duration: number; // Duration on timeline
     sourceStartTime: number; // Offset into the source audio
     type: 'music' | 'sfx';
+    data?: string; // Optional direct data storage (Data URL)
 }
 
 export interface RecordedSession {

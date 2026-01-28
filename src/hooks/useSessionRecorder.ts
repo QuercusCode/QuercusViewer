@@ -60,7 +60,10 @@ export const useSessionRecorder = ({ onPlaybackStateChange, onPlaybackCameraChan
         }
 
         const audio = audioRef.current;
-        const trackData = session.metadata.audioTrack.data; // Assuming clips reference this track
+        // Prioritize clip data, fallback to global track
+        const trackData = activeClip.data || session.metadata.audioTrack?.data;
+
+        if (!trackData) return;
 
         // Check if we need to load src
         // Note: In real app, we'd map clip.trackId to actual media. 

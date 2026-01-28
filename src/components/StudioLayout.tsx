@@ -63,6 +63,22 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
     const [deleteRangeStart, setDeleteRangeStart] = useState('00:00');
     const [deleteRangeEnd, setDeleteRangeEnd] = useState('00:00');
 
+    // Audio Clips State
+    const [selectedAudioClipId, setSelectedAudioClipId] = useState<string | null>(null);
+
+    const updateAudioClip = (id: string, updates: any) => {
+        const currentClips = session?.metadata.audioClips || [];
+        const updatedClips = currentClips.map(c => c.id === id ? { ...c, ...updates } : c);
+        updateMetadata({ audioClips: updatedClips });
+    };
+
+    const deleteAudioClip = (id: string) => {
+        const currentClips = session?.metadata.audioClips || [];
+        const updatedClips = currentClips.filter(c => c.id !== id);
+        updateMetadata({ audioClips: updatedClips });
+        if (selectedAudioClipId === id) setSelectedAudioClipId(null);
+    };
+
     // Reset trim on session load
     useEffect(() => {
         if (session) {
@@ -776,7 +792,7 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
 
                                     <div className="space-y-2">
                                         <div className="flex items-center justify-between">
-                                            <span className="text-xs text-white/60">Music Track</span>
+                                            <span className="text-xs text-white/60">Music & Sounds</span>
                                             <label className="text-[10px] text-blue-400 hover:underline cursor-pointer flex items-center gap-1">
                                                 <Plus className="w-3 h-3" /> Add File
                                                 <input
@@ -789,13 +805,22 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                                             const reader = new FileReader();
                                                             reader.onload = (ev) => {
                                                                 const result = ev.target?.result as string;
-                                                                updateMetadata({
-                                                                    audioTrack: {
+                                                                const audio = new Audio(result);
+                                                                audio.addEventListener('loadedmetadata', () => {
+                                                                    const duration = audio.duration * 1000; // ms
+                                                                    const newClip: any = {
                                                                         id: crypto.randomUUID(),
+                                                                        trackId: 'music-1',
                                                                         name: file.name,
-                                                                        data: result,
-                                                                        type: 'music'
-                                                                    }
+                                                                        startTime: playbackTime,
+                                                                        duration: duration,
+                                                                        sourceStartTime: 0,
+                                                                        type: 'music',
+                                                                        data: result
+                                                                    };
+                                                                    updateMetadata({
+                                                                        audioClips: [...(session.metadata.audioClips || []), newClip]
+                                                                    });
                                                                 });
                                                             };
                                                             reader.readAsDataURL(file);
@@ -804,34 +829,45 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                                 />
                                             </label>
                                         </div>
-                                        {session.metadata.audioTrack ? (
-                                            <div className="bg-neutral-800/50 p-2 rounded border border-white/5 flex items-center gap-3 group">
-                                                <div className="w-8 h-8 bg-blue-500/20 rounded flex items-center justify-center text-blue-400">
-                                                    <Music className="w-4 h-4" />
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="text-[10px] text-white font-medium truncate">
-                                                        {session.metadata.audioTrack.name}
-                                                    </div>
-                                                    <div className="h-1 bg-neutral-700 rounded-full overflow-hidden mt-1">
-                                                        <div className="h-full bg-blue-500 w-full" />
-                                                    </div>
-                                                </div>
-                                                <button
-                                                    onClick={() => updateMetadata({ audioTrack: undefined })}
-                                                    className="p-1 text-white/30 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+
+                                        {/* Clips List */}
+                                        <div className="space-y-1 max-h-40 overflow-y-auto">
+                                            {(session.metadata.audioClips || []).map(clip => (
+                                                <div
+                                                    key={clip.id}
+                                                    onClick={() => setSelectedAudioClipId(clip.id)}
+                                                    className={`p-2 rounded border flex items-center gap-2 cursor-pointer transition-colors ${selectedAudioClipId === clip.id
+                                                        ? 'bg-blue-600/20 border-blue-500/50'
+                                                        : 'bg-neutral-800 border-white/5 hover:bg-neutral-700'
+                                                        }`}
                                                 >
-                                                    <Trash2 className="w-3 h-3" />
-                                                </button>
-                                            </div>
-                                        ) : (
-                                            <div className="bg-neutral-800/50 p-2 rounded border border-white/5 flex items-center gap-3 border-dashed">
-                                                <div className="w-8 h-8 bg-neutral-700 rounded flex items-center justify-center">
-                                                    <Music className="w-4 h-4 text-white/30" />
+                                                    <div className={`w-6 h-6 rounded flex items-center justify-center ${clip.type === 'music' ? 'bg-purple-500/20 text-purple-400' : 'bg-green-500/20 text-green-400'}`}>
+                                                        <Music className="w-3 h-3" />
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="text-[10px] text-white font-medium truncate">{clip.name}</div>
+                                                        <div className="text-[9px] text-white/40 flex justify-between">
+                                                            <span>{formatTime(clip.startTime)}</span>
+                                                            <span>{formatTime(clip.duration)}</span>
+                                                        </div>
+                                                    </div>
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            deleteAudioClip(clip.id);
+                                                        }}
+                                                        className="p-1 text-white/20 hover:text-red-400"
+                                                    >
+                                                        <Trash2 className="w-3 h-3" />
+                                                    </button>
                                                 </div>
-                                                <span className="text-[10px] text-white/30 italic">No audio track selected</span>
-                                            </div>
-                                        )}
+                                            ))}
+                                            {(!session.metadata.audioClips || session.metadata.audioClips.length === 0) && (
+                                                <div className="text-center py-4 border border-dashed border-white/10 rounded">
+                                                    <p className="text-[10px] text-white/30 italic">No audio clips added</p>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
 
                                     <div className="space-y-2">
@@ -969,6 +1005,9 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                             setTempTrimStart(start);
                             setTempTrimEnd(end);
                         }}
+                        audioClips={session.metadata.audioClips}
+                        onAudioClipUpdate={updateAudioClip}
+                        onAudioClipSelect={setSelectedAudioClipId}
                     />
                 </div>
             </div>
