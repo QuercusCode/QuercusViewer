@@ -121,6 +121,8 @@ export interface ProteinViewerRef {
         watermark?: { text: string; show: boolean };
         overlays?: { id: string; text: string; start: number; end: number; x: number; y: number }[];
         transitions?: { start: number; end: number; type: 'fade'; duration: number }[];
+        fps?: number;
+        audioData?: string | Blob;
     }) => Promise<Blob>; // Updated
     resetCamera: () => void;
     clearMeasurements: () => void;
@@ -295,6 +297,8 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
             watermark?: { text: string; show: boolean };
             overlays?: { id: string; text: string; start: number; end: number; x: number; y: number }[];
             transitions?: { start: number; end: number; type: 'fade'; duration: number }[];
+            fps?: number;
+            audioData?: string | Blob; // Data URL or Blob
         } = {}
     ): Promise<Blob> => {
         return new Promise((resolve, reject) => {
@@ -364,6 +368,13 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                     if (originalSpin) stage.setSpin(false);
                     stage.setParameters({ spinSpeed: oldSpeed, pixelRatio: originalPixelRatio });
 
+                    if (audioSource) {
+                        try { audioSource.stop(); } catch (e) { }
+                    }
+                    if (audioContext) {
+                        audioContext.close();
+                    }
+
                     const blob = new Blob(chunks, { type: selectedMimeType || 'video/webm' });
                     resolve(blob);
                 };
@@ -372,11 +383,68 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                     console.error("MediaRecorder Error:", e);
                     if (originalSpin) stage.setSpin(false);
                     stage.setParameters({ spinSpeed: oldSpeed, pixelRatio: originalPixelRatio });
+                    if (audioSource) {
+                        try { audioSource.stop(); } catch (e) { }
+                    }
+                    if (audioContext) {
+                        // Close context to free resources
+                        audioContext.close();
+                    }
                     reject(new Error(e.error?.message || "MediaRecorder error"));
                 };
 
                 // 3. Start Recording
+                let audioContext: AudioContext | null = null;
+                let audioSource: AudioBufferSourceNode | null = null;
+                let audioDest: MediaStreamAudioDestinationNode | null = null;
+
+                // Handle Audio Setup if track provided
+                if (options.audioData) {
+                    try {
+                        audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+                        audioDest = audioContext.createMediaStreamDestination();
+
+                        // Decode audio data
+                        // Handle Base64 Data URL or raw Buffer
+                        let arrayBuffer: ArrayBuffer;
+                        if (typeof options.audioData === 'string' && options.audioData.startsWith('data:')) {
+                            const fetchRes = await fetch(options.audioData);
+                            arrayBuffer = await fetchRes.arrayBuffer();
+                        } else if (options.audioData instanceof Blob) {
+                            arrayBuffer = await options.audioData.arrayBuffer();
+                        } else {
+                            // Assume string is URL or other valid fetchable
+                            const fetchRes = await fetch(options.audioData as string);
+                            arrayBuffer = await fetchRes.arrayBuffer();
+                        }
+
+                        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+
+                        audioSource = audioContext.createBufferSource();
+                        audioSource.buffer = audioBuffer;
+                        audioSource.connect(audioDest); // Connect to stream dest
+                        audioSource.connect(audioContext.destination); // Optional: Monitor audio while recording? Maybe confusing if doubled. 
+                        // Actually, let's NOT connect to speakers to avoid echo if mic is on, 
+                        // unless user wants to hear it. For "studio export", silent render is usually preferred if automated,
+                        // but since we Playback the session, the Viewer might not produce sound itself.
+                        // Let's connect to destination only for the recording stream.
+
+                        // Add audio tracks to the canvas stream
+                        const audioTracks = audioDest.stream.getAudioTracks();
+                        if (audioTracks.length > 0) {
+                            stream.addTrack(audioTracks[0]);
+                        }
+
+                    } catch (err) {
+                        console.warn("Audio setup failed:", err);
+                    }
+                }
+
                 mediaRecorder.start();
+
+                if (audioSource) {
+                    audioSource.start(0);
+                }
 
                 // 4. Animation Loop
                 const startTime = performance.now();

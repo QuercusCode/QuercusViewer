@@ -1536,7 +1536,8 @@ function App() {
         watermark,
         overlays,
         transitions,
-        fps // Pass FPS
+        fps, // Pass FPS
+        audioData: recorder.session.metadata.audioTrack?.data // Pass Audio
       } as any);
 
       // 3. Start Playback (Concurrent)

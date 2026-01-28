@@ -768,29 +768,103 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                     <div className="space-y-2">
                                         <div className="flex items-center justify-between">
                                             <span className="text-xs text-white/60">Music Track</span>
-                                            <button className="text-[10px] text-blue-400 hover:underline">+ Add File</button>
+                                            <label className="text-[10px] text-blue-400 hover:underline cursor-pointer flex items-center gap-1">
+                                                <Plus className="w-3 h-3" /> Add File
+                                                <input
+                                                    type="file"
+                                                    accept="audio/*"
+                                                    className="hidden"
+                                                    onChange={(e) => {
+                                                        const file = e.target.files?.[0];
+                                                        if (file) {
+                                                            const reader = new FileReader();
+                                                            reader.onload = (ev) => {
+                                                                const result = ev.target?.result as string;
+                                                                updateMetadata({
+                                                                    audioTrack: {
+                                                                        id: crypto.randomUUID(),
+                                                                        name: file.name,
+                                                                        data: result,
+                                                                        type: 'music'
+                                                                    }
+                                                                });
+                                                            };
+                                                            reader.readAsDataURL(file);
+                                                        }
+                                                    }}
+                                                />
+                                            </label>
                                         </div>
-                                        <div className="bg-neutral-800/50 p-2 rounded border border-white/5 flex items-center gap-3">
-                                            <div className="w-8 h-8 bg-neutral-700 rounded flex items-center justify-center">
-                                                <Music className="w-4 h-4 text-white/30" />
-                                            </div>
-                                            <div className="flex-1">
-                                                <div className="h-1.5 bg-neutral-700 rounded-full overflow-hidden">
-                                                    <div className="h-full bg-blue-500/50 w-full" />
+                                        {session.metadata.audioTrack ? (
+                                            <div className="bg-neutral-800/50 p-2 rounded border border-white/5 flex items-center gap-3 group">
+                                                <div className="w-8 h-8 bg-blue-500/20 rounded flex items-center justify-center text-blue-400">
+                                                    <Music className="w-4 h-4" />
                                                 </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="text-[10px] text-white font-medium truncate">
+                                                        {session.metadata.audioTrack.name}
+                                                    </div>
+                                                    <div className="h-1 bg-neutral-700 rounded-full overflow-hidden mt-1">
+                                                        <div className="h-full bg-blue-500 w-full" />
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    onClick={() => updateMetadata({ audioTrack: undefined })}
+                                                    className="p-1 text-white/30 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                >
+                                                    <Trash2 className="w-3 h-3" />
+                                                </button>
                                             </div>
-                                            <span className="text-[10px] text-white/30">Empty</span>
-                                        </div>
+                                        ) : (
+                                            <div className="bg-neutral-800/50 p-2 rounded border border-white/5 flex items-center gap-3 border-dashed">
+                                                <div className="w-8 h-8 bg-neutral-700 rounded flex items-center justify-center">
+                                                    <Music className="w-4 h-4 text-white/30" />
+                                                </div>
+                                                <span className="text-[10px] text-white/30 italic">No audio track selected</span>
+                                            </div>
+                                        )}
                                     </div>
 
                                     <div className="space-y-2">
                                         <div className="flex items-center justify-between">
                                             <span className="text-xs text-white/60">Sound Effects</span>
-                                            <span className="text-[10px] text-white/20">None</span>
+                                            {session.metadata.sfxTrack && (
+                                                <span className="text-[10px] text-blue-400">{session.metadata.sfxTrack.name}</span>
+                                            )}
                                         </div>
-                                        <button className="w-full py-2 border border-dashed border-white/10 rounded text-[10px] text-white/40 hover:bg-white/5 hover:text-white transition-colors">
-                                            Browse SFX Library
-                                        </button>
+                                        <select
+                                            className="w-full py-2 bg-neutral-800 border border-white/10 rounded text-[10px] text-white outline-none focus:border-blue-500 px-2"
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                const sfxMap: Record<string, string> = {
+                                                    'cinematic': 'Cinematic Rise',
+                                                    'ambient': 'Lab Ambience',
+                                                    'click': 'UI Clicks Only'
+                                                };
+                                                if (val) {
+                                                    // In a real app, we'd load these from assets. 
+                                                    // For now, we simulate selection metadata so export can decide what to generate or warn.
+                                                    // Or we could embed small base64 snippets here if we had them.
+                                                    // Let's store the SELECTION ID.
+                                                    updateMetadata({
+                                                        sfxTrack: {
+                                                            id: val,
+                                                            name: sfxMap[val] || val,
+                                                            data: '', // Placeholder: backend or assets would provide this
+                                                            type: 'sfx'
+                                                        }
+                                                    });
+                                                } else {
+                                                    updateMetadata({ sfxTrack: undefined });
+                                                }
+                                            }}
+                                            value={session.metadata.sfxTrack?.id || ''}
+                                        >
+                                            <option value="">None</option>
+                                            <option value="cinematic">Cinematic Rise</option>
+                                            <option value="ambient">Lab Ambience</option>
+                                            <option value="click">UI Clicks Only</option>
+                                        </select>
                                     </div>
                                 </div>
                             </div>
