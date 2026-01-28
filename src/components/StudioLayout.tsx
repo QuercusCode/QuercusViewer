@@ -846,9 +846,18 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                             onChange={async (e) => {
                                                 const val = e.target.value;
                                                 const sfxMap: Record<string, string> = {
-                                                    'cinematic': 'Cinematic Rise',
                                                     'ambient': 'Lab Ambience',
-                                                    'click': 'UI Clicks Only'
+                                                    'click': 'UI Clicks Only',
+                                                    'folding': 'Protein Folding',
+                                                    'helix': 'Helix Spiral',
+                                                    'sheet': 'Beta Sheet',
+                                                    'bond': 'Molecular Bond',
+                                                    'thermal': 'Thermal Vibration',
+                                                    'docking': 'Docking Complete',
+                                                    'scan': 'Surface Scan',
+                                                    'interaction': 'Residue Interaction',
+                                                    'denaturation': 'Denaturation',
+                                                    'crystal': 'Crystal Lattice'
                                                 };
                                                 if (val) {
                                                     try {
@@ -877,9 +886,20 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                             value={session.metadata.sfxTrack?.id || ''}
                                         >
                                             <option value="">None</option>
-                                            <option value="cinematic">Cinematic Rise</option>
                                             <option value="ambient">Lab Ambience</option>
                                             <option value="click">UI Clicks Only</option>
+                                            <optgroup label="Protein Sounds">
+                                                <option value="folding">Protein Folding</option>
+                                                <option value="helix">Helix Spiral</option>
+                                                <option value="sheet">Beta Sheet</option>
+                                                <option value="bond">Molecular Bond</option>
+                                                <option value="thermal">Thermal Vibration</option>
+                                                <option value="docking">Docking Complete</option>
+                                                <option value="scan">Surface Scan</option>
+                                                <option value="interaction">Residue Interaction</option>
+                                                <option value="denaturation">Denaturation</option>
+                                                <option value="crystal">Crystal Lattice</option>
+                                            </optgroup>
                                         </select>
                                     </div>
                                 </div>

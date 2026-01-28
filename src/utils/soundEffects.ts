@@ -3,7 +3,7 @@
  * Generates simple sound effects using Web Audio API
  */
 
-export type SoundEffectType = 'cinematic' | 'ambient' | 'click';
+export type SoundEffectType = 'ambient' | 'click' | 'folding' | 'helix' | 'sheet' | 'bond' | 'thermal' | 'docking' | 'scan' | 'interaction' | 'denaturation' | 'crystal';
 
 export class SoundEffectsManager {
     private audioContext: AudioContext;
@@ -14,10 +14,10 @@ export class SoundEffectsManager {
     }
 
     /**
-     * Generate a cinematic rise sound effect
+     * Generate protein folding sound (dissonant to harmonic transition)
      */
-    private generateCinematicRise(): AudioBuffer {
-        const duration = 2.5; // 2.5 seconds
+    private generateFolding(): AudioBuffer {
+        const duration = 3.0;
         const sampleRate = this.audioContext.sampleRate;
         const buffer = this.audioContext.createBuffer(2, duration * sampleRate, sampleRate);
 
@@ -27,26 +27,275 @@ export class SoundEffectsManager {
                 const time = i / sampleRate;
                 const progress = time / duration;
 
-                // Exponential frequency sweep from 55Hz to 880Hz
-                const freqStart = 55;
-                const freqEnd = 880;
-                const freq = freqStart * Math.pow(freqEnd / freqStart, progress);
+                // Start with multiple dissonant frequencies, converge to a major chord
+                const baseFreq = 220; // A3
+                // Frequencies diverge at start, converge at end
+                const f1 = baseFreq * (1 + 0.5 * (1 - progress)); // Dissonant start
+                const f2 = baseFreq * 1.25; // Major third (Goal)
+                const f3 = baseFreq * 1.5; // Fifth (Goal)
 
-                // Volume envelope - fade in and out
-                const envelope = Math.sin(progress * Math.PI);
+                // Add some warble/instability at start
+                const instability = (1 - progress) * 10;
 
-                // Generate tone with some harmonics for richness
-                const fundamental = Math.sin(2 * Math.PI * freq * time);
-                const harmonic2 = 0.3 * Math.sin(2 * Math.PI * freq * 2 * time);
-                const harmonic3 = 0.15 * Math.sin(2 * Math.PI * freq * 3 * time);
+                const s1 = Math.sin(2 * Math.PI * (f1 + Math.random() * instability) * time);
+                const s2 = Math.sin(2 * Math.PI * (f2 - (1 - progress) * 50) * time);
+                const s3 = Math.sin(2 * Math.PI * (f3 + (1 - progress) * 30) * time);
 
-                // White noise for texture
-                const noise = (Math.random() * 2 - 1) * 0.05;
+                const envelope = Math.sin(progress * Math.PI); // Smooth arc
 
-                data[i] = (fundamental + harmonic2 + harmonic3 + noise) * envelope * 0.3;
+                data[i] = (s1 + s2 + s3) * 0.2 * envelope;
             }
         }
+        return buffer;
+    }
 
+    /**
+     * Generate Helix Spiral sound (rising swirly tone)
+     */
+    private generateHelix(): AudioBuffer {
+        const duration = 2.0;
+        const sampleRate = this.audioContext.sampleRate;
+        const buffer = this.audioContext.createBuffer(2, duration * sampleRate, sampleRate);
+
+        for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
+            const data = buffer.getChannelData(channel);
+            for (let i = 0; i < data.length; i++) {
+                const time = i / sampleRate;
+                const progress = time / duration;
+
+                // Rising frequency with LFO (swirl)
+                const lfo = Math.sin(2 * Math.PI * 8 * time); // 8Hz swirl
+                const startFreq = 300;
+                const endFreq = 600;
+                const currentFreq = startFreq + (endFreq - startFreq) * progress + (lfo * 20);
+
+                const osc = Math.sin(2 * Math.PI * currentFreq * time);
+                const envelope = Math.sin(progress * Math.PI);
+
+                // Pan effect
+                const pan = channel === 0 ? Math.cos(2 * Math.PI * 2 * time) : Math.sin(2 * Math.PI * 2 * time);
+
+                data[i] = osc * 0.3 * envelope * (0.5 + 0.5 * pan);
+            }
+        }
+        return buffer;
+    }
+
+    /**
+     * Generate Beta Sheet sound (structured, rhythmic)
+     */
+    private generateSheet(): AudioBuffer {
+        const duration = 2.0;
+        const sampleRate = this.audioContext.sampleRate;
+        const buffer = this.audioContext.createBuffer(2, duration * sampleRate, sampleRate);
+
+        for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
+            const data = buffer.getChannelData(channel);
+            for (let i = 0; i < data.length; i++) {
+                const time = i / sampleRate;
+                // Square-ish waves for structure
+                const freq = 110; // Low fundamental
+                const harmonic = Math.sin(2 * Math.PI * freq * time) +
+                    0.5 * Math.sin(2 * Math.PI * freq * 2 * time) +
+                    0.25 * Math.sin(2 * Math.PI * freq * 3 * time);
+
+                // Rhythmic gating
+                const gate = Math.sin(2 * Math.PI * 4 * time) > 0 ? 1 : 0.1;
+
+                const envelope = 1 - (time / duration);
+
+                data[i] = harmonic * 0.2 * gate * envelope;
+            }
+        }
+        return buffer;
+    }
+
+    /**
+     * Generate Molecular Bond sound (sharp snap/ping)
+     */
+    private generateBond(): AudioBuffer {
+        const duration = 0.5;
+        const sampleRate = this.audioContext.sampleRate;
+        const buffer = this.audioContext.createBuffer(2, duration * sampleRate, sampleRate);
+
+        for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
+            const data = buffer.getChannelData(channel);
+            for (let i = 0; i < data.length; i++) {
+                const time = i / sampleRate;
+                const progress = time / duration;
+
+                // Fast envelope
+                const envelope = Math.exp(-time * 10);
+
+                // Pure tone ping
+                const freq = 880;
+                const osc = Math.sin(2 * Math.PI * freq * time);
+
+                data[i] = osc * 0.5 * envelope;
+            }
+        }
+        return buffer;
+    }
+
+    /**
+     * Generate Thermal Vibration sound (jittery hum)
+     */
+    private generateThermal(): AudioBuffer {
+        const duration = 1.5;
+        const sampleRate = this.audioContext.sampleRate;
+        const buffer = this.audioContext.createBuffer(2, duration * sampleRate, sampleRate);
+
+        for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
+            const data = buffer.getChannelData(channel);
+            for (let i = 0; i < data.length; i++) {
+                const time = i / sampleRate;
+
+                // Low rumble + jitter
+                const jitter = (Math.random() - 0.5) * 0.1;
+                const osc = Math.sin(2 * Math.PI * (50 + jitter * 100) * time);
+
+                const envelope = Math.sin((time / duration) * Math.PI);
+
+                data[i] = osc * 0.4 * envelope;
+            }
+        }
+        return buffer;
+    }
+
+    /**
+     * Generate Docking Complete sound (satisfying lock)
+     */
+    private generateDocking(): AudioBuffer {
+        const duration = 1.0;
+        const sampleRate = this.audioContext.sampleRate;
+        const buffer = this.audioContext.createBuffer(2, duration * sampleRate, sampleRate);
+
+        for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
+            const data = buffer.getChannelData(channel);
+            for (let i = 0; i < data.length; i++) {
+                const time = i / sampleRate;
+
+                // Pitch drop thud + high click
+                const pitchEnv = Math.exp(-time * 5);
+                const freq = 200 * pitchEnv + 60;
+                const osc = Math.sin(2 * Math.PI * freq * time);
+
+                const click = time < 0.05 ? (Math.random() - 0.5) : 0;
+
+                const envelope = Math.exp(-time * 3);
+
+                data[i] = (osc + click * 0.5) * 0.5 * envelope;
+            }
+        }
+        return buffer;
+    }
+
+    /**
+     * Generate Surface Scan sound (high freq sweep)
+     */
+    private generateScan(): AudioBuffer {
+        const duration = 1.5;
+        const sampleRate = this.audioContext.sampleRate;
+        const buffer = this.audioContext.createBuffer(2, duration * sampleRate, sampleRate);
+
+        for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
+            const data = buffer.getChannelData(channel);
+            for (let i = 0; i < data.length; i++) {
+                const time = i / sampleRate;
+                const progress = time / duration;
+
+                const freq = 2000 + Math.sin(2 * Math.PI * 10 * time) * 500;
+                const osc = Math.sin(2 * Math.PI * freq * time);
+
+                // Stereo pan sweep
+                const pan = Math.sin(2 * Math.PI * 1 * time); // Left to right
+                const amp = channel === 0 ? (1 + pan) / 2 : (1 - pan) / 2;
+
+                data[i] = osc * 0.15 * amp;
+            }
+        }
+        return buffer;
+    }
+
+    /**
+     * Generate Residue Interaction sound (blips)
+     */
+    private generateInteraction(): AudioBuffer {
+        const duration = 1.0;
+        const sampleRate = this.audioContext.sampleRate;
+        const buffer = this.audioContext.createBuffer(2, duration * sampleRate, sampleRate);
+
+        for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
+            const data = buffer.getChannelData(channel);
+            for (let i = 0; i < data.length; i++) {
+                const time = i / sampleRate;
+
+                // Two blips
+                let blip = 0;
+                if ((time > 0.1 && time < 0.2) || (time > 0.4 && time < 0.5)) {
+                    blip = Math.sin(2 * Math.PI * 1200 * time);
+                }
+
+                data[i] = blip * 0.2;
+            }
+        }
+        return buffer;
+    }
+
+    /**
+     * Generate Denaturation sound (falling apart)
+     */
+    private generateDenaturation(): AudioBuffer {
+        const duration = 2.5;
+        const sampleRate = this.audioContext.sampleRate;
+        const buffer = this.audioContext.createBuffer(2, duration * sampleRate, sampleRate);
+
+        for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
+            const data = buffer.getChannelData(channel);
+            for (let i = 0; i < data.length; i++) {
+                const time = i / sampleRate;
+                const progress = time / duration;
+
+                // Pitch falling, noise increasing
+                const freq = 400 * (1 - progress * 0.5);
+                const osc = Math.sin(2 * Math.PI * freq * time);
+                const noise = (Math.random() - 0.5) * progress; // Noise increases
+
+                const envelope = 1 - progress;
+
+                data[i] = (osc * 0.3 + noise * 0.2) * envelope;
+            }
+        }
+        return buffer;
+    }
+
+    /**
+     * Generate Crystal Lattice sound (shimmering harmonics)
+     */
+    private generateCrystal(): AudioBuffer {
+        const duration = 3.0;
+        const sampleRate = this.audioContext.sampleRate;
+        const buffer = this.audioContext.createBuffer(2, duration * sampleRate, sampleRate);
+
+        for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
+            const data = buffer.getChannelData(channel);
+            for (let i = 0; i < data.length; i++) {
+                const time = i / sampleRate;
+                const progress = time / duration;
+
+                // Multiple high pure tones
+                const baseF = 1500;
+                const h1 = Math.sin(2 * Math.PI * baseF * time);
+                const h2 = Math.sin(2 * Math.PI * baseF * 1.5 * time);
+                const h3 = Math.sin(2 * Math.PI * baseF * 2.0 * time);
+
+                const shimmer = Math.sin(2 * Math.PI * 6 * time); // slight tremolo
+
+                const envelope = Math.exp(-time * 1.5);
+
+                data[i] = (h1 + h2 + h3) * 0.1 * (0.8 + 0.2 * shimmer) * envelope;
+            }
+        }
         return buffer;
     }
 
@@ -122,9 +371,21 @@ export class SoundEffectsManager {
      * Initialize all sound effects
      */
     async initialize(): Promise<void> {
-        this.sounds.set('cinematic', this.generateCinematicRise());
+        // Initialize standard sounds
         this.sounds.set('ambient', this.generateLabAmbience());
         this.sounds.set('click', this.generateUIClicks());
+
+        // Initialize protein sounds
+        this.sounds.set('folding', this.generateFolding());
+        this.sounds.set('helix', this.generateHelix());
+        this.sounds.set('sheet', this.generateSheet());
+        this.sounds.set('bond', this.generateBond());
+        this.sounds.set('thermal', this.generateThermal());
+        this.sounds.set('docking', this.generateDocking());
+        this.sounds.set('scan', this.generateScan());
+        this.sounds.set('interaction', this.generateInteraction());
+        this.sounds.set('denaturation', this.generateDenaturation());
+        this.sounds.set('crystal', this.generateCrystal());
     }
 
     /**
