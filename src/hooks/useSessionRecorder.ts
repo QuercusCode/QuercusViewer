@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import type { RecordedSession, RecordedEvent, TimelineSegment } from '../types';
+import type { RecordedSession, RecordedEvent, TimelineSegment, AudioClip } from '../types';
 
 interface UseSessionRecorderProps {
     onPlaybackStateChange?: (state: any) => void;
@@ -16,46 +16,77 @@ export const useSessionRecorder = ({ onPlaybackStateChange, onPlaybackCameraChan
     const [masterVolume, setMasterVolume] = useState(1.0);
 
     // Audio Playback
+    // We need a pool of players or a single smart player?
+    // For MVP: Single Music Track => Single Audio Element.
+    // We dynamically change src or currentTime based on active clip.
     const audioRef = useRef<HTMLAudioElement | null>(null);
-
-    // NLE State
-    const [segments, setSegments] = useState<TimelineSegment[]>([]);
-
-    const startTimeRef = useRef<number>(0);
-    const eventsRef = useRef<RecordedEvent[]>([]);
-    const initialStateRef = useRef<any>(null);
-    const animationFrameRef = useRef<number | null>(null);
-    const lastPlaybackUpdateRef = useRef<number>(0);
-
-    // Optimization Refs
-    const playbackCursorRef = useRef<number>(0);
-    const accumulatedStateRef = useRef<any>(null);
-    const lastAppliedTimeRef = useRef<number>(-1);
+    const audioStateRef = useRef<{ currentClipId: string | null }>({ currentClipId: null });
 
     // --- Audio Synchronization ---
-    useEffect(() => {
-        if (!session?.metadata?.audioTrack?.data) {
+    const syncAudio = useCallback((time: number, forcePlay = false) => {
+        if (!session?.metadata?.audioClips || !session.metadata.audioTrack) {
+            if (audioRef.current) audioRef.current.pause();
+            return;
+        }
+
+        const clips = session.metadata.audioClips;
+        const activeClip = clips.find(c => time >= c.startTime && time < c.startTime + c.duration);
+
+        if (!activeClip) {
             if (audioRef.current) {
                 audioRef.current.pause();
-                audioRef.current = null;
+                audioStateRef.current.currentClipId = null;
             }
             return;
         }
 
-        // Initialize Audio Element if track exists
-        if (!audioRef.current || audioRef.current.src !== session.metadata.audioTrack.data) {
-            const audio = new Audio(session.metadata.audioTrack.data);
-            audio.volume = masterVolume;
-            audioRef.current = audio;
+        // We have an active clip
+        if (!audioRef.current) {
+            audioRef.current = new Audio();
         }
-    }, [session?.metadata?.audioTrack?.data]); // Depend specifically on data
 
-    // Sync volume changes
-    useEffect(() => {
-        if (audioRef.current) {
-            audioRef.current.volume = masterVolume;
+        const audio = audioRef.current;
+        const trackData = session.metadata.audioTrack.data; // Assuming clips reference this track
+
+        // Check if we need to load src
+        // Note: In real app, we'd map clip.trackId to actual media. 
+        // Here we assume all music clips use the single audioTrack for now (Music Layer).
+        if (audio.src !== trackData) {
+            audio.src = trackData;
+            audio.volume = masterVolume;
         }
+
+        // Calculate Time
+        const offsetInClip = time - activeClip.startTime;
+        const targetSourceTime = (activeClip.sourceStartTime + offsetInClip) / 1000;
+
+        // Sync if drifted or just entered
+        // Allow small drift (0.1s)
+        if (Math.abs(audio.currentTime - targetSourceTime) > 0.15 || audio.paused) {
+            audio.currentTime = targetSourceTime;
+            if (forcePlay || isPlaying) {
+                audio.play().catch(() => { });
+            }
+        }
+
+        audioStateRef.current.currentClipId = activeClip.id;
+
+    }, [session, masterVolume, isPlaying]);
+
+    // Effect: Sync volume
+    useEffect(() => {
+        if (audioRef.current) audioRef.current.volume = masterVolume;
     }, [masterVolume]);
+
+    // Effect: Stop if component unmounts
+    useEffect(() => {
+        return () => {
+            if (audioRef.current) {
+                audioRef.current.pause();
+                audioRef.current = null;
+            }
+        };
+    }, []);
 
 
     // --- Recording ---
@@ -133,11 +164,8 @@ export const useSessionRecorder = ({ onPlaybackStateChange, onPlaybackCameraChan
         lastPlaybackUpdateRef.current = Date.now();
 
         // Sync Audio
-        if (audioRef.current) {
-            audioRef.current.play().catch(e => console.warn("Audio playback failed", e));
-        }
-
-    }, [session]);
+        syncAudio(playbackTime, true);
+    }, [session, playbackTime, syncAudio]);
 
     const pause = useCallback(() => {
         setIsPlaying(false);
@@ -151,12 +179,8 @@ export const useSessionRecorder = ({ onPlaybackStateChange, onPlaybackCameraChan
         if (!session) return;
         setPlaybackTime(time);
         applyFrameAt(time);
-
-        // Sync Audio
-        if (audioRef.current) {
-            audioRef.current.currentTime = time / 1000; // time is ms, audio uses seconds
-        }
-    }, [session]);
+        syncAudio(time, isPlaying);
+    }, [session, isPlaying, applyFrameAt, syncAudio]);
 
     const applyFrameAt = useCallback((globalTime: number) => {
         if (!session || !onPlaybackStateChange || !onPlaybackCameraChange) return;
@@ -222,6 +246,7 @@ export const useSessionRecorder = ({ onPlaybackStateChange, onPlaybackCameraChan
                     }
 
                     applyFrameAt(nextTime);
+                    syncAudio(nextTime); // Continuous sync
                     return nextTime;
                 });
 
@@ -577,6 +602,17 @@ export const useSessionRecorder = ({ onPlaybackStateChange, onPlaybackCameraChan
         });
     }, []);
 
+    const updateAudioClip = useCallback((clipId: string, updates: Partial<AudioClip>) => {
+        if (!session) return;
+        pushHistory();
+
+        updateMetadata({
+            audioClips: session.metadata.audioClips?.map(c =>
+                c.id === clipId ? { ...c, ...updates } : c
+            )
+        });
+    }, [session, pushHistory, updateMetadata]);
+
     return {
         isRecording,
         isPlaying,
@@ -604,8 +640,6 @@ export const useSessionRecorder = ({ onPlaybackStateChange, onPlaybackCameraChan
         setSegments,
 
         // Selection
-        selectedSegmentIds,
-        selectSegment: (id: string) => toggleSegmentSelection(id, false),
         toggleSegmentSelection,
         deleteSelectedSegments,
         updateSegment,
@@ -613,6 +647,7 @@ export const useSessionRecorder = ({ onPlaybackStateChange, onPlaybackCameraChan
         // Audio
         masterVolume,
         setMasterVolume,
+        updateAudioClip,
 
         // History
         undo,

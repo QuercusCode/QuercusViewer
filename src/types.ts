@@ -161,6 +161,16 @@ export interface RecordedEvent {
     payload: any;
 }
 
+export interface AudioClip {
+    id: string;
+    trackId: string; // Reference to audioTrack (or sfxTrack)
+    name: string;
+    startTime: number; // Global timeline start
+    duration: number; // Duration on timeline
+    sourceStartTime: number; // Offset into the source audio
+    type: 'music' | 'sfx';
+}
+
 export interface RecordedSession {
     id: string;
     version: number;
@@ -184,6 +194,7 @@ export interface RecordedSession {
             data: string;
             type: 'sfx';
         };
+        audioClips?: AudioClip[]; // Array of audio clips on timeline
         textOverlays?: {
             id: string;
             text: string;
