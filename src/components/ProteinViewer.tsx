@@ -400,6 +400,9 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                     stage.viewer.requestRender();
 
                     // Composite Step
+                    // Clear previous frame to prevent trails (transparency issue)
+                    compositeCtx.clearRect(0, 0, width, height);
+
                     // Draw WebGL Canvas onto Composite
                     compositeCtx.drawImage(canvas, 0, 0);
 
@@ -2434,7 +2437,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                 radialSegments: smoothSheetEnabled ? 20 : 10,
                 smoothSheet: !!smoothSheetEnabled
             };
-            
+
             let globalParams = { ...params };
             if (repType === 'cartoon') {
                 delete globalParams.quality;
@@ -2453,19 +2456,19 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                 const resPart = rule.residues ? (rule.chain === 'All' ? rule.residues : ` and ${rule.residues}`) : '';
                 return `(${chainPart}${resPart})`; // e.g. "(:A and 50-60)"
             }) || [];
-            
-            const customExclusion = customStyleSelections.length > 0 
-                ? ` and not (${customStyleSelections.join(' or ')})` 
+
+            const customExclusion = customStyleSelections.length > 0
+                ? ` and not (${customStyleSelections.join(' or ')})`
                 : "";
 
             // --- 4. RENDER SINGLE REPRESENTATION (GLOBAL) ---
-            
+
             // Build exclusion list for default representation
             const excludedChains = chainStyles ? Object.keys(chainStyles) : [];
             const chainExclusion = excludedChains.length > 0
                 ? ` and not (:${excludedChains.join(' or :')})`
                 : "";
-                
+
             const defaultSelection = `*${chainExclusion}${customExclusion}`;
 
             // Add the default representation (for non-overridden atoms)
@@ -2477,7 +2480,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
             if (chainStyles) {
                 Object.entries(chainStyles).forEach(([chain, style]) => {
                     if (!style) return;
-                    
+
                     const chainParams: any = {
                         ...params, // Use clean params (without accumulated cartoon properties)
                         color: finalColor,
@@ -2490,7 +2493,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                     if (style === 'licorice') {
                         chainParams.scale = 2.0;
                     } else if (style === 'ball+stick') {
-                       // No overrides - use global defaults
+                        // No overrides - use global defaults
                     }
 
                     component.addRepresentation(style, chainParams);
@@ -2513,7 +2516,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                     // Apply specific style adjustments
                     if (rule.style === 'cartoon') Object.assign(ruleParams, cartoonParams);
                     if (rule.style === 'licorice') ruleParams.scale = 2.0;
-                    
+
                     component.addRepresentation(rule.style, ruleParams);
                 });
             }
