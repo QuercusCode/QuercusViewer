@@ -33,6 +33,7 @@ export const VideoTimeline = ({
     onSegmentSelect,
     playbackTime,
     onSeek,
+    trimMode,
     trimStart: externalTrimStart,
     trimEnd: externalTrimEnd,
     onTrimChange,
