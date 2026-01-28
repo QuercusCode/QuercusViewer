@@ -122,7 +122,7 @@ export class SoundEffectsManager {
             const data = buffer.getChannelData(channel);
             for (let i = 0; i < data.length; i++) {
                 const time = i / sampleRate;
-                const progress = time / duration;
+
 
                 // Fast envelope
                 const envelope = Math.exp(-time * 10);
@@ -202,7 +202,7 @@ export class SoundEffectsManager {
             const data = buffer.getChannelData(channel);
             for (let i = 0; i < data.length; i++) {
                 const time = i / sampleRate;
-                const progress = time / duration;
+
 
                 const freq = 2000 + Math.sin(2 * Math.PI * 10 * time) * 500;
                 const osc = Math.sin(2 * Math.PI * freq * time);
@@ -281,7 +281,7 @@ export class SoundEffectsManager {
             const data = buffer.getChannelData(channel);
             for (let i = 0; i < data.length; i++) {
                 const time = i / sampleRate;
-                const progress = time / duration;
+
 
                 // Multiple high pure tones
                 const baseF = 1500;
