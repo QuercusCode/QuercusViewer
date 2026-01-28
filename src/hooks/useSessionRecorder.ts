@@ -13,6 +13,10 @@ export const useSessionRecorder = ({ onPlaybackStateChange, onPlaybackCameraChan
     const [playbackTime, setPlaybackTime] = useState(0);
     const [session, setSession] = useState<RecordedSession | null>(null);
     const [playbackSpeed, setPlaybackSpeed] = useState(1);
+    const [masterVolume, setMasterVolume] = useState(1.0);
+
+    // Audio Playback
+    const audioRef = useRef<HTMLAudioElement | null>(null);
 
     // NLE State
     const [segments, setSegments] = useState<TimelineSegment[]>([]);
@@ -27,6 +31,32 @@ export const useSessionRecorder = ({ onPlaybackStateChange, onPlaybackCameraChan
     const playbackCursorRef = useRef<number>(0);
     const accumulatedStateRef = useRef<any>(null);
     const lastAppliedTimeRef = useRef<number>(-1);
+
+    // --- Audio Synchronization ---
+    useEffect(() => {
+        if (!session?.metadata?.audioTrack?.data) {
+            if (audioRef.current) {
+                audioRef.current.pause();
+                audioRef.current = null;
+            }
+            return;
+        }
+
+        // Initialize Audio Element if track exists
+        if (!audioRef.current || audioRef.current.src !== session.metadata.audioTrack.data) {
+            const audio = new Audio(session.metadata.audioTrack.data);
+            audio.volume = masterVolume;
+            audioRef.current = audio;
+        }
+    }, [session?.metadata?.audioTrack?.data]); // Depend specifically on data
+
+    // Sync volume changes
+    useEffect(() => {
+        if (audioRef.current) {
+            audioRef.current.volume = masterVolume;
+        }
+    }, [masterVolume]);
+
 
     // --- Recording ---
 
@@ -101,16 +131,31 @@ export const useSessionRecorder = ({ onPlaybackStateChange, onPlaybackCameraChan
         if (!session) return;
         setIsPlaying(true);
         lastPlaybackUpdateRef.current = Date.now();
+
+        // Sync Audio
+        if (audioRef.current) {
+            audioRef.current.play().catch(e => console.warn("Audio playback failed", e));
+        }
+
     }, [session]);
 
     const pause = useCallback(() => {
         setIsPlaying(false);
+        // Sync Audio
+        if (audioRef.current) {
+            audioRef.current.pause();
+        }
     }, []);
 
     const seek = useCallback((time: number) => {
         if (!session) return;
         setPlaybackTime(time);
         applyFrameAt(time);
+
+        // Sync Audio
+        if (audioRef.current) {
+            audioRef.current.currentTime = time / 1000; // time is ms, audio uses seconds
+        }
     }, [session]);
 
     const applyFrameAt = useCallback((globalTime: number) => {
@@ -557,10 +602,18 @@ export const useSessionRecorder = ({ onPlaybackStateChange, onPlaybackCameraChan
         adjustSessionSpeed,
         segments,
         setSegments,
-        updateSegment,
+
+        // Selection
         selectedSegmentIds,
+        selectSegment: (id: string) => toggleSegmentSelection(id, false),
         toggleSegmentSelection,
         deleteSelectedSegments,
+        updateSegment,
+
+        // Audio
+        masterVolume,
+        setMasterVolume,
+
         // History
         undo,
         redo,

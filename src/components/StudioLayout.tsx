@@ -760,9 +760,17 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                     <div className="bg-neutral-800 p-3 rounded-lg border border-white/5 space-y-3">
                                         <div className="flex items-center justify-between">
                                             <span className="text-xs font-bold text-white">Master Volume</span>
-                                            <span className="text-[10px] text-blue-400">100%</span>
+                                            <span className="text-[10px] text-blue-400">{Math.round((recorder.masterVolume || 1) * 100)}%</span>
                                         </div>
-                                        <input type="range" className="w-full h-1 bg-neutral-700 rounded-lg appearance-none cursor-pointer accent-blue-500" />
+                                        <input
+                                            type="range"
+                                            min="0"
+                                            max="1"
+                                            step="0.05"
+                                            value={recorder.masterVolume || 1}
+                                            onChange={(e) => recorder.setMasterVolume && recorder.setMasterVolume(parseFloat(e.target.value))}
+                                            className="w-full h-1 bg-neutral-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                                        />
                                     </div>
 
                                     <div className="space-y-2">
