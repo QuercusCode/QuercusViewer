@@ -172,6 +172,18 @@ export interface RecordedSession {
         description?: string;
         thumbnail?: string; // Data URL
         watermarkText?: string; // Custom watermark text
+        audioTrack?: {
+            id: string;
+            name: string;
+            data: string; // Base64 Data URL
+            type: 'music' | 'voiceover';
+        };
+        sfxTrack?: {
+            id: string;
+            name: string;
+            data: string;
+            type: 'sfx';
+        };
         textOverlays?: {
             id: string;
             text: string;
