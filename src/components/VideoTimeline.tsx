@@ -33,12 +33,11 @@ export const VideoTimeline = ({
     onSegmentSelect,
     playbackTime,
     onSeek,
+    trimMode, // Added trimMode
     trimStart: externalTrimStart,
     trimEnd: externalTrimEnd,
     onTrimChange,
-    audioClips = [],
-    onAudioClipUpdate,
-    onAudioClipSelect
+    audioClips = []
 }: VideoTimelineProps) => {
     const timelineRef = useRef<HTMLDivElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -56,14 +55,6 @@ export const VideoTimeline = ({
     const [draggingSegmentId, setDraggingSegmentId] = useState<string | null>(null);
     const [dragNewStartTime, setDragNewStartTime] = useState<number>(0);
     const dragNewStartTimeRef = useRef<number>(0);
-
-    // Audio Dragging Logic
-    const [draggingAudioId, setDraggingAudioId] = useState<string | null>(null);
-    const [draggingAudioType, setDraggingAudioType] = useState<'move' | 'start' | 'end' | null>(null);
-    const [dragAudioNewStart, setDragAudioNewStart] = useState<number>(0);
-    const [dragAudioNewDuration, setDragAudioNewDuration] = useState<number>(0);
-    const [dragAudioNewSourceStart, setDragAudioNewSourceStart] = useState<number>(0);
-    const dragAudioStateRef = useRef({ start: 0, duration: 0, sourceStart: 0 });
 
     // Internal trim state (defaults to full duration)
     const duration = session?.metadata.duration || 1000;
