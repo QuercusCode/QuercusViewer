@@ -7,6 +7,7 @@ import {
 import { VideoTimeline } from './VideoTimeline';
 import type { useSessionRecorder } from '../hooks/useSessionRecorder';
 import { formatTime, parseTimeString } from '../utils/timeUtils';
+import { getSoundManager, type SoundEffectType } from '../utils/soundEffects';
 
 interface StudioLayoutProps {
     recorder: ReturnType<typeof useSessionRecorder>;
@@ -842,7 +843,7 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                         </div>
                                         <select
                                             className="w-full py-2 bg-neutral-800 border border-white/10 rounded text-[10px] text-white outline-none focus:border-blue-500 px-2"
-                                            onChange={(e) => {
+                                            onChange={async (e) => {
                                                 const val = e.target.value;
                                                 const sfxMap: Record<string, string> = {
                                                     'cinematic': 'Cinematic Rise',
@@ -850,18 +851,25 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                                     'click': 'UI Clicks Only'
                                                 };
                                                 if (val) {
-                                                    // In a real app, we'd load these from assets. 
-                                                    // For now, we simulate selection metadata so export can decide what to generate or warn.
-                                                    // Or we could embed small base64 snippets here if we had them.
-                                                    // Let's store the SELECTION ID.
-                                                    updateMetadata({
-                                                        sfxTrack: {
-                                                            id: val,
-                                                            name: sfxMap[val] || val,
-                                                            data: '', // Placeholder: backend or assets would provide this
-                                                            type: 'sfx'
-                                                        }
-                                                    });
+                                                    try {
+                                                        // Load the sound effect using the sound manager
+                                                        const soundManager = await getSoundManager();
+                                                        const soundData = await soundManager.exportAsDataURL(val as SoundEffectType);
+
+                                                        updateMetadata({
+                                                            sfxTrack: {
+                                                                id: val,
+                                                                name: sfxMap[val] || val,
+                                                                data: soundData, // Now contains actual audio
+                                                                type: 'sfx'
+                                                            }
+                                                        });
+
+                                                        // Play a preview
+                                                        soundManager.play(val as SoundEffectType, 0.5);
+                                                    } catch (err) {
+                                                        console.error('Failed to load sound effect:', err);
+                                                    }
                                                 } else {
                                                     updateMetadata({ sfxTrack: undefined });
                                                 }

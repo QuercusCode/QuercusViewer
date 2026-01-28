@@ -1531,13 +1531,123 @@ function App() {
       recorder.seek(0);
       await new Promise(r => setTimeout(r, 100)); // Wait for seek to apply
 
-      // 2. Start Recording (Async) - wraps the recording duration
+      // Helper function to convert AudioBuffer to WAV (defined first)
+      const audioBufferToWav = (buffer: AudioBuffer): Blob => {
+        const numChannels = buffer.numberOfChannels;
+        const sampleRate = buffer.sampleRate;
+        const format = 1; // PCM
+        const bitDepth = 16;
+        const bytesPerSample = bitDepth / 8;
+        const blockAlign = numChannels * bytesPerSample;
+
+        const data = new Float32Array(buffer.length * numChannels);
+        for (let i = 0; i < numChannels; i++) {
+          const channelData = buffer.getChannelData(i);
+          for (let j = 0; j < buffer.length; j++) {
+            data[j * numChannels + i] = channelData[j];
+          }
+        }
+
+        const dataLength = data.length * bytesPerSample;
+        const bufferLength = 44 + dataLength;
+        const arrayBuffer = new ArrayBuffer(bufferLength);
+        const view = new DataView(arrayBuffer);
+
+        // WAV header
+        const writeString = (offset: number, string: string) => {
+          for (let i = 0; i < string.length; i++) {
+            view.setUint8(offset + i, string.charCodeAt(i));
+          }
+        };
+
+        writeString(0, 'RIFF');
+        view.setUint32(4, bufferLength - 8, true);
+        writeString(8, 'WAVE');
+        writeString(12, 'fmt ');
+        view.setUint32(16, 16, true);
+        view.setUint16(20, format, true);
+        view.setUint16(22, numChannels, true);
+        view.setUint32(24, sampleRate, true);
+        view.setUint32(28, sampleRate * blockAlign, true);
+        view.setUint16(32, blockAlign, true);
+        view.setUint16(34, bitDepth, true);
+        writeString(36, 'data');
+        view.setUint32(40, dataLength, true);
+
+        // Write audio data
+        let offset = 44;
+        for (let i = 0; i < data.length; i++) {
+          const sample = Math.max(-1, Math.min(1, data[i]));
+          const intSample = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
+          view.setInt16(offset, intSample, true);
+          offset += 2;
+        }
+
+        return new Blob([arrayBuffer], { type: 'audio/wav' });
+      };
+
+      // 2. Prepare Audio Mix (music + sfx)
+      let finalAudioData: string | Blob | undefined = undefined;
+      const hasMusic = recorder.session.metadata.audioTrack?.data;
+      const hasSfx = recorder.session.metadata.sfxTrack?.data;
+
+      if (hasMusic || hasSfx) {
+        try {
+          // If we have both, we need to mix them
+          if (hasMusic && hasSfx) {
+            const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+
+            // Decode both audio sources
+            const musicArrayBuffer = await (await fetch(hasMusic)).arrayBuffer();
+            const sfxArrayBuffer = await (await fetch(hasSfx)).arrayBuffer();
+
+            const musicBuffer = await audioContext.decodeAudioData(musicArrayBuffer);
+            const sfxBuffer = await audioContext.decodeAudioData(sfxArrayBuffer);
+
+            // Create a mixed buffer (use the longer duration)
+            const maxDuration = Math.max(musicBuffer.duration, sfxBuffer.duration);
+            const sampleRate = audioContext.sampleRate;
+            const mixedBuffer = audioContext.createBuffer(
+              2, // stereo
+              maxDuration * sampleRate,
+              sampleRate
+            );
+
+            // Mix the channels
+            for (let channel = 0; channel < mixedBuffer.numberOfChannels; channel++) {
+              const mixedData = mixedBuffer.getChannelData(channel);
+              const musicData = musicBuffer.getChannelData(Math.min(channel, musicBuffer.numberOfChannels - 1));
+              const sfxData = sfxBuffer.getChannelData(Math.min(channel, sfxBuffer.numberOfChannels - 1));
+
+              for (let i = 0; i < mixedData.length; i++) {
+                let sample = 0;
+                if (i < musicData.length) sample += musicData[i] * 0.7; // 70% music volume
+                if (i < sfxData.length) sample += sfxData[i] * 0.3; // 30% sfx volume
+                mixedData[i] = Math.max(-1, Math.min(1, sample)); // Clamp
+              }
+            }
+
+            // Convert mixed buffer to WAV blob
+            finalAudioData = audioBufferToWav(mixedBuffer);
+            audioContext.close();
+          } else {
+            // Only one audio source
+            finalAudioData = hasMusic || hasSfx;
+          }
+        } catch (err) {
+          console.error('Failed to mix audio:', err);
+          // Fallback to just music if mixing fails
+          finalAudioData = hasMusic;
+        }
+      }
+
+      // 3. Start Recording (Async) - wraps the recording duration
       const recordingPromise = viewer.recordMovie(duration, {
         watermark,
         overlays,
         transitions,
         fps, // Pass FPS
-        audioData: recorder.session.metadata.audioTrack?.data // Pass Audio
+        audioData: finalAudioData // Pass mixed audio
       } as any);
 
       // 3. Start Playback (Concurrent)
