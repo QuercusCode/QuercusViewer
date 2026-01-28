@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import type { RecordedSession, TimelineSegment } from '../types';
+import type { RecordedSession, TimelineSegment, AudioClip } from '../types';
 import { formatTime } from '../utils/timeUtils';
 
 interface VideoTimelineProps {
@@ -18,6 +18,11 @@ interface VideoTimelineProps {
     trimStart?: number;
     trimEnd?: number;
     onTrimChange?: (start: number, end: number) => void;
+
+    // Audio Clips
+    audioClips?: AudioClip[];
+    onAudioClipUpdate?: (id: string, updates: Partial<AudioClip>) => void;
+    onAudioClipSelect?: (id: string) => void;
 }
 
 export const VideoTimeline = ({
@@ -28,10 +33,12 @@ export const VideoTimeline = ({
     onSegmentSelect,
     playbackTime,
     onSeek,
-    trimMode = false,
     trimStart: externalTrimStart,
     trimEnd: externalTrimEnd,
-    onTrimChange
+    onTrimChange,
+    audioClips = [],
+    onAudioClipUpdate,
+    onAudioClipSelect
 }: VideoTimelineProps) => {
     const timelineRef = useRef<HTMLDivElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -48,7 +55,15 @@ export const VideoTimeline = ({
     // Optimized Dragging State
     const [draggingSegmentId, setDraggingSegmentId] = useState<string | null>(null);
     const [dragNewStartTime, setDragNewStartTime] = useState<number>(0);
-    const dragNewStartTimeRef = useRef<number>(0); // Ref to track latest value for closure access
+    const dragNewStartTimeRef = useRef<number>(0);
+
+    // Audio Dragging Logic
+    const [draggingAudioId, setDraggingAudioId] = useState<string | null>(null);
+    const [draggingAudioType, setDraggingAudioType] = useState<'move' | 'start' | 'end' | null>(null);
+    const [dragAudioNewStart, setDragAudioNewStart] = useState<number>(0);
+    const [dragAudioNewDuration, setDragAudioNewDuration] = useState<number>(0);
+    const [dragAudioNewSourceStart, setDragAudioNewSourceStart] = useState<number>(0);
+    const dragAudioStateRef = useRef({ start: 0, duration: 0, sourceStart: 0 });
 
     // Internal trim state (defaults to full duration)
     const duration = session?.metadata.duration || 1000;
@@ -295,7 +310,7 @@ export const VideoTimeline = ({
             {/* Timeline Track Container */}
             <div
                 ref={containerRef}
-                className="relative h-24 bg-black/40 rounded-lg border border-white/10 overflow-x-auto overflow-y-hidden cursor-pointer select-none"
+                className="relative h-auto min-h-[6rem] bg-black/40 rounded-lg border border-white/10 overflow-x-auto overflow-y-hidden cursor-pointer select-none py-2 px-4 space-y-2"
                 onMouseDown={handleTimelineMouseDown}
                 onMouseMove={handleMouseMove}
                 onMouseUp={handleMouseUp}
@@ -527,6 +542,53 @@ export const VideoTimeline = ({
                     )}
                 </div>
             </div>
+
+            {/* Audio Track Container */}
+            {audioClips.length > 0 && (
+                <div
+                    className="relative h-12 bg-neutral-900/40 rounded-lg border border-white/5 overflow-hidden mt-1"
+                    style={{ width: '100%' }}
+                >
+                    <div
+                        className="absolute top-0 bottom-0"
+                        style={{
+                            left: -scrollLeft, // Match scrolling of video track? Or separate? 
+                            // Currently timeline container handles scroll. This track needs to sync.
+                            // Actually, separate container implies separate scroll if not careful.
+                            // Better: Put this inside the same scrollable container?
+                            // No, structure is: Toolbar -> Video Track (scrollable) -> Time Markers
+                            // We should probably move the audio track inside the scrollable area or sync scroll.
+                            // Given existing structure, let's put it BELOW the time markers but synchronized?
+                            // Simpler: Put it INSIDE the scrollable `containerRef` div, below the video track.
+                            width: `${zoomLevel * 100}%`
+                        }}
+                    >
+                        {/* We can't put it inside containerRef because that one has fixed height h-24. 
+                            We should refactor the layout to have a common scroll parent. 
+                            For now, let's assume we render it separately and user has to scroll main track? 
+                            Or we sync scroll. 
+                         */}
+                    </div>
+                </div>
+            )}
+
+            {/* 
+                Refactor: To support multi-track scrolling, we need a common scroll container.
+                Let's change the structure quickly.
+                Outer: Toolbar
+                ScrollContainer (overflow-x)
+                  - TimeGrid (absolute)
+                  - VideoTrack (relative, h-24)
+                  - AudioTrack (relative, h-12, mt-1)
+            */}
+
+            {/* Re-implementing structure for multi-track support */}
+
+            {/* ... Wait, editing the whole structure is risky with replace_file_content chunking.
+                Let's try to inject the audio track INSIDE the existing containerRef div, 
+                and just increase the height of containerRef or allow it to grow?
+                The container has `h-24` class. We should change that to `h-auto` or `min-h-[6rem]`.
+            */}
 
             {/* Time Markers */}
             <div className="flex justify-between text-xs opacity-60 font-mono px-1">
