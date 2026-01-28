@@ -33,7 +33,6 @@ export const VideoTimeline = ({
     onSegmentSelect,
     playbackTime,
     onSeek,
-    trimMode,
     trimStart: externalTrimStart,
     trimEnd: externalTrimEnd,
     onTrimChange,
@@ -311,7 +310,7 @@ export const VideoTimeline = ({
             {/* Timeline Track Container */}
             <div
                 ref={containerRef}
-                className="relative h-auto min-h-[6rem] bg-black/40 rounded-lg border border-white/10 overflow-x-auto overflow-y-hidden cursor-pointer select-none py-2 px-4 space-y-2"
+                className="relative h-auto min-h-[6rem] bg-black/40 rounded-lg border border-white/10 overflow-x-auto overflow-y-hidden cursor-pointer select-none py-2 space-y-2"
                 onMouseDown={handleTimelineMouseDown}
                 onMouseMove={handleMouseMove}
                 onMouseUp={handleMouseUp}

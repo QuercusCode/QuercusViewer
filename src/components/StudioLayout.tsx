@@ -931,7 +931,7 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
 
             {/* BOTTOM TIMELINE */}
             <div className={`h-48 bg-neutral-900/95 backdrop-blur border-t border-white/10 flex flex-col pointer-events-auto relative transition-all duration-300 ${isTrimMode ? 'ring-1 ring-blue-500/50' : ''}`}>
-                <div className="flex-1 relative mt-2">
+                <div className="flex-1 relative mt-2 px-6">
                     <VideoTimeline
                         session={session}
                         segments={segments}

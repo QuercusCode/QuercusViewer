@@ -15,6 +15,20 @@ export const useSessionRecorder = ({ onPlaybackStateChange, onPlaybackCameraChan
     const [playbackSpeed, setPlaybackSpeed] = useState(1);
     const [masterVolume, setMasterVolume] = useState(1.0);
 
+    // --- State & Refs (Restored) ---
+    const eventsRef = useRef<RecordedEvent[]>([]);
+    const initialStateRef = useRef<any>(null);
+    const startTimeRef = useRef<number>(0);
+    const animationFrameRef = useRef<number | null>(null);
+
+    // Playback Optimization Refs
+    const playbackCursorRef = useRef<number>(0);
+    const accumulatedStateRef = useRef<any>(null);
+    const lastAppliedTimeRef = useRef<number>(-1);
+    const lastPlaybackUpdateRef = useRef<number>(0);
+
+    // Timeline Segments
+    const [segments, setSegments] = useState<TimelineSegment[]>([]);
     // Audio Playback
     // We need a pool of players or a single smart player?
     // For MVP: Single Music Track => Single Audio Element.
@@ -156,7 +170,50 @@ export const useSessionRecorder = ({ onPlaybackStateChange, onPlaybackCameraChan
         });
     }, [isRecording]);
 
-    // --- Playback ---
+    // --- Playback Helper ---
+
+    const applyFrameAt = useCallback((globalTime: number) => {
+        if (!session || !onPlaybackStateChange || !onPlaybackCameraChange) return;
+
+        // Find which segment covers this global time
+        const activeSegment = segments.find(
+            s => globalTime >= s.startTime && globalTime < s.startTime + s.duration
+        );
+
+        if (!activeSegment) {
+            return;
+        }
+
+        // Calculate time within the source recording
+        const timeInSegment = globalTime - activeSegment.startTime;
+        const sourceTime = activeSegment.sourceStartTime + timeInSegment;
+
+        // Rebuild state from scratch for now to ensure correctness across jumps
+        let currentState = JSON.parse(JSON.stringify(session.initialState));
+        let currentCamera = null;
+
+        // Find events in source up to sourceTime
+        for (const event of session.events) {
+            if (event.timestamp <= sourceTime) {
+                if (event.type === 'state') {
+                    Object.assign(currentState, event.payload);
+                } else if (event.type === 'camera') {
+                    currentCamera = event.payload;
+                }
+            } else {
+                break; // Events are sorted
+            }
+        }
+
+        onPlaybackStateChange(currentState);
+        if (currentCamera && onPlaybackCameraChange) {
+            onPlaybackCameraChange(currentCamera);
+        }
+
+        lastAppliedTimeRef.current = globalTime;
+    }, [session, segments, onPlaybackStateChange, onPlaybackCameraChange]);
+
+    // --- Playback Controls ---
 
     const play = useCallback(() => {
         if (!session) return;
@@ -181,52 +238,6 @@ export const useSessionRecorder = ({ onPlaybackStateChange, onPlaybackCameraChan
         applyFrameAt(time);
         syncAudio(time, isPlaying);
     }, [session, isPlaying, applyFrameAt, syncAudio]);
-
-    const applyFrameAt = useCallback((globalTime: number) => {
-        if (!session || !onPlaybackStateChange || !onPlaybackCameraChange) return;
-
-        // Find which segment covers this global time
-        // Note: 'segments' state from upper scope
-        // We need to use state setter callback or refs if state is stale, 
-        // but here we depend on 'segments' in hook dependency array.
-        const activeSegment = segments.find(
-            s => globalTime >= s.startTime && globalTime < s.startTime + s.duration
-        );
-
-        if (!activeSegment) {
-            // Gap in timeline? Or end of playback?
-            return;
-        }
-
-        // Calculate time within the source recording
-        const timeInSegment = globalTime - activeSegment.startTime;
-        const sourceTime = activeSegment.sourceStartTime + timeInSegment;
-
-        // Rebuild state from scratch for now to ensure correctness across jumps
-        // Performance TODO: Optimization cursor needs to be segment-aware
-        let currentState = JSON.parse(JSON.stringify(session.initialState));
-        let currentCamera = null;
-
-        // Find events in source up to sourceTime
-        for (const event of session.events) {
-            if (event.timestamp <= sourceTime) {
-                if (event.type === 'state') {
-                    Object.assign(currentState, event.payload);
-                } else if (event.type === 'camera') {
-                    currentCamera = event.payload;
-                }
-            } else {
-                break; // Events are sorted
-            }
-        }
-
-        onPlaybackStateChange(currentState);
-        if (currentCamera && onPlaybackCameraChange) {
-            onPlaybackCameraChange(currentCamera);
-        }
-
-        lastAppliedTimeRef.current = globalTime;
-    }, [session, segments, onPlaybackStateChange, onPlaybackCameraChange]);
 
 
     // Playback Loop
@@ -640,6 +651,7 @@ export const useSessionRecorder = ({ onPlaybackStateChange, onPlaybackCameraChan
         setSegments,
 
         // Selection
+        selectedSegmentIds, // Fix: Expose selection state
         toggleSegmentSelection,
         deleteSelectedSegments,
         updateSegment,
