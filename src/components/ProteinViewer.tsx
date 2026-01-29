@@ -2510,11 +2510,19 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                 smoothSheet: !!smoothSheetEnabled
             };
 
+            const backboneParams = {
+                lineOnly: false,
+                scale: 2.0, // Increase thickness
+                aspectRatio: 1.5 // Adjust cylinder aspect ratio
+            };
+
             let globalParams = { ...params };
             if (repType === 'cartoon') {
                 delete globalParams.quality;
                 Object.assign(globalParams, cartoonParams);
                 // try { component.structure.eachModel((m: any) => m.calculateSecondaryStructure?.()); } catch (e) { }
+            } else if (repType === 'backbone') {
+                Object.assign(globalParams, backboneParams);
             }
 
             // --- 3.5 PREPARE CUSTOM STYLE SELECTIONS ---
