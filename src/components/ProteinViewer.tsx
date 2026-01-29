@@ -2393,7 +2393,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
             component.removeAllRepresentations();
             highlightComponentRef.current = null;
 
-            console.log("[ProteinViewer] updateRepresentation: customColors =", customColors);
+            // Start Update Logic
 
 
 
@@ -2473,7 +2473,6 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                     if (rule.residues) {
                         selection += ` and (${rule.residues})`;
                     }
-                    console.log('[ProteinViewer] Processing Transparency Rule:', rule);
                     transparencySelections.push(selection);
                 });
             }
@@ -2481,7 +2480,6 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
             const transparencyExclusion = transparencySelections.length > 0
                 ? transparencySelections.map(s => ` and not (${s})`).join('')
                 : "";
-            console.log('[ProteinViewer] Transparency Exclusion String:', transparencyExclusion);
 
             // --- 3. APPLY CUSTOM OVERRIDES USING SELECTION SCHEME ---
             if (customColors && customColors.length > 0 && NGL.ColormakerRegistry.addSelectionScheme) {
@@ -2693,7 +2691,6 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
 
                     let actualStyle = style as any;
                     if (actualStyle === 'backbone') actualStyle = 'trace';
-                    console.log(`[ProteinViewer] Chain ${chain} style: ${style} -> ${actualStyle}`);
 
                     const chainParams: any = {
                         ...params, // Use clean params (without accumulated cartoon properties)
