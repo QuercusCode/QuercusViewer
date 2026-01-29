@@ -2406,6 +2406,13 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
 
 
             let repType = representation || 'cartoon';
+
+            // Fix: 'backbone' representation in NGL can sometimes render as disconnected dots if backbone atoms are incomplete.
+            // 'trace' is a robust C-alpha trace that guarantees a continuous tubular visualization.
+            if (repType === 'backbone') {
+                repType = 'trace';
+            }
+
             let finalColor: any = coloring || 'chainid';
 
             // --- 1. RESOLVE ALIASES & DEFAULTS ---
@@ -2424,11 +2431,21 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                 finalColor = 'element';
             }
 
+            // Note: Since we are using replace_file_content, I need to match the ENTIRE block or use multi-replace.
+            // To avoid replacing massive chunks, I will split this into two edits if needed, but let's try to target the top part first
+            // and the params part second?
+            // Actually, replace_file_content works on a contiguous block. 
+            // The StartLine/EndLine must be precise.
+
+            // Let's rewrite the `repType` initialization logic at the top.
+            // And then the param logic at the bottom is separate.
+
+            // ERROR: I cannot easily edit two separated parts in one replace_file_content.
+            // I should use `multi_replace_file_content` instead.
+
+
             // --- 2. REGISTER DYNAMIC SCHEMES (Charge & Custom) ---
             const NGL = window.NGL;
-
-            // Custom Scheme Logic using Native NGL SelectionColormaker
-            // This is robust because it uses NGL's internal selection handling and fallback logic.
 
             // Helper: Register Charge Scheme (Dynamic)
             if (finalColor === 'charge') {
@@ -2521,7 +2538,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                 delete globalParams.quality;
                 Object.assign(globalParams, cartoonParams);
                 // try { component.structure.eachModel((m: any) => m.calculateSecondaryStructure?.()); } catch (e) { }
-            } else if (repType === 'backbone') {
+            } else if (repType === 'trace') {
                 Object.assign(globalParams, backboneParams);
             }
 

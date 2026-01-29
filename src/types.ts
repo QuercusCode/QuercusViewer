@@ -94,7 +94,16 @@ export interface ResidueInfo {
 }
 
 
-export type RepresentationType = 'cartoon' | 'licorice' | 'backbone' | 'spacefill' | 'surface' | 'ribbon' | 'ball+stick' | 'line';
+export type RepresentationType =
+    | 'cartoon'
+    | 'ribbon'
+    | 'ball+stick'
+    | 'spacefill'
+    | 'surface'
+    | 'line'
+    | 'backbone'
+    | 'licorice'
+    | 'trace';
 export type ColoringType = 'chainid' | 'residue' | 'secondary' | 'hydrophobicity' | 'structure' | 'bfactor' | 'charge' | 'residueindex' | 'element' | 'custom';
 export type ColorPalette = 'standard' | 'viridis' | 'magma' | 'cividis' | 'plasma';
 
