@@ -2479,7 +2479,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
             }
 
             const transparencyExclusion = transparencySelections.length > 0
-                ? ` and not (${transparencySelections.join(' or ')})`
+                ? transparencySelections.map(s => ` and not (${s})`).join('')
                 : "";
             console.log('[ProteinViewer] Transparency Exclusion String:', transparencyExclusion);
 
