@@ -2810,7 +2810,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
 
     useEffect(() => {
         updateRepresentation();
-    }, [representation, coloring, showSurface, showLigands, showIons, colorPalette, customColors, chainStyles, customStyles, smoothSheetEnabled]);
+    }, [representation, coloring, showSurface, showLigands, showIons, colorPalette, customColors, chainStyles, customStyles, customTransparency, smoothSheetEnabled]);
 
     useEffect(() => {
         if (stageRef.current) {
