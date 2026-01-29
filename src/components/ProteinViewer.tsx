@@ -2454,6 +2454,30 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
             }
 
             // --- 2.5. PREPARE TRANSPARENCY SELECTIONS (Moved Before Colors) ---
+
+            // Helper to expand residue range by 1 for overlap (fixes gaps in splines)
+            const expandResidueRange = (rangeStr: string): string => {
+                try {
+                    return rangeStr.split(',').map(part => {
+                        part = part.trim();
+                        if (part.includes('-')) {
+                            const [start, end] = part.split('-').map(Number);
+                            if (!isNaN(start) && !isNaN(end)) {
+                                return `${start - 1}-${end + 1}`;
+                            }
+                        } else {
+                            const num = Number(part);
+                            if (!isNaN(num)) {
+                                return `${num - 1}-${num + 1}`;
+                            }
+                        }
+                        return part;
+                    }).join(', ');
+                } catch (e) {
+                    return rangeStr;
+                }
+            };
+
             const transparencySelections: string[] = [];
             const transparentChainMap: Record<string, number> = {}; // chain -> opacity
 
@@ -2471,7 +2495,23 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                     }
 
                     if (rule.residues) {
-                        selection += ` and (${rule.residues})`;
+                        // Use EXPANDED selection for the Positive Transparency Render (to create overlap)
+                        // But keep the original `rule.residues` for exclusion logic elsewhere?
+                        // Wait, transparencySelections is used for BOTH render and exclusion in my previous logic.
+                        // I need TWO lists: one for rendering (expanded), one for excluding (strict).
+
+                        // Actually, for exclusion, I use `rule.residues` directly in the Explicit Loop (thisChainExclusions).
+                        // I ONLY use `transparencySelections` for:
+                        // 1. Exclusion string for Custom Colors ? Yes (line 2481).
+                        // 2. Rendering loop (line 2570).
+
+                        // If I expand here, then Custom Colors will be excluded MORE.
+                        // e.g. Opaque Custom Color 50 won't render if I exclude 49-101.
+                        // This is fine, because Transparent 49-101 includes 50.
+                        // So Transparent 50 will replace Opaque Custom Color 50.
+                        // This seems acceptable for Custom Colors too.
+
+                        selection += ` and (${expandResidueRange(rule.residues)})`;
                     }
                     transparencySelections.push(selection);
                 });
