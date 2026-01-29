@@ -2453,6 +2453,36 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                 }, 'charge_dynamic');
             }
 
+            // --- 2.5. PREPARE TRANSPARENCY SELECTIONS (Moved Before Colors) ---
+            const transparencySelections: string[] = [];
+            const transparentChainMap: Record<string, number> = {}; // chain -> opacity
+
+            // We need to render transparent parts separately and FIRST (or they need to be excluded from others)
+            // Ideally, we calculate exclusion strings first.
+
+            if (customTransparency) {
+                customTransparency.forEach(rule => {
+                    let selection = "";
+                    if (rule.chain !== 'All') {
+                        selection = `:${rule.chain}`;
+                        transparentChainMap[rule.chain] = rule.opacity;
+                    } else {
+                        selection = "*";
+                    }
+
+                    if (rule.residues) {
+                        selection += ` and (${rule.residues})`;
+                    }
+                    console.log('[ProteinViewer] Processing Transparency Rule:', rule);
+                    transparencySelections.push(selection);
+                });
+            }
+
+            const transparencyExclusion = transparencySelections.length > 0
+                ? ` and not (${transparencySelections.join(' or ')})`
+                : "";
+            console.log('[ProteinViewer] Transparency Exclusion String:', transparencyExclusion);
+
             // --- 3. APPLY CUSTOM OVERRIDES USING SELECTION SCHEME ---
             if (customColors && customColors.length > 0 && NGL.ColormakerRegistry.addSelectionScheme) {
                 const dataList: any[] = [];
@@ -2463,7 +2493,9 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                         try {
                             const testSel = new NGL.Selection(rule.selection);
                             if (testSel) {
-                                dataList.push([rule.color, rule.selection]);
+                                // Important: Apply transparency exclusion to custom colors too, 
+                                // otherwise opaque custom color wins over transparent representation
+                                dataList.push([rule.color, `${rule.selection}${transparencyExclusion}`]);
                             }
                         } catch (e) {
                             console.warn("Skipping invalid selection rule:", rule.selection);
@@ -2472,6 +2504,8 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                 });
 
                 // 2. Add Base Fallback [baseScheme, "*"]
+                // Actually the base fallback is handled by the component.addRepresentation logic below
+                // But for the scheme itself, we need to match everything else
                 dataList.push([finalColor, "*"]);
 
                 // 3. Register Selection Scheme
@@ -2527,6 +2561,41 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
             };
 
             let globalParams = { ...params };
+
+            // Render Transparent Reps NOW (so they are "behind"? Actually NGL renders opaque then transparent usually)
+            // But we need to add them to the component.
+            if (customTransparency) {
+                customTransparency.forEach((rule, idx) => {
+                    // Re-calculate selection (or reuse if we stored it, but re-calc is cheap)
+                    let selection = transparencySelections[idx];
+
+                    // Determine Style
+                    let styleToUse: any = repType;
+                    // Try to infer specific style if it's a chain
+                    if (rule.chain && rule.chain !== 'All' && chainStyles && chainStyles[rule.chain]) {
+                        styleToUse = chainStyles[rule.chain] || repType;
+                    }
+
+                    let actualStyle = styleToUse;
+                    if (actualStyle === 'backbone') actualStyle = 'trace';
+
+                    const ruleParams: any = {
+                        ...params,
+                        color: finalColor, // Use the global coloring scheme (which might be 'chainindex')
+                        sele: selection,
+                        opacity: rule.opacity,
+                        depthWrite: false, // Important for transparency
+                        side: 'front'
+                    };
+
+                    if (actualStyle === 'cartoon') Object.assign(ruleParams, cartoonParams);
+                    else if (actualStyle === 'trace') Object.assign(ruleParams, backboneParams);
+                    else if (actualStyle === 'licorice') ruleParams.scale = 2.0;
+
+                    component.addRepresentation(actualStyle as any, ruleParams);
+                });
+            }
+
             if (repType === 'cartoon') {
                 delete globalParams.quality;
                 Object.assign(globalParams, cartoonParams);
@@ -2551,58 +2620,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                 ? ` and not (${customStyleSelections.join(' or ')})`
                 : "";
 
-            // --- 3.6 PREPARE TRANSPARENCY SELECTIONS ---
-            const transparencySelections: string[] = [];
-            const transparentChainMap: Record<string, number> = {}; // chain -> opacity
-
-            if (customTransparency) {
-                customTransparency.forEach(rule => {
-                    let selection = "";
-                    if (rule.chain !== 'All') {
-                        selection = `:${rule.chain}`;
-                        transparentChainMap[rule.chain] = rule.opacity;
-                    } else {
-                        selection = "*";
-                    }
-
-                    if (rule.residues) {
-                        selection += ` and (${rule.residues})`;
-                    }
-                    console.log('[ProteinViewer] Processing Transparency Rule:', rule);
-                    transparencySelections.push(selection);
-
-                    // Render Transparency Rule
-                    // Determine Style
-                    let styleToUse: any = repType;
-                    // Try to infer specific style if it's a chain
-                    if (rule.chain && rule.chain !== 'All' && chainStyles && chainStyles[rule.chain]) {
-                        styleToUse = chainStyles[rule.chain] || repType;
-                    }
-
-                    let actualStyle = styleToUse;
-                    if (actualStyle === 'backbone') actualStyle = 'trace';
-
-                    const ruleParams: any = {
-                        ...params,
-                        color: finalColor,
-                        sele: selection,
-                        opacity: rule.opacity,
-                        depthWrite: false, // Important for transparency
-                        side: 'front'
-                    };
-
-                    if (actualStyle === 'cartoon') Object.assign(ruleParams, cartoonParams);
-                    else if (actualStyle === 'trace') Object.assign(ruleParams, backboneParams);
-                    else if (actualStyle === 'licorice') ruleParams.scale = 2.0;
-
-                    component.addRepresentation(actualStyle as any, ruleParams);
-                });
-            }
-
-            const transparencyExclusion = transparencySelections.length > 0
-                ? ` and not (${transparencySelections.join(' or ')})`
-                : "";
-            console.log('[ProteinViewer] Transparency Exclusion String:', transparencyExclusion);
+            // --- MOVED UP ---
 
             // --- 4. RENDER SINGLE REPRESENTATION (GLOBAL) ---
 
