@@ -2568,7 +2568,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                     if (rule.residues) {
                         selection += ` and (${rule.residues})`;
                     }
-
+                    console.log('[ProteinViewer] Processing Transparency Rule:', rule);
                     transparencySelections.push(selection);
 
                     // Render Transparency Rule
@@ -2602,6 +2602,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
             const transparencyExclusion = transparencySelections.length > 0
                 ? ` and not (${transparencySelections.join(' or ')})`
                 : "";
+            console.log('[ProteinViewer] Transparency Exclusion String:', transparencyExclusion);
 
             // --- 4. RENDER SINGLE REPRESENTATION (GLOBAL) ---
 
@@ -2610,6 +2611,8 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
             const chainExclusion = excludedChains.length > 0
                 ? ` and not (:${excludedChains.join(' or :')})`
                 : "";
+
+            console.log('[ProteinViewer] Generated Default Selection:', `*${chainExclusion}${customExclusion}${transparencyExclusion}`);
 
             const defaultSelection = `*${chainExclusion}${customExclusion}${transparencyExclusion}`;
 
