@@ -2,7 +2,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import Peer from 'peerjs';
 import type { DataConnection, MediaConnection } from 'peerjs';
 
-import type { ChatMessage } from '../types';
+import type { ChatMessage, CustomTransparencyRule } from '../types';
 
 export interface SessionState {
     // Single View Props (Legacy/Fallback)
@@ -10,6 +10,7 @@ export interface SessionState {
     representation?: string;
     coloring?: string;
     customColors?: any[];
+    customTransparency?: CustomTransparencyRule[];
     measurements?: any[];
     customBackgroundColor?: string | null;
     orientation?: any[];

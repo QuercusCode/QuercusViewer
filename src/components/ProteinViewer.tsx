@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
 import clsx from 'clsx';
 import { Skeleton } from './Skeleton';
-import type { RepresentationType, ColoringType, ChainInfo, Measurement, PDBMetadata, CustomColorRule, CustomStyleRule, CustomTransparencyRule, ColorPalette, ResidueInfo, StructureInfo, MeasurementTextColor, AtomInfo, SuperposedStructure, Annotation } from '../types';
+import type { RepresentationType, ColoringType, ChainInfo, Measurement, CustomColorRule, CustomStyleRule, CustomTransparencyRule, ColorPalette, ResidueInfo, StructureInfo, MeasurementTextColor, AtomInfo, SuperposedStructure, Annotation } from '../types';
 import { type DataSource, getStructureUrl } from '../utils/pdbUtils';
 
 
@@ -141,9 +141,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
     customColors = [],
     chainStyles = {},
     customStyles = [],
-    setCustomStyles,
     customTransparency = [],
-    setCustomTransparency,
     smoothSheetEnabled = false,
     overlays,
 
@@ -2617,7 +2615,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
 
             // Add the default representation (for non-overridden atoms)
             if (defaultSelection !== "not ()" && defaultSelection !== "none") {
-                component.addRepresentation(repType, { ...globalParams, sele: defaultSelection });
+                component.addRepresentation(repType as any, { ...globalParams, sele: defaultSelection });
             }
 
             // --- 5. RENDER CHAIN-SPECIFIC STYLES ---
@@ -2625,7 +2623,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                 Object.entries(chainStyles).forEach(([chain, style]) => {
                     if (!style) return;
 
-                    let actualStyle = style;
+                    let actualStyle = style as any;
                     if (actualStyle === 'backbone') actualStyle = 'trace';
                     console.log(`[ProteinViewer] Chain ${chain} style: ${style} -> ${actualStyle}`);
 
@@ -2646,7 +2644,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                         // No overrides - use global defaults
                     }
 
-                    component.addRepresentation(actualStyle, chainParams);
+                    component.addRepresentation(actualStyle as any, chainParams);
                 });
             }
 
@@ -2657,7 +2655,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                     const resPart = rule.residues ? (rule.chain === 'All' ? ` and ${rule.residues}` : ` and ${rule.residues}`) : '';
                     const selection = `${chainPart}${resPart}`; // e.g. ":A and 50-60"
 
-                    let actualStyle = rule.style;
+                    let actualStyle = rule.style as any;
                     if (actualStyle === 'backbone') actualStyle = 'trace';
 
                     const ruleParams: any = {

@@ -428,11 +428,11 @@ export const Controls: React.FC<ControlsProps> = ({
     setCustomColors,
     chainStyles, // Destructure
     setChainStyle, // Destructure
-    customStyles,
+    customStyles = [],
     setCustomStyles,
-    customTransparency,
+    customTransparency = [],
     setCustomTransparency,
-    smoothSheetEnabled,
+    smoothSheetEnabled = false,
     chains,
     ligands,
 
@@ -1600,7 +1600,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                         )}
 
                                         {/* ADVANCED STYLES WRAPPER */}
-                                        {(setChainStyle && chainStyles && chains.length > 0) || (setCustomStyles && customStyles) ? (
+                                        {(setChainStyle && chainStyles && chains.length > 0) || (true) ? (
                                             <div className="col-span-2 pt-2 border-t border-white/5 space-y-2">
                                                 <div className="flex items-center justify-between mb-1">
                                                     <div className={`text-[10px] font-bold uppercase tracking-wider ${subtleText} opacity-80`}>
