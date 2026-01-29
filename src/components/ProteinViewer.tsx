@@ -2573,7 +2573,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
 
                     // Render Transparency Rule
                     // Determine Style
-                    let styleToUse = repType;
+                    let styleToUse: any = repType;
                     // Try to infer specific style if it's a chain
                     if (rule.chain && rule.chain !== 'All' && chainStyles && chainStyles[rule.chain]) {
                         styleToUse = chainStyles[rule.chain] || repType;
@@ -2595,7 +2595,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                     else if (actualStyle === 'trace') Object.assign(ruleParams, backboneParams);
                     else if (actualStyle === 'licorice') ruleParams.scale = 2.0;
 
-                    component.addRepresentation(actualStyle, ruleParams);
+                    component.addRepresentation(actualStyle as any, ruleParams);
                 });
             }
 
