@@ -2580,6 +2580,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
 
                     let actualStyle = style;
                     if (actualStyle === 'backbone') actualStyle = 'trace';
+                    console.log(`[ProteinViewer] Chain ${chain} style: ${style} -> ${actualStyle}`);
 
                     const chainParams: any = {
                         ...params, // Use clean params (without accumulated cartoon properties)
