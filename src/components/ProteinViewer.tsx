@@ -1509,6 +1509,14 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                     alpha: true // Enable transparency support
                 }
             });
+
+            // Adjust Sensitivity to match Mol* feel (Slower/Smoother)
+            stage.setParameters({
+                rotateSpeed: 0.5,
+                zoomSpeed: 0.5,
+                panSpeed: 0.5
+            });
+
             stageRef.current = stage;
 
             // --- HOVER HANDLING (HUD) ---
