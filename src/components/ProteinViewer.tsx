@@ -1,21 +1,7 @@
 import React, { useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
 import clsx from 'clsx';
 import { Skeleton } from './Skeleton';
-import type {
-    ChainInfo,
-    ColorPalette,
-    RepresentationType,
-    ColoringType,
-    ResidueInfo,
-    Measurement,
-    StructureInfo,
-    MeasurementTextColor,
-    AtomInfo,
-    CustomColorRule,
-    SuperposedStructure,
-    Annotation,
-    CustomStyleRule
-} from '../types';
+import type { RepresentationType, ColoringType, ChainInfo, Measurement, PDBMetadata, CustomColorRule, CustomStyleRule, CustomTransparencyRule, ColorPalette, ResidueInfo, StructureInfo, MeasurementTextColor, AtomInfo, SuperposedStructure, Annotation } from '../types';
 import { type DataSource, getStructureUrl } from '../utils/pdbUtils';
 
 
@@ -54,6 +40,12 @@ export interface ProteinViewerProps {
     customColors?: CustomColorRule[];
     chainStyles?: Record<string, RepresentationType>; // New Prop
     customStyles?: CustomStyleRule[]; // New Prop
+    setCustomStyles?: (styles: CustomStyleRule[] | ((prev: CustomStyleRule[]) => CustomStyleRule[])) => void;
+
+    // Transparency
+    customTransparency?: CustomTransparencyRule[];
+    setCustomTransparency?: (rules: CustomTransparencyRule[] | ((prev: CustomTransparencyRule[]) => CustomTransparencyRule[])) => void;
+
     measurementTextColor?: MeasurementTextColor; // Added prop
     overlays?: SuperposedStructure[];
 
@@ -146,9 +138,12 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
     file,
     representation = 'cartoon',
     coloring = 'chainid',
-    customColors,
-    chainStyles, // Destructure
-    customStyles,
+    customColors = [],
+    chainStyles = {},
+    customStyles = [],
+    setCustomStyles,
+    customTransparency = [],
+    setCustomTransparency,
     smoothSheetEnabled = false,
     overlays,
 
@@ -2558,6 +2553,58 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                 ? ` and not (${customStyleSelections.join(' or ')})`
                 : "";
 
+            // --- 3.6 PREPARE TRANSPARENCY SELECTIONS ---
+            const transparencySelections: string[] = [];
+            const transparentChainMap: Record<string, number> = {}; // chain -> opacity
+
+            if (customTransparency) {
+                customTransparency.forEach(rule => {
+                    let selection = "";
+                    if (rule.chain !== 'All') {
+                        selection = `:${rule.chain}`;
+                        transparentChainMap[rule.chain] = rule.opacity;
+                    } else {
+                        selection = "*";
+                    }
+
+                    if (rule.residues) {
+                        selection += ` and (${rule.residues})`;
+                    }
+
+                    transparencySelections.push(selection);
+
+                    // Render Transparency Rule
+                    // Determine Style
+                    let styleToUse = repType;
+                    // Try to infer specific style if it's a chain
+                    if (rule.chain && rule.chain !== 'All' && chainStyles && chainStyles[rule.chain]) {
+                        styleToUse = chainStyles[rule.chain] || repType;
+                    }
+
+                    let actualStyle = styleToUse;
+                    if (actualStyle === 'backbone') actualStyle = 'trace';
+
+                    const ruleParams: any = {
+                        ...params,
+                        color: finalColor,
+                        sele: selection,
+                        opacity: rule.opacity,
+                        depthWrite: false, // Important for transparency
+                        side: 'front'
+                    };
+
+                    if (actualStyle === 'cartoon') Object.assign(ruleParams, cartoonParams);
+                    else if (actualStyle === 'trace') Object.assign(ruleParams, backboneParams);
+                    else if (actualStyle === 'licorice') ruleParams.scale = 2.0;
+
+                    component.addRepresentation(actualStyle, ruleParams);
+                });
+            }
+
+            const transparencyExclusion = transparencySelections.length > 0
+                ? ` and not (${transparencySelections.join(' or ')})`
+                : "";
+
             // --- 4. RENDER SINGLE REPRESENTATION (GLOBAL) ---
 
             // Build exclusion list for default representation
@@ -2566,7 +2613,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                 ? ` and not (:${excludedChains.join(' or :')})`
                 : "";
 
-            const defaultSelection = `*${chainExclusion}${customExclusion}`;
+            const defaultSelection = `*${chainExclusion}${customExclusion}${transparencyExclusion}`;
 
             // Add the default representation (for non-overridden atoms)
             if (defaultSelection !== "not ()" && defaultSelection !== "none") {
@@ -2585,7 +2632,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                     const chainParams: any = {
                         ...params, // Use clean params (without accumulated cartoon properties)
                         color: finalColor,
-                        sele: `:${chain}${customExclusion}` // Apply custom exclusion here too
+                        sele: `:${chain}${customExclusion}${transparencyExclusion}` // Apply custom exclusion here too
                     };
 
                     // Specific adjustments based on style
@@ -2616,7 +2663,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                     const ruleParams: any = {
                         ...params, // Use clean params
                         color: finalColor,
-                        sele: selection
+                        sele: `${selection}${transparencyExclusion}`
                     };
 
                     // Apply specific style adjustments

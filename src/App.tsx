@@ -287,6 +287,7 @@ function App() {
       if (s.customColors !== undefined) ctrl.setCustomColors(s.customColors);
       if (s.measurements !== undefined) ctrl.setMeasurements(s.measurements);
       if (s.customBackgroundColor !== undefined) ctrl.setCustomBackgroundColor(s.customBackgroundColor);
+      if (s.customTransparency !== undefined) ctrl.setCustomTransparency(s.customTransparency);
       if (s.hoveredResidue !== undefined) setRemoteHoveredResidue(s.hoveredResidue);
       if (s.annotations !== undefined) setAnnotations(s.annotations);
     }
@@ -356,6 +357,7 @@ function App() {
     // JSON stringify comparison for deep objects to avoid loops/unnecessary updates
     // if (vpState.customColors !== undefined && JSON.stringify(vpState.customColors) !== JSON.stringify(ctrl.customColors)) ctrl.setCustomColors(vpState.customColors);
     if (vpState.customColors !== undefined) ctrl.setCustomColors(vpState.customColors);
+    if (vpState.customTransparency !== undefined) ctrl.setCustomTransparency(vpState.customTransparency);
     if (vpState.customBackgroundColor !== undefined && vpState.customBackgroundColor !== ctrl.customBackgroundColor) ctrl.setCustomBackgroundColor(vpState.customBackgroundColor);
 
     // Analysis/Measurements
@@ -413,6 +415,7 @@ function App() {
           (received.isSpinning === undefined || received.isSpinning === ctrl.isSpinning) &&
           (received.highlightedResidue === undefined || deepEqual(received.highlightedResidue, ctrl.highlightedResidue)) &&
           (received.customColors === undefined || deepEqual(received.customColors, ctrl.customColors)) &&
+          (received.customTransparency === undefined || deepEqual(received.customTransparency, ctrl.customTransparency)) &&
           (received.measurements === undefined || deepEqual(received.measurements, ctrl.measurements)) &&
           (received.customBackgroundColor === undefined || received.customBackgroundColor === ctrl.customBackgroundColor) &&
           (received.hoveredResidue === undefined || deepEqual(received.hoveredResidue, hoveredResidue));
@@ -429,6 +432,7 @@ function App() {
         isSpinning: ctrl.isSpinning,
         highlightedResidue: ctrl.highlightedResidue,
         customColors: ctrl.customColors,
+        customTransparency: ctrl.customTransparency,
         measurements: ctrl.measurements,
         hoveredResidue: hoveredResidue,
         controllerId: controllerId, // Keep syncing the controller ID
@@ -443,6 +447,7 @@ function App() {
     controllers[0].isSpinning,
     controllers[0].highlightedResidue,
     controllers[0].customColors,
+    controllers[0].customTransparency,
     controllers[0].measurements,
     controllers[0].customBackgroundColor,
     hoveredResidue,
@@ -585,6 +590,7 @@ function App() {
     customColors, setCustomColors,
     chainStyles, setChainStyle, // Destructure
     customStyles, setCustomStyles,
+    customTransparency, setCustomTransparency,
     smoothSheetEnabled, setSmoothSheetEnabled,
     isSpinning, setIsSpinning,
     isRocking, setIsRocking,
@@ -667,6 +673,7 @@ function App() {
           if (vp.isSpinning !== undefined && vp.isSpinning !== ctrl.isSpinning) ctrl.setIsSpinning(vp.isSpinning);
           if (vp.customColors) ctrl.setCustomColors(vp.customColors);
           if (vp.customColors) ctrl.setCustomColors(vp.customColors);
+          if (vp.customTransparency) ctrl.setCustomTransparency(vp.customTransparency);
 
           // GUARD: Only update measurements if we haven't touched them locally recently (2s lock)
           if (vp.measurements && (Date.now() - lastLocalMeasurementUpdate.current > 2000)) {
@@ -2682,6 +2689,8 @@ function App() {
                     setChainStyle={setChainStyle}
                     customStyles={customStyles}
                     setCustomStyles={setCustomStyles}
+                    customTransparency={customTransparency}
+                    setCustomTransparency={setCustomTransparency}
                     smoothSheetEnabled={smoothSheetEnabled}
                     setSmoothSheetEnabled={setSmoothSheetEnabled}
                     onResetCamera={() => handleToolAction('reset')}
@@ -2986,6 +2995,7 @@ function App() {
                             customColors={ctrl.customColors}
                             chainStyles={ctrl.chainStyles}
                             customStyles={ctrl.customStyles}
+                            customTransparency={ctrl.customTransparency}
                             smoothSheetEnabled={ctrl.smoothSheetEnabled}
                             palette={colorPalette}
                             backgroundColor={

@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import type { RepresentationType, ColoringType, ResidueInfo, Measurement, PDBMetadata, ChainInfo, CustomColorRule, CustomStyleRule, SuperposedStructure } from '../types';
+import type { RepresentationType, ColoringType, ResidueInfo, Measurement, PDBMetadata, ChainInfo, CustomColorRule, CustomStyleRule, CustomTransparencyRule, SuperposedStructure } from '../types';
 import type { DataSource } from '../utils/pdbUtils';
 
 // Types for the Controller Return Value
@@ -24,6 +24,8 @@ export interface StructureController {
     setChainStyle: (chain: string, style: RepresentationType | null) => void;
     customStyles: CustomStyleRule[];
     setCustomStyles: (styles: CustomStyleRule[] | ((prev: CustomStyleRule[]) => CustomStyleRule[])) => void;
+    customTransparency: CustomTransparencyRule[];
+    setCustomTransparency: (rules: CustomTransparencyRule[] | ((prev: CustomTransparencyRule[]) => CustomTransparencyRule[])) => void;
     isSpinning: boolean;
     setIsSpinning: (spinning: boolean | ((prev: boolean) => boolean)) => void;
     isRocking: boolean;
@@ -125,6 +127,9 @@ export const useStructureController = (initialState: any = {}): StructureControl
     // Custom Residue Styles
     const [customStyles, setCustomStyles] = useState<CustomStyleRule[]>([]);
 
+    // Custom Transparency
+    const [customTransparency, setCustomTransparency] = useState<CustomTransparencyRule[]>([]);
+
     // -- Handlers --
 
     const handleResetView = useCallback(() => {
@@ -200,6 +205,7 @@ export const useStructureController = (initialState: any = {}): StructureControl
         customColors, setCustomColors,
         chainStyles, setChainStyle,
         customStyles, setCustomStyles,
+        customTransparency, setCustomTransparency,
         isSpinning, setIsSpinning,
         isRocking, setIsRocking,
         showSurface, setShowSurface,

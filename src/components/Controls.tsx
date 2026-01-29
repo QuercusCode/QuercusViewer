@@ -36,7 +36,7 @@ import {
     Wrench,
     X
 } from 'lucide-react';
-import type { RepresentationType, ColoringType, ChainInfo, Snapshot, Movie, ColorPalette, PDBMetadata, CustomColorRule, CustomStyleRule, Measurement } from '../types';
+import type { RepresentationType, ColoringType, ChainInfo, Snapshot, Movie, ColorPalette, PDBMetadata, CustomColorRule, CustomStyleRule, CustomTransparencyRule, Measurement } from '../types';
 import type { DataSource } from '../utils/pdbUtils';
 import type { HistoryItem } from '../hooks/useHistory';
 import { formatChemicalId } from '../utils/pdbUtils';
@@ -400,10 +400,14 @@ interface ControlsProps {
     onResetCamera?: () => void;
 
     // Custom Residue Styles
-    customStyles?: CustomStyleRule[];
-    setCustomStyles?: (styles: CustomStyleRule[] | ((prev: CustomStyleRule[]) => CustomStyleRule[])) => void;
+    customStyles: CustomStyleRule[];
+    setCustomStyles: (styles: CustomStyleRule[] | ((prev: CustomStyleRule[]) => CustomStyleRule[])) => void;
 
-    smoothSheetEnabled?: boolean;
+    // Transparency
+    customTransparency: CustomTransparencyRule[];
+    setCustomTransparency: (rules: CustomTransparencyRule[] | ((prev: CustomTransparencyRule[]) => CustomTransparencyRule[])) => void;
+
+    smoothSheetEnabled: boolean;
     setSmoothSheetEnabled?: (enabled: boolean | ((prev: boolean) => boolean)) => void;
 }
 
@@ -426,7 +430,9 @@ export const Controls: React.FC<ControlsProps> = ({
     setChainStyle, // Destructure
     customStyles,
     setCustomStyles,
-
+    customTransparency,
+    setCustomTransparency,
+    smoothSheetEnabled,
     chains,
     ligands,
 
@@ -449,7 +455,6 @@ export const Controls: React.FC<ControlsProps> = ({
     setShowLigands,
     showIons,
     setShowIons,
-    smoothSheetEnabled,
     setSmoothSheetEnabled,
     onRecordMovie,
     isRecording,
@@ -576,6 +581,36 @@ export const Controls: React.FC<ControlsProps> = ({
     const [customSelection, setCustomSelection] = useState<string>("");
     const [customColorValue, setCustomColorValue] = useState<string>("#ff0000");
     const [customColorMode, setCustomColorMode] = useState<'chain' | 'residue'>('chain');
+
+    // Transparency State
+    const [transparencyMode, setTransparencyMode] = useState<'chain' | 'residue'>('chain');
+    const [transparencyChain, setTransparencyChain] = useState<string>('');
+    const [transparencyResidues, setTransparencyResidues] = useState('');
+    const [transparencyValue, setTransparencyValue] = useState(50); // 0-100
+
+    // Handlers
+    const handleAddTransparencyRule = () => {
+        if (!transparencyChain && transparencyMode === 'chain') return;
+        if (transparencyChain === 'Select' && transparencyMode === 'chain') return;
+
+        const newRule: CustomTransparencyRule = {
+            id: crypto.randomUUID(),
+            chain: transparencyChain || 'All',
+            residues: transparencyMode === 'residue' ? transparencyResidues : undefined,
+            opacity: transparencyValue / 100
+        };
+
+        if (setCustomTransparency) {
+            setCustomTransparency(prev => [...prev, newRule]);
+            setTransparencyResidues('');
+        }
+    };
+
+    const handleRemoveTransparencyRule = (id: string) => {
+        if (setCustomTransparency) {
+            setCustomTransparency(prev => prev.filter(r => r.id !== id));
+        }
+    };
 
     const handleAddCustomColor = () => {
         let selectionString = '';
@@ -710,7 +745,7 @@ export const Controls: React.FC<ControlsProps> = ({
 
             <div className={`
                 absolute top-0 left-0 z-50
-                h-[100dvh] w-full sm:w-[340px] 
+                h-[100dvh] w-full sm:w-[340px]
                 backdrop-blur-xl border-r shadow-2xl
                 transition-transform duration-300 ease-in-out
                 flex flex-col
@@ -1781,6 +1816,134 @@ export const Controls: React.FC<ControlsProps> = ({
                                 </div>
 
 
+                            </div>
+
+                            {/* Transparency Style */}
+                            <div className={`p-2 rounded-lg border ${cardBg} mt-2`}>
+                                <div className="flex items-center justify-between mb-2">
+                                    <h4 className={`text-[10px] font-bold uppercase tracking-wider ${subtleText}`}>Transparency</h4>
+                                </div>
+
+                                <div className="flex bg-black/10 dark:bg-white/5 rounded-lg p-0.5 mb-2">
+                                    <button
+                                        onClick={() => setTransparencyMode('chain')}
+                                        className={`flex-1 py-1 text-[10px] font-medium rounded-md transition-all ${transparencyMode === 'chain' ? 'bg-blue-500 text-white shadow-sm' : 'text-neutral-500 hover:text-neutral-300'}`}
+                                    >
+                                        Chain
+                                    </button>
+                                    <button
+                                        onClick={() => setTransparencyMode('residue')}
+                                        className={`flex-1 py-1 text-[10px] font-medium rounded-md transition-all ${transparencyMode === 'residue' ? 'bg-blue-500 text-white shadow-sm' : 'text-neutral-500 hover:text-neutral-300'}`}
+                                    >
+                                        Residue
+                                    </button>
+                                </div>
+
+                                {/* Chain Selection */}
+                                {transparencyMode === 'chain' && (
+                                    <div className="space-y-2">
+                                        <label className={`text-[9px] font-bold uppercase tracking-wider block ${subtleText} opacity-70`}>Chain</label>
+                                        <div className={`relative flex items-center rounded-lg border transition-all ${inputBg}`}>
+                                            <select
+                                                value={transparencyChain}
+                                                onChange={(e) => setTransparencyChain(e.target.value)}
+                                                className="w-full appearance-none bg-transparent py-1.5 pl-2 pr-4 text-xs font-mono outline-none"
+                                            >
+                                                <option value="">Select Chain</option>
+                                                <option value="All">All Chains</option>
+                                                {chains.map(c => (
+                                                    <option key={c.name} value={c.name}>Chain {c.name}</option>
+                                                ))}
+                                            </select>
+                                            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 opacity-50 pointer-events-none" />
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Residue Range Selection */}
+                                {transparencyMode === 'residue' && (
+                                    <div className="flex gap-2">
+                                        <div className="w-[80px]">
+                                            <label className={`text-[9px] font-bold uppercase tracking-wider mb-1 block ${subtleText} opacity-70`}>Chain</label>
+                                            <div className={`relative flex items-center rounded-lg border transition-all ${inputBg}`}>
+                                                <select
+                                                    value={transparencyChain}
+                                                    onChange={(e) => setTransparencyChain(e.target.value)}
+                                                    className="w-full appearance-none bg-transparent py-1.5 pl-2 pr-4 text-xs font-mono outline-none"
+                                                >
+                                                    <option value="All">All</option>
+                                                    {chains.map(c => (
+                                                        <option key={c.name} value={c.name}>:{c.name}</option>
+                                                    ))}
+                                                </select>
+                                                <ChevronDown className="absolute right-1 top-1/2 -translate-y-1/2 w-3 h-3 opacity-50 pointer-events-none" />
+                                            </div>
+                                        </div>
+                                        <div className="flex-1">
+                                            <label className={`text-[9px] font-bold uppercase tracking-wider mb-1 block ${subtleText} opacity-70`}>Residues</label>
+                                            <input
+                                                type="text"
+                                                value={transparencyResidues}
+                                                onChange={(e) => setTransparencyResidues(e.target.value)}
+                                                placeholder="e.g. 50-60"
+                                                className={`w-full py-1.5 px-2 rounded-lg border text-xs outline-none transition-all ${inputBg}`}
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Opacity Slider */}
+                                <div className="mt-2 space-y-1">
+                                    <div className="flex justify-between">
+                                        <label className={`text-[9px] font-bold uppercase tracking-wider block ${subtleText} opacity-70`}>Opacity</label>
+                                        <span className="text-[9px] font-mono">{transparencyValue}%</span>
+                                    </div>
+                                    <input
+                                        type="range"
+                                        min="0"
+                                        max="100"
+                                        value={transparencyValue}
+                                        onChange={(e) => setTransparencyValue(Number(e.target.value))}
+                                        className="w-full h-1.5 bg-neutral-200 dark:bg-neutral-700 rounded-lg appearance-none cursor-pointer"
+                                    />
+                                </div>
+
+                                <button
+                                    onClick={handleAddTransparencyRule}
+                                    disabled={transparencyMode === 'chain' && !transparencyChain}
+                                    className="w-full mt-2 py-1.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg text-xs font-bold transition-all shadow-sm active:scale-95 flex items-center justify-center"
+                                >
+                                    <Plus size={14} className="mr-1" />
+                                    Add Rule
+                                </button>
+
+                                {/* Active Rules */}
+                                {customTransparency && customTransparency.length > 0 && (
+                                    <div className="space-y-1 pt-2 mt-2 border-t border-dashed border-gray-200 dark:border-gray-700">
+                                        <div className={`text-[9px] font-bold uppercase tracking-wider ${subtleText} opacity-70`}>Active Rules</div>
+                                        <div className="space-y-1 max-h-[100px] overflow-y-auto custom-scrollbar">
+                                            {customTransparency.map((rule) => (
+                                                <div key={rule.id} className={`flex items-center justify-between p-2 rounded border ${isLightMode ? 'bg-white border-neutral-200' : 'bg-neutral-800 border-white/5'}`}>
+                                                    <div className="flex flex-col gap-0.5">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className={`px-1.5 py-0.5 rounded text-[9px] font-mono font-bold ${isLightMode ? 'bg-neutral-100 text-neutral-700' : 'bg-neutral-700 text-neutral-300'}`}>
+                                                                {rule.chain === 'All' ? '*' : `:${rule.chain}`}
+                                                            </span>
+                                                            {rule.residues && <span className="text-[10px] opacity-70 font-mono">{rule.residues}</span>}
+                                                        </div>
+                                                        <span className="text-[9px] text-blue-500 font-medium">Opacity: {(rule.opacity * 100).toFixed(0)}%</span>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => handleRemoveTransparencyRule(rule.id)}
+                                                        className="p-1 hover:bg-red-500/20 text-neutral-400 hover:text-red-500 rounded transition-colors"
+                                                    >
+                                                        <Trash2 size={12} />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Custom Rules */}

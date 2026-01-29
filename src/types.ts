@@ -22,6 +22,13 @@ export interface CustomStyleRule {
     style: RepresentationType;
 }
 
+export interface CustomTransparencyRule {
+    id: string;
+    chain: string;
+    residues?: string; // e.g. "50-60", optional
+    opacity: number; // 0.0 to 1.0
+}
+
 export interface AtomInfo {
     serial: number;
     name: string;
