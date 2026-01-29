@@ -1259,6 +1259,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                 {!isChemical && <option value="backbone">Backbone</option>}
                                                 <option value="spacefill">Spacefill</option>
                                                 <option value="surface">Surface</option>
+                                                <option value="line">Line</option>
                                             </select>
                                         </div>
                                         <div>
