@@ -2620,23 +2620,70 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                 ? ` and not (${customStyleSelections.join(' or ')})`
                 : "";
 
-            // --- MOVED UP ---
+            // --- 4. RENDER REMAINING CHAINS (Explicit Instead of Global Exclusions) ---
+            // This avoids NGL selection precedence issues with "not" operators.
 
-            // --- 4. RENDER SINGLE REPRESENTATION (GLOBAL) ---
+            // 1. Identify Chains that are FULLY handled by Custom Styles or Transparency
+            const fullyHandledChains = new Set<string>();
 
-            // Build exclusion list for default representation
-            const excludedChains = chainStyles ? Object.keys(chainStyles) : [];
-            const chainExclusion = excludedChains.length > 0
-                ? ` and not (:${excludedChains.join(' or :')})`
-                : "";
+            // Add Custom Style Chains (only if full chain)
+            if (customStyles) {
+                customStyles.forEach(rule => {
+                    if (rule.chain !== 'All' && !rule.residues && backboneStyles.has(rule.style)) {
+                        fullyHandledChains.add(rule.chain);
+                    }
+                });
+            }
 
-            console.log('[ProteinViewer] Generated Default Selection:', `*${chainExclusion}${customExclusion}${transparencyExclusion}`);
+            // Add Transparent Chains (only if full chain)
+            if (customTransparency) {
+                customTransparency.forEach(rule => {
+                    if (rule.chain !== 'All' && !rule.residues) {
+                        fullyHandledChains.add(rule.chain);
+                    }
+                });
+            }
 
-            const defaultSelection = `*${chainExclusion}${customExclusion}${transparencyExclusion}`;
+            // Add Explicit Chain Styles
+            if (chainStyles) {
+                Object.keys(chainStyles).forEach(c => fullyHandledChains.add(c));
+            }
 
-            // Add the default representation (for non-overridden atoms)
-            if (defaultSelection !== "not ()" && defaultSelection !== "none") {
-                component.addRepresentation(repType as any, { ...globalParams, sele: defaultSelection });
+            // 2. Iterate All Chains and Render if NOT handled
+            if (component.structure && component.structure.chainStore) {
+                component.structure.eachChain((cp: any) => {
+                    const chainName = cp.chainname;
+
+                    if (!fullyHandledChains.has(chainName)) {
+                        // This chain needs default rendering.
+                        // But we STILL need to apply PARTIAL exclusions (residue ranges from styles/transparency)
+
+                        // Collect exclusions for THIS chain
+                        const thisChainExclusions: string[] = [];
+
+                        // Custom Style Partial Exclusions
+                        customStyles?.forEach(rule => {
+                            if ((rule.chain === 'All' || rule.chain === chainName) && rule.residues && backboneStyles.has(rule.style)) {
+                                thisChainExclusions.push(`(${rule.residues})`);
+                            }
+                        });
+
+                        // Transparency Partial Exclusions
+                        customTransparency?.forEach(rule => {
+                            if ((rule.chain === 'All' || rule.chain === chainName) && rule.residues) {
+                                thisChainExclusions.push(`(${rule.residues})`);
+                            }
+                        });
+
+                        const exclusionString = thisChainExclusions.length > 0
+                            ? ` and not (${thisChainExclusions.join(' or ')})`
+                            : "";
+
+                        const selection = `:${chainName}${exclusionString}`;
+
+                        component.addRepresentation(repType as any, { ...globalParams, sele: selection });
+                    }
+                });
             }
 
             // --- 5. RENDER CHAIN-SPECIFIC STYLES ---
