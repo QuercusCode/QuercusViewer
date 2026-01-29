@@ -2578,6 +2578,9 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                 Object.entries(chainStyles).forEach(([chain, style]) => {
                     if (!style) return;
 
+                    let actualStyle = style;
+                    if (actualStyle === 'backbone') actualStyle = 'trace';
+
                     const chainParams: any = {
                         ...params, // Use clean params (without accumulated cartoon properties)
                         color: finalColor,
@@ -2585,15 +2588,17 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                     };
 
                     // Specific adjustments based on style
-                    if (style === 'cartoon') Object.assign(chainParams, cartoonParams);
+                    if (actualStyle === 'cartoon') Object.assign(chainParams, cartoonParams);
+                    else if (actualStyle === 'trace') Object.assign(chainParams, backboneParams);
+
                     // For atomic/bond representations, ensure reasonable defaults
-                    if (style === 'licorice') {
+                    if (actualStyle === 'licorice') {
                         chainParams.scale = 2.0;
-                    } else if (style === 'ball+stick') {
+                    } else if (actualStyle === 'ball+stick') {
                         // No overrides - use global defaults
                     }
 
-                    component.addRepresentation(style, chainParams);
+                    component.addRepresentation(actualStyle, chainParams);
                 });
             }
 
@@ -2604,6 +2609,9 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                     const resPart = rule.residues ? (rule.chain === 'All' ? ` and ${rule.residues}` : ` and ${rule.residues}`) : '';
                     const selection = `${chainPart}${resPart}`; // e.g. ":A and 50-60"
 
+                    let actualStyle = rule.style;
+                    if (actualStyle === 'backbone') actualStyle = 'trace';
+
                     const ruleParams: any = {
                         ...params, // Use clean params
                         color: finalColor,
@@ -2611,10 +2619,12 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                     };
 
                     // Apply specific style adjustments
-                    if (rule.style === 'cartoon') Object.assign(ruleParams, cartoonParams);
-                    if (rule.style === 'licorice') ruleParams.scale = 2.0;
+                    if (actualStyle === 'cartoon') Object.assign(ruleParams, cartoonParams);
+                    else if (actualStyle === 'trace') Object.assign(ruleParams, backboneParams);
 
-                    component.addRepresentation(rule.style, ruleParams);
+                    if (actualStyle === 'licorice') ruleParams.scale = 2.0;
+
+                    component.addRepresentation(actualStyle, ruleParams);
                 });
             }
 
