@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
     CircleHelp, X, MousePointer2, Keyboard, Sparkles,
-    BookOpen, Layers, Activity, Share2, FileUp, ArrowLeft, Wrench, Palette, Mail, Github, MessageSquare, ExternalLink, Linkedin, Heart, Users, Video
+    BookOpen, Layers, Activity, Share2, FileUp, ArrowLeft, Wrench, Palette, Mail, Github, MessageSquare, ExternalLink, Linkedin, Heart, Users, Video, Ghost
 } from 'lucide-react';
 
 type FeatureSection = {
@@ -342,6 +342,46 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
                                 </span>
                             </li>
                         </ul>
+                    </div>
+                </div>
+            )
+        },
+        {
+            id: 'transparency',
+            title: 'Transparency',
+            icon: Ghost,
+            description: 'See *through* the structure.',
+            content: (
+                <div className="space-y-6">
+                    <div className="bg-neutral-800/50 p-4 rounded-xl border border-neutral-700/50">
+                        <h4 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
+                            <Ghost className="w-4 h-4 text-neutral-400" /> Transparency Layers
+                        </h4>
+                        <p className="text-xs text-neutral-300 mb-4">
+                            Reveal internal cavities or focus on specific binding sites by making outer layers transparent.
+                        </p>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="bg-black/20 p-3 rounded-lg border border-white/5">
+                                <h5 className="text-xs font-bold text-white mb-1">Per-Chain Mode</h5>
+                                <p className="text-[11px] text-neutral-400">
+                                    Adjust the opacity of an entire chain (e.g., Chain A) to ghost it out while keeping others solid.
+                                </p>
+                            </div>
+                            <div className="bg-black/20 p-3 rounded-lg border border-white/5">
+                                <h5 className="text-xs font-bold text-white mb-1">Residue Mode</h5>
+                                <p className="text-[11px] text-neutral-400">
+                                    Create a "window" into the protein by making specific residues (e.g., <code className="bg-white/10 px-1 rounded">50-100</code>) transparent.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                            <strong className="text-blue-400 text-xs block mb-1">Pro Tip: Layering</strong>
+                            <p className="text-[11px] text-neutral-400">
+                                Combine <span className="text-white">Surface</span> representation with <span className="text-white">50% Opacity</span> to see the internal backbone structure through the volume.
+                            </p>
+                        </div>
                     </div>
                 </div>
             )
