@@ -1614,7 +1614,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                                 ? (isLightMode ? 'bg-white shadow text-blue-600' : 'bg-neutral-700 text-white shadow')
                                                                 : 'text-neutral-400 hover:text-neutral-500'}`}
                                                         >
-                                                            Chain
+                                                            Per-Chain
                                                         </button>
                                                         <button
                                                             onClick={() => setTransparencyMode('residue')}
