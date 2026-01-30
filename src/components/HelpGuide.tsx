@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
     CircleHelp, X, MousePointer2, Keyboard, Sparkles,
-    BookOpen, Layers, Activity, Share2, FileUp, ArrowLeft, Wrench, Palette, Mail, Github, MessageSquare, ExternalLink, Linkedin, Heart, Users, Video, Ghost
+    BookOpen, Layers, Activity, Share2, FileUp, ArrowLeft, Wrench, Palette, Mail, Github, MessageSquare, ExternalLink, Linkedin, Heart, Users, Video, Ghost, Shapes
 } from 'lucide-react';
 
 type FeatureSection = {
@@ -381,6 +381,62 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
                             <p className="text-[11px] text-neutral-400">
                                 Combine <span className="text-white">Surface</span> representation with <span className="text-white">50% Opacity</span> to see the internal backbone structure through the volume.
                             </p>
+                        </div>
+                    </div>
+                </div>
+            )
+        },
+        {
+            id: 'advanced-styles',
+            title: 'Advanced Styles',
+            icon: Shapes,
+            description: 'Mix & Match representations.',
+            content: (
+                <div className="space-y-6">
+                    <div className="bg-neutral-800/50 p-4 rounded-xl border border-neutral-700/50">
+                        <h4 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
+                            <Shapes className="w-4 h-4 text-purple-400" /> Advanced Styling
+                        </h4>
+                        <p className="text-xs text-neutral-300 mb-4">
+                            Go beyond global settings. Apply different geometric representations to specific parts of the structure to tell a clearer story.
+                        </p>
+
+                        <div className="space-y-4">
+                            <div className="bg-black/20 p-3 rounded-lg border border-white/5">
+                                <h5 className="text-xs font-bold text-white mb-2 flex items-center gap-2">
+                                    <span className="w-4 h-4 flex items-center justify-center bg-purple-500/20 text-purple-400 rounded text-[10px]">1</span>
+                                    Per-Chain Styles
+                                </h5>
+                                <p className="text-[11px] text-neutral-400 ml-6">
+                                    Set a unique style for an entire chain.
+                                    <br />
+                                    <em className="text-neutral-500">Example: Render Chain A as <strong className="text-neutral-300">Surface</strong> (to show volume) and Chain B as <strong className="text-neutral-300">Licorice</strong> (to show bonds).</em>
+                                </p>
+                            </div>
+
+                            <div className="bg-black/20 p-3 rounded-lg border border-white/5">
+                                <h5 className="text-xs font-bold text-white mb-2 flex items-center gap-2">
+                                    <span className="w-4 h-4 flex items-center justify-center bg-pink-500/20 text-pink-400 rounded text-[10px]">2</span>
+                                    Residue Styles
+                                </h5>
+                                <p className="text-[11px] text-neutral-400 ml-6">
+                                    Highlight specific active sites or motifs with a different representation.
+                                    <br />
+                                    <em className="text-neutral-500">Example: Select residues <code className="bg-white/10 px-1 rounded">50-60</code> and set them to <strong className="text-neutral-300">Ball & Stick</strong> to make them pop out from the cartoon.</em>
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="mt-4 p-3 bg-purple-500/10 border border-purple-500/20 rounded-lg">
+                            <div className="flex gap-2">
+                                <Layers className="w-4 h-4 text-purple-400 shrink-0" />
+                                <div>
+                                    <strong className="text-purple-400 text-xs block mb-0.5">Priority Layering</strong>
+                                    <p className="text-[10px] text-neutral-400">
+                                        Residue styles override Chain styles, which override Global styles. Use this hierarchy to build complex scenes.
+                                    </p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
