@@ -113,7 +113,15 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
                             </div>
                         </div>
                     </div>
-                </div>
+
+
+                    <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                        <strong className="text-blue-400 text-xs block mb-1">Pro Tip: Quick Access</strong>
+                        <p className="text-[11px] text-neutral-400">
+                            Press <kbd className="bg-neutral-800 px-1 rounded text-neutral-300">?</kbd> anywhere in the app to toggle this guide instantly.
+                        </p>
+                    </div>
+                </div >
             )
         },
         {
@@ -149,7 +157,15 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
                             </div>
                         </div>
                     </div>
-                </div>
+
+
+                    <div className="mt-4 p-3 bg-indigo-500/10 border border-indigo-500/20 rounded-lg">
+                        <strong className="text-indigo-400 text-xs block mb-1">Pro Tip: Focus Mode</strong>
+                        <p className="text-[11px] text-neutral-400">
+                            Need more screen space? Press <kbd className="bg-neutral-800 px-1 rounded text-neutral-300">Cmd+B</kbd> to collapse the sidebar and maximize your viewports.
+                        </p>
+                    </div>
+                </div >
             )
         },
         {
@@ -219,7 +235,15 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
                             </div>
                         </div>
                     </div>
-                </div>
+
+
+                    <div className="mt-4 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+                        <strong className="text-green-400 text-xs block mb-1">Pro Tip: Instant Chat</strong>
+                        <p className="text-[11px] text-neutral-400">
+                            During a session, press <kbd className="bg-neutral-800 px-1 rounded text-neutral-300">C</kbd> to toggle the chat window without leaving your view.
+                        </p>
+                    </div>
+                </div >
             )
         },
         {
@@ -260,6 +284,12 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
                             <span className="px-2 py-1 bg-blue-900/30 text-blue-200 border border-blue-500/20 rounded text-[10px]">Antibiotics</span>
                             <span className="px-2 py-1 bg-blue-900/30 text-blue-200 border border-blue-500/20 rounded text-[10px]">Nucleotides</span>
                         </div>
+                    </div>
+                    <div className="mt-4 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+                        <strong className="text-yellow-400 text-xs block mb-1">Pro Tip: Data Persistence</strong>
+                        <p className="text-[11px] text-neutral-400">
+                            Your **History** and **Favorites** are stored locally in your browser, so they'll be here when you come back.
+                        </p>
                     </div>
                 </div>
             )
@@ -302,6 +332,12 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
                             </ul>
                         </div>
                     </div>
+                    <div className="mt-4 p-3 bg-purple-500/10 border border-purple-500/20 rounded-lg">
+                        <strong className="text-purple-400 text-xs block mb-1">Pro Tip: Performance</strong>
+                        <p className="text-[11px] text-neutral-400">
+                            Working with large complexes? Use **Cartoon** representation to maintain smooth frame rates while rotating.
+                        </p>
+                    </div>
                 </div>
             )
         },
@@ -342,6 +378,12 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
                                 </span>
                             </li>
                         </ul>
+                    </div>
+                    <div className="mt-4 p-3 bg-pink-500/10 border border-pink-500/20 rounded-lg">
+                        <strong className="text-pink-400 text-xs block mb-1">Pro Tip: Syntax</strong>
+                        <p className="text-[11px] text-neutral-400">
+                            You can paste comma-separated lists (e.g., <code className="bg-neutral-800 px-1 rounded">10,15,42</code>) or ranges (<code className="bg-neutral-800 px-1 rounded">20-50</code>) directly.
+                        </p>
                     </div>
                 </div>
             )
@@ -478,6 +520,12 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
                             </div>
                         </div>
                     </div>
+                    <div className="mt-4 p-3 bg-neutral-500/10 border border-neutral-500/20 rounded-lg">
+                        <strong className="text-neutral-400 text-xs block mb-1">Pro Tip: Export Data</strong>
+                        <p className="text-[11px] text-neutral-400">
+                            The **Measurements Panel** allows you to export your distance calculations as a CSV file for analysis in Excel.
+                        </p>
+                    </div>
                 </div>
             )
         },
@@ -519,6 +567,12 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
                                 </p>
                             </div>
                         </div>
+                    </div>
+                    <div className="mt-4 p-3 bg-white/5 border border-white/10 rounded-lg">
+                        <strong className="text-white text-xs block mb-1">Pro Tip: Screenshots</strong>
+                        <p className="text-[11px] text-neutral-400">
+                            Combine **Clean Mode** with a custom background color to create publication-ready figure bases.
+                        </p>
                     </div>
                 </div>
             )
@@ -572,6 +626,12 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
                                 <span className="w-1.5 h-1.5 rounded-full bg-pink-500" /> HD Video Export
                             </li>
                         </ul>
+                    </div>
+                    <div className="mt-4 p-3 bg-rose-500/10 border border-rose-500/20 rounded-lg">
+                        <strong className="text-rose-400 text-xs block mb-1">Pro Tip: Transparent PNGs</strong>
+                        <p className="text-[11px] text-neutral-400">
+                            Image exports automatically include an alpha channel (transparent background) if you haven't set a custom background color.
+                        </p>
                     </div>
                 </div>
             )
