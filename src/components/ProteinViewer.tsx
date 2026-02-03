@@ -2420,7 +2420,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
             }
 
             // Handle "Force Element" for single chains/chemicals when default 'chainid' is picked
-            const chainCount = component.structure ? component.structure.chainStore.count : 0;
+            const chainCount = component.structure && component.structure.chainStore ? component.structure.chainStore.count : 0;
             if (finalColor === 'chainid' && (chainCount <= 1 || dataSource === 'pubchem')) {
                 finalColor = 'element';
             }
