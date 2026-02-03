@@ -2579,9 +2579,11 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
             // Fix: High Contrast for Chains
             // If coloring by chain, ignore the global aesthetic palette (often monotonic like Magma) 
             // and force a high-contrast Rainbow (Spectral) to ensure distinct chain colors.
+            // If coloring by chain, ignore the global aesthetic palette (often monotonic like Magma) 
+            // and force a high-contrast Rainbow (Spectral) to ensure distinct chain colors.
             if (finalColor === 'chainindex') {
                 params.colorScale = 'Spectral';
-            } else if (scale && scale.length > 0) {
+            } else if (scale && Array.isArray(scale) && scale.length > 0) {
                 params.colorScale = scale;
             }
 
