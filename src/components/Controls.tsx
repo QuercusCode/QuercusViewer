@@ -1137,11 +1137,10 @@ export const Controls: React.FC<ControlsProps> = ({
                         isOpen={openSections['appearance']}
                         onToggle={() => toggleSection('appearance')}
                         isLightMode={isLightMode}
-                        id="visualization-controls"
                     >
                         <div className="space-y-3">
                             {/* Visual Style */}
-                            <div className="space-y-2">
+                            <div id="visualization-controls" className="space-y-2">
                                 <label className={`text-[10px] font-bold uppercase tracking-wider block ${subtleText}`}>Visualization</label>
                                 <div className="space-y-3">
                                     {/* Consolidated Visualization & Layout Grid - 4 Columns */}
@@ -1414,8 +1413,8 @@ export const Controls: React.FC<ControlsProps> = ({
 
                                         {/* ADVANCED COLORS WRAPPER */}
                                         {setCustomColors && (
-                                            <div id="custom-color-controls" className="col-span-2 pt-2 border-t border-white/5 space-y-2">
-                                                <div className="flex items-center justify-between mb-1">
+                                            <div className="col-span-2 pt-2 border-t border-white/5 space-y-2">
+                                                <div id="custom-color-controls" className="flex items-center justify-between mb-1">
                                                     <div className={`text-[10px] font-bold uppercase tracking-wider ${subtleText} opacity-80`}>
                                                         Advanced Colors
                                                     </div>
@@ -1602,8 +1601,8 @@ export const Controls: React.FC<ControlsProps> = ({
                                         {/* TRANSPARENCY WRAPPER */}
                                         {/* Always render, prop is required */}
                                         {true && (
-                                            <div id="transparency-controls" className="col-span-2 pt-2 border-t border-white/5 space-y-2">
-                                                <div className="flex items-center justify-between mb-1">
+                                            <div className="col-span-2 pt-2 border-t border-white/5 space-y-2">
+                                                <div id="transparency-controls" className="flex items-center justify-between mb-1">
                                                     <div className={`text-[10px] font-bold uppercase tracking-wider ${subtleText} opacity-80`}>
                                                         Transparency
                                                     </div>
