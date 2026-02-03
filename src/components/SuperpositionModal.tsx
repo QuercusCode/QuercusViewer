@@ -9,6 +9,7 @@ interface SuperpositionModalProps {
     onAddOverlay: (structure: SuperposedStructure) => void;
     onRemoveOverlay: (id: string) => void;
     onToggleOverlay: (id: string) => void;
+    onOpenAlignment: () => void; // New Prop
 }
 
 export const SuperpositionModal: React.FC<SuperpositionModalProps> = ({
@@ -17,7 +18,8 @@ export const SuperpositionModal: React.FC<SuperpositionModalProps> = ({
     overlays,
     onAddOverlay,
     onRemoveOverlay,
-    onToggleOverlay
+    onToggleOverlay,
+    onOpenAlignment
 }) => {
     const [pdbInput, setPdbInput] = useState('');
     const [colorInput, setColorInput] = useState('#FFA500'); // Default Orange
@@ -56,9 +58,18 @@ export const SuperpositionModal: React.FC<SuperpositionModalProps> = ({
                 {/* Header */}
                 <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-800">
                     <h2 className="text-lg font-semibold text-white">Structure Superposition</h2>
-                    <button onClick={onClose} className="text-neutral-400 hover:text-white transition-colors">
-                        <X size={20} />
-                    </button>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={onOpenAlignment}
+                            title="View Sequence Alignment"
+                            className="bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 text-xs px-3 py-1.5 rounded-lg border border-cyan-500/30 transition-colors"
+                        >
+                            Align Sequences
+                        </button>
+                        <button onClick={onClose} className="text-neutral-400 hover:text-white transition-colors">
+                            <X size={20} />
+                        </button>
+                    </div>
                 </div>
 
                 {/* Content */}

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
 import clsx from 'clsx';
 import { Skeleton } from './Skeleton';
+import { SequenceAlignmentModal } from './SequenceAlignmentModal';
 import type { RepresentationType, ColoringType, ChainInfo, Measurement, CustomColorRule, CustomStyleRule, CustomTransparencyRule, ColorPalette, ResidueInfo, StructureInfo, MeasurementTextColor, AtomInfo, SuperposedStructure, Annotation } from '../types';
 import { type DataSource, getStructureUrl } from '../utils/pdbUtils';
 
@@ -130,7 +131,9 @@ export interface ProteinViewerRef {
     setOrientation: (orientation: any) => void;
     getPdbBlob: () => Blob | null; // Method to extract current structure as blob
     container: HTMLDivElement | null; // Expose container for canvas access
+    openAlignmentView: () => void; // Added for Sequence Alignment
 }
+
 
 export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
     pdbId,
@@ -179,6 +182,8 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
     remoteHoveredResidue
 }: ProteinViewerProps, ref: React.Ref<ProteinViewerRef>) => {
 
+    const [isAlignmentOpen, setIsAlignmentOpen] = React.useState(false);
+    const [primaryStructureChains, setPrimaryStructureChains] = React.useState<ChainInfo[] | undefined>(undefined);
     const containerRef = useRef<HTMLDivElement>(null);
     const stageRef = useRef<any>(null);
     const componentRef = useRef<any>(null);
@@ -529,6 +534,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
     };
 
     useImperativeHandle(ref, () => ({
+        openAlignmentView: () => setIsAlignmentOpen(true),
         recordMovie: performVideoRecord, // Exposed
         highlightRegion: (selection: string, _label?: string) => {
             if (!componentRef.current) return;
@@ -1880,6 +1886,8 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                             if (onStructureLoaded) {
                                 onStructureLoaded({ chains, ligands, isSmallMolecule });
                             }
+                            // Store locally for Alignment View
+                            setPrimaryStructureChains(chains);
                         } catch (e) { console.warn("Chain parsing error", e); }
                     }
 
@@ -2918,6 +2926,13 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
     return (
         <div className={clsx("relative w-full h-full", className)} style={backgroundColor === 'transparent' ? { background: 'transparent' } : {}}>
             <div ref={containerRef} className="w-full h-full" style={backgroundColor === 'transparent' ? { background: 'transparent' } : {}} />
+
+            <SequenceAlignmentModal
+                isOpen={isAlignmentOpen}
+                onClose={() => setIsAlignmentOpen(false)}
+                primaryStructure={primaryStructureChains}
+                overlays={overlays || []}
+            />
 
             {/* HTML Overlays for Annotations */}
             {annotations && annotations.map(ann => {

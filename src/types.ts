@@ -84,7 +84,7 @@ export interface SuperposedStructure {
     description?: string;
     isVisible: boolean;
     opacity?: number;
-
+    chains?: ChainInfo[]; // Added for Sequence Alignment
 }
 
 

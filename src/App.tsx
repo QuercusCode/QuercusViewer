@@ -2620,6 +2620,10 @@ function App() {
             onAddOverlay={controllers[activeViewIndex].addOverlay}
             onRemoveOverlay={controllers[activeViewIndex].removeOverlay}
             onToggleOverlay={controllers[activeViewIndex].toggleOverlay}
+            onOpenAlignment={() => {
+              setIsSuperpositionModalOpen(false);
+              viewerRefs[activeViewIndex].current?.openAlignmentView();
+            }}
           />
 
           <Settings
