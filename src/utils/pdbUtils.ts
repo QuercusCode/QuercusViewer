@@ -1,4 +1,4 @@
-import type { PDBMetadata } from '../types';
+import type { PDBMetadata, ChainInfo, AtomInfo } from '../types';
 
 export const fetchPDBMetadata = async (pdbId: string): Promise<PDBMetadata | null> => {
     if (!pdbId) return null;
@@ -122,4 +122,124 @@ export const formatChemicalId = (id: string): string => {
         return id.charAt(0).toUpperCase() + id.slice(1).toLowerCase();
     }
     return id.toUpperCase();
+};
+
+export const extractChainsFromComponent = (component: any): { chains: ChainInfo[], ligands: string[], isSmallMolecule: boolean } => {
+    if (!component || !component.structure) return { chains: [], ligands: [], isSmallMolecule: false };
+
+    const chains: ChainInfo[] = [];
+    const seenChains = new Set<string>();
+
+    component.structure.eachChain((c: any) => {
+        if (seenChains.has(c.chainname)) return;
+        seenChains.add(c.chainname);
+
+        let seq = "";
+        let minSeq = Infinity;
+        let maxSeq = -Infinity;
+        let nucleicCount = 0;
+        let proteinCount = 0;
+
+        const resMap: number[] = [];
+        const bFactors: number[] = [];
+
+        try {
+            c.eachResidue((r: any) => {
+                let resNo = r.resno;
+                if (resNo === undefined && typeof r.getResno === 'function') {
+                    resNo = r.getResno();
+                }
+
+                if (typeof resNo === 'number') {
+                    if (resNo < minSeq) minSeq = resNo;
+                    if (resNo > maxSeq) maxSeq = resNo;
+                    resMap.push(resNo); // Valid residue number
+                } else {
+                    resMap.push((maxSeq > -Infinity ? maxSeq : 0) + 1);
+                }
+
+                // B-Factor Extraction
+                let bSum = 0;
+                let bCount = 0;
+                r.eachAtom((a: any) => {
+                    bSum += a.bfactor;
+                    bCount++;
+                });
+                const avgB = bCount > 0 ? bSum / bCount : 0;
+                bFactors.push(avgB);
+
+                // Determine Type
+                if (r.isNucleic()) nucleicCount++;
+                else if (r.isProtein()) proteinCount++;
+
+                // Parse Residue Name
+                let resName = 'X';
+                if (r.isNucleic()) {
+                    const rawName = r.resname.trim().toUpperCase();
+                    if (rawName.length === 1) resName = rawName;
+                    else if (rawName.length === 2 && rawName.startsWith('D')) resName = rawName[1];
+                    else if (rawName.length === 2 && rawName.endsWith('A')) resName = 'A';
+                    else resName = rawName.substring(0, 1);
+                } else {
+                    if (r.getResname1) resName = r.getResname1();
+                    else if (r.resname) resName = r.resname[0];
+                }
+                seq += resName;
+            });
+        } catch (eRes) {
+            console.warn(`Residue iteration failed for chain ${c.chainname}`, eRes);
+        }
+
+        if (minSeq === Infinity) minSeq = 0;
+        if (maxSeq === -Infinity) maxSeq = 0;
+
+        // Infer Chain Type
+        let chainType: 'protein' | 'nucleic' | 'unknown' = 'unknown';
+        if (nucleicCount > proteinCount) chainType = 'nucleic';
+        else if (proteinCount > 0) chainType = 'protein';
+
+        // Extract Atoms for Small Molecules
+        let atomList: AtomInfo[] = [];
+        if (chainType === 'unknown' && seq.length < 50) {
+            try {
+                c.eachResidue((r: any) => {
+                    r.eachAtom((a: any) => {
+                        atomList.push({
+                            serial: a.serial,
+                            name: a.atomname,
+                            element: a.element,
+                            resNo: r.resno,
+                            chain: c.chainname
+                        });
+                    });
+                });
+            } catch (eAtom) { console.warn("Atom iteration failed", eAtom); }
+        }
+
+        chains.push({
+            name: c.chainname,
+            min: minSeq,
+            max: maxSeq,
+            sequence: seq,
+            residueMap: resMap,
+            type: chainType,
+            atoms: atomList.length > 0 ? atomList : undefined,
+            bFactors: bFactors
+        });
+    });
+
+    // Extract Ligands
+    const ligandSet = new Set<string>();
+    try {
+        component.structure.eachResidue((r: any) => {
+            const invalidLigands = ['HOH', 'WAT', 'TIP', 'SOL', 'DOD'];
+            if (r.isHetero() && !invalidLigands.includes(r.resname)) {
+                ligandSet.add(r.resname);
+            }
+        });
+    } catch (e) { }
+
+    const isSmallMolecule = chains.length === 0 || (chains.length === 1 && chains[0].type === 'unknown');
+
+    return { chains, ligands: Array.from(ligandSet), isSmallMolecule };
 };
