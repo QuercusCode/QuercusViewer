@@ -26,7 +26,7 @@ export const fetchPDBMetadata = async (pdbId: string): Promise<PDBMetadata | nul
         const method = data.exptl?.[0]?.method || 'Unknown';
 
         let resolution = 'N/A';
-        if (data.rcsb_entry_info?.resolution_combined && Array.isArray(data.rcsb_entry_info.resolution_combined) && data.rcsb_entry_info.resolution_combined.length > 0) {
+        if (data.rcsb_entry_info?.resolution_combined && data.rcsb_entry_info.resolution_combined.length > 0) {
             resolution = `${data.rcsb_entry_info.resolution_combined[0].toFixed(2)} Å`;
         } else if (data.refine?.[0]?.ls_d_res_high) {
             resolution = `${data.refine[0].ls_d_res_high.toFixed(2)} Å`;
@@ -36,9 +36,9 @@ export const fetchPDBMetadata = async (pdbId: string): Promise<PDBMetadata | nul
 
         // Organism from Entity 1
         let organism = 'Unknown source';
-        if (entityData.rcsb_entity_source_organism && Array.isArray(entityData.rcsb_entity_source_organism) && entityData.rcsb_entity_source_organism.length > 0) {
+        if (entityData.rcsb_entity_source_organism && entityData.rcsb_entity_source_organism.length > 0) {
             organism = entityData.rcsb_entity_source_organism[0].scientific_name;
-        } else if (data.rcsb_entity_source_organism && Array.isArray(data.rcsb_entity_source_organism) && data.rcsb_entity_source_organism.length > 0) {
+        } else if (data.rcsb_entity_source_organism && data.rcsb_entity_source_organism.length > 0) {
             organism = data.rcsb_entity_source_organism[0].scientific_name; // Fallback to entry if present (rare)
         }
 
@@ -76,7 +76,7 @@ export const getStructureUrl = (id: string, source: DataSource): string => {
     switch (source) {
         case 'pubchem': return `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/${id}/record/SDF/?record_type=3d`;
         case 'alphafold': return `https://alphafold.ebi.ac.uk/files/AF-${id}-F1-model_v4.pdb`;
-        case 'pdb': default: return `https://models.rcsb.org/${id}.mmtf`; // Use MMTF for efficient Biological Assembly loading
+        case 'pdb': default: return `https://files.rcsb.org/download/${id}.pdb`; // Explicitly use PDB format
     }
 };
 

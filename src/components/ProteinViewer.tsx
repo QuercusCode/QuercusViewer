@@ -1667,8 +1667,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                         if (dataSource === 'pubchem' && cleanId.length < 1) return null;
 
                         let url = getStructureUrl(cleanId, dataSource);
-                        // Request Biological Unit 1 for proper viral/assembly visualization
-                        let loadParams: any = { defaultRepresentation: false, assembly: 'bu1' };
+                        let loadParams: any = { defaultRepresentation: false };
 
                         // Add extension hint for NGL if needed
                         if (dataSource === 'pubchem') loadParams.ext = 'sdf';
@@ -2420,7 +2419,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
             }
 
             // Handle "Force Element" for single chains/chemicals when default 'chainid' is picked
-            const chainCount = component.structure && component.structure.chainStore ? component.structure.chainStore.count : 0;
+            const chainCount = component.structure ? component.structure.chainStore.count : 0;
             if (finalColor === 'chainid' && (chainCount <= 1 || dataSource === 'pubchem')) {
                 finalColor = 'element';
             }
@@ -2579,11 +2578,9 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
             // Fix: High Contrast for Chains
             // If coloring by chain, ignore the global aesthetic palette (often monotonic like Magma) 
             // and force a high-contrast Rainbow (Spectral) to ensure distinct chain colors.
-            // If coloring by chain, ignore the global aesthetic palette (often monotonic like Magma) 
-            // and force a high-contrast Rainbow (Spectral) to ensure distinct chain colors.
             if (finalColor === 'chainindex') {
                 params.colorScale = 'Spectral';
-            } else if (scale && Array.isArray(scale) && scale.length > 0) {
+            } else if (scale && scale.length > 0) {
                 params.colorScale = scale;
             }
 
