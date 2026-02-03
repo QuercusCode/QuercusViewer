@@ -2531,9 +2531,8 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                         try {
                             const testSel = new NGL.Selection(rule.selection);
                             if (testSel) {
-                                // Important: Apply transparency exclusion to custom colors too, 
-                                // otherwise opaque custom color wins over transparent representation
-                                dataList.push([rule.color, `${rule.selection}${transparencyExclusion}`]);
+                                // Removed transparencyExclusion to allow custom colors on transparent atoms
+                                dataList.push([rule.color, rule.selection]);
                             }
                         } catch (e) {
                             console.warn("Skipping invalid selection rule:", rule.selection);
