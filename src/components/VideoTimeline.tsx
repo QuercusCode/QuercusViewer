@@ -393,7 +393,7 @@ export const VideoTimeline = ({
     const eventBlocks = getEventBlocks();
 
     return (
-        <div id="video-timeline" className="space-y-2">
+        <div className="space-y-2">
             {/* Timeline Toolbar */}
             <div className="flex justify-between items-center text-xs px-1">
                 <div className="opacity-60 font-mono">

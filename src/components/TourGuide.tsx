@@ -40,20 +40,6 @@ export const startOnboardingTour = (onComplete?: () => void, onHighlight?: (elem
             }
         },
         {
-            element: '#custom-color-controls',
-            popover: {
-                title: 'Advanced Custom Colors',
-                description: 'Apply specific colors to individual residues or entire chains. Useful for highlighting active sites or specific domains.'
-            }
-        },
-        {
-            element: '#transparency-controls',
-            popover: {
-                title: 'Transparency Rules',
-                description: 'Make specific parts of the structure transparent to reveal internal details. You can target chains or specific residue ranges.'
-            }
-        },
-        {
             element: '#viewport-controls',
             popover: {
                 title: 'Multi-View Layouts',
@@ -67,13 +53,6 @@ export const startOnboardingTour = (onComplete?: () => void, onHighlight?: (elem
                 description: isChemical
                     ? 'Inspect calculated chemical properties (Lipophilicity, H-Bonds) and measure atomic distances.'
                     : 'Analyze structures with Superposition, Contact Maps, and precise Distance Measurements.'
-            }
-        },
-        {
-            element: '#video-timeline',
-            popover: {
-                title: 'Studio Timeline',
-                description: 'Edit your recorded sessions. Trim clips, adjust start times, and arrange your production before exporting.'
             }
         },
         // Sequence Track (Atom List) - Desktop Only
