@@ -459,6 +459,10 @@ export const MolStarProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerPr
 
     // Imperative Handle (The Contract)
     useImperativeHandle(ref, () => ({
+        openAlignmentView: () => {
+            console.warn("Sequence Alignment not yet implemented for Mol* engine");
+            props.onError?.("Sequence alignment is currently only supported in the NGL engine. Switch to NGL to use this feature.");
+        },
         getSnapshotBlob: async (_resolutionFactor = 1, _transparent = true) => {
             if (!pluginRef.current?.canvas3d) return null;
 
