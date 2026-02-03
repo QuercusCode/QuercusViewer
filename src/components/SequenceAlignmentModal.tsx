@@ -275,13 +275,22 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
     };
 
     const exportAsImage = async () => {
-        if (!modalRef.current) return;
+        if (!modalRef.current) {
+            alert('Export failed: Modal reference not found');
+            return;
+        }
 
         try {
+            console.log('Starting PNG export...');
             const canvas = await html2canvas(modalRef.current, {
                 backgroundColor: '#0D1117',
-                scale: 2
+                scale: 2,
+                logging: false,
+                useCORS: true,
+                allowTaint: true
             });
+
+            console.log('Canvas created successfully');
 
             canvas.toBlob((blob) => {
                 if (blob) {
@@ -289,12 +298,18 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                     const a = document.createElement('a');
                     a.href = url;
                     a.download = `sequence_alignment_${Date.now()}.png`;
+                    document.body.appendChild(a);
                     a.click();
+                    document.body.removeChild(a);
                     URL.revokeObjectURL(url);
+                    console.log('PNG exported successfully');
+                } else {
+                    alert('Failed to create image blob');
                 }
-            });
+            }, 'image/png');
         } catch (error) {
             console.error('Failed to export image:', error);
+            alert(`Export failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     };
 
