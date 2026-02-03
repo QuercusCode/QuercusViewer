@@ -1667,7 +1667,8 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                         if (dataSource === 'pubchem' && cleanId.length < 1) return null;
 
                         let url = getStructureUrl(cleanId, dataSource);
-                        let loadParams: any = { defaultRepresentation: false };
+                        // Request Biological Unit 1 for proper viral/assembly visualization
+                        let loadParams: any = { defaultRepresentation: false, assembly: 'bu1' };
 
                         // Add extension hint for NGL if needed
                         if (dataSource === 'pubchem') loadParams.ext = 'sdf';
