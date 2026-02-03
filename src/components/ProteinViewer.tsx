@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useImperativeHandle, forwardRef } from 'react
 import clsx from 'clsx';
 import { Skeleton } from './Skeleton';
 import { SequenceAlignmentModal } from './SequenceAlignmentModal';
-import type { RepresentationType, ColoringType, ChainInfo, Measurement, CustomColorRule, CustomStyleRule, CustomTransparencyRule, ColorPalette, ResidueInfo, StructureInfo, MeasurementTextColor, AtomInfo, SuperposedStructure, Annotation } from '../types';
+import type { RepresentationType, ColoringType, ChainInfo, Measurement, CustomColorRule, CustomStyleRule, CustomTransparencyRule, ColorPalette, ResidueInfo, StructureInfo, MeasurementTextColor, SuperposedStructure, Annotation } from '../types';
 import { type DataSource, getStructureUrl, extractChainsFromComponent } from '../utils/pdbUtils';
 
 
