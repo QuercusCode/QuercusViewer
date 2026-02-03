@@ -187,7 +187,6 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
     const [annotations, setAnnotations] = useState<Record<string, ResidueAnnotation[]>>({});
     const [showAnnotationPopup, setShowAnnotationPopup] = useState<{ chainKey: string, position: number } | null>(null);
     const [annotationText, setAnnotationText] = useState('');
-    const [exportFormat, setExportFormat] = useState<ExportFormat>('fasta');
     const [showExportMenu, setShowExportMenu] = useState(false);
     const modalRef = useRef<HTMLDivElement>(null);
 
