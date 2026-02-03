@@ -1768,7 +1768,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                                 }
                             }
 
-                            const extractedData = extractChainsFromComponent(component);
+                            const extractedData = extractChainsFromComponent(component, component.matrix?.elements);
                             const { chains, ligands, isSmallMolecule } = extractedData;
 
                             if (onStructureLoaded) {
@@ -1902,7 +1902,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                         overlayComponentsRef.current.set(overlay.id, comp);
 
                         // Extract Chains for Alignment
-                        const extracted = extractChainsFromComponent(comp);
+                        const extracted = extractChainsFromComponent(comp, comp.matrix?.elements);
                         if (extracted.chains.length > 0) {
                             setOverlayChains(prev => ({
                                 ...prev,

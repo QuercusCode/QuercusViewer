@@ -124,7 +124,16 @@ export const formatChemicalId = (id: string): string => {
     return id.toUpperCase();
 };
 
-export const extractChainsFromComponent = (component: any): { chains: ChainInfo[], ligands: string[], isSmallMolecule: boolean } => {
+// Helper for Matrix4 application (Column-Major)
+const applyMatrix4 = (x: number, y: number, z: number, m: number[]) => {
+    return {
+        x: m[0] * x + m[4] * y + m[8] * z + m[12],
+        y: m[1] * x + m[5] * y + m[9] * z + m[13],
+        z: m[2] * x + m[6] * y + m[10] * z + m[14]
+    };
+};
+
+export const extractChainsFromComponent = (component: any, matrix?: number[]): { chains: ChainInfo[], ligands: string[], isSmallMolecule: boolean } => {
     if (!component || !component.structure) return { chains: [], ligands: [], isSmallMolecule: false };
 
     const chains: ChainInfo[] = [];
@@ -178,7 +187,11 @@ export const extractChainsFromComponent = (component: any): { chains: ChainInfo[
                 // Store coords (CA/P or fallback to first atom)
                 const targetAtom = caAtom || firstAtom;
                 if (targetAtom) {
-                    coords.push({ x: targetAtom.x, y: targetAtom.y, z: targetAtom.z });
+                    if (matrix && matrix.length === 16) {
+                        coords.push(applyMatrix4(targetAtom.x, targetAtom.y, targetAtom.z, matrix));
+                    } else {
+                        coords.push({ x: targetAtom.x, y: targetAtom.y, z: targetAtom.z });
+                    }
                 } else {
                     coords.push({ x: 0, y: 0, z: 0 }); // Should theoretically not happen
                 }
