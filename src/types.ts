@@ -46,6 +46,7 @@ export interface ChainInfo {
     type?: 'protein' | 'nucleic' | 'unknown'; // Added: To distinguish polymer type
     atoms?: AtomInfo[]; // Added: For small chemicals, list atoms directly
     bFactors?: number[]; // Added: Per-residue B-factor for coloring sync
+    coords?: { x: number; y: number; z: number }[]; // Added: C-alpha/P coordinates for RMSD
 }
 
 export interface StructureInfo {

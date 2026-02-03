@@ -142,6 +142,7 @@ export const extractChainsFromComponent = (component: any): { chains: ChainInfo[
 
         const resMap: number[] = [];
         const bFactors: number[] = [];
+        const coords: { x: number, y: number, z: number }[] = [];
 
         try {
             c.eachResidue((r: any) => {
@@ -158,15 +159,29 @@ export const extractChainsFromComponent = (component: any): { chains: ChainInfo[
                     resMap.push((maxSeq > -Infinity ? maxSeq : 0) + 1);
                 }
 
-                // B-Factor Extraction
+                // B-Factor & Coordinate Extraction
                 let bSum = 0;
                 let bCount = 0;
+                let caAtom: any = null;
+                let firstAtom: any = null;
+
                 r.eachAtom((a: any) => {
                     bSum += a.bfactor;
                     bCount++;
+
+                    if (a.atomname === 'CA' || a.atomname === 'P') caAtom = a;
+                    if (!firstAtom) firstAtom = a;
                 });
                 const avgB = bCount > 0 ? bSum / bCount : 0;
                 bFactors.push(avgB);
+
+                // Store coords (CA/P or fallback to first atom)
+                const targetAtom = caAtom || firstAtom;
+                if (targetAtom) {
+                    coords.push({ x: targetAtom.x, y: targetAtom.y, z: targetAtom.z });
+                } else {
+                    coords.push({ x: 0, y: 0, z: 0 }); // Should theoretically not happen
+                }
 
                 // Determine Type
                 if (r.isNucleic()) nucleicCount++;
@@ -224,7 +239,8 @@ export const extractChainsFromComponent = (component: any): { chains: ChainInfo[
             residueMap: resMap,
             type: chainType,
             atoms: atomList.length > 0 ? atomList : undefined,
-            bFactors: bFactors
+            bFactors: bFactors,
+            coords: coords // Added field
         });
     });
 
