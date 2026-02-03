@@ -1,7 +1,7 @@
-
 import React, { useMemo, useState } from 'react';
-import { X, GitCommitVertical, AlertTriangle } from 'lucide-react';
+import { X, GitCommitVertical, AlertTriangle, FileText, BarChart2, Hash, Percent } from 'lucide-react';
 import type { ChainInfo, SuperposedStructure } from '../types';
+import clsx from 'clsx';
 
 interface SequenceAlignmentModalProps {
     isOpen: boolean;
@@ -14,74 +14,140 @@ interface AlignedResult {
     overlayId: string;
     overlayName: string;
     chainMatches: {
-        primaryChain: string; // e.g. "A"
-        targetChain: string;  // e.g. "A"
-        score: number;
+        primaryChain: string;
+        targetChain: string;
+        stats: {
+            identity: number; // %
+            similarity: number; // %
+            gaps: number; // count
+            length: number; // total alignment length
+            score: number; // raw score
+        };
         alignment: {
-            seq1: string; // Primary (with gaps)
-            seq2: string; // Target (with gaps)
-            identity: number; // Percent
+            seq1: string; // Primary
+            seq2: string; // Target
+            matchStr: string; // Match string ( | : . )
         };
     }[];
 }
 
-// Basic Needleman-Wunsch Implementation
+// Scientific Residue Coloring (Clustal-inspired simplified)
+const RESIDUE_COLORS: Record<string, string> = {
+    // Hydrophobic (Blue)
+    'A': 'text-blue-400', 'V': 'text-blue-400', 'L': 'text-blue-400', 'I': 'text-blue-400',
+    'M': 'text-blue-400', 'F': 'text-blue-400', 'W': 'text-blue-400', 'P': 'text-blue-400',
+    // Polar (Green)
+    'G': 'text-green-400', 'S': 'text-green-400', 'T': 'text-green-400', 'C': 'text-yellow-400',
+    'N': 'text-green-400', 'Q': 'text-green-400', 'Y': 'text-green-400',
+    // Positive (Red)
+    'K': 'text-red-400', 'R': 'text-red-400', 'H': 'text-red-400',
+    // Negative (Magenta)
+    'D': 'text-fuchsia-400', 'E': 'text-fuchsia-400',
+    // Gap
+    '-': 'text-neutral-700'
+};
+
+const RESIDUE_GROUPS = [
+    { name: 'Hydrophobic', color: 'bg-blue-400', desc: 'A, V, L, I, M, F, W, P' },
+    { name: 'Polar', color: 'bg-green-400', desc: 'G, S, T, N, Q, Y' },
+    { name: 'Positive', color: 'bg-red-400', desc: 'K, R, H' },
+    { name: 'Negative', color: 'bg-fuchsia-400', desc: 'D, E' },
+    { name: 'Cysteine', color: 'bg-yellow-400', desc: 'C' },
+];
+
+const CONSERVATIVE_GROUPS = [
+    ['S', 'T', 'A'],
+    ['N', 'E', 'Q', 'K'],
+    ['N', 'H', 'Q', 'K'],
+    ['N', 'D', 'E', 'Q'],
+    ['Q', 'H', 'R', 'K'],
+    ['M', 'I', 'L', 'V'],
+    ['M', 'I', 'L', 'F'],
+    ['H', 'Y'],
+    ['F', 'Y', 'W']
+];
+
+const getMatchChar = (a: string, b: string): string => {
+    if (a === '-' || b === '-') return ' ';
+    if (a === b) return '|';
+    // Check conservative
+    for (const group of CONSERVATIVE_GROUPS) {
+        if (group.includes(a) && group.includes(b)) return ':';
+    }
+    return '.';
+};
+
 const alignSequences = (seq1: string, seq2: string) => {
-    const match = 1;
-    const mismatch = -1;
-    const gap = -2;
+    const match = 10;
+    const mismatch = -2;
+    const gap = -5; // Penalty
 
     const n = seq1.length;
     const m = seq2.length;
+    const scoreMatrix = Array(n + 1).fill(0).map(() => Array(m + 1).fill(0));
 
-    // Create matrix
-    const score = Array(n + 1).fill(0).map(() => Array(m + 1).fill(0));
+    for (let i = 0; i <= n; i++) scoreMatrix[i][0] = i * gap;
+    for (let j = 0; j <= m; j++) scoreMatrix[0][j] = j * gap;
 
-    // Initialize
-    for (let i = 0; i <= n; i++) score[i][0] = i * gap;
-    for (let j = 0; j <= m; j++) score[0][j] = j * gap;
-
-    // Fill
     for (let i = 1; i <= n; i++) {
         for (let j = 1; j <= m; j++) {
             const isMatch = seq1[i - 1] === seq2[j - 1];
-            score[i][j] = Math.max(
-                score[i - 1][j - 1] + (isMatch ? match : mismatch),
-                score[i - 1][j] + gap,
-                score[i][j - 1] + gap
+            scoreMatrix[i][j] = Math.max(
+                scoreMatrix[i - 1][j - 1] + (isMatch ? match : mismatch),
+                scoreMatrix[i - 1][j] + gap,
+                scoreMatrix[i][j - 1] + gap
             );
         }
     }
 
-    // Traceback
     let align1 = "";
     let align2 = "";
     let i = n;
     let j = m;
-    let matches = 0;
+    let identityCount = 0;
+    let similarityCount = 0;
+    let gapCount = 0;
 
     while (i > 0 || j > 0) {
-        if (i > 0 && j > 0 && score[i][j] === score[i - 1][j - 1] + (seq1[i - 1] === seq2[j - 1] ? match : mismatch)) {
-            align1 = seq1[i - 1] + align1;
-            align2 = seq2[j - 1] + align2;
-            if (seq1[i - 1] === seq2[j - 1]) matches++;
-            i--;
-            j--;
-        } else if (i > 0 && score[i][j] === score[i - 1][j] + gap) {
+        if (i > 0 && j > 0 && scoreMatrix[i][j] === scoreMatrix[i - 1][j - 1] + (seq1[i - 1] === seq2[j - 1] ? match : mismatch)) {
+            const c1 = seq1[i - 1];
+            const c2 = seq2[j - 1];
+            align1 = c1 + align1;
+            align2 = c2 + align2;
+            if (c1 === c2) {
+                identityCount++;
+                similarityCount++;
+            } else if (getMatchChar(c1, c2) === ':') {
+                similarityCount++;
+            }
+            i--; j--;
+        } else if (i > 0 && scoreMatrix[i][j] === scoreMatrix[i - 1][j] + gap) {
             align1 = seq1[i - 1] + align1;
             align2 = "-" + align2;
+            gapCount++;
             i--;
         } else {
             align1 = "-" + align1;
             align2 = seq2[j - 1] + align2;
+            gapCount++;
             j--;
         }
     }
 
+    const length = align1.length;
+    const matchStr = align1.split('').map((c, k) => getMatchChar(c, align2[k])).join('');
+
     return {
         seq1: align1,
         seq2: align2,
-        identity: matches / Math.max(align1.length, 1) * 100
+        matchStr,
+        stats: {
+            identity: (identityCount / length) * 100,
+            similarity: (similarityCount / length) * 100,
+            gaps: gapCount,
+            length,
+            score: scoreMatrix[n][m]
+        }
     };
 };
 
@@ -93,148 +159,175 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
 }) => {
     const [selectedChain, setSelectedChain] = useState<string | null>(null);
 
-    // Perform Alignments Memoized
     const alignmentResults = useMemo(() => {
         if (!primaryStructure || overlays.length === 0) return [];
-
         const results: AlignedResult[] = [];
 
         overlays.forEach(ov => {
             if (!ov.chains || ov.chains.length === 0) return;
-
             const chainMatches: AlignedResult['chainMatches'] = [];
 
-            // Simple heuristic mapping: Match Chain A to Chain A
             primaryStructure.forEach(pChain => {
-                const targetChain = ov.chains?.find(c => c.name === pChain.name) || ov.chains?.[0]; // Fallback to first if mismatch
+                // Try to find same chain name, else index?
+                // For exact matches we prefer name.
+                const targetChain = ov.chains?.find(c => c.name === pChain.name) || ov.chains?.[0];
 
                 if (targetChain) {
-                    const alignment = alignSequences(pChain.sequence, targetChain.sequence);
+                    const result = alignSequences(pChain.sequence, targetChain.sequence);
                     chainMatches.push({
                         primaryChain: pChain.name,
                         targetChain: targetChain.name,
-                        score: alignment.identity,
-                        alignment
+                        stats: result.stats,
+                        alignment: {
+                            seq1: result.seq1,
+                            seq2: result.seq2,
+                            matchStr: result.matchStr
+                        }
                     });
                 }
             });
 
             results.push({
                 overlayId: ov.id,
-                overlayName: ov.description || ov.id,
+                overlayName: ov.description || `Structure ${ov.id.substr(0, 4)}`,
                 chainMatches
             });
         });
-
         return results;
     }, [primaryStructure, overlays]);
 
+    const availableChains = useMemo(() => primaryStructure?.map(c => c.name) || [], [primaryStructure]);
 
-    // Determine unique chains present in primary structure to filter tabs
-    const availableChains = useMemo(() => {
-        return primaryStructure?.map(c => c.name) || [];
-    }, [primaryStructure]);
-
-    // Set default tab
     useMemo(() => {
-        if (!selectedChain && availableChains.length > 0) {
-            setSelectedChain(availableChains[0]);
-        }
+        if (!selectedChain && availableChains.length > 0) setSelectedChain(availableChains[0]);
     }, [availableChains]);
-
 
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
-            <div className="bg-neutral-900 border border-neutral-700/50 rounded-xl shadow-2xl w-full max-w-5xl h-[80vh] flex flex-col overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 sm:p-8">
+            <div className="bg-[#0D1117] border border-white/10 rounded-xl shadow-2xl w-full max-w-6xl h-[85vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                 {/* Header */}
-                <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-800 bg-neutral-900/50">
-                    <div className="flex items-center gap-3">
-                        <GitCommitVertical className="text-cyan-400" size={24} />
+                <div className="flex items-start justify-between px-8 py-6 border-b border-white/10 bg-gradient-to-r from-white/5 to-transparent">
+                    <div className="flex items-center gap-4">
+                        <div className="bg-cyan-500/10 p-2 rounded-lg">
+                            <GitCommitVertical className="text-cyan-400" size={28} />
+                        </div>
                         <div>
-                            <h2 className="text-lg font-bold text-white">Sequence Alignment</h2>
-                            <p className="text-xs text-neutral-400">Pairwise alignment against primary structure (Needleman-Wunsch)</p>
+                            <h2 className="text-xl font-bold text-white tracking-tight">Sequence Alignment</h2>
+                            <p className="text-sm text-neutral-400 font-medium">Pairwise Needleman-Wunsch • BLOSUM62 Heuristic • Gap Penalty: -5</p>
                         </div>
                     </div>
-                    <button onClick={onClose} className="text-neutral-400 hover:text-white transition-colors">
+                    <button onClick={onClose} className="text-neutral-500 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full">
                         <X size={24} />
                     </button>
                 </div>
 
-                {/* Chain Selector Tabs */}
-                <div className="flex gap-1 px-6 pt-4 border-b border-neutral-800 pb-0 overflow-x-auto scrollbar-hide">
+                {/* Chain Selector */}
+                <div className="flex px-6 pt-1 border-b border-white/10 bg-[#0D1117]">
                     {availableChains.map(chain => (
                         <button
                             key={chain}
                             onClick={() => setSelectedChain(chain)}
-                            className={`px-4 py-2 text-sm font-bold border-b-2 transition-colors ${selectedChain === chain
-                                ? 'border-cyan-500 text-cyan-400 bg-cyan-500/5'
-                                : 'border-transparent text-neutral-500 hover:text-neutral-300 hover:bg-neutral-800'
-                                }`}
+                            className={clsx(
+                                "px-6 py-3 text-sm font-bold border-b-2 transition-all",
+                                selectedChain === chain
+                                    ? "border-cyan-500 text-cyan-400 bg-cyan-500/5"
+                                    : "border-transparent text-neutral-500 hover:text-neutral-300 hover:bg-white/5"
+                            )}
                         >
                             Chain {chain}
                         </button>
                     ))}
                 </div>
 
-                {/* Content */}
-                <div className="flex-1 overflow-y-auto p-6 space-y-8 bg-[#0d1117]">
+                {/* Main Content */}
+                <div className="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar">
                     {selectedChain && alignmentResults.map(result => {
                         const match = result.chainMatches.find(m => m.primaryChain === selectedChain);
                         if (!match) return null;
 
                         return (
-                            <div key={result.overlayId} className="space-y-2">
-                                <div className="flex items-center justify-between">
-                                    <h3 className="text-sm font-bold text-neutral-200">
-                                        vs. {result.overlayName} <span className="text-neutral-500 font-normal">(Chain {match.targetChain})</span>
-                                    </h3>
-                                    <span className={`text-xs px-2 py-0.5 rounded-full font-mono ${match.score > 80 ? 'bg-green-500/20 text-green-400' : match.score > 50 ? 'bg-yellow-500/20 text-yellow-400' : 'bg-red-500/20 text-red-400'}`}>
-                                        {match.score.toFixed(1)}% Identity
-                                    </span>
+                            <div key={result.overlayId} className="bg-black/40 border border-white/10 rounded-xl overflow-hidden">
+                                {/* Stats Dashboard */}
+                                <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-white/10 border-b border-white/10 bg-white/5">
+                                    <StatBox
+                                        label="Identity"
+                                        value={`${match.stats.identity.toFixed(1)}%`}
+                                        icon={<Percent size={14} />}
+                                        color={match.stats.identity > 30 ? 'text-green-400' : 'text-yellow-400'}
+                                    />
+                                    <StatBox
+                                        label="Similarity"
+                                        value={`${match.stats.similarity.toFixed(1)}%`}
+                                        icon={<Hash size={14} />}
+                                        color="text-blue-400"
+                                    />
+                                    <StatBox
+                                        label="Gaps"
+                                        value={match.stats.gaps.toString()}
+                                        subtext={`(${(match.stats.gaps / match.stats.length * 100).toFixed(1)}%)`}
+                                        icon={<AlertTriangle size={14} />}
+                                        color="text-orange-400"
+                                    />
+                                    <StatBox
+                                        label="Total Length"
+                                        value={match.stats.length.toString()}
+                                        icon={<BarChart2 size={14} />}
+                                        color="text-neutral-300"
+                                    />
                                 </div>
 
-                                <div className="font-mono text-[10px] sm:text-xs leading-relaxed bg-black/30 p-4 rounded-lg border border-neutral-800 overflow-x-auto">
-                                    {/* Primary Seq */}
-                                    <div className="whitespace-pre flex">
-                                        <span className="w-20 inline-block text-neutral-500 shrink-0 select-none">Primary:</span>
-                                        <div className="flex">
-                                            {match.alignment.seq1.split('').map((char, i) => (
-                                                <span key={i} className={`w-[8px] sm:w-[9px] text-center inline-block ${char === '-' ? 'text-neutral-700' : 'text-cyan-200'}`}>{char}</span>
+                                <div className="p-6">
+                                    <div className="flex items-baseline justify-between mb-4">
+                                        <h3 className="text-lg font-bold text-neutral-200">
+                                            {result.overlayName} <span className="text-neutral-500 text-sm font-normal">(Chain {match.targetChain})</span>
+                                        </h3>
+                                        <div className="flex gap-4">
+                                            {RESIDUE_GROUPS.map(g => (
+                                                <div key={g.name} className="flex items-center gap-2" title={g.desc}>
+                                                    <div className={`w-3 h-3 rounded-full ${g.color}`} />
+                                                    <span className="text-[10px] uppercase font-bold text-neutral-500 tracking-wider">{g.name}</span>
+                                                </div>
                                             ))}
                                         </div>
                                     </div>
 
-                                    {/* Match Line */}
-                                    <div className="whitespace-pre flex my-0.5">
-                                        <span className="w-20 inline-block shrink-0 select-none"></span>
-                                        <div className="flex">
-                                            {match.alignment.seq1.split('').map((c1, i) => {
-                                                const c2 = match.alignment.seq2[i];
-                                                const isMatch = c1 === c2 && c1 !== '-';
-                                                return (
-                                                    <span key={i} className={`w-[8px] sm:w-[9px] text-center inline-block font-bold ${isMatch ? 'text-white' : 'text-transparent'}`}>
-                                                        {isMatch ? '|' : '.'}
-                                                    </span>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
+                                    {/* Alignment Track */}
+                                    <div className="relative font-mono text-xs leading-none bg-[#050505] rounded-lg border border-white/10 p-6 overflow-x-auto shadow-inner selection:bg-cyan-500/30">
 
-                                    {/* Overlay Seq */}
-                                    <div className="whitespace-pre flex">
-                                        <span className="w-20 inline-block text-neutral-500 shrink-0 select-none">Overlay:</span>
-                                        <div className="flex">
-                                            {match.alignment.seq2.split('').map((char, i) => {
-                                                const c1 = match.alignment.seq1[i];
-                                                const isMismatch = char !== '-' && c1 !== '-' && char !== c1;
-                                                return (
-                                                    <span key={i} className={`w-[8px] sm:w-[9px] text-center inline-block ${char === '-' ? 'text-neutral-700' : isMismatch ? 'text-red-400 font-bold' : 'text-neutral-300'}`}>
-                                                        {char}
+                                        {/* Ruler */}
+                                        <div className="flex mb-4 opacity-50 select-none">
+                                            <div className="w-24 shrink-0" />
+                                            <div className="flex relative h-4 w-full">
+                                                {Array.from({ length: Math.ceil(match.stats.length / 10) }).map((_, i) => (
+                                                    <span key={i} className="absolute text-[10px] text-neutral-500 border-l border-neutral-700 pl-1 h-3" style={{ left: `${i * 10 * 12}px` }}> {/* Approx 12px per char? No, char width varies. Monospace char width is fixed but usually 1ch ~8-10px depending on font size. We need flex basis. Better to use simple indices in a flex row */}
+                                                        {i * 10 + 1}
                                                     </span>
-                                                );
-                                            })}
+                                                ))}
+                                            </div>
+                                        </div>
+                                        {/* Revisit Ruler: Absolute positioning on text is hard without fixed width font metrics. 
+                                            Let's just put markers every 10 chars in the flex flow. */}
+
+                                        <div className="space-y-1">
+                                            {/* Primary Sequence */}
+                                            <SequenceRow label="Primary" sequence={match.alignment.seq1} />
+
+                                            {/* Match Line */}
+                                            <div className="flex">
+                                                <span className="w-24 shrink-0 select-none" />
+                                                <div className="flex">
+                                                    {match.alignment.matchStr.split('').map((char, i) => (
+                                                        <span key={i} className={`w-[1ch] text-center font-bold ${char === '|' ? 'text-white' : char === ':' ? 'text-blue-400' : 'text-neutral-800'}`}>
+                                                            {char}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            {/* Target Sequence */}
+                                            <SequenceRow label="Overlay" sequence={match.alignment.seq2} compareSeq={match.alignment.seq1} />
                                         </div>
                                     </div>
                                 </div>
@@ -243,9 +336,10 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                     })}
 
                     {alignmentResults.length === 0 && (
-                        <div className="flex flex-col items-center justify-center p-12 text-neutral-500">
-                            <AlertTriangle size={48} className="mb-4 opacity-50" />
-                            <p>No alignment data available. Please add overlays first.</p>
+                        <div className="flex flex-col items-center justify-center h-64 text-neutral-500 border-2 border-dashed border-white/5 rounded-2xl mx-6">
+                            <FileText size={48} className="mb-4 opacity-20" />
+                            <p className="text-lg font-medium">No alignment data available</p>
+                            <p className="text-sm opacity-60">Add structure overlays to see pairwise alignments</p>
                         </div>
                     )}
                 </div>
@@ -253,3 +347,47 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
         </div>
     );
 };
+
+const StatBox = ({ label, value, icon, subtext, color }: any) => (
+    <div className="p-4 flex items-center gap-4 hover:bg-white/5 transition-colors">
+        <div className={`p-2 rounded-lg bg-white/5 ${color}`}>
+            {icon}
+        </div>
+        <div>
+            <p className="text-[10px] uppercase font-bold text-neutral-500 tracking-wider mb-0.5">{label}</p>
+            <div className="flex items-baseline gap-2">
+                <span className={`text-xl font-mono font-bold ${color}`}>{value}</span>
+                {subtext && <span className="text-xs text-neutral-500">{subtext}</span>}
+            </div>
+        </div>
+    </div>
+);
+
+const SequenceRow = ({ label, sequence, compareSeq }: { label: string, sequence: string, compareSeq?: string }) => (
+    <div className="flex items-center hover:bg-white/5 py-1 rounded transition-colors group">
+        <span className="w-24 shrink-0 text-xs font-bold text-neutral-500 uppercase tracking-wider select-none pl-2 group-hover:text-neutral-300 transition-colors">
+            {label}
+        </span>
+        <div className="flex font-mono text-sm tracking-widest"> {/* tracking-widest ~ 0.1em. need fixed width */}
+            {sequence.split('').map((char, i) => {
+                let colorClass = RESIDUE_COLORS[char] || 'text-neutral-300';
+                if (compareSeq) {
+                    // If it's the target seq, maybe dim non-mismatches?
+                    // Or just use standard colors. Standard colors look "scientific".
+                    // If difference:
+                    const c1 = compareSeq[i];
+                    if (c1 !== '-' && char !== '-' && c1 !== char) {
+                        // Mismatch implies importance? Or just typical color?
+                        // Keep typical color but maybe background highlight? 
+                        // Let's stick to text color for clean look.
+                    }
+                }
+                return (
+                    <span key={i} className={`w-[1ch] inline-block text-center ${colorClass}`}>
+                        {char}
+                    </span>
+                );
+            })}
+        </div>
+    </div>
+);
