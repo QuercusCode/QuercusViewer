@@ -152,6 +152,7 @@ export const extractChainsFromComponent = (component: any, matrix?: number[]): {
         const resMap: number[] = [];
         const bFactors: number[] = [];
         const coords: { x: number, y: number, z: number }[] = [];
+        const secStrucs: string[] = [];
 
         try {
             c.eachResidue((r: any) => {
@@ -195,6 +196,15 @@ export const extractChainsFromComponent = (component: any, matrix?: number[]): {
                 } else {
                     coords.push({ x: 0, y: 0, z: 0 }); // Should theoretically not happen
                 }
+
+                // Secondary Structure Extraction
+                let ssCode = 'C';
+                if (r.sstruc) {
+                    const s = r.sstruc.toLowerCase();
+                    if (['h', 'g', 'i'].includes(s)) ssCode = 'H';
+                    else if (['e', 'b'].includes(s)) ssCode = 'E';
+                }
+                secStrucs.push(ssCode);
 
                 // Determine Type
                 if (r.isNucleic()) nucleicCount++;
@@ -253,7 +263,8 @@ export const extractChainsFromComponent = (component: any, matrix?: number[]): {
             type: chainType,
             atoms: atomList.length > 0 ? atomList : undefined,
             bFactors: bFactors,
-            coords: coords // Added field
+            coords: coords, // Added field
+            secondaryStructure: secStrucs
         });
     });
 

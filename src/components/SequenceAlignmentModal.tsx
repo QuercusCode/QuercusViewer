@@ -27,6 +27,8 @@ interface AlignedResult {
         alignment: {
             seq1: string; // Primary
             seq2: string; // Target
+            ss1?: string; // Secondary Structure 1
+            ss2?: string; // Secondary Structure 2
             matchStr: string;
         };
     }[];
@@ -77,6 +79,8 @@ const alignSequences = (chain1: ChainInfo, chain2: ChainInfo) => {
     const seq2 = chain2.sequence;
     const coords1 = chain1.coords;
     const coords2 = chain2.coords;
+    const ss1Raw = chain1.secondaryStructure;
+    const ss2Raw = chain2.secondaryStructure;
 
     const match = 10;
     const mismatch = -2;
@@ -102,6 +106,9 @@ const alignSequences = (chain1: ChainInfo, chain2: ChainInfo) => {
 
     let align1 = "";
     let align2 = "";
+    let alignedSS1 = "";
+    let alignedSS2 = "";
+
     let i = n;
     let j = m;
     let identityCount = 0;
@@ -118,6 +125,10 @@ const alignSequences = (chain1: ChainInfo, chain2: ChainInfo) => {
             const c2 = seq2[j - 1];
             align1 = c1 + align1;
             align2 = c2 + align2;
+
+            // Align SS
+            alignedSS1 = (ss1Raw?.[i - 1] || ' ') + alignedSS1;
+            alignedSS2 = (ss2Raw?.[j - 1] || ' ') + alignedSS2;
 
             // Stats
             if (c1 === c2) {
@@ -142,11 +153,15 @@ const alignSequences = (chain1: ChainInfo, chain2: ChainInfo) => {
         } else if (i > 0 && scoreMatrix[i][j] === scoreMatrix[i - 1][j] + gap) {
             align1 = seq1[i - 1] + align1;
             align2 = "-" + align2;
+            alignedSS1 = (ss1Raw?.[i - 1] || ' ') + alignedSS1;
+            alignedSS2 = " " + alignedSS2; // Gap has no SS
             gapCount++;
             i--;
         } else {
             align1 = "-" + align1;
             align2 = seq2[j - 1] + align2;
+            alignedSS1 = " " + alignedSS1;
+            alignedSS2 = (ss2Raw?.[j - 1] || ' ') + alignedSS2;
             gapCount++;
             j--;
         }
@@ -161,6 +176,8 @@ const alignSequences = (chain1: ChainInfo, chain2: ChainInfo) => {
     return {
         seq1: align1,
         seq2: align2,
+        ss1: alignedSS1,
+        ss2: alignedSS2,
         matchStr,
         stats: {
             identity: (identityCount / length) * 100,
@@ -201,6 +218,8 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                         alignment: {
                             seq1: result.seq1,
                             seq2: result.seq2,
+                            ss1: result.ss1,
+                            ss2: result.ss2,
                             matchStr: result.matchStr
                         }
                     });
@@ -360,6 +379,9 @@ ${match.alignment.seq2}
                                         </div>
 
                                         <div className="space-y-1">
+                                            {/* Primary SS */}
+                                            {match.alignment.ss1 && <SecondaryStructureRow ss={match.alignment.ss1} />}
+
                                             {/* Primary Sequence */}
                                             <SequenceRow label="Primary" sequence={match.alignment.seq1} />
 
@@ -377,6 +399,9 @@ ${match.alignment.seq2}
 
                                             {/* Target Sequence */}
                                             <SequenceRow label="Overlay" sequence={match.alignment.seq2} />
+
+                                            {/* Target SS */}
+                                            {match.alignment.ss2 && <SecondaryStructureRow ss={match.alignment.ss2} />}
                                         </div>
                                     </div>
                                 </div>
@@ -425,6 +450,31 @@ const SequenceRow = ({ label, sequence }: { label: string, sequence: string }) =
                         {char}
                     </span>
                 );
+            })}
+        </div>
+    </div>
+);
+
+const SecondaryStructureRow = ({ ss }: { ss: string }) => (
+    <div className="flex items-center h-2 mb-1">
+        <span className="w-24 shrink-0 select-none" />
+        <div className="flex font-mono text-sm tracking-widest h-full items-center">
+            {ss.split('').map((char, i) => {
+                let element = <div className="w-[1ch] h-[1px] bg-neutral-800" />;
+                if (char === 'H') {
+                    element = (
+                        <div className="w-[1ch] flex justify-center">
+                            <div className="w-full h-1.5 bg-fuchsia-500/50 rounded-sm" title="Alpha Helix" />
+                        </div>
+                    );
+                } else if (char === 'E') {
+                    element = (
+                        <div className="w-[1ch] flex justify-center">
+                            <div className="w-full h-1 bg-yellow-500/50 arrow-shape" title="Beta Sheet" />
+                        </div>
+                    );
+                }
+                return <React.Fragment key={i}>{element}</React.Fragment>;
             })}
         </div>
     </div>
