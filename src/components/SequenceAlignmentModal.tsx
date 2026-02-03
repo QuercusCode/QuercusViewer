@@ -1,7 +1,8 @@
-import React, { useMemo, useState } from 'react';
-import { X, GitCommitVertical, AlertTriangle, FileText, BarChart2, Hash, Percent, Download, Activity } from 'lucide-react';
+import React, { useMemo, useState, useRef } from 'react';
+import { X, GitCommitVertical, AlertTriangle, FileText, BarChart2, Hash, Percent, Download, Activity, Image, MessageSquare, ChevronDown } from 'lucide-react';
 import type { ChainInfo, SuperposedStructure } from '../types';
 import clsx from 'clsx';
+import html2canvas from 'html2canvas';
 
 interface SequenceAlignmentModalProps {
     isOpen: boolean;
@@ -17,22 +18,28 @@ interface AlignedResult {
         primaryChain: string;
         targetChain: string;
         stats: {
-            identity: number; // %
-            similarity: number; // %
-            gaps: number; // count
-            length: number; // length
+            identity: number;
+            similarity: number;
+            gaps: number;
+            length: number;
             score: number;
-            rmsd?: number; // Angstrom
+            rmsd?: number;
         };
         alignment: {
-            seq1: string; // Primary
-            seq2: string; // Target
-            ss1?: string; // Secondary Structure 1
-            ss2?: string; // Secondary Structure 2
+            seq1: string;
+            seq2: string;
             matchStr: string;
         };
     }[];
 }
+
+interface ResidueAnnotation {
+    position: number;
+    text: string;
+    color?: string;
+}
+
+type ExportFormat = 'fasta' | 'clustal' | 'stockholm';
 
 // Scientific Residue Coloring
 const RESIDUE_COLORS: Record<string, string> = {
@@ -79,8 +86,6 @@ const alignSequences = (chain1: ChainInfo, chain2: ChainInfo) => {
     const seq2 = chain2.sequence;
     const coords1 = chain1.coords;
     const coords2 = chain2.coords;
-    const ss1Raw = chain1.secondaryStructure;
-    const ss2Raw = chain2.secondaryStructure;
 
     const match = 10;
     const mismatch = -2;
@@ -106,16 +111,12 @@ const alignSequences = (chain1: ChainInfo, chain2: ChainInfo) => {
 
     let align1 = "";
     let align2 = "";
-    let alignedSS1 = "";
-    let alignedSS2 = "";
-
     let i = n;
     let j = m;
     let identityCount = 0;
     let similarityCount = 0;
     let gapCount = 0;
 
-    // RMSD Calc
     let sumSqDist = 0;
     let atomPairs = 0;
 
@@ -126,11 +127,6 @@ const alignSequences = (chain1: ChainInfo, chain2: ChainInfo) => {
             align1 = c1 + align1;
             align2 = c2 + align2;
 
-            // Align SS
-            alignedSS1 = (ss1Raw?.[i - 1] || ' ') + alignedSS1;
-            alignedSS2 = (ss2Raw?.[j - 1] || ' ') + alignedSS2;
-
-            // Stats
             if (c1 === c2) {
                 identityCount++;
                 similarityCount++;
@@ -138,7 +134,6 @@ const alignSequences = (chain1: ChainInfo, chain2: ChainInfo) => {
                 similarityCount++;
             }
 
-            // RMSD: Calculate dist between coords1[i-1] and coords2[j-1]
             if (coords1 && coords2 && coords1[i - 1] && coords2[j - 1]) {
                 const p1 = coords1[i - 1];
                 const p2 = coords2[j - 1];
@@ -153,15 +148,11 @@ const alignSequences = (chain1: ChainInfo, chain2: ChainInfo) => {
         } else if (i > 0 && scoreMatrix[i][j] === scoreMatrix[i - 1][j] + gap) {
             align1 = seq1[i - 1] + align1;
             align2 = "-" + align2;
-            alignedSS1 = (ss1Raw?.[i - 1] || ' ') + alignedSS1;
-            alignedSS2 = " " + alignedSS2; // Gap has no SS
             gapCount++;
             i--;
         } else {
             align1 = "-" + align1;
             align2 = seq2[j - 1] + align2;
-            alignedSS1 = " " + alignedSS1;
-            alignedSS2 = (ss2Raw?.[j - 1] || ' ') + alignedSS2;
             gapCount++;
             j--;
         }
@@ -169,15 +160,11 @@ const alignSequences = (chain1: ChainInfo, chain2: ChainInfo) => {
 
     const length = align1.length;
     const matchStr = align1.split('').map((c, k) => getMatchChar(c, align2[k])).join('');
-
-    // RMSD Final
     const rmsd = atomPairs > 0 ? Math.sqrt(sumSqDist / atomPairs) : undefined;
 
     return {
         seq1: align1,
         seq2: align2,
-        ss1: alignedSS1,
-        ss2: alignedSS2,
         matchStr,
         stats: {
             identity: (identityCount / length) * 100,
@@ -197,6 +184,12 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
     overlays
 }) => {
     const [selectedChain, setSelectedChain] = useState<string | null>(null);
+    const [annotations, setAnnotations] = useState<Record<string, ResidueAnnotation[]>>({});
+    const [showAnnotationPopup, setShowAnnotationPopup] = useState<{ chainKey: string, position: number } | null>(null);
+    const [annotationText, setAnnotationText] = useState('');
+    const [exportFormat, setExportFormat] = useState<ExportFormat>('fasta');
+    const [showExportMenu, setShowExportMenu] = useState(false);
+    const modalRef = useRef<HTMLDivElement>(null);
 
     const alignmentResults = useMemo(() => {
         if (!primaryStructure || overlays.length === 0) return [];
@@ -218,8 +211,6 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                         alignment: {
                             seq1: result.seq1,
                             seq2: result.seq2,
-                            ss1: result.ss1,
-                            ss2: result.ss2,
                             matchStr: result.matchStr
                         }
                     });
@@ -241,26 +232,114 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
         if (!selectedChain && availableChains.length > 0) setSelectedChain(availableChains[0]);
     }, [availableChains]);
 
-    const handleExport = (result: AlignedResult, match: AlignedResult['chainMatches'][0]) => {
-        const text = `>Primary | Chain ${match.primaryChain}
-${match.alignment.seq1}
->Overlay: ${result.overlayName} | Chain ${match.targetChain}
-${match.alignment.seq2}
-`;
-        const blob = new Blob([text], { type: 'text/plain' });
+    const exportAlignment = (result: AlignedResult, match: AlignedResult['chainMatches'][0], format: ExportFormat) => {
+        let content = '';
+        const primaryLabel = `Primary_Chain_${match.primaryChain}`;
+        const overlayLabel = `${result.overlayName.replace(/\s+/g, '_')}_Chain_${match.targetChain}`;
+
+        switch (format) {
+            case 'fasta':
+                content = `>${primaryLabel}\n${match.alignment.seq1}\n>${overlayLabel}\n${match.alignment.seq2}\n`;
+                break;
+
+            case 'clustal':
+                const lineLength = 60;
+                content = `CLUSTAL W (1.81) multiple sequence alignment\n\n`;
+                for (let i = 0; i < match.alignment.seq1.length; i += lineLength) {
+                    const chunk1 = match.alignment.seq1.substring(i, i + lineLength);
+                    const chunk2 = match.alignment.seq2.substring(i, i + lineLength);
+                    const chunkMatch = match.alignment.matchStr.substring(i, i + lineLength);
+
+                    content += `${primaryLabel.padEnd(20)}${chunk1}\n`;
+                    content += `${overlayLabel.padEnd(20)}${chunk2}\n`;
+                    content += `${' '.repeat(20)}${chunkMatch}\n\n`;
+                }
+                break;
+
+            case 'stockholm':
+                content = `# STOCKHOLM 1.0\n`;
+                content += `#=GF ID ${primaryLabel}_vs_${overlayLabel}\n`;
+                content += `${primaryLabel.padEnd(25)}${match.alignment.seq1}\n`;
+                content += `${overlayLabel.padEnd(25)}${match.alignment.seq2}\n`;
+                content += `//\n`;
+                break;
+        }
+
+        const blob = new Blob([content], { type: 'text/plain' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `alignment_primary_${match.primaryChain}_vs_${result.overlayName}_${match.targetChain}.fasta`;
+        a.download = `alignment_${primaryLabel}_vs_${overlayLabel}.${format}`;
         a.click();
         URL.revokeObjectURL(url);
+        setShowExportMenu(false);
+    };
+
+    const exportAsImage = async () => {
+        if (!modalRef.current) return;
+
+        try {
+            const canvas = await html2canvas(modalRef.current, {
+                backgroundColor: '#0D1117',
+                scale: 2
+            });
+
+            canvas.toBlob((blob) => {
+                if (blob) {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `sequence_alignment_${Date.now()}.png`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                }
+            });
+        } catch (error) {
+            console.error('Failed to export image:', error);
+        }
+    };
+
+    const handleResidueClick = (chainKey: string, position: number) => {
+        setShowAnnotationPopup({ chainKey, position });
+        const existing = annotations[chainKey]?.find(a => a.position === position);
+        setAnnotationText(existing?.text || '');
+    };
+
+    const saveAnnotation = () => {
+        if (!showAnnotationPopup || !annotationText.trim()) return;
+
+        const { chainKey, position } = showAnnotationPopup;
+        setAnnotations(prev => {
+            const chainAnnotations = prev[chainKey] || [];
+            const filtered = chainAnnotations.filter(a => a.position !== position);
+            return {
+                ...prev,
+                [chainKey]: [...filtered, { position, text: annotationText.trim() }]
+            };
+        });
+
+        setShowAnnotationPopup(null);
+        setAnnotationText('');
+    };
+
+    const deleteAnnotation = () => {
+        if (!showAnnotationPopup) return;
+
+        const { chainKey, position } = showAnnotationPopup;
+        setAnnotations(prev => ({
+            ...prev,
+            [chainKey]: (prev[chainKey] || []).filter(a => a.position !== position)
+        }));
+
+        setShowAnnotationPopup(null);
+        setAnnotationText('');
     };
 
     if (!isOpen) return null;
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 sm:p-8">
-            <div className="bg-[#0D1117] border border-white/10 rounded-xl shadow-2xl w-full max-w-6xl h-[85vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div ref={modalRef} className="bg-[#0D1117] border border-white/10 rounded-xl shadow-2xl w-full max-w-6xl h-[85vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                 {/* Header */}
                 <div className="flex items-start justify-between px-8 py-6 border-b border-white/10 bg-gradient-to-r from-white/5 to-transparent">
                     <div className="flex items-center gap-4">
@@ -272,9 +351,18 @@ ${match.alignment.seq2}
                             <p className="text-sm text-neutral-400 font-medium">Pairwise Needleman-Wunsch • BLOSUM62 Heuristic • Gap Penalty: -5</p>
                         </div>
                     </div>
-                    <button onClick={onClose} className="text-neutral-500 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full">
-                        <X size={24} />
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={exportAsImage}
+                            className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-purple-500/20 text-purple-400 rounded-lg transition-colors border border-white/10 hover:border-purple-500/50 text-sm font-bold"
+                        >
+                            <Image size={16} />
+                            Export PNG
+                        </button>
+                        <button onClick={onClose} className="text-neutral-500 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full">
+                            <X size={24} />
+                        </button>
+                    </div>
                 </div>
 
                 {/* Chain Selector */}
@@ -300,6 +388,9 @@ ${match.alignment.seq2}
                     {selectedChain && alignmentResults.map(result => {
                         const match = result.chainMatches.find(m => m.primaryChain === selectedChain);
                         if (!match) return null;
+
+                        const chainKey = `${result.overlayId}_${match.primaryChain}_${match.targetChain}`;
+                        const chainAnnotations = annotations[chainKey] || [];
 
                         return (
                             <div key={result.overlayId} className="bg-black/40 border border-white/10 rounded-xl overflow-hidden">
@@ -345,13 +436,30 @@ ${match.alignment.seq2}
                                             <h3 className="text-lg font-bold text-neutral-200">
                                                 {result.overlayName} <span className="text-neutral-500 text-sm font-normal">(Chain {match.targetChain})</span>
                                             </h3>
-                                            <button
-                                                onClick={() => handleExport(result, match)}
-                                                className="flex items-center gap-1.5 px-3 py-1 bg-white/5 hover:bg-cyan-500/20 text-xs font-bold text-cyan-400 rounded-md transition-colors border border-white/10 hover:border-cyan-500/50"
-                                            >
-                                                <Download size={12} />
-                                                Export FASTA
-                                            </button>
+                                            <div className="relative">
+                                                <button
+                                                    onClick={() => setShowExportMenu(!showExportMenu)}
+                                                    className="flex items-center gap-1.5 px-3 py-1 bg-white/5 hover:bg-cyan-500/20 text-xs font-bold text-cyan-400 rounded-md transition-colors border border-white/10 hover:border-cyan-500/50"
+                                                >
+                                                    <Download size={12} />
+                                                    Export
+                                                    <ChevronDown size={12} />
+                                                </button>
+
+                                                {showExportMenu && (
+                                                    <div className="absolute top-full left-0 mt-1 bg-[#0D1117] border border-white/20 rounded-lg shadow-xl z-50 py-1 min-w-[140px]">
+                                                        {(['fasta', 'clustal', 'stockholm'] as ExportFormat[]).map(fmt => (
+                                                            <button
+                                                                key={fmt}
+                                                                onClick={() => exportAlignment(result, match, fmt)}
+                                                                className="w-full px-4 py-2 text-left text-sm text-neutral-300 hover:bg-cyan-500/20 hover:text-cyan-400 transition-colors"
+                                                            >
+                                                                {fmt.toUpperCase()}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                         <div className="flex gap-4">
                                             {RESIDUE_GROUPS.map(g => (
@@ -365,7 +473,6 @@ ${match.alignment.seq2}
 
                                     {/* Alignment Track */}
                                     <div className="relative font-mono text-xs leading-none bg-[#050505] rounded-lg border border-white/10 p-6 overflow-x-auto shadow-inner selection:bg-cyan-500/30">
-
                                         {/* Ruler */}
                                         <div className="flex mb-4 opacity-50 select-none">
                                             <div className="w-24 shrink-0" />
@@ -379,11 +486,31 @@ ${match.alignment.seq2}
                                         </div>
 
                                         <div className="space-y-1">
-                                            {/* Primary SS */}
-                                            {match.alignment.ss1 && <SecondaryStructureRow ss={match.alignment.ss1} />}
+                                            {/* Annotation Markers */}
+                                            {chainAnnotations.length > 0 && (
+                                                <div className="flex mb-2">
+                                                    <span className="w-24 shrink-0" />
+                                                    <div className="flex relative">
+                                                        {chainAnnotations.map(anno => (
+                                                            <div
+                                                                key={anno.position}
+                                                                className="absolute"
+                                                                style={{ left: `${anno.position * 12}px` }}
+                                                                title={anno.text}
+                                                            >
+                                                                <MessageSquare size={10} className="text-amber-400" />
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
 
                                             {/* Primary Sequence */}
-                                            <SequenceRow label="Primary" sequence={match.alignment.seq1} />
+                                            <SequenceRow
+                                                label="Primary"
+                                                sequence={match.alignment.seq1}
+                                                onResidueClick={(pos) => handleResidueClick(chainKey, pos)}
+                                            />
 
                                             {/* Match Line */}
                                             <div className="flex">
@@ -398,10 +525,11 @@ ${match.alignment.seq2}
                                             </div>
 
                                             {/* Target Sequence */}
-                                            <SequenceRow label="Overlay" sequence={match.alignment.seq2} />
-
-                                            {/* Target SS */}
-                                            {match.alignment.ss2 && <SecondaryStructureRow ss={match.alignment.ss2} />}
+                                            <SequenceRow
+                                                label="Overlay"
+                                                sequence={match.alignment.seq2}
+                                                onResidueClick={(pos) => handleResidueClick(chainKey, pos)}
+                                            />
                                         </div>
                                     </div>
                                 </div>
@@ -418,6 +546,48 @@ ${match.alignment.seq2}
                     )}
                 </div>
             </div>
+
+            {/* Annotation Popup */}
+            {showAnnotationPopup && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                    <div className="bg-[#0D1117] border border-white/20 rounded-lg p-6 w-96 shadow-2xl">
+                        <div className="flex items-center gap-2 mb-4">
+                            <MessageSquare size={20} className="text-amber-400" />
+                            <h3 className="text-lg font-bold text-white">Residue Annotation</h3>
+                        </div>
+                        <p className="text-sm text-neutral-400 mb-4">Position: {showAnnotationPopup.position + 1}</p>
+                        <textarea
+                            value={annotationText}
+                            onChange={(e) => setAnnotationText(e.target.value)}
+                            placeholder="Add your note here..."
+                            className="w-full h-24 bg-black/40 border border-white/10 rounded-lg p-3 text-sm text-white placeholder-neutral-500 focus:border-cyan-500 focus:outline-none resize-none"
+                            autoFocus
+                        />
+                        <div className="flex gap-2 mt-4">
+                            <button
+                                onClick={saveAnnotation}
+                                className="flex-1 px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg font-bold transition-colors"
+                            >
+                                Save
+                            </button>
+                            {annotations[showAnnotationPopup.chainKey]?.find(a => a.position === showAnnotationPopup.position) && (
+                                <button
+                                    onClick={deleteAnnotation}
+                                    className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg font-bold transition-colors border border-red-500/50"
+                                >
+                                    Delete
+                                </button>
+                            )}
+                            <button
+                                onClick={() => setShowAnnotationPopup(null)}
+                                className="px-4 py-2 bg-white/5 hover:bg-white/10 text-neutral-400 rounded-lg font-bold transition-colors"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
@@ -437,7 +607,7 @@ const StatBox = ({ label, value, icon, subtext, color }: any) => (
     </div>
 );
 
-const SequenceRow = ({ label, sequence }: { label: string, sequence: string }) => (
+const SequenceRow = ({ label, sequence, onResidueClick }: { label: string, sequence: string, onResidueClick?: (position: number) => void }) => (
     <div className="flex items-center hover:bg-white/5 py-1 rounded transition-colors group">
         <span className="w-24 shrink-0 text-xs font-bold text-neutral-500 uppercase tracking-wider select-none pl-2 group-hover:text-neutral-300 transition-colors">
             {label}
@@ -446,35 +616,15 @@ const SequenceRow = ({ label, sequence }: { label: string, sequence: string }) =
             {sequence.split('').map((char, i) => {
                 let colorClass = RESIDUE_COLORS[char] || 'text-neutral-300';
                 return (
-                    <span key={i} className={`w-[1ch] inline-block text-center ${colorClass}`}>
+                    <span
+                        key={i}
+                        className={`w-[1ch] inline-block text-center ${colorClass} ${onResidueClick ? 'cursor-pointer hover:bg-amber-500/20 hover:ring-1 hover:ring-amber-500' : ''}`}
+                        onClick={() => onResidueClick?.(i)}
+                        title={onResidueClick ? 'Click to annotate' : undefined}
+                    >
                         {char}
                     </span>
                 );
-            })}
-        </div>
-    </div>
-);
-
-const SecondaryStructureRow = ({ ss }: { ss: string }) => (
-    <div className="flex items-center h-2 mb-1">
-        <span className="w-24 shrink-0 select-none" />
-        <div className="flex font-mono text-sm tracking-widest h-full items-center">
-            {ss.split('').map((char, i) => {
-                let element = <div className="w-[1ch] h-[1px] bg-neutral-800" />;
-                if (char === 'H') {
-                    element = (
-                        <div className="w-[1ch] flex justify-center">
-                            <div className="w-full h-1.5 bg-fuchsia-500/50 rounded-sm" title="Alpha Helix" />
-                        </div>
-                    );
-                } else if (char === 'E') {
-                    element = (
-                        <div className="w-[1ch] flex justify-center">
-                            <div className="w-full h-1 bg-yellow-500/50 arrow-shape" title="Beta Sheet" />
-                        </div>
-                    );
-                }
-                return <React.Fragment key={i}>{element}</React.Fragment>;
             })}
         </div>
     </div>
