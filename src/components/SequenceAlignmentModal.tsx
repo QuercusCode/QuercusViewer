@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { X, GitCommitVertical, AlertTriangle, FileText, BarChart2, Hash, Percent, Download, Activity, Ruler } from 'lucide-react';
+import { X, GitCommitVertical, AlertTriangle, FileText, BarChart2, Hash, Percent, Download, Activity } from 'lucide-react';
 import type { ChainInfo, SuperposedStructure } from '../types';
 import clsx from 'clsx';
 
@@ -376,7 +376,7 @@ ${match.alignment.seq2}
                                             </div>
 
                                             {/* Target Sequence */}
-                                            <SequenceRow label="Overlay" sequence={match.alignment.seq2} compareSeq={match.alignment.seq1} />
+                                            <SequenceRow label="Overlay" sequence={match.alignment.seq2} />
                                         </div>
                                     </div>
                                 </div>
@@ -412,7 +412,7 @@ const StatBox = ({ label, value, icon, subtext, color }: any) => (
     </div>
 );
 
-const SequenceRow = ({ label, sequence, compareSeq }: { label: string, sequence: string, compareSeq?: string }) => (
+const SequenceRow = ({ label, sequence }: { label: string, sequence: string }) => (
     <div className="flex items-center hover:bg-white/5 py-1 rounded transition-colors group">
         <span className="w-24 shrink-0 text-xs font-bold text-neutral-500 uppercase tracking-wider select-none pl-2 group-hover:text-neutral-300 transition-colors">
             {label}
