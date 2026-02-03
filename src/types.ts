@@ -47,7 +47,6 @@ export interface ChainInfo {
     atoms?: AtomInfo[]; // Added: For small chemicals, list atoms directly
     bFactors?: number[]; // Added: Per-residue B-factor for coloring sync
     coords?: { x: number; y: number; z: number }[]; // Added: C-alpha/P coordinates for RMSD
-    secondaryStructure?: string[]; // Added: Secondary structure codes (H, E, C)
 }
 
 export interface StructureInfo {

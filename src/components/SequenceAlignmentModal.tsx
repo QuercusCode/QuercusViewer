@@ -2,7 +2,7 @@ import React, { useMemo, useState, useRef } from 'react';
 import { X, GitCommitVertical, AlertTriangle, FileText, BarChart2, Hash, Percent, Download, Activity, Image, MessageSquare, ChevronDown } from 'lucide-react';
 import type { ChainInfo, SuperposedStructure } from '../types';
 import clsx from 'clsx';
-import html2canvas from 'html2canvas';
+import domtoimage from 'dom-to-image-more';
 
 interface SequenceAlignmentModalProps {
     isOpen: boolean;
@@ -282,31 +282,25 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
 
         try {
             console.log('Starting PNG export...');
-            const canvas = await html2canvas(modalRef.current, {
-                backgroundColor: '#0D1117',
+            const dataUrl = await domtoimage.toPng(modalRef.current, {
+                quality: 1,
+                bgcolor: '#0D1117',
                 scale: 2,
-                logging: false,
-                useCORS: true,
-                allowTaint: true
+                style: {
+                    transform: 'scale(1)',
+                    transformOrigin: 'top left'
+                }
             });
 
-            console.log('Canvas created successfully');
+            console.log('Image created successfully');
 
-            canvas.toBlob((blob) => {
-                if (blob) {
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `sequence_alignment_${Date.now()}.png`;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                    console.log('PNG exported successfully');
-                } else {
-                    alert('Failed to create image blob');
-                }
-            }, 'image/png');
+            const link = document.createElement('a');
+            link.download = `sequence_alignment_${Date.now()}.png`;
+            link.href = dataUrl;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            console.log('PNG exported successfully');
         } catch (error) {
             console.error('Failed to export image:', error);
             alert(`Export failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
