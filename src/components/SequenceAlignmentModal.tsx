@@ -1,8 +1,8 @@
 import React, { useMemo, useState, useRef } from 'react';
-import { X, GitCommitVertical, AlertTriangle, FileText, BarChart2, Hash, Percent, Download, Activity, Image, MessageSquare, ChevronDown } from 'lucide-react';
+import { X, GitCommitVertical, AlertTriangle, FileText, BarChart2, Hash, Percent, Download, Activity, FileDown, MessageSquare, ChevronDown } from 'lucide-react';
 import type { ChainInfo, SuperposedStructure } from '../types';
 import clsx from 'clsx';
-import domtoimage from 'dom-to-image-more';
+import { jsPDF } from 'jspdf';
 
 interface SequenceAlignmentModalProps {
     isOpen: boolean;
@@ -274,69 +274,98 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
         setShowExportMenu(false);
     };
 
-    const exportAsImage = async () => {
-        if (!modalRef.current) {
-            alert('Export failed: Modal reference not found');
-            return;
-        }
-
+    const exportAsPDF = () => {
         try {
-            console.log('Starting PNG export...');
+            console.log('Starting PDF export...');
 
-            // Add a temporary class to remove all borders
-            const exportClass = 'alignment-export-mode';
-            const style = document.createElement('style');
-            style.id = 'export-style-temp';
-            style.textContent = `
-                .${exportClass} *,
-                .${exportClass} {
-                    border: none !important;
-                    box-shadow: none !important;
-                    outline: none !important;
-                }
-            `;
-            document.head.appendChild(style);
-            modalRef.current.classList.add(exportClass);
-
-            // Wait a tick for styles to apply
-            await new Promise(resolve => setTimeout(resolve, 50));
-
-            const dataUrl = await domtoimage.toPng(modalRef.current, {
-                quality: 1,
-                bgcolor: '#0D1117',
-                scale: 2,
-                filter: (node: HTMLElement) => {
-                    // Filter out close button and export button
-                    if (node.tagName === 'BUTTON') {
-                        const text = node.textContent || '';
-                        if (text.includes('Export PNG') || text.includes('Export') || node.getAttribute('aria-label') === 'Close') {
-                            return false;
-                        }
-                    }
-                    return true;
-                }
+            const doc = new jsPDF({
+                orientation: 'landscape',
+                unit: 'mm',
+                format: 'a4'
             });
 
-            // Remove temporary styles
-            modalRef.current.classList.remove(exportClass);
-            document.head.removeChild(style);
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const pageHeight = doc.internal.pageSize.getHeight();
+            const margin = 15;
+            let yPos = margin;
 
-            console.log('Image created successfully');
+            // Title
+            doc.setFontSize(16);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Sequence Alignment Report', margin, yPos);
+            yPos += 10;
 
-            const link = document.createElement('a');
-            link.download = `sequence_alignment_${Date.now()}.png`;
-            link.href = dataUrl;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            console.log('PNG exported successfully');
+            // Metadata
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'normal');
+            doc.text('Pairwise Needleman-Wunsch • BLOSUM62 Heuristic • Gap Penalty: -5', margin, yPos);
+            yPos += 8;
+
+            // Process each alignment result
+            alignmentResults.forEach((result, idx) => {
+                const match = result.chainMatches.find(m => m.primaryChain === selectedChain);
+                if (!match) return;
+
+                // Check if we need a new page
+                if (yPos > pageHeight - 60) {
+                    doc.addPage();
+                    yPos = margin;
+                }
+
+                // Overlay title
+                doc.setFontSize(12);
+                doc.setFont('helvetica', 'bold');
+                doc.text(`${result.overlayName} (Chain ${match.targetChain})`, margin, yPos);
+                yPos += 7;
+
+                // Statistics box
+                doc.setFontSize(8);
+                doc.setFont('helvetica', 'normal');
+                const stats = [
+                    `Identity: ${match.stats.identity.toFixed(1)}%`,
+                    `Similarity: ${match.stats.similarity.toFixed(1)}%`,
+                    `RMSD: ${match.stats.rmsd ? match.stats.rmsd.toFixed(2) + ' Å' : 'N/A'}`,
+                    `Gaps: ${match.stats.gaps} (${(match.stats.gaps / match.stats.length * 100).toFixed(1)}%)`,
+                    `Length: ${match.stats.length}`
+                ];
+                doc.text(stats.join('  |  '), margin, yPos);
+                yPos += 6;
+
+                // Alignment sequences
+                doc.setFont('courier', 'normal');
+                doc.setFontSize(7);
+
+                const charsPerLine = 100;
+                const seq1 = match.alignment.seq1;
+                const seq2 = match.alignment.seq2;
+                const matchStr = match.alignment.matchStr;
+
+                for (let i = 0; i < seq1.length; i += charsPerLine) {
+                    if (yPos > pageHeight - 20) {
+                        doc.addPage();
+                        yPos = margin;
+                    }
+
+                    const chunk1 = seq1.substring(i, i + charsPerLine);
+                    const chunk2 = seq2.substring(i, i + charsPerLine);
+                    const chunkMatch = matchStr.substring(i, i + charsPerLine);
+
+                    doc.text(`Primary:  ${chunk1}`, margin, yPos);
+                    yPos += 4;
+                    doc.text(`          ${chunkMatch}`, margin, yPos);
+                    yPos += 4;
+                    doc.text(`Overlay:  ${chunk2}`, margin, yPos);
+                    yPos += 7;
+                }
+
+                yPos += 5;
+            });
+
+            // Save
+            doc.save(`sequence_alignment_${Date.now()}.pdf`);
+            console.log('PDF exported successfully');
         } catch (error) {
-            // Cleanup in case of error
-            const style = document.getElementById('export-style-temp');
-            if (style) document.head.removeChild(style);
-            if (modalRef.current) modalRef.current.classList.remove('alignment-export-mode');
-
-            console.error('Failed to export image:', error);
+            console.error('Failed to export PDF:', error);
             alert(`Export failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     };
@@ -395,11 +424,11 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                     </div>
                     <div className="flex items-center gap-2">
                         <button
-                            onClick={exportAsImage}
+                            onClick={exportAsPDF}
                             className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-purple-500/20 text-purple-400 rounded-lg transition-colors border border-white/10 hover:border-purple-500/50 text-sm font-bold"
                         >
-                            <Image size={16} />
-                            Export PNG
+                            <FileDown size={16} />
+                            Export PDF
                         </button>
                         <button onClick={onClose} className="text-neutral-500 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full">
                             <X size={24} />
