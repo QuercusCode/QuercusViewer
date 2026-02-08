@@ -288,7 +288,20 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                 scale: 2,
                 style: {
                     transform: 'scale(1)',
-                    transformOrigin: 'top left'
+                    transformOrigin: 'top left',
+                    border: 'none',
+                    boxShadow: 'none',
+                    outline: 'none'
+                },
+                filter: (node: HTMLElement) => {
+                    // Filter out close button and export button
+                    if (node.tagName === 'BUTTON') {
+                        const text = node.textContent || '';
+                        if (text.includes('Export PNG') || node.getAttribute('aria-label') === 'Close') {
+                            return false;
+                        }
+                    }
+                    return true;
                 }
             });
 
@@ -347,7 +360,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 sm:p-8">
-            <div ref={modalRef} className="bg-[#0D1117] border border-white/10 rounded-xl shadow-2xl w-full max-w-6xl h-[85vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div ref={modalRef} className="bg-[#0D1117] rounded-xl shadow-2xl w-full max-w-6xl h-[85vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                 {/* Header */}
                 <div className="flex items-start justify-between px-8 py-6 border-b border-white/10 bg-gradient-to-r from-white/5 to-transparent">
                     <div className="flex items-center gap-4">
