@@ -292,13 +292,25 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
 
             // Helper function to add page footer
             const addFooter = () => {
+                // Footer gradient accent line
+                doc.setFillColor(59, 130, 246); // blue-500
+                doc.rect(0, pageHeight - 12, pageWidth, 1, 'F');
+
                 doc.setFontSize(8);
-                doc.setTextColor(150);
+                doc.setTextColor(148, 163, 184); // slate-400
                 doc.setFont('helvetica', 'normal');
                 const timestamp = new Date().toLocaleString();
                 doc.text(`Generated: ${timestamp}`, margin, pageHeight - 7);
-                doc.text(`Page ${pageNumber}`, pageWidth - margin - 10, pageHeight - 7);
-                doc.setTextColor(0);
+
+                // Page number in badge
+                doc.setFillColor(30, 41, 59); // slate-800
+                const pageNumText = `Page ${pageNumber}`;
+                const pageNumWidth = doc.getTextWidth(pageNumText) + 8;
+                doc.roundedRect(pageWidth - margin - pageNumWidth, pageHeight - 10, pageNumWidth, 6, 2, 2, 'F');
+                doc.setTextColor(203, 213, 225); // slate-300
+                doc.text(pageNumText, pageWidth - margin - pageNumWidth + 4, pageHeight - 6);
+
+                doc.setTextColor(226, 232, 240); // Reset to slate-200
             };
 
             // Helper function to add new page
@@ -308,27 +320,56 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                     doc.addPage();
                     pageNumber++;
                     yPos = margin;
+
+                    // Apply dark background to new page
+                    doc.setFillColor(15, 23, 42); // slate-900
+                    doc.rect(0, 0, pageWidth, pageHeight, 'F');
+
                     return true;
                 }
                 return false;
             };
 
-            // Document Title Box
-            doc.setFillColor(240, 240, 240);
-            doc.rect(margin, yPos, pageWidth - 2 * margin, 20, 'F');
-            doc.setDrawColor(180, 180, 180);
-            doc.rect(margin, yPos, pageWidth - 2 * margin, 20, 'S');
+            // === STUNNING COVER PAGE ===
+            // Dark gradient background
+            doc.setFillColor(15, 23, 42); // slate-900
+            doc.rect(0, 0, pageWidth, pageHeight, 'F');
 
-            doc.setFontSize(18);
+            // Accent gradient banner
+            const gradientHeight = 35;
+            for (let i = 0; i < gradientHeight; i++) {
+                const progress = i / gradientHeight;
+                const r = Math.floor(59 + (139 - 59) * progress); // From indigo to blue
+                const g = Math.floor(130 + (92 - 130) * progress);
+                const b = Math.floor(246 + (246 - 246) * progress);
+                doc.setFillColor(r, g, b);
+                doc.rect(0, yPos + i, pageWidth, 1, 'F');
+            }
+
+            // Title
+            doc.setFontSize(28);
             doc.setFont('helvetica', 'bold');
-            doc.setTextColor(0);
-            doc.text('Sequence Alignment Report', margin + 5, yPos + 8);
+            doc.setTextColor(255, 255, 255);
+            doc.text('Sequence Alignment Report', margin + 5, yPos + 15);
 
-            doc.setFontSize(9);
+            // Subtitle
+            doc.setFontSize(10);
             doc.setFont('helvetica', 'normal');
-            doc.setTextColor(80);
-            doc.text('Pairwise Needleman-Wunsch Algorithm • BLOSUM62 Matrix • Gap Penalty: -5', margin + 5, yPos + 15);
-            yPos += 25;
+            doc.setTextColor(226, 232, 240); // slate-200
+            doc.text('Pairwise Needleman-Wunsch Algorithm • BLOSUM62 Matrix • Gap Penalty: -5', margin + 5, yPos + 25);
+
+            yPos += gradientHeight + 5;
+
+            // Date badge
+            doc.setFillColor(30, 41, 59); // slate-800
+            const badgeWidth = 70;
+            const badgeHeight = 8;
+            doc.roundedRect(pageWidth - margin - badgeWidth, yPos, badgeWidth, badgeHeight, 2, 2, 'F');
+            doc.setFontSize(8);
+            doc.setTextColor(148, 163, 184); // slate-400
+            doc.text(new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }), pageWidth - margin - badgeWidth + 3, yPos + 5.5);
+
+            yPos += 15;
 
             // Calculate global statistics
             let totalAlignments = 0;
@@ -355,20 +396,23 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                 if (rmsdCount > 0) avgRMSD /= rmsdCount;
             }
 
-            // Summary Section
-            doc.setFillColor(245, 245, 250);
-            doc.rect(margin, yPos, pageWidth - 2 * margin, 35, 'F');
-            doc.setDrawColor(200, 200, 220);
-            doc.rect(margin, yPos, pageWidth - 2 * margin, 35, 'S');
+            // Summary Section - Dark card design
+            doc.setFillColor(30, 41, 59); // slate-800
+            doc.roundedRect(margin, yPos, pageWidth - 2 * margin, 38, 3, 3, 'F');
+            doc.setDrawColor(71, 85, 105); // slate-600
+            doc.setLineWidth(0.5);
+            doc.roundedRect(margin, yPos, pageWidth - 2 * margin, 38, 3, 3, 'S');
 
-            doc.setFontSize(13);
+            // Summary title with gradient effect
+            doc.setFontSize(14);
             doc.setFont('helvetica', 'bold');
-            doc.setTextColor(40);
-            doc.text('Summary', margin + 5, yPos + 7);
+            doc.setTextColor(148, 226, 213); // teal-300
+            doc.text('Summary', margin + 5, yPos + 8);
 
+            // Summary stats in grid
             doc.setFontSize(9);
             doc.setFont('helvetica', 'normal');
-            doc.setTextColor(60);
+            doc.setTextColor(226, 232, 240); // slate-200
             const summaryLines = [
                 `Total Structures: ${alignmentResults.length}`,
                 `Total Chain Alignments: ${totalAlignments}`,
@@ -377,24 +421,32 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                 rmsdCount > 0 ? `Average RMSD: ${avgRMSD.toFixed(2)} Å` : 'RMSD: N/A'
             ];
             summaryLines.forEach((line, i) => {
-                doc.text(line, margin + 5, yPos + 14 + i * 5);
+                const xOffset = i < 3 ? margin + 5 : margin + (pageWidth - 2 * margin) / 2 + 5;
+                const yOffset = yPos + 16 + (i < 3 ? i * 6 : (i - 3) * 6);
+                doc.text(line, xOffset, yOffset);
             });
-            yPos += 40;
+            yPos += 43;
 
-            // Table of Contents
-            doc.setFontSize(12);
+            // Table of Contents - Modern design
+            doc.setFontSize(13);
             doc.setFont('helvetica', 'bold');
-            doc.setTextColor(40);
+            doc.setTextColor(196, 181, 253); // violet-300
             doc.text('Table of Contents', margin, yPos);
-            yPos += 7;
+            yPos += 8;
 
             doc.setFontSize(9);
             doc.setFont('helvetica', 'normal');
-            doc.setTextColor(80);
+            doc.setTextColor(203, 213, 225); // slate-300
 
             let tocIndex = 1;
             alignmentResults.forEach(result => {
                 result.chainMatches.forEach(match => {
+                    // TOC entry with subtle background
+                    if (tocIndex % 2 === 0) {
+                        doc.setFillColor(30, 41, 59, 30); // slate-800 with opacity
+                        doc.rect(margin - 2, yPos - 4, pageWidth - 2 * margin + 4, 5, 'F');
+                    }
+                    doc.setTextColor(203, 213, 225); // slate-300
                     doc.text(`${tocIndex}. ${result.overlayName} - Chain ${match.primaryChain} -> ${match.targetChain}`, margin + 3, yPos);
                     yPos += 5;
                     tocIndex++;
@@ -402,7 +454,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                 });
             });
 
-            yPos += 5;
+            yPos += 8;
             checkAndAddPage(80);
 
             // Process each alignment result
@@ -412,65 +464,73 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                 result.chainMatches.forEach((match) => {
                     checkAndAddPage(80);
 
-                    // Alignment Section Header
-                    doc.setFillColor(250, 250, 250);
-                    doc.rect(margin, yPos, pageWidth - 2 * margin, 10, 'F');
-                    doc.setDrawColor(200, 200, 200);
-                    doc.rect(margin, yPos, pageWidth - 2 * margin, 10, 'S');
+                    // Alignment Section Header - Dark card with accent
+                    doc.setFillColor(30, 41, 59); // slate-800
+                    doc.roundedRect(margin, yPos, pageWidth - 2 * margin, 11, 2, 2, 'F');
+
+                    // Accent line on left
+                    doc.setFillColor(59, 130, 246); // blue-500
+                    doc.roundedRect(margin, yPos, 4, 11, 2, 2, 'F');
 
                     doc.setFontSize(12);
                     doc.setFont('helvetica', 'bold');
-                    doc.setTextColor(30);
-                    doc.text(`${alignmentIndex}. ${result.overlayName} - Chain ${match.primaryChain} -> ${match.targetChain}`, margin + 3, yPos + 7);
-                    yPos += 13;
+                    doc.setTextColor(226, 232, 240); // slate-200
+                    doc.text(`${alignmentIndex}. ${result.overlayName} - Chain ${match.primaryChain} -> ${match.targetChain}`, margin + 8, yPos + 7.5);
+                    yPos += 14;
 
-                    // Statistics Table
+                    // Statistics Cards - Modern glassmorphism style
                     const statsData = [
-                        { label: 'Identity', value: `${match.stats.identity.toFixed(1)}%`, color: [52, 152, 219] },
-                        { label: 'Similarity', value: `${match.stats.similarity.toFixed(1)}%`, color: [46, 204, 113] },
-                        { label: 'RMSD', value: match.stats.rmsd ? `${match.stats.rmsd.toFixed(2)} Å` : 'N/A', color: [155, 89, 182] },
-                        { label: 'Gaps', value: `${match.stats.gaps} (${(match.stats.gaps / match.stats.length * 100).toFixed(1)}%)`, color: [230, 126, 34] },
-                        { label: 'Length', value: `${match.stats.length}`, color: [52, 73, 94] }
+                        { label: 'Identity', value: `${match.stats.identity.toFixed(1)}%`, color: [59, 130, 246], bgColor: [30, 58, 138] }, // blue
+                        { label: 'Similarity', value: `${match.stats.similarity.toFixed(1)}%`, color: [16, 185, 129], bgColor: [6, 78, 59] }, // emerald
+                        { label: 'RMSD', value: match.stats.rmsd ? `${match.stats.rmsd.toFixed(2)} Å` : 'N/A', color: [168, 85, 247], bgColor: [88, 28, 135] }, // purple
+                        { label: 'Gaps', value: `${match.stats.gaps} (${(match.stats.gaps / match.stats.length * 100).toFixed(1)}%)`, color: [251, 146, 60], bgColor: [124, 45, 18] }, // orange
+                        { label: 'Length', value: `${match.stats.length}`, color: [148, 163, 184], bgColor: [51, 65, 85] } // slate
                     ];
 
                     const boxWidth = (pageWidth - 2 * margin - 20) / 5;
                     statsData.forEach((stat, i) => {
                         const xPos = margin + i * (boxWidth + 4);
 
-                        // Box background
-                        doc.setFillColor(stat.color[0], stat.color[1], stat.color[2]);
-                        doc.rect(xPos, yPos, boxWidth, 12, 'F');
+                        // Card background with gradient
+                        doc.setFillColor(stat.bgColor[0], stat.bgColor[1], stat.bgColor[2]);
+                        doc.roundedRect(xPos, yPos, boxWidth, 13, 2, 2, 'F');
+
+                        // Subtle border
+                        doc.setDrawColor(stat.color[0], stat.color[1], stat.color[2]);
+                        doc.setLineWidth(0.3);
+                        doc.roundedRect(xPos, yPos, boxWidth, 13, 2, 2, 'S');
 
                         // Label
                         doc.setFontSize(7);
                         doc.setFont('helvetica', 'bold');
-                        doc.setTextColor(255);
-                        doc.text(stat.label.toUpperCase(), xPos + boxWidth / 2, yPos + 4, { align: 'center' });
+                        doc.setTextColor(stat.color[0], stat.color[1], stat.color[2]);
+                        doc.text(stat.label.toUpperCase(), xPos + boxWidth / 2, yPos + 5, { align: 'center' });
 
                         // Value
                         doc.setFontSize(10);
                         doc.setFont('helvetica', 'bold');
-                        doc.text(stat.value, xPos + boxWidth / 2, yPos + 9.5, { align: 'center' });
+                        doc.setTextColor(226, 232, 240); // slate-200
+                        doc.text(stat.value, xPos + boxWidth / 2, yPos + 10, { align: 'center' });
                     });
-                    yPos += 16;
+                    yPos += 17;
 
                     // Coverage Info
                     doc.setFontSize(8);
                     doc.setFont('helvetica', 'normal');
-                    doc.setTextColor(100);
+                    doc.setTextColor(148, 163, 184); // slate-400
                     const coverage = ((match.stats.length - match.stats.gaps) / match.stats.length * 100).toFixed(1);
                     doc.text(`Alignment Coverage: ${coverage}% • Score: ${match.stats.score.toFixed(0)}`, margin, yPos);
                     yPos += 6;
 
                     // Alignment Sequences Section
-                    doc.setDrawColor(220, 220, 220);
+                    doc.setDrawColor(71, 85, 105); // slate-600
                     doc.setLineWidth(0.5);
                     doc.line(margin, yPos, pageWidth - margin, yPos);
                     yPos += 5;
 
                     doc.setFont('courier', 'normal');
                     doc.setFontSize(7);
-                    doc.setTextColor(0);
+                    doc.setTextColor(226, 232, 240); // slate-200
 
                     const charsPerLine = 90;
                     const seq1 = match.alignment.seq1;
@@ -482,12 +542,12 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                             // Re-add section header on new page
                             doc.setFontSize(10);
                             doc.setFont('helvetica', 'bold');
-                            doc.setTextColor(100);
+                            doc.setTextColor(148, 163, 184); // slate-400
                             doc.text(`${result.overlayName} - Chain ${match.primaryChain} -> ${match.targetChain} (continued)`, margin, yPos);
                             yPos += 6;
                             doc.setFont('courier', 'normal');
                             doc.setFontSize(7);
-                            doc.setTextColor(0);
+                            doc.setTextColor(226, 232, 240); // slate-200
                         }
 
                         const chunk1 = seq1.substring(i, i + charsPerLine);
@@ -497,19 +557,19 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                         // Position label
                         doc.setFont('helvetica', 'normal');
                         doc.setFontSize(6);
-                        doc.setTextColor(120);
+                        doc.setTextColor(100, 116, 139); // slate-500
                         doc.text(`${i + 1}`, margin, yPos);
 
                         // Sequences
                         doc.setFont('courier', 'normal');
                         doc.setFontSize(7);
-                        doc.setTextColor(0);
+                        doc.setTextColor(226, 232, 240); // slate-200
                         doc.text(`Primary:  ${chunk1}`, margin + 15, yPos);
                         yPos += 4;
-                        doc.setTextColor(100);
+                        doc.setTextColor(148, 163, 184); // slate-400
                         doc.text(`          ${chunkMatch}`, margin + 15, yPos);
                         yPos += 4;
-                        doc.setTextColor(0);
+                        doc.setTextColor(226, 232, 240); // slate-200
                         doc.text(`Overlay:  ${chunk2}`, margin + 15, yPos);
                         yPos += 8;
                     }
@@ -548,7 +608,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                     // Conservation Section for this alignment
                     doc.setFontSize(11);
                     doc.setFont('helvetica', 'bold');
-                    doc.setTextColor(40);
+                    doc.setTextColor(196, 181, 253); // violet-300
                     doc.text(`Conservation Analysis: ${result.overlayName} (Chain ${match.primaryChain} -> ${match.targetChain})`, margin, yPos);
                     yPos += 6;
 
@@ -583,7 +643,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                     // Visual conservation map
                     doc.setFontSize(8);
                     doc.setFont('helvetica', 'normal');
-                    doc.setTextColor(80);
+                    doc.setTextColor(203, 213, 225); // slate-300
                     doc.text('Conservation Map (50-residue blocks):', margin, yPos);
                     yPos += 5;
 
@@ -610,7 +670,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
 
                     // Legend
                     doc.setFontSize(7);
-                    doc.setTextColor(100);
+                    doc.setTextColor(148, 163, 184); // slate-400
                     const legendItems = [
                         { color: [46, 204, 113], label: '>80% High' },
                         { color: [52, 152, 219], label: '60-80% Medium' },
@@ -630,7 +690,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                     // Gap Distribution Analysis
                     doc.setFontSize(9);
                     doc.setFont('helvetica', 'bold');
-                    doc.setTextColor(60);
+                    doc.setTextColor(148, 226, 213); // teal-300
                     doc.text('Gap Distribution:', margin, yPos);
                     yPos += 5;
 
@@ -652,7 +712,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
 
                     doc.setFontSize(8);
                     doc.setFont('helvetica', 'normal');
-                    doc.setTextColor(80);
+                    doc.setTextColor(203, 213, 225); // slate-300
 
                     if (gapClusters.length > 0) {
                         const largestGap = gapClusters.reduce((max, gap) => gap.length > max.length ? gap : max);
@@ -683,13 +743,13 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
             // 2. ALIGNMENT QUALITY ASSESSMENT
             doc.setFontSize(11);
             doc.setFont('helvetica', 'bold');
-            doc.setTextColor(40);
+            doc.setTextColor(196, 181, 253); // violet-300
             doc.text('Alignment Quality Assessment', margin, yPos);
             yPos += 6;
 
             doc.setFontSize(8);
             doc.setFont('helvetica', 'normal');
-            doc.setTextColor(80);
+            doc.setTextColor(203, 213, 225); // slate-300
 
             alignmentResults.forEach((result) => {
                 result.chainMatches.forEach((match) => {
@@ -719,7 +779,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                     doc.setFont('helvetica', 'bold');
                     doc.text(`${result.overlayName} (Chain ${match.primaryChain} -> ${match.targetChain}): ${qualityLabel} (${qualityScore.toFixed(1)}/100)`, margin, yPos);
                     doc.setFont('helvetica', 'normal');
-                    doc.setTextColor(80);
+                    doc.setTextColor(203, 213, 225); // slate-300
                     yPos += 5;
                     checkAndAddPage(30);
                 });
@@ -731,13 +791,13 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
             // 3. INTERPRETATION & RECOMMENDATIONS
             doc.setFontSize(11);
             doc.setFont('helvetica', 'bold');
-            doc.setTextColor(40);
+            doc.setTextColor(196, 181, 253); // violet-300
             doc.text('Interpretation & Recommendations', margin, yPos);
             yPos += 6;
 
             doc.setFontSize(8);
             doc.setFont('helvetica', 'normal');
-            doc.setTextColor(80);
+            doc.setTextColor(203, 213, 225); // slate-300
 
             const interpretations = [];
 
@@ -779,13 +839,13 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
             // 4. METHODOLOGY REFERENCE
             doc.setFontSize(10);
             doc.setFont('helvetica', 'bold');
-            doc.setTextColor(40);
+            doc.setTextColor(196, 181, 253); // violet-300
             doc.text('Methodology', margin, yPos);
             yPos += 5;
 
             doc.setFontSize(7);
             doc.setFont('helvetica', 'normal');
-            doc.setTextColor(100);
+            doc.setTextColor(148, 163, 184); // slate-400
             doc.text('Algorithm: Needleman-Wunsch pairwise global alignment', margin, yPos);
             yPos += 4;
             doc.text('Scoring Matrix: BLOSUM62 (BLOcks SUbstitution Matrix)', margin, yPos);
@@ -804,13 +864,13 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
             // 5. AMINO ACID COMPOSITION ANALYSIS
             doc.setFontSize(11);
             doc.setFont('helvetica', 'bold');
-            doc.setTextColor(40);
+            doc.setTextColor(196, 181, 253); // violet-300
             doc.text('Amino Acid Composition Analysis', margin, yPos);
             yPos += 6;
 
             doc.setFontSize(8);
             doc.setFont('helvetica', 'normal');
-            doc.setTextColor(80);
+            doc.setTextColor(203, 213, 225); // slate-300
 
             // Helper to count amino acids (excluding gaps)
             const countAminoAcids = (sequence: string) => {
@@ -830,7 +890,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
 
                     doc.setFontSize(9);
                     doc.setFont('helvetica', 'bold');
-                    doc.setTextColor(60);
+                    doc.setTextColor(148, 226, 213); // teal-300
                     doc.text(`${result.overlayName} (Chain ${match.primaryChain} -> ${match.targetChain})`, margin, yPos);
                     yPos += 5;
 
@@ -869,7 +929,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
 
                     doc.setFontSize(7);
                     doc.setFont('helvetica', 'normal');
-                    doc.setTextColor(80);
+                    doc.setTextColor(203, 213, 225); // slate-300
 
                     const propData = [
                         { name: 'Hydrophobic', primary: props1.hydrophobic, overlay: props2.hydrophobic, color: [255, 193, 7] },
@@ -894,13 +954,13 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
             // 6. SUBSTITUTION PATTERN ANALYSIS
             doc.setFontSize(11);
             doc.setFont('helvetica', 'bold');
-            doc.setTextColor(40);
+            doc.setTextColor(196, 181, 253); // violet-300
             doc.text('Substitution Pattern Analysis', margin, yPos);
             yPos += 6;
 
             doc.setFontSize(8);
             doc.setFont('helvetica', 'normal');
-            doc.setTextColor(80);
+            doc.setTextColor(203, 213, 225); // slate-300
 
             alignmentResults.forEach((result) => {
                 result.chainMatches.forEach((match) => {
@@ -930,13 +990,13 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                     if (totalSubs > 0) {
                         doc.setFontSize(9);
                         doc.setFont('helvetica', 'bold');
-                        doc.setTextColor(60);
+                        doc.setTextColor(148, 226, 213); // teal-300
                         doc.text(`${result.overlayName} (Chain ${match.primaryChain} -> ${match.targetChain})`, margin, yPos);
                         yPos += 5;
 
                         doc.setFontSize(7);
                         doc.setFont('helvetica', 'normal');
-                        doc.setTextColor(80);
+                        doc.setTextColor(203, 213, 225); // slate-300
 
                         doc.text(`Total substitutions: ${totalSubs} | Conservative: ${conservativeCount} (${(conservativeCount / totalSubs * 100).toFixed(1)}%) | Non-conservative: ${nonConservativeCount} (${(nonConservativeCount / totalSubs * 100).toFixed(1)}%)`, margin, yPos);
                         yPos += 5;
@@ -965,13 +1025,13 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
             // 7. CONSENSUS SEQUENCE
             doc.setFontSize(11);
             doc.setFont('helvetica', 'bold');
-            doc.setTextColor(40);
+            doc.setTextColor(196, 181, 253); // violet-300
             doc.text('Consensus Sequences', margin, yPos);
             yPos += 6;
 
             doc.setFontSize(8);
             doc.setFont('helvetica', 'normal');
-            doc.setTextColor(80);
+            doc.setTextColor(203, 213, 225); // slate-300
             doc.text('Consensus represents the most conserved residue at each position (shown for regions with >70% identity)', margin, yPos);
             yPos += 5;
 
@@ -997,13 +1057,13 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
 
                         doc.setFontSize(9);
                         doc.setFont('helvetica', 'bold');
-                        doc.setTextColor(60);
+                        doc.setTextColor(148, 226, 213); // teal-300
                         doc.text(`${result.overlayName} (Chain ${match.primaryChain} -> ${match.targetChain})`, margin, yPos);
                         yPos += 5;
 
                         doc.setFont('courier', 'normal');
                         doc.setFontSize(6);
-                        doc.setTextColor(80);
+                        doc.setTextColor(203, 213, 225); // slate-300
 
                         // Show first 100 residues of consensus
                         const consensusPreview = consensus.substring(0, 100);
@@ -1023,13 +1083,13 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
             // 8. STATISTICAL SUMMARY
             doc.setFontSize(11);
             doc.setFont('helvetica', 'bold');
-            doc.setTextColor(40);
+            doc.setTextColor(196, 181, 253); // violet-300
             doc.text('Statistical Summary', margin, yPos);
             yPos += 6;
 
             doc.setFontSize(8);
             doc.setFont('helvetica', 'normal');
-            doc.setTextColor(80);
+            doc.setTextColor(203, 213, 225); // slate-300
 
             // Calculate variance and standard deviation
             const identities = alignmentResults.flatMap(r => r.chainMatches.map(m => m.stats.identity));
@@ -1055,13 +1115,13 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
             // 9. REFERENCE & CITATION
             doc.setFontSize(10);
             doc.setFont('helvetica', 'bold');
-            doc.setTextColor(40);
+            doc.setTextColor(196, 181, 253); // violet-300
             doc.text('References & Citation', margin, yPos);
             yPos += 5;
 
             doc.setFontSize(7);
             doc.setFont('helvetica', 'italic');
-            doc.setTextColor(100);
+            doc.setTextColor(148, 163, 184); // slate-400
             doc.text('If you use this alignment analysis in your research, please cite:', margin, yPos);
             yPos += 4;
 
