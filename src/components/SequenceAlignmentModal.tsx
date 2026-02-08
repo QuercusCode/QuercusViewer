@@ -395,7 +395,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
             let tocIndex = 1;
             alignmentResults.forEach(result => {
                 result.chainMatches.forEach(match => {
-                    doc.text(`${tocIndex}. ${result.overlayName} - Chain ${match.primaryChain} → ${match.targetChain}`, margin + 3, yPos);
+                    doc.text(`${tocIndex}. ${result.overlayName} - Chain ${match.primaryChain} -> ${match.targetChain}`, margin + 3, yPos);
                     yPos += 5;
                     tocIndex++;
                     checkAndAddPage(50);
@@ -421,7 +421,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                     doc.setFontSize(12);
                     doc.setFont('helvetica', 'bold');
                     doc.setTextColor(30);
-                    doc.text(`${alignmentIndex}. ${result.overlayName} - Chain ${match.primaryChain} → ${match.targetChain}`, margin + 3, yPos + 7);
+                    doc.text(`${alignmentIndex}. ${result.overlayName} - Chain ${match.primaryChain} -> ${match.targetChain}`, margin + 3, yPos + 7);
                     yPos += 13;
 
                     // Statistics Table
@@ -483,7 +483,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                             doc.setFontSize(10);
                             doc.setFont('helvetica', 'bold');
                             doc.setTextColor(100);
-                            doc.text(`${result.overlayName} - Chain ${match.primaryChain} → ${match.targetChain} (continued)`, margin, yPos);
+                            doc.text(`${result.overlayName} - Chain ${match.primaryChain} -> ${match.targetChain} (continued)`, margin, yPos);
                             yPos += 6;
                             doc.setFont('courier', 'normal');
                             doc.setFontSize(7);
