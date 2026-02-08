@@ -522,31 +522,39 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                     doc.text(`Alignment Coverage: ${coverage}% • Score: ${match.stats.score.toFixed(0)}`, margin, yPos);
                     yPos += 6;
 
-                    // Alignment Sequences Section
-                    doc.setDrawColor(71, 85, 105); // slate-600
-                    doc.setLineWidth(0.5);
-                    doc.line(margin, yPos, pageWidth - margin, yPos);
-                    yPos += 5;
+                    // Alignment Sequences Section with prominent display
+                    yPos += 3;
 
-                    doc.setFont('courier', 'normal');
-                    doc.setFontSize(7);
+                    // Sequence box header
+                    doc.setFillColor(30, 41, 59); // slate-800
+                    doc.roundedRect(margin, yPos, pageWidth - 2 * margin, 8, 2, 2, 'F');
+                    doc.setFontSize(9);
+                    doc.setFont('helvetica', 'bold');
+                    doc.setTextColor(148, 226, 213); // teal-300
+                    doc.text('SEQUENCE ALIGNMENT', margin + 5, yPos + 5.5);
+                    yPos += 11;
+
+                    doc.setFont('courier', 'bold');
+                    doc.setFontSize(8); // Increased from 7
                     doc.setTextColor(226, 232, 240); // slate-200
 
-                    const charsPerLine = 90;
+                    const charsPerLine = 80; // Reduced for larger font
                     const seq1 = match.alignment.seq1;
                     const seq2 = match.alignment.seq2;
                     const matchStr = match.alignment.matchStr;
 
                     for (let i = 0; i < seq1.length; i += charsPerLine) {
-                        if (checkAndAddPage(30)) {
+                        if (checkAndAddPage(35)) {
                             // Re-add section header on new page
-                            doc.setFontSize(10);
+                            doc.setFillColor(30, 41, 59); // slate-800
+                            doc.roundedRect(margin, yPos, pageWidth - 2 * margin, 8, 2, 2, 'F');
+                            doc.setFontSize(9);
                             doc.setFont('helvetica', 'bold');
-                            doc.setTextColor(148, 163, 184); // slate-400
-                            doc.text(`${result.overlayName} - Chain ${match.primaryChain} -> ${match.targetChain} (continued)`, margin, yPos);
-                            yPos += 6;
-                            doc.setFont('courier', 'normal');
-                            doc.setFontSize(7);
+                            doc.setTextColor(148, 226, 213); // teal-300
+                            doc.text(`${result.overlayName} - Chain ${match.primaryChain} -> ${match.targetChain} (continued)`, margin + 5, yPos + 5.5);
+                            yPos += 11;
+                            doc.setFont('courier', 'bold');
+                            doc.setFontSize(8);
                             doc.setTextColor(226, 232, 240); // slate-200
                         }
 
@@ -554,24 +562,48 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                         const chunk2 = seq2.substring(i, i + charsPerLine);
                         const chunkMatch = matchStr.substring(i, i + charsPerLine);
 
-                        // Position label
-                        doc.setFont('helvetica', 'normal');
-                        doc.setFontSize(6);
-                        doc.setTextColor(100, 116, 139); // slate-500
-                        doc.text(`${i + 1}`, margin, yPos);
+                        // Sequence block with subtle background
+                        const blockHeight = 16;
+                        doc.setFillColor(30, 41, 59, 25); // slate-800 with low opacity
+                        doc.roundedRect(margin, yPos - 2, pageWidth - 2 * margin, blockHeight, 2, 2, 'F');
 
-                        // Sequences
-                        doc.setFont('courier', 'normal');
+                        // Position label - bigger and more visible
+                        doc.setFont('helvetica', 'bold');
                         doc.setFontSize(7);
-                        doc.setTextColor(226, 232, 240); // slate-200
-                        doc.text(`Primary:  ${chunk1}`, margin + 15, yPos);
-                        yPos += 4;
                         doc.setTextColor(148, 163, 184); // slate-400
-                        doc.text(`          ${chunkMatch}`, margin + 15, yPos);
-                        yPos += 4;
+                        const posLabel = `${i + 1}`.padStart(4, ' ');
+                        doc.text(posLabel, margin + 3, yPos + 2);
+
+                        // Primary sequence with colored label
+                        doc.setFont('helvetica', 'bold');
+                        doc.setFontSize(7);
+                        doc.setTextColor(59, 130, 246); // blue-500
+                        doc.text('Pri:', margin + 15, yPos + 2);
+
+                        doc.setFont('courier', 'bold');
+                        doc.setFontSize(8);
                         doc.setTextColor(226, 232, 240); // slate-200
-                        doc.text(`Overlay:  ${chunk2}`, margin + 15, yPos);
-                        yPos += 8;
+                        doc.text(chunk1, margin + 25, yPos + 2);
+                        yPos += 5;
+
+                        // Match string - highlighted
+                        doc.setFont('courier', 'bold');
+                        doc.setFontSize(8);
+                        doc.setTextColor(16, 185, 129); // emerald-500 for matches
+                        doc.text(chunkMatch, margin + 25, yPos + 2);
+                        yPos += 5;
+
+                        // Overlay sequence with colored label
+                        doc.setFont('helvetica', 'bold');
+                        doc.setFontSize(7);
+                        doc.setTextColor(168, 85, 247); // purple-500
+                        doc.text('Ovl:', margin + 15, yPos + 2);
+
+                        doc.setFont('courier', 'bold');
+                        doc.setFontSize(8);
+                        doc.setTextColor(226, 232, 240); // slate-200
+                        doc.text(chunk2, margin + 25, yPos + 2);
+                        yPos += 10; // More spacing between blocks
                     }
 
                     yPos += 3;
