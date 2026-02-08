@@ -282,28 +282,44 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
 
         try {
             console.log('Starting PNG export...');
+
+            // Add a temporary class to remove all borders
+            const exportClass = 'alignment-export-mode';
+            const style = document.createElement('style');
+            style.id = 'export-style-temp';
+            style.textContent = `
+                .${exportClass} *,
+                .${exportClass} {
+                    border: none !important;
+                    box-shadow: none !important;
+                    outline: none !important;
+                }
+            `;
+            document.head.appendChild(style);
+            modalRef.current.classList.add(exportClass);
+
+            // Wait a tick for styles to apply
+            await new Promise(resolve => setTimeout(resolve, 50));
+
             const dataUrl = await domtoimage.toPng(modalRef.current, {
                 quality: 1,
                 bgcolor: '#0D1117',
                 scale: 2,
-                style: {
-                    transform: 'scale(1)',
-                    transformOrigin: 'top left',
-                    border: 'none',
-                    boxShadow: 'none',
-                    outline: 'none'
-                },
                 filter: (node: HTMLElement) => {
                     // Filter out close button and export button
                     if (node.tagName === 'BUTTON') {
                         const text = node.textContent || '';
-                        if (text.includes('Export PNG') || node.getAttribute('aria-label') === 'Close') {
+                        if (text.includes('Export PNG') || text.includes('Export') || node.getAttribute('aria-label') === 'Close') {
                             return false;
                         }
                     }
                     return true;
                 }
             });
+
+            // Remove temporary styles
+            modalRef.current.classList.remove(exportClass);
+            document.head.removeChild(style);
 
             console.log('Image created successfully');
 
@@ -315,6 +331,11 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
             document.body.removeChild(link);
             console.log('PNG exported successfully');
         } catch (error) {
+            // Cleanup in case of error
+            const style = document.getElementById('export-style-temp');
+            if (style) document.head.removeChild(style);
+            if (modalRef.current) modalRef.current.classList.remove('alignment-export-mode');
+
             console.error('Failed to export image:', error);
             alert(`Export failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
