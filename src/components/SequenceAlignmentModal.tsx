@@ -585,7 +585,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                                             {/* Match Line */}
                                             <div className="flex">
                                                 <span className="w-24 shrink-0 select-none" />
-                                                <div className="flex">
+                                                <div className="flex font-mono text-sm tracking-widest">
                                                     {match.alignment.matchStr.split('').map((char, i) => (
                                                         <span key={i} className={`w-[1ch] text-center font-bold ${char === '|' ? 'text-white' : char === ':' ? 'text-blue-400' : 'text-neutral-800'}`}>
                                                             {char}
