@@ -325,6 +325,28 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                     doc.setFillColor(15, 23, 42); // slate-900
                     doc.rect(0, 0, pageWidth, pageHeight, 'F');
 
+                    // === LOGO HEADER ON SUBSEQUENT PAGES ===
+                    // Compact Quercus logo in top-right
+                    const logoX = pageWidth - margin - 50;
+                    const logoY = 10;
+
+                    // Small icon
+                    doc.setFillColor(59, 130, 246); // blue-500
+                    doc.circle(logoX, logoY, 4, 'F');
+
+                    doc.setFontSize(10);
+                    doc.setFont('helvetica', 'bold');
+                    doc.setTextColor(255, 255, 255);
+                    doc.text('Q', logoX - 2, logoY + 1);
+
+                    // Compact text
+                    doc.setFontSize(9);
+                    doc.setFont('helvetica', 'bold');
+                    doc.setTextColor(148, 163, 184); // slate-400
+                    doc.text('Quercus Viewer', logoX + 6, logoY + 2);
+
+                    yPos = margin + 10; // Add space after logo
+
                     return true;
                 }
                 return false;
@@ -334,6 +356,29 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
             // Dark gradient background
             doc.setFillColor(15, 23, 42); // slate-900
             doc.rect(0, 0, pageWidth, pageHeight, 'F');
+
+            // === LOGO/BRANDING ===
+            // Quercus icon representation with "Q"
+            doc.setFillColor(59, 130, 246); // blue-500
+            doc.circle(margin + 12, pageHeight - yPos - 8, 8, 'F');
+
+            doc.setFontSize(22);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(255, 255, 255);
+            doc.text('Q', margin + 8.5, pageHeight - yPos - 5);
+
+            // Brand name next to icon
+            doc.setFontSize(16);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(226, 232, 240); // slate-200
+            doc.text('Quercus', margin + 24, pageHeight - yPos - 9);
+
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(148, 163, 184); // slate-400
+            doc.text('Viewer', margin + 68, pageHeight - yPos - 9);
+
+            yPos += 25;
 
             // Accent gradient banner
             const gradientHeight = 35;
