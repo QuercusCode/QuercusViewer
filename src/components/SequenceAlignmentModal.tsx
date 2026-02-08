@@ -284,81 +284,158 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                 format: 'a4'
             });
 
+            const pageWidth = doc.internal.pageSize.getWidth();
             const pageHeight = doc.internal.pageSize.getHeight();
             const margin = 15;
             let yPos = margin;
+            let pageNumber = 1;
 
-            // Title
-            doc.setFontSize(16);
+            // Helper function to add page footer
+            const addFooter = () => {
+                doc.setFontSize(8);
+                doc.setTextColor(150);
+                doc.setFont('helvetica', 'normal');
+                const timestamp = new Date().toLocaleString();
+                doc.text(`Generated: ${timestamp}`, margin, pageHeight - 7);
+                doc.text(`Page ${pageNumber}`, pageWidth - margin - 10, pageHeight - 7);
+                doc.setTextColor(0);
+            };
+
+            // Helper function to add new page
+            const checkAndAddPage = (requiredSpace: number) => {
+                if (yPos > pageHeight - requiredSpace) {
+                    addFooter();
+                    doc.addPage();
+                    pageNumber++;
+                    yPos = margin;
+                    return true;
+                }
+                return false;
+            };
+
+            // Document Title Box
+            doc.setFillColor(240, 240, 240);
+            doc.rect(margin, yPos, pageWidth - 2 * margin, 20, 'F');
+            doc.setDrawColor(180, 180, 180);
+            doc.rect(margin, yPos, pageWidth - 2 * margin, 20, 'S');
+
+            doc.setFontSize(18);
             doc.setFont('helvetica', 'bold');
-            doc.text('Sequence Alignment Report', margin, yPos);
-            yPos += 10;
+            doc.setTextColor(0);
+            doc.text('Sequence Alignment Report', margin + 5, yPos + 8);
 
-            // Metadata
             doc.setFontSize(9);
             doc.setFont('helvetica', 'normal');
-            doc.text('Pairwise Needleman-Wunsch • BLOSUM62 Heuristic • Gap Penalty: -5', margin, yPos);
-            yPos += 8;
+            doc.setTextColor(80);
+            doc.text('Pairwise Needleman-Wunsch Algorithm • BLOSUM62 Matrix • Gap Penalty: -5', margin + 5, yPos + 15);
+            yPos += 25;
 
             // Process each alignment result
             alignmentResults.forEach((result) => {
                 const match = result.chainMatches.find(m => m.primaryChain === selectedChain);
                 if (!match) return;
 
-                // Check if we need a new page
-                if (yPos > pageHeight - 60) {
-                    doc.addPage();
-                    yPos = margin;
-                }
+                checkAndAddPage(80);
 
-                // Overlay title
+                // Alignment Section Header
+                doc.setFillColor(250, 250, 250);
+                doc.rect(margin, yPos, pageWidth - 2 * margin, 10, 'F');
+                doc.setDrawColor(200, 200, 200);
+                doc.rect(margin, yPos, pageWidth - 2 * margin, 10, 'S');
+
                 doc.setFontSize(12);
                 doc.setFont('helvetica', 'bold');
-                doc.text(`${result.overlayName} (Chain ${match.targetChain})`, margin, yPos);
-                yPos += 7;
+                doc.setTextColor(30);
+                doc.text(`${result.overlayName} (Chain ${match.targetChain})`, margin + 3, yPos + 7);
+                yPos += 13;
 
-                // Statistics box
-                doc.setFontSize(8);
-                doc.setFont('helvetica', 'normal');
-                const stats = [
-                    `Identity: ${match.stats.identity.toFixed(1)}%`,
-                    `Similarity: ${match.stats.similarity.toFixed(1)}%`,
-                    `RMSD: ${match.stats.rmsd ? match.stats.rmsd.toFixed(2) + ' Å' : 'N/A'}`,
-                    `Gaps: ${match.stats.gaps} (${(match.stats.gaps / match.stats.length * 100).toFixed(1)}%)`,
-                    `Length: ${match.stats.length}`
+                // Statistics Table
+                const statsData = [
+                    { label: 'Identity', value: `${match.stats.identity.toFixed(1)}%`, color: [52, 152, 219] },
+                    { label: 'Similarity', value: `${match.stats.similarity.toFixed(1)}%`, color: [46, 204, 113] },
+                    { label: 'RMSD', value: match.stats.rmsd ? `${match.stats.rmsd.toFixed(2)} Å` : 'N/A', color: [155, 89, 182] },
+                    { label: 'Gaps', value: `${match.stats.gaps} (${(match.stats.gaps / match.stats.length * 100).toFixed(1)}%)`, color: [230, 126, 34] },
+                    { label: 'Length', value: `${match.stats.length}`, color: [52, 73, 94] }
                 ];
-                doc.text(stats.join('  |  '), margin, yPos);
-                yPos += 6;
 
-                // Alignment sequences
+                const boxWidth = (pageWidth - 2 * margin - 20) / 5;
+                statsData.forEach((stat, i) => {
+                    const xPos = margin + i * (boxWidth + 4);
+
+                    // Box background
+                    doc.setFillColor(stat.color[0], stat.color[1], stat.color[2]);
+                    doc.rect(xPos, yPos, boxWidth, 12, 'F');
+
+                    // Label
+                    doc.setFontSize(7);
+                    doc.setFont('helvetica', 'bold');
+                    doc.setTextColor(255);
+                    doc.text(stat.label.toUpperCase(), xPos + boxWidth / 2, yPos + 4, { align: 'center' });
+
+                    // Value
+                    doc.setFontSize(10);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text(stat.value, xPos + boxWidth / 2, yPos + 9.5, { align: 'center' });
+                });
+                yPos += 16;
+
+                // Alignment Sequences Section
+                doc.setDrawColor(220, 220, 220);
+                doc.setLineWidth(0.5);
+                doc.line(margin, yPos, pageWidth - margin, yPos);
+                yPos += 5;
+
                 doc.setFont('courier', 'normal');
                 doc.setFontSize(7);
+                doc.setTextColor(0);
 
-                const charsPerLine = 100;
+                const charsPerLine = 90;
                 const seq1 = match.alignment.seq1;
                 const seq2 = match.alignment.seq2;
                 const matchStr = match.alignment.matchStr;
 
                 for (let i = 0; i < seq1.length; i += charsPerLine) {
-                    if (yPos > pageHeight - 20) {
-                        doc.addPage();
-                        yPos = margin;
+                    if (checkAndAddPage(30)) {
+                        // Re-add section header on new page
+                        doc.setFontSize(10);
+                        doc.setFont('helvetica', 'bold');
+                        doc.setTextColor(100);
+                        doc.text(`${result.overlayName} (continued)`, margin, yPos);
+                        yPos += 6;
+                        doc.setFont('courier', 'normal');
+                        doc.setFontSize(7);
+                        doc.setTextColor(0);
                     }
 
                     const chunk1 = seq1.substring(i, i + charsPerLine);
                     const chunk2 = seq2.substring(i, i + charsPerLine);
                     const chunkMatch = matchStr.substring(i, i + charsPerLine);
 
-                    doc.text(`Primary:  ${chunk1}`, margin, yPos);
+                    // Position label
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(6);
+                    doc.setTextColor(120);
+                    doc.text(`${i + 1}`, margin, yPos);
+
+                    // Sequences
+                    doc.setFont('courier', 'normal');
+                    doc.setFontSize(7);
+                    doc.setTextColor(0);
+                    doc.text(`Primary:  ${chunk1}`, margin + 15, yPos);
                     yPos += 4;
-                    doc.text(`          ${chunkMatch}`, margin, yPos);
+                    doc.setTextColor(100);
+                    doc.text(`          ${chunkMatch}`, margin + 15, yPos);
                     yPos += 4;
-                    doc.text(`Overlay:  ${chunk2}`, margin, yPos);
-                    yPos += 7;
+                    doc.setTextColor(0);
+                    doc.text(`Overlay:  ${chunk2}`, margin + 15, yPos);
+                    yPos += 8;
                 }
 
-                yPos += 5;
+                yPos += 3;
             });
+
+            // Add footer to last page
+            addFooter();
 
             // Save
             doc.save(`sequence_alignment_${Date.now()}.pdf`);
