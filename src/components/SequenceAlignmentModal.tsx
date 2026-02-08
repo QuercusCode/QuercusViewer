@@ -519,6 +519,286 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                 });
             });
 
+            // === ADVANCED ANALYSIS SECTION ===
+            checkAndAddPage(100);
+
+            // Section divider
+            doc.setDrawColor(100, 100, 100);
+            doc.setLineWidth(1);
+            doc.line(margin, yPos, pageWidth - margin, yPos);
+            yPos += 10;
+
+            // Analysis Header
+            doc.setFillColor(240, 248, 255);
+            doc.rect(margin, yPos, pageWidth - 2 * margin, 12, 'F');
+            doc.setDrawColor(180, 200, 220);
+            doc.rect(margin, yPos, pageWidth - 2 * margin, 12, 'S');
+
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(30);
+            doc.text('Advanced Analysis & Insights', margin + 5, yPos + 8);
+            yPos += 17;
+
+            // 1. CONSERVATION ANALYSIS for each alignment
+            alignmentResults.forEach((result) => {
+                result.chainMatches.forEach((match) => {
+                    checkAndAddPage(80);
+
+                    // Conservation Section for this alignment
+                    doc.setFontSize(11);
+                    doc.setFont('helvetica', 'bold');
+                    doc.setTextColor(40);
+                    doc.text(`Conservation Analysis: ${result.overlayName} (Chain ${match.primaryChain} -> ${match.targetChain})`, margin, yPos);
+                    yPos += 6;
+
+                    const seq1 = match.alignment.seq1;
+                    const seq2 = match.alignment.seq2;
+                    const matchStr = match.alignment.matchStr;
+
+                    // Calculate conservation by region (blocks of 50 residues)
+                    const blockSize = 50;
+                    const blocks = [];
+                    for (let i = 0; i < seq1.length; i += blockSize) {
+                        const blockMatch = matchStr.substring(i, i + blockSize);
+
+                        let identicalCount = 0;
+                        let similarCount = 0;
+                        for (let j = 0; j < blockMatch.length; j++) {
+                            if (blockMatch[j] === '|') identicalCount++;
+                            else if (blockMatch[j] === ':') similarCount++;
+                        }
+
+                        const blockIdentity = (identicalCount / blockSize) * 100;
+                        const blockSimilarity = ((identicalCount + similarCount) / blockSize) * 100;
+
+                        blocks.push({
+                            start: i + 1,
+                            end: Math.min(i + blockSize, seq1.length),
+                            identity: blockIdentity,
+                            similarity: blockSimilarity
+                        });
+                    }
+
+                    // Visual conservation map
+                    doc.setFontSize(8);
+                    doc.setFont('helvetica', 'normal');
+                    doc.setTextColor(80);
+                    doc.text('Conservation Map (50-residue blocks):', margin, yPos);
+                    yPos += 5;
+
+                    const barWidth = (pageWidth - 2 * margin - 30) / blocks.length;
+                    const barHeight = 15;
+                    const barStartX = margin + 30;
+
+                    blocks.forEach((block, idx) => {
+                        const xPos = barStartX + idx * barWidth;
+
+                        // Color based on identity level
+                        let color;
+                        if (block.identity >= 80) color = [46, 204, 113]; // Green - High
+                        else if (block.identity >= 60) color = [52, 152, 219]; // Blue - Medium
+                        else if (block.identity >= 40) color = [241, 196, 15]; // Yellow - Low
+                        else color = [231, 76, 60]; // Red - Very Low
+
+                        doc.setFillColor(color[0], color[1], color[2]);
+                        doc.rect(xPos, yPos, barWidth - 0.5, barHeight, 'F');
+                        doc.setDrawColor(200);
+                        doc.rect(xPos, yPos, barWidth - 0.5, barHeight, 'S');
+                    });
+                    yPos += barHeight + 3;
+
+                    // Legend
+                    doc.setFontSize(7);
+                    doc.setTextColor(100);
+                    const legendItems = [
+                        { color: [46, 204, 113], label: '>80% High' },
+                        { color: [52, 152, 219], label: '60-80% Medium' },
+                        { color: [241, 196, 15], label: '40-60% Low' },
+                        { color: [231, 76, 60], label: '<40% Very Low' }
+                    ];
+
+                    let legendX = margin;
+                    legendItems.forEach(item => {
+                        doc.setFillColor(item.color[0], item.color[1], item.color[2]);
+                        doc.rect(legendX, yPos, 3, 3, 'F');
+                        doc.text(item.label, legendX + 5, yPos + 2.5);
+                        legendX += 30;
+                    });
+                    yPos += 7;
+
+                    // Gap Distribution Analysis
+                    doc.setFontSize(9);
+                    doc.setFont('helvetica', 'bold');
+                    doc.setTextColor(60);
+                    doc.text('Gap Distribution:', margin, yPos);
+                    yPos += 5;
+
+                    let gapClusters = [];
+                    let inGap = false;
+                    let gapStart = 0;
+
+                    for (let i = 0; i < seq1.length; i++) {
+                        const hasGap = seq1[i] === '-' || seq2[i] === '-';
+
+                        if (hasGap && !inGap) {
+                            gapStart = i;
+                            inGap = true;
+                        } else if (!hasGap && inGap) {
+                            gapClusters.push({ start: gapStart + 1, end: i, length: i - gapStart });
+                            inGap = false;
+                        }
+                    }
+
+                    doc.setFontSize(8);
+                    doc.setFont('helvetica', 'normal');
+                    doc.setTextColor(80);
+
+                    if (gapClusters.length > 0) {
+                        const largestGap = gapClusters.reduce((max, gap) => gap.length > max.length ? gap : max);
+                        doc.text(`Total gap regions: ${gapClusters.length} | Largest gap: ${largestGap.length} residues (pos ${largestGap.start}-${largestGap.end})`, margin, yPos);
+                        yPos += 5;
+
+                        if (gapClusters.length <= 10) {
+                            gapClusters.forEach(gap => {
+                                doc.text(`  - Gap at positions ${gap.start}-${gap.end} (${gap.length} residues)`, margin + 3, yPos);
+                                yPos += 4;
+                                checkAndAddPage(30);
+                            });
+                        } else {
+                            doc.text(`  - Too many gap regions to list individually (${gapClusters.length} total)`, margin + 3, yPos);
+                            yPos += 4;
+                        }
+                    } else {
+                        doc.text('No gap regions found (perfectly aligned)', margin, yPos);
+                        yPos += 5;
+                    }
+
+                    yPos += 3;
+                });
+            });
+
+            checkAndAddPage(70);
+
+            // 2. ALIGNMENT QUALITY ASSESSMENT
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(40);
+            doc.text('Alignment Quality Assessment', margin, yPos);
+            yPos += 6;
+
+            doc.setFontSize(8);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(80);
+
+            alignmentResults.forEach((result) => {
+                result.chainMatches.forEach((match) => {
+                    const qualityScore = (
+                        match.stats.identity * 0.4 +
+                        match.stats.similarity * 0.3 +
+                        (1 - match.stats.gaps / match.stats.length) * 100 * 0.3
+                    );
+
+                    let qualityLabel = '';
+                    let qualityColor = [0, 0, 0];
+                    if (qualityScore >= 80) {
+                        qualityLabel = 'Excellent';
+                        qualityColor = [46, 204, 113];
+                    } else if (qualityScore >= 60) {
+                        qualityLabel = 'Good';
+                        qualityColor = [52, 152, 219];
+                    } else if (qualityScore >= 40) {
+                        qualityLabel = 'Fair';
+                        qualityColor = [241, 196, 15];
+                    } else {
+                        qualityLabel = 'Poor';
+                        qualityColor = [231, 76, 60];
+                    }
+
+                    doc.setTextColor(qualityColor[0], qualityColor[1], qualityColor[2]);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text(`${result.overlayName} (Chain ${match.primaryChain} -> ${match.targetChain}): ${qualityLabel} (${qualityScore.toFixed(1)}/100)`, margin, yPos);
+                    doc.setFont('helvetica', 'normal');
+                    doc.setTextColor(80);
+                    yPos += 5;
+                    checkAndAddPage(30);
+                });
+            });
+            yPos += 3;
+
+            checkAndAddPage(60);
+
+            // 3. INTERPRETATION & RECOMMENDATIONS
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(40);
+            doc.text('Interpretation & Recommendations', margin, yPos);
+            yPos += 6;
+
+            doc.setFontSize(8);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(80);
+
+            const interpretations = [];
+
+            if (avgIdentity >= 90) {
+                interpretations.push('- Very high sequence identity suggests these structures are highly homologous or nearly identical.');
+            } else if (avgIdentity >= 70) {
+                interpretations.push('- High sequence identity indicates strong evolutionary relationship and likely similar function.');
+            } else if (avgIdentity >= 40) {
+                interpretations.push('- Moderate identity suggests distant homology. Structural conservation may be higher than sequence.');
+            } else {
+                interpretations.push('- Low sequence identity. Consider validating structural alignment with RMSD and functional analysis.');
+            }
+
+            if (avgRMSD > 0 && avgRMSD < 2.0) {
+                interpretations.push('- Excellent structural similarity (RMSD < 2.0 A) indicates nearly identical 3D structures.');
+            } else if (avgRMSD >= 2.0 && avgRMSD < 4.0) {
+                interpretations.push('- Good structural similarity. Minor conformational differences may exist.');
+            } else if (avgRMSD >= 4.0) {
+                interpretations.push('- Significant structural differences detected. Consider domain-level analysis.');
+            }
+
+            const avgGapPercent = alignmentResults.reduce((sum, result) => {
+                return sum + result.chainMatches.reduce((s, m) => s + (m.stats.gaps / m.stats.length), 0);
+            }, 0) / totalAlignments * 100;
+
+            if (avgGapPercent > 20) {
+                interpretations.push('- High gap content (>20%) suggests insertions/deletions or alignment artifacts. Manual review recommended.');
+            }
+
+            interpretations.forEach(interp => {
+                doc.text(interp, margin, yPos);
+                yPos += 5;
+                checkAndAddPage(30);
+            });
+
+            yPos += 5;
+            checkAndAddPage(40);
+
+            // 4. METHODOLOGY REFERENCE
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(40);
+            doc.text('Methodology', margin, yPos);
+            yPos += 5;
+
+            doc.setFontSize(7);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(100);
+            doc.text('Algorithm: Needleman-Wunsch pairwise global alignment', margin, yPos);
+            yPos += 4;
+            doc.text('Scoring Matrix: BLOSUM62 (BLOcks SUbstitution Matrix)', margin, yPos);
+            yPos += 4;
+            doc.text('Gap Penalty: -5 (linear gap penalty)', margin, yPos);
+            yPos += 4;
+            doc.text('Identity: Percentage of identical residues at aligned positions', margin, yPos);
+            yPos += 4;
+            doc.text('Similarity: Percentage of identical + biochemically similar residues', margin, yPos);
+            yPos += 4;
+            doc.text('RMSD: Root Mean Square Deviation of backbone alpha carbon atoms (when available)', margin, yPos);
+            yPos += 8;
+
             // Add footer to last page
             addFooter();
 
