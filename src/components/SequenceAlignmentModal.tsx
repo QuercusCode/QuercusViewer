@@ -274,7 +274,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
         setShowExportMenu(false);
     };
 
-    const exportAsPDF = () => {
+    const exportAsPDF = async () => {
         try {
             console.log('Starting PDF export...');
 
@@ -289,6 +289,30 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
             const margin = 15;
             let yPos = margin;
             let pageNumber = 1;
+
+            // Load logo
+            const logoImg = new Image();
+            logoImg.src = '/logo/full-white.png';
+            await new Promise((resolve) => {
+                logoImg.onload = resolve;
+                logoImg.onerror = () => {
+                    console.warn('Logo failed to load, continuing without it');
+                    resolve(null);
+                };
+            });
+
+            // Helper function to add logo header
+            const addLogoHeader = () => {
+                if (logoImg.complete && logoImg.naturalWidth > 0) {
+                    try {
+                        const logoWidth = 35;
+                        const logoHeight = (logoImg.naturalHeight / logoImg.naturalWidth) * logoWidth;
+                        doc.addImage(logoImg, 'PNG', pageWidth - margin - logoWidth, margin - 8, logoWidth, logoHeight);
+                    } catch (e) {
+                        console.warn('Failed to add logo:', e);
+                    }
+                }
+            };
 
             // Helper function to add page footer
             const addFooter = () => {
@@ -325,27 +349,8 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                     doc.setFillColor(15, 23, 42); // slate-900
                     doc.rect(0, 0, pageWidth, pageHeight, 'F');
 
-                    // === LOGO HEADER ON SUBSEQUENT PAGES ===
-                    // Compact Quercus logo in top-right
-                    const logoX = pageWidth - margin - 50;
-                    const logoY = 10;
-
-                    // Small icon
-                    doc.setFillColor(59, 130, 246); // blue-500
-                    doc.circle(logoX, logoY, 4, 'F');
-
-                    doc.setFontSize(10);
-                    doc.setFont('helvetica', 'bold');
-                    doc.setTextColor(255, 255, 255);
-                    doc.text('Q', logoX - 2, logoY + 1);
-
-                    // Compact text
-                    doc.setFontSize(9);
-                    doc.setFont('helvetica', 'bold');
-                    doc.setTextColor(148, 163, 184); // slate-400
-                    doc.text('Quercus Viewer', logoX + 6, logoY + 2);
-
-                    yPos = margin + 10; // Add space after logo
+                    // Add logo header to new page
+                    addLogoHeader();
 
                     return true;
                 }
@@ -357,28 +362,18 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
             doc.setFillColor(15, 23, 42); // slate-900
             doc.rect(0, 0, pageWidth, pageHeight, 'F');
 
-            // === LOGO/BRANDING ===
-            // Quercus icon representation with "Q"
-            doc.setFillColor(59, 130, 246); // blue-500
-            doc.circle(margin + 12, pageHeight - yPos - 8, 8, 'F');
-
-            doc.setFontSize(22);
-            doc.setFont('helvetica', 'bold');
-            doc.setTextColor(255, 255, 255);
-            doc.text('Q', margin + 8.5, pageHeight - yPos - 5);
-
-            // Brand name next to icon
-            doc.setFontSize(16);
-            doc.setFont('helvetica', 'bold');
-            doc.setTextColor(226, 232, 240); // slate-200
-            doc.text('Quercus', margin + 24, pageHeight - yPos - 9);
-
-            doc.setFontSize(12);
-            doc.setFont('helvetica', 'normal');
-            doc.setTextColor(148, 163, 184); // slate-400
-            doc.text('Viewer', margin + 68, pageHeight - yPos - 9);
-
-            yPos += 25;
+            // Add large logo to cover page
+            if (logoImg.complete && logoImg.naturalWidth > 0) {
+                try {
+                    const coverLogoWidth = 60;
+                    const coverLogoHeight = (logoImg.naturalHeight / logoImg.naturalWidth) * coverLogoWidth;
+                    const logoX = (pageWidth - coverLogoWidth) / 2;
+                    doc.addImage(logoImg, 'PNG', logoX, yPos, coverLogoWidth, coverLogoHeight);
+                    yPos += coverLogoHeight + 8;
+                } catch (e) {
+                    console.warn('Failed to add cover logo:', e);
+                }
+            }
 
             // Accent gradient banner
             const gradientHeight = 35;
