@@ -799,6 +799,282 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
             doc.text('RMSD: Root Mean Square Deviation of backbone alpha carbon atoms (when available)', margin, yPos);
             yPos += 8;
 
+            checkAndAddPage(100);
+
+            // 5. AMINO ACID COMPOSITION ANALYSIS
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(40);
+            doc.text('Amino Acid Composition Analysis', margin, yPos);
+            yPos += 6;
+
+            doc.setFontSize(8);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(80);
+
+            // Helper to count amino acids (excluding gaps)
+            const countAminoAcids = (sequence: string) => {
+                const counts: { [key: string]: number } = {};
+                for (const aa of sequence) {
+                    if (aa !== '-') {
+                        counts[aa] = (counts[aa] || 0) + 1;
+                    }
+                }
+                return counts;
+            };
+
+            // Analyze composition for each alignment
+            alignmentResults.forEach((result) => {
+                result.chainMatches.forEach((match) => {
+                    checkAndAddPage(60);
+
+                    doc.setFontSize(9);
+                    doc.setFont('helvetica', 'bold');
+                    doc.setTextColor(60);
+                    doc.text(`${result.overlayName} (Chain ${match.primaryChain} -> ${match.targetChain})`, margin, yPos);
+                    yPos += 5;
+
+                    const seq1Clean = match.alignment.seq1.replace(/-/g, '');
+                    const seq2Clean = match.alignment.seq2.replace(/-/g, '');
+
+                    const counts1 = countAminoAcids(seq1Clean);
+                    const counts2 = countAminoAcids(seq2Clean);
+
+                    // Categorize by properties
+                    const hydrophobic = ['A', 'V', 'I', 'L', 'M', 'F', 'W', 'P'];
+                    const polar = ['S', 'T', 'Y', 'N', 'Q', 'C'];
+                    const charged = ['K', 'R', 'H', 'D', 'E'];
+                    const small = ['G'];
+
+                    const getPropertyCount = (counts: { [key: string]: number }, list: string[]) => {
+                        return list.reduce((sum, aa) => sum + (counts[aa] || 0), 0);
+                    };
+
+                    const total1 = seq1Clean.length;
+                    const total2 = seq2Clean.length;
+
+                    const props1 = {
+                        hydrophobic: (getPropertyCount(counts1, hydrophobic) / total1) * 100,
+                        polar: (getPropertyCount(counts1, polar) / total1) * 100,
+                        charged: (getPropertyCount(counts1, charged) / total1) * 100,
+                        small: (getPropertyCount(counts1, small) / total1) * 100
+                    };
+
+                    const props2 = {
+                        hydrophobic: (getPropertyCount(counts2, hydrophobic) / total2) * 100,
+                        polar: (getPropertyCount(counts2, polar) / total2) * 100,
+                        charged: (getPropertyCount(counts2, charged) / total2) * 100,
+                        small: (getPropertyCount(counts2, small) / total2) * 100
+                    };
+
+                    doc.setFontSize(7);
+                    doc.setFont('helvetica', 'normal');
+                    doc.setTextColor(80);
+
+                    const propData = [
+                        { name: 'Hydrophobic', primary: props1.hydrophobic, overlay: props2.hydrophobic, color: [255, 193, 7] },
+                        { name: 'Polar', primary: props1.polar, overlay: props2.polar, color: [33, 150, 243] },
+                        { name: 'Charged', primary: props1.charged, overlay: props2.charged, color: [233, 30, 99] },
+                        { name: 'Small (Gly)', primary: props1.small, overlay: props2.small, color: [156, 39, 176] }
+                    ];
+
+                    propData.forEach(prop => {
+                        const diff = Math.abs(prop.primary - prop.overlay);
+                        const diffStr = diff > 5 ? ` (Δ${diff.toFixed(1)}%)` : '';
+                        doc.text(`${prop.name}: Primary ${prop.primary.toFixed(1)}% | Overlay ${prop.overlay.toFixed(1)}%${diffStr}`, margin + 3, yPos);
+                        yPos += 4;
+                    });
+
+                    yPos += 2;
+                });
+            });
+
+            checkAndAddPage(80);
+
+            // 6. SUBSTITUTION PATTERN ANALYSIS
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(40);
+            doc.text('Substitution Pattern Analysis', margin, yPos);
+            yPos += 6;
+
+            doc.setFontSize(8);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(80);
+
+            alignmentResults.forEach((result) => {
+                result.chainMatches.forEach((match) => {
+                    checkAndAddPage(50);
+
+                    const seq1 = match.alignment.seq1;
+                    const seq2 = match.alignment.seq2;
+                    const matchStr = match.alignment.matchStr;
+
+                    // Analyze mismatches
+                    const substitutions: { [key: string]: number } = {};
+                    let conservativeCount = 0;
+                    let nonConservativeCount = 0;
+
+                    for (let i = 0; i < seq1.length; i++) {
+                        if (seq1[i] !== '-' && seq2[i] !== '-' && seq1[i] !== seq2[i]) {
+                            const sub = `${seq1[i]}->${seq2[i]}`;
+                            substitutions[sub] = (substitutions[sub] || 0) + 1;
+
+                            if (matchStr[i] === ':') conservativeCount++;
+                            else nonConservativeCount++;
+                        }
+                    }
+
+                    const totalSubs = Object.values(substitutions).reduce((sum, count) => sum + count, 0);
+
+                    if (totalSubs > 0) {
+                        doc.setFontSize(9);
+                        doc.setFont('helvetica', 'bold');
+                        doc.setTextColor(60);
+                        doc.text(`${result.overlayName} (Chain ${match.primaryChain} -> ${match.targetChain})`, margin, yPos);
+                        yPos += 5;
+
+                        doc.setFontSize(7);
+                        doc.setFont('helvetica', 'normal');
+                        doc.setTextColor(80);
+
+                        doc.text(`Total substitutions: ${totalSubs} | Conservative: ${conservativeCount} (${(conservativeCount / totalSubs * 100).toFixed(1)}%) | Non-conservative: ${nonConservativeCount} (${(nonConservativeCount / totalSubs * 100).toFixed(1)}%)`, margin, yPos);
+                        yPos += 5;
+
+                        // Show top 5 most common substitutions
+                        const topSubs = Object.entries(substitutions)
+                            .sort((a, b) => b[1] - a[1])
+                            .slice(0, 5);
+
+                        if (topSubs.length > 0) {
+                            doc.text('Most common substitutions:', margin, yPos);
+                            yPos += 4;
+                            topSubs.forEach(([sub, count]) => {
+                                doc.text(`  ${sub}: ${count} occurrences (${(count / totalSubs * 100).toFixed(1)}%)`, margin + 3, yPos);
+                                yPos += 3.5;
+                            });
+                        }
+
+                        yPos += 3;
+                    }
+                });
+            });
+
+            checkAndAddPage(70);
+
+            // 7. CONSENSUS SEQUENCE
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(40);
+            doc.text('Consensus Sequences', margin, yPos);
+            yPos += 6;
+
+            doc.setFontSize(8);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(80);
+            doc.text('Consensus represents the most conserved residue at each position (shown for regions with >70% identity)', margin, yPos);
+            yPos += 5;
+
+            alignmentResults.forEach((result) => {
+                result.chainMatches.forEach((match) => {
+                    if (match.stats.identity >= 70) {
+                        checkAndAddPage(40);
+
+                        const seq1 = match.alignment.seq1;
+                        const seq2 = match.alignment.seq2;
+                        const matchStr = match.alignment.matchStr;
+
+                        let consensus = '';
+                        for (let i = 0; i < seq1.length; i++) {
+                            if (matchStr[i] === '|') {
+                                consensus += seq1[i]; // Identical
+                            } else if (seq1[i] !== '-' && seq2[i] !== '-') {
+                                consensus += 'X'; // Mismatch
+                            } else {
+                                consensus += '-'; // Gap
+                            }
+                        }
+
+                        doc.setFontSize(9);
+                        doc.setFont('helvetica', 'bold');
+                        doc.setTextColor(60);
+                        doc.text(`${result.overlayName} (Chain ${match.primaryChain} -> ${match.targetChain})`, margin, yPos);
+                        yPos += 5;
+
+                        doc.setFont('courier', 'normal');
+                        doc.setFontSize(6);
+                        doc.setTextColor(80);
+
+                        // Show first 100 residues of consensus
+                        const consensusPreview = consensus.substring(0, 100);
+                        doc.text(`Consensus: ${consensusPreview}${consensus.length > 100 ? '...' : ''}`, margin, yPos);
+                        yPos += 5;
+
+                        const identicalCount = (consensus.match(/[^X-]/g) || []).length;
+                        doc.setFont('helvetica', 'normal');
+                        doc.text(`Conserved positions: ${identicalCount}/${consensus.length} (${(identicalCount / consensus.length * 100).toFixed(1)}%)`, margin, yPos);
+                        yPos += 5;
+                    }
+                });
+            });
+
+            checkAndAddPage(50);
+
+            // 8. STATISTICAL SUMMARY
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(40);
+            doc.text('Statistical Summary', margin, yPos);
+            yPos += 6;
+
+            doc.setFontSize(8);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(80);
+
+            // Calculate variance and standard deviation
+            const identities = alignmentResults.flatMap(r => r.chainMatches.map(m => m.stats.identity));
+            const similarities = alignmentResults.flatMap(r => r.chainMatches.map(m => m.stats.similarity));
+
+            const variance = (values: number[]) => {
+                const mean = values.reduce((sum, v) => sum + v, 0) / values.length;
+                return values.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0) / values.length;
+            };
+
+            const identityStd = Math.sqrt(variance(identities));
+            const similarityStd = Math.sqrt(variance(similarities));
+
+            doc.text(`Identity: Mean = ${avgIdentity.toFixed(1)}% ± ${identityStd.toFixed(1)}% (SD)`, margin, yPos);
+            yPos += 4;
+            doc.text(`Similarity: Mean = ${avgSimilarity.toFixed(1)}% ± ${similarityStd.toFixed(1)}% (SD)`, margin, yPos);
+            yPos += 4;
+            doc.text(`Range: Identity [${Math.min(...identities).toFixed(1)}% - ${Math.max(...identities).toFixed(1)}%], Similarity [${Math.min(...similarities).toFixed(1)}% - ${Math.max(...similarities).toFixed(1)}%]`, margin, yPos);
+            yPos += 8;
+
+            checkAndAddPage(40);
+
+            // 9. REFERENCE & CITATION
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(40);
+            doc.text('References & Citation', margin, yPos);
+            yPos += 5;
+
+            doc.setFontSize(7);
+            doc.setFont('helvetica', 'italic');
+            doc.setTextColor(100);
+            doc.text('If you use this alignment analysis in your research, please cite:', margin, yPos);
+            yPos += 4;
+
+            doc.setFont('helvetica', 'normal');
+            doc.text('1. Needleman, S. B., & Wunsch, C. D. (1970). A general method applicable to the search for similarities', margin, yPos);
+            yPos += 3.5;
+            doc.text('   in the amino acid sequence of two proteins. Journal of Molecular Biology, 48(3), 443-453.', margin, yPos);
+            yPos += 4;
+            doc.text('2. Henikoff, S., & Henikoff, J. G. (1992). Amino acid substitution matrices from protein blocks.', margin, yPos);
+            yPos += 3.5;
+            doc.text('   Proceedings of the National Academy of Sciences, 89(22), 10915-10919.', margin, yPos);
+            yPos += 8;
+
             // Add footer to last page
             addFooter();
 
