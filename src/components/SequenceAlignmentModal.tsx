@@ -284,7 +284,6 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                 format: 'a4'
             });
 
-            const pageWidth = doc.internal.pageSize.getWidth();
             const pageHeight = doc.internal.pageSize.getHeight();
             const margin = 15;
             let yPos = margin;
@@ -302,7 +301,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
             yPos += 8;
 
             // Process each alignment result
-            alignmentResults.forEach((result, idx) => {
+            alignmentResults.forEach((result) => {
                 const match = result.chainMatches.find(m => m.primaryChain === selectedChain);
                 if (!match) return;
 
