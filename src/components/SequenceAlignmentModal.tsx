@@ -330,108 +330,193 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
             doc.text('Pairwise Needleman-Wunsch Algorithm • BLOSUM62 Matrix • Gap Penalty: -5', margin + 5, yPos + 15);
             yPos += 25;
 
-            // Process each alignment result
-            alignmentResults.forEach((result) => {
-                const match = result.chainMatches.find(m => m.primaryChain === selectedChain);
-                if (!match) return;
+            // Calculate global statistics
+            let totalAlignments = 0;
+            let avgIdentity = 0;
+            let avgSimilarity = 0;
+            let avgRMSD = 0;
+            let rmsdCount = 0;
 
-                checkAndAddPage(80);
-
-                // Alignment Section Header
-                doc.setFillColor(250, 250, 250);
-                doc.rect(margin, yPos, pageWidth - 2 * margin, 10, 'F');
-                doc.setDrawColor(200, 200, 200);
-                doc.rect(margin, yPos, pageWidth - 2 * margin, 10, 'S');
-
-                doc.setFontSize(12);
-                doc.setFont('helvetica', 'bold');
-                doc.setTextColor(30);
-                doc.text(`${result.overlayName} (Chain ${match.targetChain})`, margin + 3, yPos + 7);
-                yPos += 13;
-
-                // Statistics Table
-                const statsData = [
-                    { label: 'Identity', value: `${match.stats.identity.toFixed(1)}%`, color: [52, 152, 219] },
-                    { label: 'Similarity', value: `${match.stats.similarity.toFixed(1)}%`, color: [46, 204, 113] },
-                    { label: 'RMSD', value: match.stats.rmsd ? `${match.stats.rmsd.toFixed(2)} Å` : 'N/A', color: [155, 89, 182] },
-                    { label: 'Gaps', value: `${match.stats.gaps} (${(match.stats.gaps / match.stats.length * 100).toFixed(1)}%)`, color: [230, 126, 34] },
-                    { label: 'Length', value: `${match.stats.length}`, color: [52, 73, 94] }
-                ];
-
-                const boxWidth = (pageWidth - 2 * margin - 20) / 5;
-                statsData.forEach((stat, i) => {
-                    const xPos = margin + i * (boxWidth + 4);
-
-                    // Box background
-                    doc.setFillColor(stat.color[0], stat.color[1], stat.color[2]);
-                    doc.rect(xPos, yPos, boxWidth, 12, 'F');
-
-                    // Label
-                    doc.setFontSize(7);
-                    doc.setFont('helvetica', 'bold');
-                    doc.setTextColor(255);
-                    doc.text(stat.label.toUpperCase(), xPos + boxWidth / 2, yPos + 4, { align: 'center' });
-
-                    // Value
-                    doc.setFontSize(10);
-                    doc.setFont('helvetica', 'bold');
-                    doc.text(stat.value, xPos + boxWidth / 2, yPos + 9.5, { align: 'center' });
+            alignmentResults.forEach(result => {
+                result.chainMatches.forEach(match => {
+                    totalAlignments++;
+                    avgIdentity += match.stats.identity;
+                    avgSimilarity += match.stats.similarity;
+                    if (match.stats.rmsd) {
+                        avgRMSD += match.stats.rmsd;
+                        rmsdCount++;
+                    }
                 });
-                yPos += 16;
+            });
 
-                // Alignment Sequences Section
-                doc.setDrawColor(220, 220, 220);
-                doc.setLineWidth(0.5);
-                doc.line(margin, yPos, pageWidth - margin, yPos);
-                yPos += 5;
+            if (totalAlignments > 0) {
+                avgIdentity /= totalAlignments;
+                avgSimilarity /= totalAlignments;
+                if (rmsdCount > 0) avgRMSD /= rmsdCount;
+            }
 
-                doc.setFont('courier', 'normal');
-                doc.setFontSize(7);
-                doc.setTextColor(0);
+            // Summary Section
+            doc.setFillColor(245, 245, 250);
+            doc.rect(margin, yPos, pageWidth - 2 * margin, 35, 'F');
+            doc.setDrawColor(200, 200, 220);
+            doc.rect(margin, yPos, pageWidth - 2 * margin, 35, 'S');
 
-                const charsPerLine = 90;
-                const seq1 = match.alignment.seq1;
-                const seq2 = match.alignment.seq2;
-                const matchStr = match.alignment.matchStr;
+            doc.setFontSize(13);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(40);
+            doc.text('Summary', margin + 5, yPos + 7);
 
-                for (let i = 0; i < seq1.length; i += charsPerLine) {
-                    if (checkAndAddPage(30)) {
-                        // Re-add section header on new page
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(60);
+            const summaryLines = [
+                `Total Structures: ${alignmentResults.length}`,
+                `Total Chain Alignments: ${totalAlignments}`,
+                `Average Identity: ${avgIdentity.toFixed(1)}%`,
+                `Average Similarity: ${avgSimilarity.toFixed(1)}%`,
+                rmsdCount > 0 ? `Average RMSD: ${avgRMSD.toFixed(2)} Å` : 'RMSD: N/A'
+            ];
+            summaryLines.forEach((line, i) => {
+                doc.text(line, margin + 5, yPos + 14 + i * 5);
+            });
+            yPos += 40;
+
+            // Table of Contents
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(40);
+            doc.text('Table of Contents', margin, yPos);
+            yPos += 7;
+
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(80);
+
+            let tocIndex = 1;
+            alignmentResults.forEach(result => {
+                result.chainMatches.forEach(match => {
+                    doc.text(`${tocIndex}. ${result.overlayName} - Chain ${match.primaryChain} → ${match.targetChain}`, margin + 3, yPos);
+                    yPos += 5;
+                    tocIndex++;
+                    checkAndAddPage(50);
+                });
+            });
+
+            yPos += 5;
+            checkAndAddPage(80);
+
+            // Process each alignment result
+            let alignmentIndex = 1;
+            alignmentResults.forEach((result) => {
+                // Loop through ALL chain matches instead of just one
+                result.chainMatches.forEach((match) => {
+                    checkAndAddPage(80);
+
+                    // Alignment Section Header
+                    doc.setFillColor(250, 250, 250);
+                    doc.rect(margin, yPos, pageWidth - 2 * margin, 10, 'F');
+                    doc.setDrawColor(200, 200, 200);
+                    doc.rect(margin, yPos, pageWidth - 2 * margin, 10, 'S');
+
+                    doc.setFontSize(12);
+                    doc.setFont('helvetica', 'bold');
+                    doc.setTextColor(30);
+                    doc.text(`${alignmentIndex}. ${result.overlayName} - Chain ${match.primaryChain} → ${match.targetChain}`, margin + 3, yPos + 7);
+                    yPos += 13;
+
+                    // Statistics Table
+                    const statsData = [
+                        { label: 'Identity', value: `${match.stats.identity.toFixed(1)}%`, color: [52, 152, 219] },
+                        { label: 'Similarity', value: `${match.stats.similarity.toFixed(1)}%`, color: [46, 204, 113] },
+                        { label: 'RMSD', value: match.stats.rmsd ? `${match.stats.rmsd.toFixed(2)} Å` : 'N/A', color: [155, 89, 182] },
+                        { label: 'Gaps', value: `${match.stats.gaps} (${(match.stats.gaps / match.stats.length * 100).toFixed(1)}%)`, color: [230, 126, 34] },
+                        { label: 'Length', value: `${match.stats.length}`, color: [52, 73, 94] }
+                    ];
+
+                    const boxWidth = (pageWidth - 2 * margin - 20) / 5;
+                    statsData.forEach((stat, i) => {
+                        const xPos = margin + i * (boxWidth + 4);
+
+                        // Box background
+                        doc.setFillColor(stat.color[0], stat.color[1], stat.color[2]);
+                        doc.rect(xPos, yPos, boxWidth, 12, 'F');
+
+                        // Label
+                        doc.setFontSize(7);
+                        doc.setFont('helvetica', 'bold');
+                        doc.setTextColor(255);
+                        doc.text(stat.label.toUpperCase(), xPos + boxWidth / 2, yPos + 4, { align: 'center' });
+
+                        // Value
                         doc.setFontSize(10);
                         doc.setFont('helvetica', 'bold');
-                        doc.setTextColor(100);
-                        doc.text(`${result.overlayName} (continued)`, margin, yPos);
-                        yPos += 6;
-                        doc.setFont('courier', 'normal');
-                        doc.setFontSize(7);
-                        doc.setTextColor(0);
-                    }
+                        doc.text(stat.value, xPos + boxWidth / 2, yPos + 9.5, { align: 'center' });
+                    });
+                    yPos += 16;
 
-                    const chunk1 = seq1.substring(i, i + charsPerLine);
-                    const chunk2 = seq2.substring(i, i + charsPerLine);
-                    const chunkMatch = matchStr.substring(i, i + charsPerLine);
-
-                    // Position label
+                    // Coverage Info
+                    doc.setFontSize(8);
                     doc.setFont('helvetica', 'normal');
-                    doc.setFontSize(6);
-                    doc.setTextColor(120);
-                    doc.text(`${i + 1}`, margin, yPos);
+                    doc.setTextColor(100);
+                    const coverage = ((match.stats.length - match.stats.gaps) / match.stats.length * 100).toFixed(1);
+                    doc.text(`Alignment Coverage: ${coverage}% • Score: ${match.stats.score.toFixed(0)}`, margin, yPos);
+                    yPos += 6;
 
-                    // Sequences
+                    // Alignment Sequences Section
+                    doc.setDrawColor(220, 220, 220);
+                    doc.setLineWidth(0.5);
+                    doc.line(margin, yPos, pageWidth - margin, yPos);
+                    yPos += 5;
+
                     doc.setFont('courier', 'normal');
                     doc.setFontSize(7);
                     doc.setTextColor(0);
-                    doc.text(`Primary:  ${chunk1}`, margin + 15, yPos);
-                    yPos += 4;
-                    doc.setTextColor(100);
-                    doc.text(`          ${chunkMatch}`, margin + 15, yPos);
-                    yPos += 4;
-                    doc.setTextColor(0);
-                    doc.text(`Overlay:  ${chunk2}`, margin + 15, yPos);
-                    yPos += 8;
-                }
 
-                yPos += 3;
+                    const charsPerLine = 90;
+                    const seq1 = match.alignment.seq1;
+                    const seq2 = match.alignment.seq2;
+                    const matchStr = match.alignment.matchStr;
+
+                    for (let i = 0; i < seq1.length; i += charsPerLine) {
+                        if (checkAndAddPage(30)) {
+                            // Re-add section header on new page
+                            doc.setFontSize(10);
+                            doc.setFont('helvetica', 'bold');
+                            doc.setTextColor(100);
+                            doc.text(`${result.overlayName} - Chain ${match.primaryChain} → ${match.targetChain} (continued)`, margin, yPos);
+                            yPos += 6;
+                            doc.setFont('courier', 'normal');
+                            doc.setFontSize(7);
+                            doc.setTextColor(0);
+                        }
+
+                        const chunk1 = seq1.substring(i, i + charsPerLine);
+                        const chunk2 = seq2.substring(i, i + charsPerLine);
+                        const chunkMatch = matchStr.substring(i, i + charsPerLine);
+
+                        // Position label
+                        doc.setFont('helvetica', 'normal');
+                        doc.setFontSize(6);
+                        doc.setTextColor(120);
+                        doc.text(`${i + 1}`, margin, yPos);
+
+                        // Sequences
+                        doc.setFont('courier', 'normal');
+                        doc.setFontSize(7);
+                        doc.setTextColor(0);
+                        doc.text(`Primary:  ${chunk1}`, margin + 15, yPos);
+                        yPos += 4;
+                        doc.setTextColor(100);
+                        doc.text(`          ${chunkMatch}`, margin + 15, yPos);
+                        yPos += 4;
+                        doc.setTextColor(0);
+                        doc.text(`Overlay:  ${chunk2}`, margin + 15, yPos);
+                        yPos += 8;
+                    }
+
+                    yPos += 3;
+                    alignmentIndex++;
+                });
             });
 
             // Add footer to last page
