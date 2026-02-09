@@ -578,7 +578,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                     doc.setFontSize(12); // Increased from 10
                     doc.setTextColor(226, 232, 240); // slate-200
 
-                    const charsPerLine = 60; // Reduced for larger font (was 70)
+                    const charsPerLine = 70; // Increased from 60
                     const seq1 = match.alignment.seq1;
                     const seq2 = match.alignment.seq2;
                     const matchStr = match.alignment.matchStr;
