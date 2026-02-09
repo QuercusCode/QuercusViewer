@@ -541,7 +541,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                         doc.roundedRect(xPos, yPos, boxWidth, 13, 2, 2, 'S');
 
                         // Label
-                        doc.setFontSize(7);
+                        doc.setFontSize(9);
                         doc.setFont('helvetica', 'bold');
                         doc.setTextColor(stat.color[0], stat.color[1], stat.color[2]);
                         doc.text(stat.label.toUpperCase(), xPos + boxWidth / 2, yPos + 5, { align: 'center' });
@@ -609,14 +609,14 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
 
                         // Position label - bigger and more visible
                         doc.setFont('helvetica', 'bold');
-                        doc.setFontSize(7);
+                        doc.setFontSize(9);
                         doc.setTextColor(148, 163, 184); // slate-400
                         const posLabel = `${i + 1}`.padStart(4, ' ');
                         doc.text(posLabel, margin + 3, yPos + 2);
 
                         // Primary sequence with colored label
                         doc.setFont('helvetica', 'bold');
-                        doc.setFontSize(7);
+                        doc.setFontSize(9);
                         doc.setTextColor(59, 130, 246); // blue-500
                         doc.text('Pri:', margin + 15, yPos + 2);
 
@@ -635,7 +635,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
 
                         // Overlay sequence with colored label
                         doc.setFont('helvetica', 'bold');
-                        doc.setFontSize(7);
+                        doc.setFontSize(9);
                         doc.setTextColor(168, 85, 247); // purple-500
                         doc.text('Ovl:', margin + 15, yPos + 2);
 
@@ -666,7 +666,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
             doc.setDrawColor(180, 200, 220);
             doc.rect(margin, yPos, pageWidth - 2 * margin, 12, 'S');
 
-            doc.setFontSize(14);
+            doc.setFontSize(18);
             doc.setFont('helvetica', 'bold');
             doc.setTextColor(30);
             doc.text('Advanced Analysis & Insights', margin + 5, yPos + 8);
@@ -678,7 +678,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                     checkAndAddPage(80);
 
                     // Conservation Section for this alignment
-                    doc.setFontSize(11);
+                    doc.setFontSize(13);
                     doc.setFont('helvetica', 'bold');
                     doc.setTextColor(196, 181, 253); // violet-300
                     doc.text(`Conservation Analysis: ${result.overlayName} (Chain ${match.primaryChain} -> ${match.targetChain})`, margin, yPos);
@@ -713,7 +713,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                     }
 
                     // Visual conservation map
-                    doc.setFontSize(8);
+                    doc.setFontSize(10);
                     doc.setFont('helvetica', 'normal');
                     doc.setTextColor(203, 213, 225); // slate-300
                     doc.text('Conservation Map (50-residue blocks):', margin, yPos);
@@ -741,7 +741,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                     yPos += barHeight + 3;
 
                     // Legend
-                    doc.setFontSize(7);
+                    doc.setFontSize(9);
                     doc.setTextColor(148, 163, 184); // slate-400
                     const legendItems = [
                         { color: [46, 204, 113], label: '>80% High' },
@@ -760,7 +760,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                     yPos += 7;
 
                     // Gap Distribution Analysis
-                    doc.setFontSize(9);
+                    doc.setFontSize(11);
                     doc.setFont('helvetica', 'bold');
                     doc.setTextColor(148, 226, 213); // teal-300
                     doc.text('Gap Distribution:', margin, yPos);
@@ -782,7 +782,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                         }
                     }
 
-                    doc.setFontSize(8);
+                    doc.setFontSize(10);
                     doc.setFont('helvetica', 'normal');
                     doc.setTextColor(203, 213, 225); // slate-300
 
@@ -915,7 +915,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
             doc.text('Methodology', margin, yPos);
             yPos += 5;
 
-            doc.setFontSize(7);
+            doc.setFontSize(9);
             doc.setFont('helvetica', 'normal');
             doc.setTextColor(148, 163, 184); // slate-400
             doc.text('Algorithm: Needleman-Wunsch pairwise global alignment', margin, yPos);
@@ -999,7 +999,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                         small: (getPropertyCount(counts2, small) / total2) * 100
                     };
 
-                    doc.setFontSize(7);
+                    doc.setFontSize(9);
                     doc.setFont('helvetica', 'normal');
                     doc.setTextColor(203, 213, 225); // slate-300
 
@@ -1066,7 +1066,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                         doc.text(`${result.overlayName} (Chain ${match.primaryChain} -> ${match.targetChain})`, margin, yPos);
                         yPos += 5;
 
-                        doc.setFontSize(7);
+                        doc.setFontSize(9);
                         doc.setFont('helvetica', 'normal');
                         doc.setTextColor(203, 213, 225); // slate-300
 
@@ -1134,7 +1134,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                         yPos += 5;
 
                         doc.setFont('courier', 'normal');
-                        doc.setFontSize(6);
+                        doc.setFontSize(8);
                         doc.setTextColor(203, 213, 225); // slate-300
 
                         // Show first 100 residues of consensus
@@ -1191,7 +1191,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
             doc.text('References & Citation', margin, yPos);
             yPos += 5;
 
-            doc.setFontSize(7);
+            doc.setFontSize(9);
             doc.setFont('helvetica', 'italic');
             doc.setTextColor(148, 163, 184); // slate-400
             doc.text('If you use this alignment analysis in your research, please cite:', margin, yPos);
