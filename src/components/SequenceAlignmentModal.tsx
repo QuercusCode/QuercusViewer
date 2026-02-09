@@ -575,7 +575,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                     yPos += 11;
 
                     doc.setFont('courier', 'normal');
-                    doc.setFontSize(16); // Increased for visibility
+                    doc.setFontSize(14); // Optimal size
                     doc.setTextColor(226, 232, 240); // slate-200
 
                     const charsPerLine = 80; // Optimal balance
@@ -594,7 +594,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                             doc.text(`${result.overlayName} - Chain ${match.primaryChain} -> ${match.targetChain} (continued)`, margin + 5, yPos + 5.5);
                             yPos += 11;
                             doc.setFont('courier', 'normal');
-                            doc.setFontSize(16); // Match main sequence size
+                            doc.setFontSize(14); // Match main sequence size
                             doc.setTextColor(226, 232, 240); // slate-200
                         }
 
@@ -603,7 +603,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                         const chunkMatch = matchStr.substring(i, i + charsPerLine);
 
                         // Sequence block with subtle background
-                        const blockHeight = 16;
+                        const blockHeight = 22; // Increased for better spacing
                         doc.setFillColor(30, 41, 59, 25); // slate-800 with low opacity
                         doc.roundedRect(margin, yPos - 2, pageWidth - 2 * margin, blockHeight, 2, 2, 'F');
 
@@ -621,17 +621,17 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                         doc.text('Pri:', margin + 15, yPos + 2);
 
                         doc.setFont('courier', 'normal');
-                        doc.setFontSize(16);
+                        doc.setFontSize(14);
                         doc.setTextColor(226, 232, 240); // slate-200
                         doc.text(chunk1, margin + 25, yPos + 2);
-                        yPos += 5;
+                        yPos += 7; // Increased spacing
 
                         // Match string - highlighted
                         doc.setFont('courier', 'normal');
-                        doc.setFontSize(16);
+                        doc.setFontSize(14);
                         doc.setTextColor(16, 185, 129); // emerald-500 for matches
                         doc.text(chunkMatch, margin + 25, yPos + 2);
-                        yPos += 5;
+                        yPos += 7; // Increased spacing
 
                         // Overlay sequence with colored label
                         doc.setFont('helvetica', 'bold');
@@ -640,10 +640,10 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                         doc.text('Ovl:', margin + 15, yPos + 2);
 
                         doc.setFont('courier', 'normal');
-                        doc.setFontSize(16);
+                        doc.setFontSize(14);
                         doc.setTextColor(226, 232, 240); // slate-200
                         doc.text(chunk2, margin + 25, yPos + 2);
-                        yPos += 10; // More spacing between blocks
+                        yPos += 12; // More spacing between blocks
                     }
 
                     yPos += 3;
