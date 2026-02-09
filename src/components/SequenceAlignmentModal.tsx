@@ -393,7 +393,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
             doc.text('Sequence Alignment Report', margin + 5, yPos + 15);
 
             // Subtitle
-            doc.setFontSize(12);
+            doc.setFontSize(13);
             doc.setFont('helvetica', 'normal');
             doc.setTextColor(226, 232, 240); // slate-200
             doc.text('Pairwise Needleman-Wunsch Algorithm • BLOSUM62 Matrix • Gap Penalty: -5', margin + 5, yPos + 25);
@@ -512,7 +512,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                     doc.setFillColor(59, 130, 246); // blue-500
                     doc.roundedRect(margin, yPos, 4, 11, 2, 2, 'F');
 
-                    doc.setFontSize(12);
+                    doc.setFontSize(13);
                     doc.setFont('helvetica', 'bold');
                     doc.setTextColor(226, 232, 240); // slate-200
                     doc.text(`${alignmentIndex}. ${result.overlayName} - Chain ${match.primaryChain} -> ${match.targetChain}`, margin + 8, yPos + 7.5);
@@ -547,7 +547,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                         doc.text(stat.label.toUpperCase(), xPos + boxWidth / 2, yPos + 5, { align: 'center' });
 
                         // Value
-                        doc.setFontSize(12);
+                        doc.setFontSize(13);
                         doc.setFont('helvetica', 'bold');
                         doc.setTextColor(226, 232, 240); // slate-200
                         doc.text(stat.value, xPos + boxWidth / 2, yPos + 10, { align: 'center' });
@@ -574,8 +574,8 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                     doc.text('SEQUENCE ALIGNMENT', margin + 5, yPos + 5.5);
                     yPos += 11;
 
-                    doc.setFont('courier', 'bold');
-                    doc.setFontSize(12); // Increased from 10
+                    doc.setFont('courier', 'normal');
+                    doc.setFontSize(13); // Increased from 12, unbolded
                     doc.setTextColor(226, 232, 240); // slate-200
 
                     const charsPerLine = 80; // Optimal balance
@@ -593,7 +593,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                             doc.setTextColor(148, 226, 213); // teal-300
                             doc.text(`${result.overlayName} - Chain ${match.primaryChain} -> ${match.targetChain} (continued)`, margin + 5, yPos + 5.5);
                             yPos += 11;
-                            doc.setFont('courier', 'bold');
+                            doc.setFont('courier', 'normal');
                             doc.setFontSize(12); // Match main sequence size
                             doc.setTextColor(226, 232, 240); // slate-200
                         }
@@ -620,15 +620,15 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                         doc.setTextColor(59, 130, 246); // blue-500
                         doc.text('Pri:', margin + 15, yPos + 2);
 
-                        doc.setFont('courier', 'bold');
-                        doc.setFontSize(12);
+                        doc.setFont('courier', 'normal');
+                        doc.setFontSize(13);
                         doc.setTextColor(226, 232, 240); // slate-200
                         doc.text(chunk1, margin + 25, yPos + 2);
                         yPos += 5;
 
                         // Match string - highlighted
-                        doc.setFont('courier', 'bold');
-                        doc.setFontSize(12);
+                        doc.setFont('courier', 'normal');
+                        doc.setFontSize(13);
                         doc.setTextColor(16, 185, 129); // emerald-500 for matches
                         doc.text(chunkMatch, margin + 25, yPos + 2);
                         yPos += 5;
@@ -639,8 +639,8 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                         doc.setTextColor(168, 85, 247); // purple-500
                         doc.text('Ovl:', margin + 15, yPos + 2);
 
-                        doc.setFont('courier', 'bold');
-                        doc.setFontSize(12);
+                        doc.setFont('courier', 'normal');
+                        doc.setFontSize(13);
                         doc.setTextColor(226, 232, 240); // slate-200
                         doc.text(chunk2, margin + 25, yPos + 2);
                         yPos += 10; // More spacing between blocks
@@ -909,7 +909,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
             checkAndAddPage(40);
 
             // 4. METHODOLOGY REFERENCE
-            doc.setFontSize(12);
+            doc.setFontSize(13);
             doc.setFont('helvetica', 'bold');
             doc.setTextColor(196, 181, 253); // violet-300
             doc.text('Methodology', margin, yPos);
@@ -1185,7 +1185,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
             checkAndAddPage(40);
 
             // 9. REFERENCE & CITATION
-            doc.setFontSize(12);
+            doc.setFontSize(13);
             doc.setFont('helvetica', 'bold');
             doc.setTextColor(196, 181, 253); // violet-300
             doc.text('References & Citation', margin, yPos);
