@@ -488,7 +488,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                     }
                     doc.setTextColor(203, 213, 225); // slate-300
                     doc.text(`${tocIndex}. ${result.overlayName} - Chain ${match.primaryChain} -> ${match.targetChain}`, margin + 3, yPos);
-                    yPos += 5;
+                    yPos += 7;
                     tocIndex++;
                     checkAndAddPage(50);
                 });
@@ -560,10 +560,10 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                     doc.setTextColor(148, 163, 184); // slate-400
                     const coverage = ((match.stats.length - match.stats.gaps) / match.stats.length * 100).toFixed(1);
                     doc.text(`Alignment Coverage: ${coverage}% • Score: ${match.stats.score.toFixed(0)}`, margin, yPos);
-                    yPos += 6;
+                    yPos += 9;
 
                     // Alignment Sequences Section with prominent display
-                    yPos += 3;
+                    yPos += 5;
 
                     // Sequence box header
                     doc.setFillColor(30, 41, 59); // slate-800
@@ -646,7 +646,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                         yPos += 12; // More spacing between blocks
                     }
 
-                    yPos += 3;
+                    yPos += 5;
                     alignmentIndex++;
                 });
             });
@@ -682,7 +682,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                     doc.setFont('helvetica', 'bold');
                     doc.setTextColor(196, 181, 253); // violet-300
                     doc.text(`Conservation Analysis: ${result.overlayName} (Chain ${match.primaryChain} -> ${match.targetChain})`, margin, yPos);
-                    yPos += 6;
+                    yPos += 9;
 
                     const seq1 = match.alignment.seq1;
                     const seq2 = match.alignment.seq2;
@@ -717,7 +717,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                     doc.setFont('helvetica', 'normal');
                     doc.setTextColor(203, 213, 225); // slate-300
                     doc.text('Conservation Map (50-residue blocks):', margin, yPos);
-                    yPos += 5;
+                    yPos += 7;
 
                     const barWidth = (pageWidth - 2 * margin - 30) / blocks.length;
                     const barHeight = 15;
@@ -764,7 +764,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                     doc.setFont('helvetica', 'bold');
                     doc.setTextColor(148, 226, 213); // teal-300
                     doc.text('Gap Distribution:', margin, yPos);
-                    yPos += 5;
+                    yPos += 7;
 
                     let gapClusters = [];
                     let inGap = false;
@@ -789,24 +789,24 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                     if (gapClusters.length > 0) {
                         const largestGap = gapClusters.reduce((max, gap) => gap.length > max.length ? gap : max);
                         doc.text(`Total gap regions: ${gapClusters.length} | Largest gap: ${largestGap.length} residues (pos ${largestGap.start}-${largestGap.end})`, margin, yPos);
-                        yPos += 5;
+                        yPos += 7;
 
                         if (gapClusters.length <= 10) {
                             gapClusters.forEach(gap => {
                                 doc.text(`  - Gap at positions ${gap.start}-${gap.end} (${gap.length} residues)`, margin + 3, yPos);
-                                yPos += 4;
+                                yPos += 9;
                                 checkAndAddPage(30);
                             });
                         } else {
                             doc.text(`  - Too many gap regions to list individually (${gapClusters.length} total)`, margin + 3, yPos);
-                            yPos += 4;
+                            yPos += 9;
                         }
                     } else {
                         doc.text('No gap regions found (perfectly aligned)', margin, yPos);
-                        yPos += 5;
+                        yPos += 7;
                     }
 
-                    yPos += 3;
+                    yPos += 5;
                 });
             });
 
@@ -817,7 +817,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
             doc.setFont('helvetica', 'bold');
             doc.setTextColor(196, 181, 253); // violet-300
             doc.text('Alignment Quality Assessment', margin, yPos);
-            yPos += 6;
+            yPos += 9;
 
             doc.setFontSize(11);
             doc.setFont('helvetica', 'normal');
@@ -852,11 +852,11 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                     doc.text(`${result.overlayName} (Chain ${match.primaryChain} -> ${match.targetChain}): ${qualityLabel} (${qualityScore.toFixed(1)}/100)`, margin, yPos);
                     doc.setFont('helvetica', 'normal');
                     doc.setTextColor(203, 213, 225); // slate-300
-                    yPos += 5;
+                    yPos += 7;
                     checkAndAddPage(30);
                 });
             });
-            yPos += 3;
+            yPos += 5;
 
             checkAndAddPage(60);
 
@@ -865,7 +865,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
             doc.setFont('helvetica', 'bold');
             doc.setTextColor(196, 181, 253); // violet-300
             doc.text('Interpretation & Recommendations', margin, yPos);
-            yPos += 6;
+            yPos += 9;
 
             doc.setFontSize(11);
             doc.setFont('helvetica', 'normal');
@@ -901,11 +901,11 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
 
             interpretations.forEach(interp => {
                 doc.text(interp, margin, yPos);
-                yPos += 5;
+                yPos += 7;
                 checkAndAddPage(30);
             });
 
-            yPos += 5;
+            yPos += 7;
             checkAndAddPage(40);
 
             // 4. METHODOLOGY REFERENCE
@@ -913,21 +913,21 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
             doc.setFont('helvetica', 'bold');
             doc.setTextColor(196, 181, 253); // violet-300
             doc.text('Methodology', margin, yPos);
-            yPos += 5;
+            yPos += 7;
 
             doc.setFontSize(12);
             doc.setFont('helvetica', 'normal');
             doc.setTextColor(148, 163, 184); // slate-400
             doc.text('Algorithm: Needleman-Wunsch pairwise global alignment', margin, yPos);
-            yPos += 4;
+            yPos += 9;
             doc.text('Scoring Matrix: BLOSUM62 (BLOcks SUbstitution Matrix)', margin, yPos);
-            yPos += 4;
+            yPos += 9;
             doc.text('Gap Penalty: -5 (linear gap penalty)', margin, yPos);
-            yPos += 4;
+            yPos += 9;
             doc.text('Identity: Percentage of identical residues at aligned positions', margin, yPos);
-            yPos += 4;
+            yPos += 9;
             doc.text('Similarity: Percentage of identical + biochemically similar residues', margin, yPos);
-            yPos += 4;
+            yPos += 9;
             doc.text('RMSD: Root Mean Square Deviation of backbone alpha carbon atoms (when available)', margin, yPos);
             yPos += 8;
 
@@ -938,7 +938,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
             doc.setFont('helvetica', 'bold');
             doc.setTextColor(196, 181, 253); // violet-300
             doc.text('Amino Acid Composition Analysis', margin, yPos);
-            yPos += 6;
+            yPos += 9;
 
             doc.setFontSize(11);
             doc.setFont('helvetica', 'normal');
@@ -964,7 +964,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                     doc.setFont('helvetica', 'bold');
                     doc.setTextColor(148, 226, 213); // teal-300
                     doc.text(`${result.overlayName} (Chain ${match.primaryChain} -> ${match.targetChain})`, margin, yPos);
-                    yPos += 5;
+                    yPos += 7;
 
                     const seq1Clean = match.alignment.seq1.replace(/-/g, '');
                     const seq2Clean = match.alignment.seq2.replace(/-/g, '');
@@ -1014,7 +1014,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                         const diff = Math.abs(prop.primary - prop.overlay);
                         const diffStr = diff > 5 ? ` (Δ${diff.toFixed(1)}%)` : '';
                         doc.text(`${prop.name}: Primary ${prop.primary.toFixed(1)}% | Overlay ${prop.overlay.toFixed(1)}%${diffStr}`, margin + 3, yPos);
-                        yPos += 4;
+                        yPos += 9;
                     });
 
                     yPos += 2;
@@ -1028,7 +1028,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
             doc.setFont('helvetica', 'bold');
             doc.setTextColor(196, 181, 253); // violet-300
             doc.text('Substitution Pattern Analysis', margin, yPos);
-            yPos += 6;
+            yPos += 9;
 
             doc.setFontSize(11);
             doc.setFont('helvetica', 'normal');
@@ -1064,14 +1064,14 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                         doc.setFont('helvetica', 'bold');
                         doc.setTextColor(148, 226, 213); // teal-300
                         doc.text(`${result.overlayName} (Chain ${match.primaryChain} -> ${match.targetChain})`, margin, yPos);
-                        yPos += 5;
+                        yPos += 7;
 
                         doc.setFontSize(12);
                         doc.setFont('helvetica', 'normal');
                         doc.setTextColor(203, 213, 225); // slate-300
 
                         doc.text(`Total substitutions: ${totalSubs} | Conservative: ${conservativeCount} (${(conservativeCount / totalSubs * 100).toFixed(1)}%) | Non-conservative: ${nonConservativeCount} (${(nonConservativeCount / totalSubs * 100).toFixed(1)}%)`, margin, yPos);
-                        yPos += 5;
+                        yPos += 7;
 
                         // Show top 5 most common substitutions
                         const topSubs = Object.entries(substitutions)
@@ -1080,14 +1080,14 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
 
                         if (topSubs.length > 0) {
                             doc.text('Most common substitutions:', margin, yPos);
-                            yPos += 4;
+                            yPos += 9;
                             topSubs.forEach(([sub, count]) => {
                                 doc.text(`  ${sub}: ${count} occurrences (${(count / totalSubs * 100).toFixed(1)}%)`, margin + 3, yPos);
-                                yPos += 3.5;
+                                yPos += 9;
                             });
                         }
 
-                        yPos += 3;
+                        yPos += 5;
                     }
                 });
             });
@@ -1099,13 +1099,13 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
             doc.setFont('helvetica', 'bold');
             doc.setTextColor(196, 181, 253); // violet-300
             doc.text('Consensus Sequences', margin, yPos);
-            yPos += 6;
+            yPos += 9;
 
             doc.setFontSize(11);
             doc.setFont('helvetica', 'normal');
             doc.setTextColor(203, 213, 225); // slate-300
             doc.text('Consensus represents the most conserved residue at each position (shown for regions with >70% identity)', margin, yPos);
-            yPos += 5;
+            yPos += 7;
 
             alignmentResults.forEach((result) => {
                 result.chainMatches.forEach((match) => {
@@ -1131,7 +1131,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                         doc.setFont('helvetica', 'bold');
                         doc.setTextColor(148, 226, 213); // teal-300
                         doc.text(`${result.overlayName} (Chain ${match.primaryChain} -> ${match.targetChain})`, margin, yPos);
-                        yPos += 5;
+                        yPos += 7;
 
                         doc.setFont('courier', 'normal');
                         doc.setFontSize(11);
@@ -1140,12 +1140,12 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                         // Show first 100 residues of consensus
                         const consensusPreview = consensus.substring(0, 100);
                         doc.text(`Consensus: ${consensusPreview}${consensus.length > 100 ? '...' : ''}`, margin, yPos);
-                        yPos += 5;
+                        yPos += 7;
 
                         const identicalCount = (consensus.match(/[^X-]/g) || []).length;
                         doc.setFont('helvetica', 'normal');
                         doc.text(`Conserved positions: ${identicalCount}/${consensus.length} (${(identicalCount / consensus.length * 100).toFixed(1)}%)`, margin, yPos);
-                        yPos += 5;
+                        yPos += 7;
                     }
                 });
             });
@@ -1157,7 +1157,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
             doc.setFont('helvetica', 'bold');
             doc.setTextColor(196, 181, 253); // violet-300
             doc.text('Statistical Summary', margin, yPos);
-            yPos += 6;
+            yPos += 9;
 
             doc.setFontSize(11);
             doc.setFont('helvetica', 'normal');
@@ -1176,9 +1176,9 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
             const similarityStd = Math.sqrt(variance(similarities));
 
             doc.text(`Identity: Mean = ${avgIdentity.toFixed(1)}% ± ${identityStd.toFixed(1)}% (SD)`, margin, yPos);
-            yPos += 4;
+            yPos += 9;
             doc.text(`Similarity: Mean = ${avgSimilarity.toFixed(1)}% ± ${similarityStd.toFixed(1)}% (SD)`, margin, yPos);
-            yPos += 4;
+            yPos += 9;
             doc.text(`Range: Identity [${Math.min(...identities).toFixed(1)}% - ${Math.max(...identities).toFixed(1)}%], Similarity [${Math.min(...similarities).toFixed(1)}% - ${Math.max(...similarities).toFixed(1)}%]`, margin, yPos);
             yPos += 8;
 
@@ -1189,21 +1189,21 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
             doc.setFont('helvetica', 'bold');
             doc.setTextColor(196, 181, 253); // violet-300
             doc.text('References & Citation', margin, yPos);
-            yPos += 5;
+            yPos += 7;
 
             doc.setFontSize(12);
             doc.setFont('helvetica', 'italic');
             doc.setTextColor(148, 163, 184); // slate-400
             doc.text('If you use this alignment analysis in your research, please cite:', margin, yPos);
-            yPos += 4;
+            yPos += 9;
 
             doc.setFont('helvetica', 'normal');
             doc.text('1. Needleman, S. B., & Wunsch, C. D. (1970). A general method applicable to the search for similarities', margin, yPos);
-            yPos += 3.5;
+            yPos += 9;
             doc.text('   in the amino acid sequence of two proteins. Journal of Molecular Biology, 48(3), 443-453.', margin, yPos);
-            yPos += 4;
+            yPos += 9;
             doc.text('2. Henikoff, S., & Henikoff, J. G. (1992). Amino acid substitution matrices from protein blocks.', margin, yPos);
-            yPos += 3.5;
+            yPos += 9;
             doc.text('   Proceedings of the National Academy of Sciences, 89(22), 10915-10919.', margin, yPos);
             yPos += 8;
 
