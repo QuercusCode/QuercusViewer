@@ -393,7 +393,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
             doc.text('Sequence Alignment Report', margin + 5, yPos + 15);
 
             // Subtitle
-            doc.setFontSize(10);
+            doc.setFontSize(12);
             doc.setFont('helvetica', 'normal');
             doc.setTextColor(226, 232, 240); // slate-200
             doc.text('Pairwise Needleman-Wunsch Algorithm • BLOSUM62 Matrix • Gap Penalty: -5', margin + 5, yPos + 25);
@@ -547,7 +547,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                         doc.text(stat.label.toUpperCase(), xPos + boxWidth / 2, yPos + 5, { align: 'center' });
 
                         // Value
-                        doc.setFontSize(10);
+                        doc.setFontSize(12);
                         doc.setFont('helvetica', 'bold');
                         doc.setTextColor(226, 232, 240); // slate-200
                         doc.text(stat.value, xPos + boxWidth / 2, yPos + 10, { align: 'center' });
@@ -575,10 +575,10 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                     yPos += 11;
 
                     doc.setFont('courier', 'bold');
-                    doc.setFontSize(10); // Increased from 8
+                    doc.setFontSize(12); // Increased from 10
                     doc.setTextColor(226, 232, 240); // slate-200
 
-                    const charsPerLine = 70; // Reduced for larger font (was 80)
+                    const charsPerLine = 60; // Reduced for larger font (was 70)
                     const seq1 = match.alignment.seq1;
                     const seq2 = match.alignment.seq2;
                     const matchStr = match.alignment.matchStr;
@@ -594,7 +594,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                             doc.text(`${result.overlayName} - Chain ${match.primaryChain} -> ${match.targetChain} (continued)`, margin + 5, yPos + 5.5);
                             yPos += 11;
                             doc.setFont('courier', 'bold');
-                            doc.setFontSize(10); // Match main sequence size
+                            doc.setFontSize(12); // Match main sequence size
                             doc.setTextColor(226, 232, 240); // slate-200
                         }
 
@@ -621,14 +621,14 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                         doc.text('Pri:', margin + 15, yPos + 2);
 
                         doc.setFont('courier', 'bold');
-                        doc.setFontSize(10);
+                        doc.setFontSize(12);
                         doc.setTextColor(226, 232, 240); // slate-200
                         doc.text(chunk1, margin + 25, yPos + 2);
                         yPos += 5;
 
                         // Match string - highlighted
                         doc.setFont('courier', 'bold');
-                        doc.setFontSize(10);
+                        doc.setFontSize(12);
                         doc.setTextColor(16, 185, 129); // emerald-500 for matches
                         doc.text(chunkMatch, margin + 25, yPos + 2);
                         yPos += 5;
@@ -640,7 +640,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                         doc.text('Ovl:', margin + 15, yPos + 2);
 
                         doc.setFont('courier', 'bold');
-                        doc.setFontSize(10);
+                        doc.setFontSize(12);
                         doc.setTextColor(226, 232, 240); // slate-200
                         doc.text(chunk2, margin + 25, yPos + 2);
                         yPos += 10; // More spacing between blocks
@@ -909,7 +909,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
             checkAndAddPage(40);
 
             // 4. METHODOLOGY REFERENCE
-            doc.setFontSize(10);
+            doc.setFontSize(12);
             doc.setFont('helvetica', 'bold');
             doc.setTextColor(196, 181, 253); // violet-300
             doc.text('Methodology', margin, yPos);
@@ -1185,7 +1185,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
             checkAndAddPage(40);
 
             // 9. REFERENCE & CITATION
-            doc.setFontSize(10);
+            doc.setFontSize(12);
             doc.setFont('helvetica', 'bold');
             doc.setTextColor(196, 181, 253); // violet-300
             doc.text('References & Citation', margin, yPos);
