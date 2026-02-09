@@ -1012,8 +1012,10 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
 
                     propData.forEach(prop => {
                         const diff = Math.abs(prop.primary - prop.overlay);
-                        const diffStr = diff > 5 ? ` (Δ${diff.toFixed(1)}%)` : '';
-                        doc.text(`${prop.name}: Primary ${prop.primary.toFixed(1)}% | Overlay ${prop.overlay.toFixed(1)}%${diffStr}`, margin + 3, yPos);
+                        const diffStr = diff > 5 ? ` (${diff.toFixed(1)}%)` : ''; // Removed delta symbol
+                        const textLine = `${prop.name}: Primary ${prop.primary.toFixed(1)}% | Overlay ${prop.overlay.toFixed(1)}%${diffStr}`;
+                        doc.setFont('helvetica', 'normal'); // Ensure font is set each time
+                        doc.text(textLine, margin + 3, yPos);
                         yPos += 9;
                     });
 
