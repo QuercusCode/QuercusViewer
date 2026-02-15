@@ -578,7 +578,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                     doc.setFontSize(14); // Optimal size
                     doc.setTextColor(226, 232, 240); // slate-200
 
-                    const charsPerLine = 80; // Optimal balance
+                    const charsPerLine = 65; // Reduced to fit within page margins
                     const seq1 = match.alignment.seq1;
                     const seq2 = match.alignment.seq2;
                     const matchStr = match.alignment.matchStr;
@@ -612,37 +612,37 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                         doc.setFontSize(12);
                         doc.setTextColor(148, 163, 184); // slate-400
                         const posLabel = `${i + 1}`.padStart(4, ' ');
-                        doc.text(posLabel, margin + 3, yPos + 2);
+                        doc.text(posLabel, margin + 2, yPos + 2);
 
                         // Primary sequence with colored label
                         doc.setFont('helvetica', 'bold');
                         doc.setFontSize(12);
                         doc.setTextColor(59, 130, 246); // blue-500
-                        doc.text('Pri:', margin + 15, yPos + 2);
+                        doc.text('Pri:', margin + 12, yPos + 2);
 
                         doc.setFont('courier', 'normal');
                         doc.setFontSize(14);
                         doc.setTextColor(226, 232, 240); // slate-200
-                        doc.text(chunk1, margin + 25, yPos + 2);
+                        doc.text(chunk1, margin + 21, yPos + 2);
                         yPos += 9; // Increased spacing
 
                         // Match string - highlighted
                         doc.setFont('courier', 'normal');
                         doc.setFontSize(14);
                         doc.setTextColor(16, 185, 129); // emerald-500 for matches
-                        doc.text(chunkMatch, margin + 25, yPos + 2);
+                        doc.text(chunkMatch, margin + 21, yPos + 2);
                         yPos += 9; // Increased spacing
 
                         // Overlay sequence with colored label
                         doc.setFont('helvetica', 'bold');
                         doc.setFontSize(12);
                         doc.setTextColor(168, 85, 247); // purple-500
-                        doc.text('Ovl:', margin + 15, yPos + 2);
+                        doc.text('Ovl:', margin + 12, yPos + 2);
 
                         doc.setFont('courier', 'normal');
                         doc.setFontSize(14);
                         doc.setTextColor(226, 232, 240); // slate-200
-                        doc.text(chunk2, margin + 25, yPos + 2);
+                        doc.text(chunk2, margin + 21, yPos + 2);
                         yPos += 12; // More spacing between blocks
                     }
 
