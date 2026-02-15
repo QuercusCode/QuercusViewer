@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { X, Plus, Eye, EyeOff, Trash2, Upload } from 'lucide-react';
+import { X, Plus, Eye, EyeOff, Trash2, Upload, FileDown } from 'lucide-react';
+import jsPDF from 'jspdf';
 import type { SuperposedStructure } from '../types';
 
 interface SuperpositionModalProps {
@@ -9,7 +10,8 @@ interface SuperpositionModalProps {
     onAddOverlay: (structure: SuperposedStructure) => void;
     onRemoveOverlay: (id: string) => void;
     onToggleOverlay: (id: string) => void;
-    onOpenAlignment: () => void; // New Prop
+    onOpenAlignment: () => void;
+    getSnapshot?: () => Promise<string | null>; // Add snapshot capability
 }
 
 export const SuperpositionModal: React.FC<SuperpositionModalProps> = ({
@@ -19,12 +21,166 @@ export const SuperpositionModal: React.FC<SuperpositionModalProps> = ({
     onAddOverlay,
     onRemoveOverlay,
     onToggleOverlay,
-    onOpenAlignment
+    onOpenAlignment,
+    getSnapshot
 }) => {
     const [pdbInput, setPdbInput] = useState('');
     const [colorInput, setColorInput] = useState('#FFA500'); // Default Orange
 
     if (!isOpen) return null;
+
+    const handleGeneratePDF = async () => {
+        const doc = new jsPDF('p', 'mm', 'a4');
+        const pageWidth = 210;
+        const pageHeight = 297;
+        const margin = 20;
+        let yPos = margin;
+
+        // Dark background
+        doc.setFillColor(15, 23, 42); // slate-900
+        doc.rect(0, 0, pageWidth, pageHeight, 'F');
+
+        // Load logo
+        const logoImg = new Image();
+        logoImg.src = '/logo/full-white.png';
+        await new Promise((resolve) => {
+            logoImg.onload = resolve;
+            logoImg.onerror = resolve;
+        });
+
+        // Add logo
+        if (logoImg.complete && logoImg.naturalWidth > 0) {
+            try {
+                const coverLogoWidth = 60;
+                const coverLogoHeight = (logoImg.naturalHeight / logoImg.naturalWidth) * coverLogoWidth;
+                const logoX = (pageWidth - coverLogoWidth) / 2;
+                doc.addImage(logoImg, 'PNG', logoX, yPos, coverLogoWidth, coverLogoHeight);
+                yPos += coverLogoHeight + 8;
+            } catch (e) {
+                console.warn('Failed to add logo:', e);
+            }
+        }
+
+        // Title
+        doc.setFontSize(36);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(255, 255, 255);
+        doc.text('Structure Superposition', pageWidth / 2, yPos + 15, { align: 'center' });
+        yPos += 30;
+
+        // Subtitle
+        doc.setFontSize(16);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(148, 163, 184);
+        doc.text('Alignment Report', pageWidth / 2, yPos, { align: 'center' });
+        yPos += 20;
+
+        // Date
+        doc.setFontSize(11);
+        doc.setTextColor(148, 163, 184);
+        const dateStr = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        doc.text(dateStr, pageWidth / 2, yPos, { align: 'center' });
+        yPos += 25;
+
+        // Summary section
+        doc.setFillColor(30, 41, 59);
+        doc.roundedRect(margin, yPos, pageWidth - 2 * margin, 12, 3, 3, 'F');
+        doc.setFontSize(18);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(255, 255, 255);
+        doc.text('Summary', margin + 5, yPos + 8);
+        yPos += 18;
+
+        // Stats
+        doc.setFontSize(16);
+        doc.setTextColor(226, 232, 240);
+        doc.text(`Total Structures: ${overlays.length + 1}`, margin, yPos);
+        yPos += 8;
+        doc.text(`Visible Structures: ${overlays.filter(o => o.isVisible).length + 1}`, margin, yPos);
+        yPos += 15;
+
+        // Structures list
+        doc.setFillColor(30, 41, 59);
+        doc.roundedRect(margin, yPos, pageWidth - 2 * margin, 12, 3, 3, 'F');
+        doc.setFontSize(18);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(255, 255, 255);
+        doc.text('Aligned Structures', margin + 5, yPos + 8);
+        yPos += 18;
+
+        // List structures
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(203, 213, 225);
+
+        overlays.forEach((overlay, idx) => {
+            // Structure box
+            doc.setFillColor(30, 41, 59, 25);
+            doc.roundedRect(margin, yPos, pageWidth - 2 * margin, 12, 2, 2, 'F');
+
+            // Color indicator
+            const hexColor = overlay.color;
+            const r = parseInt(hexColor.slice(1, 3), 16);
+            const g = parseInt(hexColor.slice(3, 5), 16);
+            const b = parseInt(hexColor.slice(5, 7), 16);
+            doc.setFillColor(r, g, b);
+            doc.circle(margin + 5, yPos + 6, 2, 'F');
+
+            // Description
+            doc.setTextColor(226, 232, 240);
+            doc.text(`${idx + 1}. ${overlay.description}`, margin + 12, yPos + 7);
+
+            // Status
+            doc.setFontSize(11);
+            doc.setTextColor(overlay.isVisible ? 148 : 100, overlay.isVisible ? 226 : 163, overlay.isVisible ? 213 : 184);
+            doc.text(overlay.isVisible ? '(Visible)' : '(Hidden)', pageWidth - margin - 20, yPos + 7);
+            doc.setFontSize(14);
+
+            yPos += 15;
+        });
+
+        // Add snapshot if available
+        if (getSnapshot) {
+            yPos += 10;
+            try {
+                const snapshot = await getSnapshot();
+                if (snapshot) {
+                    doc.addPage();
+                    yPos = margin;
+
+                    // Dark background on new page
+                    doc.setFillColor(15, 23, 42);
+                    doc.rect(0, 0, pageWidth, pageHeight, 'F');
+
+                    // Logo on new page
+                    if (logoImg.complete && logoImg.naturalWidth > 0) {
+                        try {
+                            const logoWidth = 35;
+                            const logoHeight = (logoImg.naturalHeight / logoImg.naturalWidth) * logoWidth;
+                            doc.addImage(logoImg, 'PNG', pageWidth - margin - logoWidth, margin - 8, logoWidth, logoHeight);
+                        } catch (e) {
+                            console.warn('Failed to add logo:', e);
+                        }
+                    }
+
+                    doc.setFontSize(18);
+                    doc.setFont('helvetica', 'bold');
+                    doc.setTextColor(255, 255, 255);
+                    doc.text('3D Superposition View', pageWidth / 2, yPos, { align: 'center' });
+                    yPos += 15;
+
+                    const imgWidth = pageWidth - 2 * margin;
+                    const imgHeight = imgWidth * 0.75;
+                    doc.addImage(snapshot, 'PNG', margin, yPos, imgWidth, imgHeight);
+                }
+            } catch (e) {
+                console.warn('Failed to add snapshot:', e);
+            }
+        }
+
+        // Save PDF
+        doc.save(`superposition_report_${new Date().toISOString().slice(0, 10)}.pdf`);
+    };
 
     const handleAddPdb = () => {
         if (!pdbInput || pdbInput.length < 3) return;
@@ -59,6 +215,14 @@ export const SuperpositionModal: React.FC<SuperpositionModalProps> = ({
                 <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-800">
                     <h2 className="text-lg font-semibold text-white">Structure Superposition</h2>
                     <div className="flex gap-2">
+                        <button
+                            onClick={handleGeneratePDF}
+                            title="Generate PDF Report"
+                            className="bg-violet-500/10 hover:bg-violet-500/20 text-violet-400 text-xs px-3 py-1.5 rounded-lg border border-violet-500/30 transition-colors flex items-center gap-1.5"
+                        >
+                            <FileDown size={14} />
+                            Report
+                        </button>
                         <button
                             onClick={onOpenAlignment}
                             title="View Sequence Alignment"

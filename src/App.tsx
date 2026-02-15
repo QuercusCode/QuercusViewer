@@ -2620,6 +2620,16 @@ function App() {
             onAddOverlay={controllers[activeViewIndex].addOverlay}
             onRemoveOverlay={controllers[activeViewIndex].removeOverlay}
             onToggleOverlay={controllers[activeViewIndex].toggleOverlay}
+            getSnapshot={async () => {
+              if (!viewerRefs[activeViewIndex].current) return null;
+              const blob = await viewerRefs[activeViewIndex].current.getSnapshotBlob();
+              if (!blob) return null;
+              return new Promise<string>((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result as string);
+                reader.readAsDataURL(blob);
+              });
+            }}
             onOpenAlignment={() => {
               setIsSuperpositionModalOpen(false);
               viewerRefs[activeViewIndex].current?.openAlignmentView();
