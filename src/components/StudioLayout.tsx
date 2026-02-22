@@ -54,7 +54,7 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
     const [isTrimMode, setIsTrimMode] = useState(false);
     const [tempTrimStart, setTempTrimStart] = useState<number>(0);
     const [tempTrimEnd, setTempTrimEnd] = useState<number>(0);
-    const [activeTool, setActiveTool] = useState<'default' | 'settings' | 'tracks' | 'audio' | 'text'>('default');
+    const [activeTool, setActiveTool] = useState<'default' | 'settings' | 'tracks' | 'audio' | 'text' | 'edit'>('default');
 
     // Segment/Range Edit Modes
     const [speedFactor, setSpeedFactor] = useState(2);
@@ -207,6 +207,12 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                 {/* LEFT TOOLBAR */}
                 <div className="w-16 bg-neutral-900/95 backdrop-blur border-r border-white/10 flex flex-col items-center py-4 gap-4 pointer-events-auto z-50">
                     <ToolButton
+                        icon={<Scissors className="w-5 h-5" />}
+                        label="Edit Recording"
+                        active={activeTool === 'edit'}
+                        onClick={() => setActiveTool('edit')}
+                    />
+                    <ToolButton
                         icon={<Settings className="w-5 h-5" />}
                         label="Settings"
                         active={activeTool === 'settings'}
@@ -270,6 +276,7 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                             {activeTool === 'tracks' && 'Timeline Tracks'}
                             {activeTool === 'audio' && 'Audio Mixer'}
                             {activeTool === 'text' && 'Text Overlays'}
+                            {activeTool === 'edit' && 'Edit Recording'}
                             {activeTool === 'default' && (selectedSegmentIds.length > 0 ? 'Clip Properties' : 'Project Properties')}
                         </h2>
                     </div>
@@ -940,23 +947,23 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                     </div>
                                 </div>
                             </div>
-                        ) : (
-                            // GLOBAL / PROJECT TOOLS (Default View)
-                            <div className="space-y-6">
-                                {/* Trim Tool */}
-                                <div className="space-y-3">
+                        ) : activeTool === 'edit' ? (
+                            // EDIT RECORDING TOOLS
+                            <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-200">
+                                {/* Trim Controls - Visual Mode */}
+                                <div className="space-y-2">
                                     <label className="text-xs text-white/70 font-semibold flex items-center gap-2">
-                                        <Scissors className="w-3 h-3" /> Trim Project
+                                        <Scissors className="w-3 h-3" /> Trim Range
                                     </label>
-                                    <div className="flex gap-2">
+                                    <div className="flex gap-2 items-center flex-wrap">
                                         <button
                                             onClick={() => setIsTrimMode(!isTrimMode)}
-                                            className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${isTrimMode
-                                                ? 'bg-blue-600 text-white ring-2 ring-blue-400/50'
-                                                : 'bg-neutral-800 text-white hover:bg-neutral-700'
+                                            className={`px-3 py-1.5 rounded text-xs transition-colors ${isTrimMode
+                                                ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                                                : 'bg-blue-600/20 hover:bg-blue-600/40 border border-blue-600/30 text-white'
                                                 }`}
                                         >
-                                            {isTrimMode ? 'Done' : 'Select Range'}
+                                            {isTrimMode ? '✓ Trimming' : 'Start Trim'}
                                         </button>
                                         {isTrimMode && (
                                             <button
@@ -964,20 +971,146 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                                     trimSession(tempTrimStart, tempTrimEnd);
                                                     setIsTrimMode(false);
                                                 }}
-                                                className="flex-1 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-xs font-bold transition-colors"
+                                                className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded text-xs transition-colors"
                                             >
-                                                Apply
+                                                Apply Trim
                                             </button>
                                         )}
+                                        {isTrimMode && (
+                                            <span className="text-xs text-white opacity-60">
+                                                Drag blue handles on timeline
+                                            </span>
+                                        )}
                                     </div>
-                                    {isTrimMode && (
-                                        <p className="text-[10px] text-blue-400">
-                                            Drag timeline handles to set start/end
-                                        </p>
-                                    )}
                                 </div>
-                                <div className="pt-8 text-center">
-                                    <p className="text-[10px] text-white/30">Select a tool from the sidebar to edit settings, text, or layers.</p>
+
+                                {/* Event Deletion Controls */}
+                                <div className="space-y-2">
+                                    <label className="text-xs text-white/70 font-semibold block">Delete Events</label>
+                                    <div className="flex gap-2 flex-wrap">
+                                        <button
+                                            onClick={() => {
+                                                const lastIdx = session.events.length - 1;
+                                                if (lastIdx >= 0) deleteEvent(lastIdx);
+                                            }}
+                                            className="px-2 py-1 bg-red-600/20 hover:bg-red-600/40 border border-red-600/30 text-white rounded text-xs transition-colors flex items-center gap-1"
+                                        >
+                                            <Trash2 className="w-3 h-3" />
+                                            Undo Last
+                                        </button>
+                                        <button
+                                            onClick={() => deleteEventsByType('camera')}
+                                            className="px-2 py-1 bg-blue-600/20 hover:bg-blue-600/40 border border-blue-600/30 text-white rounded text-xs transition-colors"
+                                        >
+                                            Delete Camera Events
+                                        </button>
+                                        <button
+                                            onClick={() => deleteEventsByType('annotation')}
+                                            className="px-2 py-1 bg-yellow-600/20 hover:bg-yellow-600/40 border border-yellow-600/30 text-white rounded text-xs transition-colors"
+                                        >
+                                            Delete Annotations
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Delete by Time Range */}
+                                <div className="space-y-2">
+                                    <label className="text-xs text-white/70 font-semibold block">Delete by Time Range</label>
+                                    <div className="flex gap-2 items-center flex-wrap">
+                                        <input
+                                            type="text"
+                                            value={deleteRangeStart}
+                                            onChange={(e) => setDeleteRangeStart(e.target.value)}
+                                            placeholder="00:00"
+                                            className="bg-black/30 border border-white/10 text-white rounded px-2 py-1 text-xs w-16 font-mono outline-none focus:border-blue-500"
+                                        />
+                                        <span className="text-xs text-white opacity-50">to</span>
+                                        <input
+                                            type="text"
+                                            value={deleteRangeEnd}
+                                            onChange={(e) => setDeleteRangeEnd(e.target.value)}
+                                            placeholder="00:00"
+                                            className="bg-black/30 border border-white/10 text-white rounded px-2 py-1 text-xs w-16 font-mono outline-none focus:border-blue-500"
+                                        />
+                                        <button
+                                            onClick={() => {
+                                                const start = parseTimeString(deleteRangeStart);
+                                                const end = parseTimeString(deleteRangeEnd);
+                                                if (start < end && end > 0) {
+                                                    deleteEventsByTimeRange(start, end);
+                                                    setDeleteRangeStart('00:00');
+                                                    setDeleteRangeEnd('00:00');
+                                                }
+                                            }}
+                                            className="px-3 py-1 bg-orange-600 hover:bg-orange-700 text-white rounded text-xs transition-colors flex items-center gap-1"
+                                        >
+                                            <Trash2 className="w-3 h-3" />
+                                            Delete Range
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Split Session */}
+                                <div className="space-y-2">
+                                    <label className="text-xs text-white/70 font-semibold block">Split Session</label>
+                                    <div className="flex gap-2 items-center flex-wrap">
+                                        <button
+                                            onClick={() => {
+                                                splitSession(playbackTime);
+                                            }}
+                                            className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded text-xs transition-colors flex items-center gap-1"
+                                        >
+                                            <Scissors className="w-3 h-3" />
+                                            Split at {formatTime(playbackTime)}
+                                        </button>
+                                        <span className="text-xs text-white opacity-60">
+                                            Creates 2 separate sessions
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* Playback Speed FX */}
+                                <div className="space-y-3">
+                                    <label className="text-xs text-white/70 font-semibold flex items-center gap-2">
+                                        <Film className="w-3 h-3" /> Playback Speed FX
+                                    </label>
+                                    <div className="bg-neutral-800 rounded-lg p-1 flex gap-1">
+                                        {[0.5, 1, 2, 4].map(speed => (
+                                            <button
+                                                key={speed}
+                                                onClick={() => setSpeedFactor(speed)}
+                                                className={`flex-1 py-1.5 rounded text-xs font-bold transition-all ${speedFactor === speed
+                                                    ? 'bg-blue-600 text-white shadow'
+                                                    : 'text-white/50 hover:text-white hover:bg-white/5'
+                                                    }`}
+                                            >
+                                                {speed}x
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <button
+                                        onClick={() => {
+                                            adjustSessionSpeed(tempTrimStart, tempTrimEnd, speedFactor);
+                                        }}
+                                        className="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold transition-colors"
+                                    >
+                                        Apply {speedFactor}x Speed
+                                    </button>
+                                    <p className="text-[10px] text-white/30 text-center">
+                                        Applies to range {formatTime(tempTrimStart)} - {formatTime(tempTrimEnd)}
+                                    </p>
+                                </div>
+                            </div>
+                        ) : (
+                            // GLOBAL / PROJECT TOOLS (Default View)
+                            <div className="space-y-6">
+                                <div className="pt-8 text-center flex flex-col items-center gap-4">
+                                    <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center">
+                                        <Settings className="w-6 h-6 text-white/20" />
+                                    </div>
+                                    <p className="text-xs text-white/40 max-w-[200px]">
+                                        Select a tool from the sidebar to edit settings, text, audio, or layers.
+                                    </p>
                                 </div>
                             </div>
                         )}

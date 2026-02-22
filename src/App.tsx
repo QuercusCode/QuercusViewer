@@ -2738,14 +2738,6 @@ function App() {
                         importSession={recorder.importSession}
                         exportVideo={handleExportVideo}
                         updateMetadata={recorder.updateMetadata}
-                        trimSession={recorder.trimSession}
-                        deleteEvent={recorder.deleteEvent}
-                        deleteEventsByType={recorder.deleteEventsByType}
-                        deleteEventsByTimeRange={recorder.deleteEventsByTimeRange}
-                        splitSession={recorder.splitSession}
-                        selectedSegmentIds={recorder.selectedSegmentIds}
-                        toggleSegmentSelection={recorder.toggleSegmentSelection}
-                        deleteSelectedSegments={recorder.deleteSelectedSegments}
                         isLightMode={isLightMode}
                         cardBg={isLightMode ? 'bg-white' : 'bg-neutral-900'}
                       />
