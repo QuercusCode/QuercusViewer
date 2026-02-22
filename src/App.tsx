@@ -1512,8 +1512,10 @@ function App() {
 
       // Extract new options
       const watermark = recorder.session.metadata.settings?.showWatermark ? {
-        text: recorder.session.metadata.watermarkText || 'Created with ProteinViewer',
-        show: true
+        text: recorder.session.metadata.watermarkText || 'Powered by QuercusViewer',
+        show: true,
+        logo: recorder.session.metadata.watermarkLogo,
+        position: recorder.session.metadata.settings.watermarkPosition || 'bottom-right'
       } : undefined;
 
       const overlays = recorder.session.metadata.textOverlays; // Already matches expected format

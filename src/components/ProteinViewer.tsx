@@ -100,7 +100,14 @@ export interface ProteinViewerProps {
 }
 
 export interface ProteinViewerRef {
-    getSnapshotBlob: (resolutionFactor?: number, transparent?: boolean) => Promise<Blob | null>;
+    getSnapshotBlob: (resolutionFactor?: number, transparent?: boolean, options?: {
+        watermark?: {
+            text?: string;
+            show: boolean;
+            logo?: string;
+            position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+        }
+    }) => Promise<Blob | null>;
     highlightResidue: (chain: string, resNo: number) => void;
     focusLigands: () => void;
     clearHighlight: () => void;
@@ -112,7 +119,12 @@ export interface ProteinViewerRef {
     addResidue: (chainName: string, resType: string) => Promise<Blob | null>;
     recordTurntable: (duration?: number) => Promise<Blob>;
     recordMovie: (duration: number, options?: {
-        watermark?: { text: string; show: boolean };
+        watermark?: {
+            text?: string;
+            show: boolean;
+            logo?: string;
+            position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+        };
         overlays?: { id: string; text: string; start: number; end: number; x: number; y: number }[];
         transitions?: { start: number; end: number; type: 'fade'; duration: number }[];
         fps?: number;
@@ -295,7 +307,12 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
     const performVideoRecord = async (
         duration: number,
         options: {
-            watermark?: { text: string; show: boolean };
+            watermark?: {
+                text?: string;
+                show: boolean;
+                logo?: string;
+                position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+            };
             overlays?: { id: string; text: string; start: number; end: number; x: number; y: number }[];
             transitions?: { start: number; end: number; type: 'fade'; duration: number }[];
             fps?: number;
@@ -441,7 +458,27 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                 };
 
                 // Initialize audio and start recording
-                startRecordingWithAudio();
+                let watermarkImg: HTMLImageElement | null = null;
+                const initializeRecording = async () => {
+                    // Preload watermark logo if provided
+                    if (options.watermark?.show && options.watermark.logo) {
+                        try {
+                            watermarkImg = new Image();
+                            await new Promise((res, rej) => {
+                                watermarkImg!.onload = res;
+                                watermarkImg!.onerror = rej;
+                                watermarkImg!.src = options.watermark!.logo!;
+                            });
+                        } catch (err) {
+                            console.warn("Failed to load watermark logo", err);
+                            watermarkImg = null;
+                        }
+                    }
+
+                    await startRecordingWithAudio();
+                };
+
+                initializeRecording();
 
                 // 4. Animation Loop
                 const startTime = performance.now();
@@ -472,18 +509,79 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                     compositeCtx.drawImage(canvas, 0, 0);
 
                     // 1. Watermark
-                    if (options.watermark?.show && options.watermark.text) {
-                        const fontSize = Math.max(20, Math.floor(height * 0.03));
-                        compositeCtx.font = `700 ${fontSize}px "Inter", sans-serif`;
-                        compositeCtx.textAlign = 'right';
-                        compositeCtx.textBaseline = 'bottom';
-                        compositeCtx.shadowColor = 'rgba(0,0,0,0.6)';
-                        compositeCtx.shadowBlur = 4;
-                        compositeCtx.shadowOffsetX = 1;
-                        compositeCtx.shadowOffsetY = 1;
-                        compositeCtx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                    if (options.watermark?.show) {
                         const margin = Math.floor(width * 0.02);
-                        compositeCtx.fillText(options.watermark.text, width - margin, height - margin);
+                        const pos = options.watermark.position || 'bottom-right';
+                        const text = options.watermark.text || '';
+
+                        let startX = 0;
+                        let startY = 0;
+                        let textX = 0;
+                        let textY = 0;
+
+                        // Logo sizing (max 10% of canvas height or 100px)
+                        let logoW = 0;
+                        let logoH = 0;
+
+                        if (watermarkImg) {
+                            const maxLogoHeight = Math.min(100, Math.floor(height * 0.1));
+                            const aspect = watermarkImg.width / watermarkImg.height;
+                            logoH = maxLogoHeight;
+                            logoW = Math.floor(logoH * aspect);
+                        }
+
+                        // Determine baseline coordinates based on position
+                        if (pos === 'top-left') {
+                            startX = margin;
+                            startY = margin;
+                            textX = startX + (logoW ? logoW + 8 : 0);
+                            textY = startY + (logoH ? logoH / 2 : 0);
+                            compositeCtx.textAlign = 'left';
+                            compositeCtx.textBaseline = logoH ? 'middle' : 'top';
+                        } else if (pos === 'top-right') {
+                            startX = width - margin - logoW;
+                            startY = margin;
+                            textX = startX - 8;
+                            textY = startY + (logoH ? logoH / 2 : 0);
+                            compositeCtx.textAlign = 'right';
+                            compositeCtx.textBaseline = logoH ? 'middle' : 'top';
+                        } else if (pos === 'bottom-left') {
+                            startX = margin;
+                            startY = height - margin - logoH;
+                            textX = startX + (logoW ? logoW + 8 : 0);
+                            textY = startY + (logoH ? logoH / 2 : logoH);
+                            compositeCtx.textAlign = 'left';
+                            compositeCtx.textBaseline = logoH ? 'middle' : 'bottom';
+                        } else { // bottom-right
+                            startX = width - margin - logoW;
+                            startY = height - margin - logoH;
+                            textX = startX - 8;
+                            textY = startY + (logoH ? logoH / 2 : logoH);
+                            compositeCtx.textAlign = 'right';
+                            compositeCtx.textBaseline = logoH ? 'middle' : 'bottom';
+                        }
+
+                        if (watermarkImg) {
+                            compositeCtx.drawImage(watermarkImg, startX, startY, logoW, logoH);
+                        }
+
+                        if (text) {
+                            const fontSize = Math.max(20, Math.floor(height * 0.03));
+                            compositeCtx.font = `700 ${fontSize}px "Inter", sans-serif`;
+                            compositeCtx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                            compositeCtx.shadowColor = 'rgba(0,0,0,0.6)';
+                            compositeCtx.shadowBlur = 4;
+                            compositeCtx.shadowOffsetX = 1;
+                            compositeCtx.shadowOffsetY = 1;
+
+                            // Adjust textY if no logo
+                            if (!watermarkImg) {
+                                if (pos.startsWith('top')) textY = margin;
+                                else textY = height - margin;
+                            }
+
+                            compositeCtx.fillText(text, textX, textY);
+                        }
                     }
 
                     // 2. Text Overlays
@@ -605,7 +703,14 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
             }
         },
 
-        getSnapshotBlob: async (resolutionFactor: number = 3, transparent: boolean = true) => {
+        getSnapshotBlob: async (resolutionFactor: number = 3, transparent: boolean = true, options?: {
+            watermark?: {
+                text?: string;
+                show: boolean;
+                logo?: string;
+                position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+            }
+        }) => {
             if (!stageRef.current) return null;
 
             const fixPngBlob = async (blob: Blob): Promise<Blob> => {
@@ -644,7 +749,13 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                     // Fix potentially broken NGL blob
                     const fixedBlob = await fixPngBlob(blob);
 
-                    // Add Watermark via Canvas
+                    // If watermark explicitly disabled, return raw blob
+                    if (options?.watermark && !options.watermark.show) {
+                        resolve(fixedBlob);
+                        return;
+                    }
+
+                    // Proceed to add watermark via canvas
                     const img = new Image();
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
@@ -659,30 +770,96 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                         // Draw Structure
                         ctx.drawImage(img, 0, 0);
 
-                        // Draw Watermark
-                        // 3% of height or max 40px, min 20px
-                        const fontSize = Math.max(20, Math.min(40, Math.floor(img.height * 0.025)));
-                        ctx.font = `700 ${fontSize}px "Inter", sans-serif`; // Use project font
-                        ctx.textAlign = 'right';
-                        ctx.textBaseline = 'bottom';
+                        const pos = options?.watermark?.position || 'bottom-right';
+                        const text = options?.watermark?.text !== undefined ? options.watermark.text : 'Powered by QuercusViewer';
+                        const margin = Math.floor(canvas.width * 0.02);
 
-                        // Drop Shadow for legibility on any background
-                        ctx.shadowColor = 'rgba(0,0,0,0.6)';
-                        ctx.shadowBlur = 4;
-                        ctx.shadowOffsetX = 1;
-                        ctx.shadowOffsetY = 1;
+                        let startX = 0;
+                        let startY = 0;
+                        let textX = 0;
+                        let textY = 0;
+                        let logoW = 0;
+                        let logoH = 0;
 
-                        // Add "QuercusViewer" Logo text
-                        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                        const drawText = () => {
+                            if (!text) return;
+                            const fontSize = Math.max(20, Math.min(40, Math.floor(canvas.height * 0.025)));
+                            ctx.font = `700 ${fontSize}px "Inter", sans-serif`;
+                            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                            ctx.shadowColor = 'rgba(0,0,0,0.6)';
+                            ctx.shadowBlur = 4;
+                            ctx.shadowOffsetX = 1;
+                            ctx.shadowOffsetY = 1;
+                            ctx.fillText(text, textX, textY);
+                        };
 
-                        const margin = Math.floor(img.width * 0.02);
-                        ctx.fillText("Powered by QuercusViewer", img.width - margin, img.height - margin);
+                        const finalizeCanvas = () => {
+                            canvas.toBlob((finalBlob) => {
+                                URL.revokeObjectURL(img.src);
+                                resolve(finalBlob || fixedBlob);
+                            }, 'image/png');
+                        };
 
-                        // Convert back to blob
-                        canvas.toBlob((finalBlob) => {
-                            URL.revokeObjectURL(img.src); // Cleanup
-                            resolve(finalBlob || fixedBlob);
-                        }, 'image/png');
+                        const applyPositioning = (watermarkImg?: HTMLImageElement) => {
+                            if (watermarkImg) {
+                                const maxLogoHeight = Math.min(100, Math.floor(canvas.height * 0.1));
+                                const aspect = watermarkImg.width / watermarkImg.height;
+                                logoH = maxLogoHeight;
+                                logoW = Math.floor(logoH * aspect);
+                            }
+
+                            if (pos === 'top-left') {
+                                startX = margin;
+                                startY = margin;
+                                textX = startX + (logoW ? logoW + 8 : 0);
+                                textY = startY + (logoH ? logoH / 2 : 0);
+                                ctx.textAlign = 'left';
+                                ctx.textBaseline = logoH ? 'middle' : 'top';
+                            } else if (pos === 'top-right') {
+                                startX = canvas.width - margin - logoW;
+                                startY = margin;
+                                textX = startX - 8;
+                                textY = startY + (logoH ? logoH / 2 : 0);
+                                ctx.textAlign = 'right';
+                                ctx.textBaseline = logoH ? 'middle' : 'top';
+                            } else if (pos === 'bottom-left') {
+                                startX = margin;
+                                startY = canvas.height - margin - logoH;
+                                textX = startX + (logoW ? logoW + 8 : 0);
+                                textY = startY + (logoH ? logoH / 2 : logoH);
+                                ctx.textAlign = 'left';
+                                ctx.textBaseline = logoH ? 'middle' : 'bottom';
+                            } else {
+                                startX = canvas.width - margin - logoW;
+                                startY = canvas.height - margin - logoH;
+                                textX = startX - 8;
+                                textY = startY + (logoH ? logoH / 2 : logoH);
+                                ctx.textAlign = 'right';
+                                ctx.textBaseline = logoH ? 'middle' : 'bottom';
+                            }
+
+                            if (watermarkImg) {
+                                ctx.drawImage(watermarkImg, startX, startY, logoW, logoH);
+                            }
+
+                            if (!watermarkImg) {
+                                if (pos.startsWith('top')) textY = margin;
+                                else textY = canvas.height - margin;
+                            }
+
+                            drawText();
+                            finalizeCanvas();
+                        };
+
+                        // Fetch or proceed
+                        if (options?.watermark && options.watermark.show && options.watermark.logo) {
+                            const logoImg = new Image();
+                            logoImg.onload = () => applyPositioning(logoImg);
+                            logoImg.onerror = () => applyPositioning();
+                            logoImg.src = options.watermark.logo;
+                        } else {
+                            applyPositioning();
+                        }
                     };
 
                     img.onerror = (e) => {
