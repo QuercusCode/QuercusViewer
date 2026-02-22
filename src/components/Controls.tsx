@@ -615,8 +615,13 @@ export const Controls: React.FC<ControlsProps> = ({
     const handleAddCustomColor = () => {
         let selectionString = '';
         if (customChain !== '__none__' && customChain !== 'All') {
-            selectionString = `:${customChain}`;
-            if (customSelection) selectionString += ` and ${customSelection}`;
+            const chainPrefix = customChain ? `:${customChain}` : '*';
+            selectionString = chainPrefix;
+            if (customSelection) {
+                selectionString = chainPrefix === '*'
+                    ? customSelection
+                    : `${chainPrefix} and ${customSelection}`;
+            }
         } else if (customChain === 'All') {
             selectionString = customSelection ? customSelection : '*';
         } else {
