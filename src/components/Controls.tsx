@@ -1435,7 +1435,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                                 ? (isLightMode ? 'bg-white shadow text-blue-600' : 'bg-neutral-700 text-white shadow')
                                                                 : 'text-neutral-400 hover:text-neutral-500'}`}
                                                         >
-                                                            Per-Chain
+                                                            {isChemical ? 'Molecule' : 'Per-Chain'}
                                                         </button>
                                                         <button
                                                             onClick={() => setCustomColorMode('residue')}
@@ -1443,7 +1443,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                                 ? (isLightMode ? 'bg-white shadow text-blue-600' : 'bg-neutral-700 text-white shadow')
                                                                 : 'text-neutral-400 hover:text-neutral-500'}`}
                                                         >
-                                                            Residue
+                                                            {isChemical ? 'Atoms/Elements' : 'Residue'}
                                                         </button>
                                                     </div>
                                                 </div>
@@ -1526,8 +1526,10 @@ export const Controls: React.FC<ControlsProps> = ({
                                                                 </div>
                                                                 <div className="flex-1">
                                                                     <div className="flex justify-between items-center mb-1">
-                                                                        <label className={`text-[9px] font-bold uppercase tracking-wider ${subtleText} opacity-70`}>Residues</label>
-                                                                        {customChain && chains.find(c => c.name === customChain)?.min !== undefined && (
+                                                                        <label className={`text-[9px] font-bold uppercase tracking-wider ${subtleText} opacity-70`}>
+                                                                            {isChemical ? 'Atoms/Elements' : 'Residues'}
+                                                                        </label>
+                                                                        {!isChemical && customChain && chains.find(c => c.name === customChain)?.min !== undefined && (
                                                                             <span className={`text-[9px] font-mono ${subtleText} opacity-50`}>
                                                                                 {chains.find(c => c.name === customChain)?.min}-{chains.find(c => c.name === customChain)?.max}
                                                                             </span>
@@ -1537,7 +1539,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                                         type="text"
                                                                         value={customSelection}
                                                                         onChange={(e) => setCustomSelection(e.target.value)}
-                                                                        placeholder="e.g. 50-60"
+                                                                        placeholder={isChemical ? "e.g. @1-5 or _C" : "e.g. 50-60"}
                                                                         className={`w-full rounded-lg px-3 py-1.5 text-xs border outline-none font-mono placeholder:text-neutral-500 ${inputBg}`}
                                                                     />
                                                                 </div>
@@ -1622,7 +1624,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                                 ? (isLightMode ? 'bg-white shadow text-blue-600' : 'bg-neutral-700 text-white shadow')
                                                                 : 'text-neutral-400 hover:text-neutral-500'}`}
                                                         >
-                                                            Per-Chain
+                                                            {isChemical ? 'Molecule' : 'Per-Chain'}
                                                         </button>
                                                         <button
                                                             onClick={() => setTransparencyMode('residue')}
@@ -1630,7 +1632,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                                 ? (isLightMode ? 'bg-white shadow text-blue-600' : 'bg-neutral-700 text-white shadow')
                                                                 : 'text-neutral-400 hover:text-neutral-500'}`}
                                                         >
-                                                            Residue
+                                                            {isChemical ? 'Atoms/Elements' : 'Residue'}
                                                         </button>
                                                     </div>
                                                 </div>
@@ -1678,12 +1680,14 @@ export const Controls: React.FC<ControlsProps> = ({
                                                                 </div>
                                                             </div>
                                                             <div className="flex-1">
-                                                                <label className={`text-[9px] font-bold uppercase tracking-wider mb-1 block ${subtleText} opacity-70`}>Residues</label>
+                                                                <label className={`text-[9px] font-bold uppercase tracking-wider mb-1 block ${subtleText} opacity-70`}>
+                                                                    {isChemical ? 'Atoms/Elements' : 'Residues'}
+                                                                </label>
                                                                 <input
                                                                     type="text"
                                                                     value={transparencyResidues}
                                                                     onChange={(e) => setTransparencyResidues(e.target.value)}
-                                                                    placeholder="e.g. 50-60"
+                                                                    placeholder={isChemical ? "e.g. @1-5 or _C" : "e.g. 50-60"}
                                                                     className={`w-full py-1.5 px-2 rounded-lg border text-xs outline-none transition-all ${inputBg}`}
                                                                 />
                                                             </div>
@@ -1761,7 +1765,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                                 ? (isLightMode ? 'bg-white shadow text-blue-600' : 'bg-neutral-700 text-white shadow')
                                                                 : 'text-neutral-400 hover:text-neutral-500'}`}
                                                         >
-                                                            Per-Chain
+                                                            {isChemical ? 'Molecule' : 'Per-Chain'}
                                                         </button>
                                                         <button
                                                             onClick={() => setCustomStylesMode('residue')}
@@ -1769,7 +1773,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                                 ? (isLightMode ? 'bg-white shadow text-blue-600' : 'bg-neutral-700 text-white shadow')
                                                                 : 'text-neutral-400 hover:text-neutral-500'}`}
                                                         >
-                                                            Residue
+                                                            {isChemical ? 'Atoms/Elements' : 'Residue'}
                                                         </button>
                                                     </div>
                                                 </div>
@@ -1877,8 +1881,10 @@ export const Controls: React.FC<ControlsProps> = ({
                                                                 </div>
                                                                 <div className="flex-1">
                                                                     <div className="flex justify-between items-center mb-1">
-                                                                        <label className={`text-[9px] font-bold uppercase tracking-wider ${subtleText} opacity-70`}>Residues</label>
-                                                                        {customResStyleChain && customResStyleChain !== 'All' && chains.find(c => c.name === customResStyleChain)?.min !== undefined && (
+                                                                        <label className={`text-[9px] font-bold uppercase tracking-wider ${subtleText} opacity-70`}>
+                                                                            {isChemical ? 'Atoms/Elements' : 'Residues'}
+                                                                        </label>
+                                                                        {!isChemical && customResStyleChain && customResStyleChain !== 'All' && chains.find(c => c.name === customResStyleChain)?.min !== undefined && (
                                                                             <span className={`text-[9px] font-mono ${subtleText} opacity-50`}>
                                                                                 {chains.find(c => c.name === customResStyleChain)?.min}-{chains.find(c => c.name === customResStyleChain)?.max}
                                                                             </span>
@@ -1888,7 +1894,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                                         type="text"
                                                                         value={customResStyleRange}
                                                                         onChange={(e) => setCustomResStyleRange(e.target.value)}
-                                                                        placeholder="e.g. 50-60"
+                                                                        placeholder={isChemical ? "e.g. @1-5 or _C" : "e.g. 50-60"}
                                                                         className={`w-full py-1.5 px-2 rounded-lg border text-xs outline-none transition-all ${inputBg}`}
                                                                     />
                                                                 </div>
