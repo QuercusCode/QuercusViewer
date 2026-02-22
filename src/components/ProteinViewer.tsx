@@ -2695,10 +2695,20 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
             // Fix: High Contrast for Chains
             // If coloring by chain, ignore the global aesthetic palette (often monotonic like Magma) 
             // and force a high-contrast Rainbow (Spectral) to ensure distinct chain colors.
-            if (finalColor === 'chainindex') {
-                params.colorScale = 'Spectral';
-            } else if (scale && scale.length > 0) {
-                params.colorScale = scale;
+            // For atomic representations (licorice, ball+stick), applying Spectral to chainindex can sometimes 
+            // trigger an NGL rendering bug (TypeError reading 'length'), so we only apply it to backbone styles.
+            const isBackboneStyle = repType === 'cartoon' || repType === 'trace' || repType === 'backbone' || repType === 'tube';
+            if (isBackboneStyle) {
+                if (finalColor === 'chainindex') {
+                    params.colorScale = 'Spectral';
+                } else if (scale && scale.length > 0) {
+                    params.colorScale = scale;
+                }
+            } else {
+                // For atomic styles, still try to apply custom palette if not chainindex
+                if (finalColor !== 'chainindex' && scale && scale.length > 0) {
+                    params.colorScale = scale;
+                }
             }
 
             const cartoonParams = {
@@ -2715,6 +2725,11 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
             };
 
             let globalParams = { ...params };
+
+            // Ensure specific parameters for non-backbone styles are applied globally
+            if (repType === 'licorice') {
+                globalParams.scale = 2.0;
+            }
 
             // Render Transparent Reps NOW (so they are "behind"? Actually NGL renders opaque then transparent usually)
             // But we need to add them to the component.
@@ -2838,7 +2853,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                             selection += ` and not (${thisChainExclusions.join(' or ')})`;
                         }
 
-                        component.addRepresentation(repType as any, { ...globalParams, sele: selection });
+                        try { component.addRepresentation(repType as any, { ...globalParams, sele: selection }); } catch (err) { console.error("CRASH IN BASE RENDER:", err, repType, selection, globalParams); }
                     }
                 });
             }
