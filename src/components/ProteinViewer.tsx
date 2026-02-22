@@ -2393,7 +2393,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                 customTransparency.forEach(rule => {
                     let selection = "";
                     if (rule.chain !== 'All') {
-                        selection = `:${rule.chain}`;
+                        selection = rule.chain ? `:${rule.chain}` : "*"; // Fallback to all for an empty chain (which means whole molecule anyway)
                         transparentChainMap[rule.chain] = rule.opacity;
                     } else {
                         selection = "*";
@@ -2553,8 +2553,8 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
             const backboneStyles = new Set(['cartoon', 'backbone', 'trace', 'tube', 'ribbon', 'rocket', 'rope']);
 
             const customStyleSelections = customStyles?.filter(rule => backboneStyles.has(rule.style)).map(rule => {
-                const chainPart = rule.chain === 'All' ? '' : `:${rule.chain}`;
-                const resPart = rule.residues ? (rule.chain === 'All' ? rule.residues : ` and ${rule.residues}`) : '';
+                const chainPart = rule.chain === 'All' ? '' : (rule.chain ? `:${rule.chain}` : '');
+                const resPart = rule.residues ? (chainPart === '' ? rule.residues : ` and ${rule.residues}`) : '';
                 return `(${chainPart}${resPart})`; // e.g. "(:A and 50-60)"
             }) || [];
 
@@ -2618,10 +2618,10 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                         });
 
                         const exclusionString = thisChainExclusions.length > 0
-                            ? ` and not (${thisChainExclusions.join(' or ')})`
+                            ? (chainName ? ` and not (${thisChainExclusions.join(' or ')})` : `not (${thisChainExclusions.join(' or ')})`)
                             : "";
 
-                        const selection = `:${chainName}${exclusionString}`;
+                        const selection = chainName ? `:${chainName}${exclusionString}` : (exclusionString ? exclusionString : "*");
 
                         component.addRepresentation(repType as any, { ...globalParams, sele: selection });
                     }
@@ -2639,7 +2639,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                     const chainParams: any = {
                         ...params, // Use clean params (without accumulated cartoon properties)
                         color: finalColor,
-                        sele: `:${chain}${customExclusion}${transparencyExclusion}` // Apply custom exclusion here too
+                        sele: chain ? `:${chain}${customExclusion}${transparencyExclusion}` : `*${customExclusion}${transparencyExclusion}` // Apply custom exclusion here too
                     };
 
                     // Specific adjustments based on style
@@ -2660,9 +2660,9 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
             // --- 6. RENDER CUSTOM RESIDUE STYLES ---
             if (customStyles) {
                 customStyles.forEach(rule => {
-                    const chainPart = rule.chain === 'All' ? '*' : `:${rule.chain}`;
-                    const resPart = rule.residues ? (rule.chain === 'All' ? ` and ${rule.residues}` : ` and ${rule.residues}`) : '';
-                    const selection = `${chainPart}${resPart}`; // e.g. ":A and 50-60"
+                    const chainPart = rule.chain === 'All' ? '*' : (rule.chain ? `:${rule.chain}` : '*');
+                    const resPart = rule.residues ? (rule.chain === 'All' || !rule.chain ? ` and ${rule.residues}` : ` and ${rule.residues}`) : '';
+                    const selection = `${chainPart}${resPart}`; // e.g. ":A and 50-60" or "* and 50-60"
 
                     let actualStyle = rule.style as any;
                     if (actualStyle === 'backbone') actualStyle = 'trace';
