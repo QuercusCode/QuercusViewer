@@ -2391,33 +2391,18 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
 
             if (customTransparency) {
                 customTransparency.forEach(rule => {
-                    let selection = "";
+                    const chainPart = rule.chain === 'All' ? '' : (rule.chain ? `:${rule.chain}` : '');
                     if (rule.chain !== 'All') {
-                        selection = rule.chain ? `:${rule.chain}` : "*"; // Fallback to all for an empty chain (which means whole molecule anyway)
                         transparentChainMap[rule.chain] = rule.opacity;
-                    } else {
-                        selection = "*";
                     }
 
+                    let selection = chainPart;
                     if (rule.residues) {
-                        // Use EXPANDED selection for the Positive Transparency Render (to create overlap)
-                        // But keep the original `rule.residues` for exclusion logic elsewhere?
-                        // Wait, transparencySelections is used for BOTH render and exclusion in my previous logic.
-                        // I need TWO lists: one for rendering (expanded), one for excluding (strict).
-
-                        // Actually, for exclusion, I use `rule.residues` directly in the Explicit Loop (thisChainExclusions).
-                        // I ONLY use `transparencySelections` for:
-                        // 1. Exclusion string for Custom Colors ? Yes (line 2481).
-                        // 2. Rendering loop (line 2570).
-
-                        // If I expand here, then Custom Colors will be excluded MORE.
-                        // e.g. Opaque Custom Color 50 won't render if I exclude 49-101.
-                        // This is fine, because Transparent 49-101 includes 50.
-                        // So Transparent 50 will replace Opaque Custom Color 50.
-                        // This seems acceptable for Custom Colors too.
-
-                        selection += ` and (${expandResidueRange(rule.residues)})`;
+                        const expandedResidues = expandResidueRange(rule.residues);
+                        selection = chainPart === '' ? `(${expandedResidues})` : `${chainPart} and (${expandedResidues})`;
                     }
+                    if (!selection) selection = '*';
+
                     transparencySelections.push(selection);
                 });
             }
@@ -2660,9 +2645,9 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
             // --- 6. RENDER CUSTOM RESIDUE STYLES ---
             if (customStyles) {
                 customStyles.forEach(rule => {
-                    const chainPart = rule.chain === 'All' ? '*' : (rule.chain ? `:${rule.chain}` : '*');
-                    const resPart = rule.residues ? (rule.chain === 'All' || !rule.chain ? ` and ${rule.residues}` : ` and ${rule.residues}`) : '';
-                    const selection = `${chainPart}${resPart}`; // e.g. ":A and 50-60" or "* and 50-60"
+                    const chainPart = rule.chain === 'All' ? '' : (rule.chain ? `:${rule.chain}` : '');
+                    const resPart = rule.residues ? (chainPart === '' ? rule.residues : ` and ${rule.residues}`) : '';
+                    const selection = `${chainPart}${resPart}` || '*'; // e.g. ":A and 50-60" or "@1-5"
 
                     let actualStyle = rule.style as any;
                     if (actualStyle === 'backbone') actualStyle = 'trace';
