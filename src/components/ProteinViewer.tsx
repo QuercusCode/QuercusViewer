@@ -2697,7 +2697,8 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
             // and force a high-contrast Rainbow (Spectral) to ensure distinct chain colors.
             // For atomic representations (licorice, ball+stick), applying Spectral to chainindex can sometimes 
             // trigger an NGL rendering bug (TypeError reading 'length'), so we only apply it to backbone styles.
-            const isBackboneStyle = repType === 'cartoon' || repType === 'trace' || repType === 'backbone' || repType === 'tube';
+            const currentRepType = repType as string;
+            const isBackboneStyle = currentRepType === 'cartoon' || currentRepType === 'trace' || currentRepType === 'backbone' || currentRepType === 'tube';
             if (isBackboneStyle) {
                 if (finalColor === 'chainindex') {
                     params.colorScale = 'Spectral';
