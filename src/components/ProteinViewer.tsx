@@ -56,6 +56,8 @@ export interface ProteinViewerProps {
     enableAmbientOcclusion?: boolean;
     smoothSheetEnabled?: boolean; // New toggle
     initialOrientation?: any; // New prop for setting start view
+    pixelRatio?: number; // High-Res Render (e.g. 2 for 2x)
+    showCursor?: boolean; // Show/hide cursor over viewer
 
 
 
@@ -193,7 +195,9 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
     isInteractive = true,
     annotations,
     onAddAnnotation,
-    remoteHoveredResidue
+    remoteHoveredResidue,
+    pixelRatio,
+    showCursor = true,
 }: ProteinViewerProps, ref: React.Ref<ProteinViewerRef>) => {
 
     const [isAlignmentOpen, setIsAlignmentOpen] = React.useState(false);
@@ -1669,6 +1673,20 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
             stageRef.current.setParameters({ backgroundColor: bgColor });
         }
     }, [backgroundColor]);
+
+    // Apply device pixel ratio (High-Res Render)
+    useEffect(() => {
+        if (stageRef.current && pixelRatio !== undefined) {
+            stageRef.current.setParameters({ devicePixelRatio: pixelRatio });
+        }
+    }, [pixelRatio]);
+
+    // Apply cursor visibility
+    useEffect(() => {
+        if (containerRef.current) {
+            containerRef.current.style.cursor = showCursor ? '' : 'none';
+        }
+    }, [showCursor]);
 
     useEffect(() => {
         isMounted.current = true;

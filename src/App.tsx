@@ -3007,7 +3007,7 @@ function App() {
                             smoothSheetEnabled={ctrl.smoothSheetEnabled}
                             palette={colorPalette}
                             backgroundColor={
-                              (isStudioMode && recorder.session?.metadata?.settings?.backgroundColor)
+                              (isStudioMode && recorder.session?.metadata?.settings?.backgroundColor !== undefined)
                                 ? recorder.session.metadata.settings.backgroundColor
                                 : (ctrl.customBackgroundColor || (isLightMode ? 'white' : 'black'))
                             }
@@ -3056,6 +3056,16 @@ function App() {
                               (isStudioMode && recorder.session?.metadata?.settings?.ssao !== undefined)
                                 ? recorder.session.metadata.settings.ssao
                                 : settings.ssao
+                            }
+                            pixelRatio={
+                              (isStudioMode && recorder.session?.metadata?.settings?.resolutionScale !== undefined)
+                                ? recorder.session.metadata.settings.resolutionScale
+                                : undefined
+                            }
+                            showCursor={
+                              isStudioMode
+                                ? (recorder.session?.metadata?.settings?.showCursor ?? true)
+                                : true
                             }
                             resetCamera={ctrl.resetKey}
                             disableScroll={!isScrollEnabled} // Scroll Protection
