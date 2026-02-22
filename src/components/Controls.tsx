@@ -595,7 +595,7 @@ export const Controls: React.FC<ControlsProps> = ({
 
         const newRule: CustomTransparencyRule = {
             id: crypto.randomUUID(),
-            chain: transparencyChain || 'All',
+            chain: transparencyChain === '__none__' ? 'All' : transparencyChain,
             residues: transparencyMode === 'residue' ? transparencyResidues : undefined,
             opacity: transparencyValue / 100
         };
@@ -614,10 +614,13 @@ export const Controls: React.FC<ControlsProps> = ({
 
     const handleAddCustomColor = () => {
         let selectionString = '';
-        if (customChain) {
+        if (customChain !== '__none__' && customChain !== 'All') {
             selectionString = `:${customChain}`;
             if (customSelection) selectionString += ` and ${customSelection}`;
+        } else if (customChain === 'All') {
+            selectionString = customSelection ? customSelection : '*';
         } else {
+            // Unselected state or missing logic fallback
             selectionString = customSelection;
         }
 
@@ -627,7 +630,7 @@ export const Controls: React.FC<ControlsProps> = ({
                 color: customColorValue
             }]);
             setCustomSelection('');
-            setCustomChain('');
+            setCustomChain('__none__');
         }
     };
 
@@ -1809,7 +1812,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                                         </div>
                                                                         <button
                                                                             onClick={() => {
-                                                                                if (selectedChainForStyle && selectedChainForStyle !== '__none__') {
+                                                                                if (selectedChainForStyle !== '__none__') {
                                                                                     setChainStyle(selectedChainForStyle, selectedStyleForChain);
                                                                                 }
                                                                             }}
