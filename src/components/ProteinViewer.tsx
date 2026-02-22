@@ -27,6 +27,7 @@ export interface ProteinViewerProps {
     fileType?: 'pdb' | 'mmcif' | 'sdf' | 'mol' | 'mol2';
 
     // Appearance
+    isChemical?: boolean;
     isLightMode: boolean;
     isSpinning: boolean;
     isRocking?: boolean;
@@ -146,6 +147,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
     customStyles = [],
     customTransparency = [],
     smoothSheetEnabled = false,
+    isChemical = false,
     overlays,
 
     palette: colorPalette = 'standard', // Rename to matches internal usage
@@ -2556,7 +2558,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
             // Add Custom Style Chains (only if full chain)
             if (customStyles) {
                 customStyles.forEach(rule => {
-                    if (rule.chain !== 'All' && !rule.residues && backboneStyles.has(rule.style)) {
+                    if (rule.chain !== 'All' && !rule.residues && (isChemical || backboneStyles.has(rule.style))) {
                         fullyHandledChains.add(rule.chain);
                     }
                 });
@@ -2590,8 +2592,12 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
 
                         // Custom Style Partial Exclusions
                         customStyles?.forEach(rule => {
-                            if ((rule.chain === 'All' || rule.chain === chainName) && rule.residues && backboneStyles.has(rule.style)) {
-                                thisChainExclusions.push(`(${rule.residues})`);
+                            if ((rule.chain === 'All' || rule.chain === chainName) && rule.residues) {
+                                // For proteins, atomic styles are additive (they don't cut holes in cartoon).
+                                // But for chemicals, the baseline is already atomic, so ANY custom style must explicitly overwrite.
+                                if (isChemical || backboneStyles.has(rule.style)) {
+                                    thisChainExclusions.push(`(${rule.residues})`);
+                                }
                             }
                         });
 

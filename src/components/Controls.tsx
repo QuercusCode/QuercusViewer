@@ -1809,10 +1809,10 @@ export const Controls: React.FC<ControlsProps> = ({
                                                                                 onChange={(e) => setSelectedStyleForChain(e.target.value as RepresentationType)}
                                                                                 className="w-full appearance-none bg-transparent py-1.5 pl-2 pr-6 text-xs outline-none"
                                                                             >
-                                                                                <option value="cartoon">Cartoon</option>
+                                                                                {!isChemical && <option value="cartoon">Cartoon</option>}
                                                                                 <option value="ball+stick">Ball & Stick</option>
                                                                                 <option value="licorice">Licorice</option>
-                                                                                <option value="backbone">Backbone</option>
+                                                                                {!isChemical && <option value="backbone">Backbone</option>}
                                                                                 <option value="spacefill">Spacefill</option>
                                                                                 <option value="surface">Surface</option>
                                                                                 <option value="line">Line</option>
@@ -1909,10 +1909,10 @@ export const Controls: React.FC<ControlsProps> = ({
                                                                             onChange={(e) => setCustomResStyleType(e.target.value as RepresentationType)}
                                                                             className="w-full appearance-none bg-transparent py-1.5 pl-2 pr-6 text-xs outline-none"
                                                                         >
-                                                                            <option value="cartoon">Cartoon</option>
+                                                                            {!isChemical && <option value="cartoon">Cartoon</option>}
                                                                             <option value="ball+stick">Ball & Stick</option>
                                                                             <option value="licorice">Licorice</option>
-                                                                            <option value="backbone">Backbone</option>
+                                                                            {!isChemical && <option value="backbone">Backbone</option>}
                                                                             <option value="spacefill">Spacefill</option>
                                                                             <option value="surface">Surface</option>
                                                                             <option value="line">Line</option>
