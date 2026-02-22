@@ -2362,30 +2362,52 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
 
             // --- 2.5. PREPARE TRANSPARENCY SELECTIONS (Moved Before Colors) ---
 
-            // Helper to expand residue range by 1 for overlap (fixes gaps in splines)
-            const expandResidueRange = (rangeStr: string): string => {
+            // Helper to expand selection to include immediately bonded atoms.
+            // This is CRITICAL for representations like ball+stick or licorice:
+            // If we render H atoms transparently and C atoms opaquely in separate passes,
+            // NGL won't draw the C-H bond sticks unless AT LEAST ONE of the passes includes BOTH atoms.
+            // By expanding the transparent (or custom styled) selection to include the bonded heavy atoms,
+            // the overlay pass can draw the connecting sticks, while the base pass handles the heavy atoms normally.
+            const expandSelectionByBonds = (selectionStr: string): string => {
+                if (!component.structure || !window.NGL) return selectionStr;
                 try {
-                    return rangeStr.split(',').map(part => {
-                        part = part.trim();
-                        if (part.includes('-')) {
-                            const [start, end] = part.split('-').map(Number);
-                            if (!isNaN(start) && !isNaN(end)) {
-                                return `${start - 1}-${end + 1}`;
-                            }
-                        } else {
-                            const num = Number(part);
-                            if (!isNaN(num)) {
-                                return `${num - 1}-${num + 1}`;
-                            }
+                    const sel = new window.NGL.Selection(selectionStr);
+                    const selectedIndices = new Set<number>();
+
+                    // 1. Identify all currently selected atom indices
+                    component.structure.eachAtom((a: any) => {
+                        selectedIndices.add(a.index);
+                    }, sel);
+
+                    if (selectedIndices.size === 0) return selectionStr;
+
+                    const expandedIndices = new Set<number>(selectedIndices);
+
+                    // 2. Iterate all bonds to find neighboring atoms
+                    component.structure.eachBond((b: any) => {
+                        const idx1 = b.atom1.index;
+                        const idx2 = b.atom2.index;
+
+                        if (selectedIndices.has(idx1) && !selectedIndices.has(idx2)) {
+                            expandedIndices.add(idx2);
+                        } else if (selectedIndices.has(idx2) && !selectedIndices.has(idx1)) {
+                            expandedIndices.add(idx1);
                         }
-                        return part;
-                    }).join(', ');
+                    });
+
+                    // If no expansion occurred, fallback to original string
+                    if (expandedIndices.size === selectedIndices.size) return selectionStr;
+
+                    // 3. Construct a query using exact atom index routing: `@1,2,3`
+                    return `@${Array.from(expandedIndices).join(',')}`;
                 } catch (e) {
-                    return rangeStr;
+                    console.warn("Failed to topologically expand NGL selection:", e);
+                    return selectionStr;
                 }
             };
 
-            const transparencySelections: string[] = [];
+            const transparencySelections: string[] = []; // Strict selections used for excluding chunks from Opaque pass
+            const renderSelections: Array<{ chain: string, opacity: number, exactSelection: string, expandedSelection: string }> = []; // Expanded selections for rendering Transparency pass
             const transparentChainMap: Record<string, number> = {}; // chain -> opacity
 
             // We need to render transparent parts separately and FIRST (or they need to be excluded from others)
@@ -2398,14 +2420,22 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                         transparentChainMap[rule.chain] = rule.opacity;
                     }
 
-                    let selection = chainPart;
+                    let exactSelection = chainPart;
                     if (rule.residues) {
-                        const expandedResidues = expandResidueRange(rule.residues);
-                        selection = chainPart === '' ? `(${expandedResidues})` : `${chainPart} and (${expandedResidues})`;
+                        exactSelection = chainPart === '' ? `(${rule.residues})` : `${chainPart} and (${rule.residues})`;
                     }
-                    if (!selection) selection = '*';
+                    if (!exactSelection) exactSelection = '*';
 
-                    transparencySelections.push(selection);
+                    // Use exact selection for exclusion 'holes' in the opaque layer
+                    transparencySelections.push(exactSelection);
+
+                    // Expand selection topologically so the transparent layer draws bonded sticks
+                    renderSelections.push({
+                        chain: rule.chain,
+                        opacity: rule.opacity,
+                        exactSelection: exactSelection,
+                        expandedSelection: expandSelectionByBonds(exactSelection)
+                    });
                 });
             }
 
@@ -2494,9 +2524,9 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
             // Render Transparent Reps NOW (so they are "behind"? Actually NGL renders opaque then transparent usually)
             // But we need to add them to the component.
             if (customTransparency) {
-                customTransparency.forEach((rule, idx) => {
-                    // Re-calculate selection (or reuse if we stored it, but re-calc is cheap)
-                    let selection = transparencySelections[idx];
+                renderSelections.forEach((rule) => {
+                    // Use EXPANDED selection for rendering to guarantee sticks map across representation boundaries
+                    let selection = rule.expandedSelection;
 
                     // Determine Style
                     let styleToUse: any = repType;
@@ -2652,7 +2682,10 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                 customStyles.forEach(rule => {
                     const chainPart = rule.chain === 'All' ? '' : (rule.chain ? `:${rule.chain}` : '');
                     const resPart = rule.residues ? (chainPart === '' ? rule.residues : ` and ${rule.residues}`) : '';
-                    const selection = `${chainPart}${resPart}` || '*'; // e.g. ":A and 50-60" or "@1-5"
+                    const exactSelection = `${chainPart}${resPart}` || '*'; // e.g. ":A and 50-60" or "@1-5"
+
+                    // Use EXPANDED selection for rendering to guarantee sticks map across representation boundaries
+                    const renderSelection = expandSelectionByBonds(exactSelection);
 
                     let actualStyle = rule.style as any;
                     if (actualStyle === 'backbone') actualStyle = 'trace';
@@ -2660,7 +2693,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                     const ruleParams: any = {
                         ...params, // Use clean params
                         color: finalColor,
-                        sele: `${selection}${transparencyExclusion}`
+                        sele: `${renderSelection}${transparencyExclusion}`
                     };
 
                     // Apply specific style adjustments
