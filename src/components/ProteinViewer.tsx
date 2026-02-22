@@ -2608,11 +2608,10 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                             }
                         });
 
-                        const exclusionString = thisChainExclusions.length > 0
-                            ? (chainName ? ` and not (${thisChainExclusions.join(' or ')})` : `not (${thisChainExclusions.join(' or ')})`)
-                            : "";
-
-                        const selection = chainName ? `:${chainName}${exclusionString}` : (exclusionString ? exclusionString : "*");
+                        let selection = chainName ? `:${chainName}` : "*";
+                        if (thisChainExclusions.length > 0) {
+                            selection += ` and not (${thisChainExclusions.join(' or ')})`;
+                        }
 
                         component.addRepresentation(repType as any, { ...globalParams, sele: selection });
                     }
