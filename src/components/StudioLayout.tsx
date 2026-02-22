@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     ArrowLeft, Play, Pause, Scissors, Trash2, Download,
     Settings, Layers, Music, Type, Film, Pencil, Undo, Redo,
@@ -66,6 +66,9 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
     // Audio Clips State
     const [selectedAudioClipId, setSelectedAudioClipId] = useState<string | null>(null);
 
+    // Branding State
+    const watermarkLogoInputRef = useRef<HTMLInputElement>(null);
+
     const updateAudioClip = (id: string, updates: any) => {
         const currentClips = session?.metadata.audioClips || [];
         const updatedClips = currentClips.map(c => c.id === id ? { ...c, ...updates } : c);
@@ -77,6 +80,18 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
         const updatedClips = currentClips.filter(c => c.id !== id);
         updateMetadata({ audioClips: updatedClips });
         if (selectedAudioClipId === id) setSelectedAudioClipId(null);
+    };
+
+    const handleUploadWatermarkLogo = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const dataUrl = event.target?.result as string;
+            updateMetadata({ watermarkLogo: dataUrl });
+        };
+        reader.readAsDataURL(file);
     };
 
     // Reset trim on session load
@@ -581,6 +596,7 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                                                 onClick={() => updateMetadata({
                                                                     settings: { ...session.metadata.settings, watermarkPosition: pos as any }
                                                                 })}
+                                                                title={`Position: ${pos.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}`}
                                                                 className={`rounded border ${session.metadata.settings?.watermarkPosition === pos ? 'bg-blue-500 border-blue-400' : 'bg-neutral-800 border-white/10 hover:bg-neutral-700'}`}
                                                             />
                                                         ))}
@@ -591,9 +607,30 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
 
                                         <div className="flex items-center justify-between pt-2">
                                             <span className="text-xs text-white/60">Upload Logo</span>
-                                            <button className="text-[10px] text-blue-400 hover:underline flex items-center gap-1">
-                                                <Plus className="w-3 h-3" /> Select Image
-                                            </button>
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                className="hidden"
+                                                ref={watermarkLogoInputRef}
+                                                onChange={handleUploadWatermarkLogo}
+                                            />
+                                            <div className="flex items-center gap-2">
+                                                {session.metadata.watermarkLogo && (
+                                                    <button
+                                                        onClick={() => updateMetadata({ watermarkLogo: undefined })}
+                                                        className="text-[10px] text-red-400 hover:text-red-300 transition-colors"
+                                                        title="Remove Logo"
+                                                    >
+                                                        Clear
+                                                    </button>
+                                                )}
+                                                <button
+                                                    onClick={() => watermarkLogoInputRef.current?.click()}
+                                                    className="text-[10px] text-blue-400 hover:underline flex items-center gap-1"
+                                                >
+                                                    <Plus className="w-3 h-3" /> {session.metadata.watermarkLogo ? 'Change Image' : 'Select Image'}
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

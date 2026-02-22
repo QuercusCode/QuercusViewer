@@ -200,6 +200,7 @@ export interface RecordedSession {
         description?: string;
         thumbnail?: string; // Data URL
         watermarkText?: string; // Custom watermark text
+        watermarkLogo?: string; // Custom watermark image
         audioTrack?: {
             id: string;
             name: string;
