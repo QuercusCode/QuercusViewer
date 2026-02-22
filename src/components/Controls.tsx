@@ -511,7 +511,7 @@ export const Controls: React.FC<ControlsProps> = ({
     const [isSearchFocused, setIsSearchFocused] = useState(false);
 
     // Chain Styling State
-    const [selectedChainForStyle, setSelectedChainForStyle] = useState<string>("");
+    const [selectedChainForStyle, setSelectedChainForStyle] = useState<string>("__none__");
     const [selectedStyleForChain, setSelectedStyleForChain] = useState<RepresentationType>("cartoon");
     const [customStylesMode, setCustomStylesMode] = useState<'chain' | 'residue'>('chain');
 
@@ -573,24 +573,24 @@ export const Controls: React.FC<ControlsProps> = ({
     // Recording State
     const [recordDuration, setRecordDuration] = useState(4000);
 
-    // Custom Color State
-    const [viewSequenceChain, setViewSequenceChain] = useState('');
+    // Sequence Viewer State
+    const [viewSequenceChain, setViewSequenceChain] = useState('All');
 
     // Custom Color State
-    const [customChain, setCustomChain] = useState<string>("");
+    const [customChain, setCustomChain] = useState<string>("__none__");
     const [customSelection, setCustomSelection] = useState<string>("");
     const [customColorValue, setCustomColorValue] = useState<string>("#ff0000");
     const [customColorMode, setCustomColorMode] = useState<'chain' | 'residue'>('chain');
 
     // Transparency State
     const [transparencyMode, setTransparencyMode] = useState<'chain' | 'residue'>('chain');
-    const [transparencyChain, setTransparencyChain] = useState<string>('');
+    const [transparencyChain, setTransparencyChain] = useState<string>('__none__');
     const [transparencyResidues, setTransparencyResidues] = useState('');
     const [transparencyValue, setTransparencyValue] = useState(50); // 0-100
 
     // Handlers
     const handleAddTransparencyRule = () => {
-        if (!transparencyChain && transparencyMode === 'chain') return;
+        if (transparencyChain === '__none__' && transparencyMode === 'chain') return;
         if (transparencyChain === 'Select' && transparencyMode === 'chain') return;
 
         const newRule: CustomTransparencyRule = {
@@ -1457,9 +1457,9 @@ export const Controls: React.FC<ControlsProps> = ({
                                                                             }}
                                                                             className="w-full appearance-none bg-transparent py-1.5 pl-2 pr-6 text-xs font-mono outline-none"
                                                                         >
-                                                                            <option value="" disabled>Select</option>
+                                                                            <option value="__none__" disabled>Select</option>
                                                                             {chains.map(c => (
-                                                                                <option key={c.name} value={c.name}>:{c.name}</option>
+                                                                                <option key={c.name} value={c.name}>{c.name ? `:${c.name}` : 'Molecule'}</option>
                                                                             ))}
                                                                         </select>
                                                                         <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 opacity-50 pointer-events-none" />
@@ -1487,7 +1487,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                                 {/* Add Button */}
                                                                 <button
                                                                     onClick={handleAddCustomColor}
-                                                                    disabled={!customChain}
+                                                                    disabled={customChain === '__none__'}
                                                                     className="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg text-xs font-bold transition-all shadow-sm active:scale-95 flex items-center justify-center gap-1.5"
                                                                 >
                                                                     Set
@@ -1508,9 +1508,9 @@ export const Controls: React.FC<ControlsProps> = ({
                                                                             onChange={(e) => setCustomChain(e.target.value)}
                                                                             className="w-full appearance-none bg-transparent py-1.5 pl-2 pr-6 text-xs font-mono outline-none"
                                                                         >
-                                                                            <option value="">All</option>
+                                                                            <option value="All">All</option>
                                                                             {chains.map(c => (
-                                                                                <option key={c.name} value={c.name}>:{c.name}</option>
+                                                                                <option key={c.name} value={c.name}>{c.name ? `:${c.name}` : 'Molecule'}</option>
                                                                             ))}
                                                                         </select>
                                                                         <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 opacity-50 pointer-events-none" />
@@ -1556,7 +1556,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                                     {/* Add Button */}
                                                                     <button
                                                                         onClick={handleAddCustomColor}
-                                                                        disabled={(!customSelection && !customChain)}
+                                                                        disabled={(!customSelection && (customChain === '__none__' || customChain === 'All'))}
                                                                         className="px-6 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg text-xs font-bold transition-all shadow-sm active:scale-95 flex items-center justify-center gap-1.5"
                                                                     >
                                                                         <Plus className="w-3.5 h-3.5" />
@@ -1639,10 +1639,10 @@ export const Controls: React.FC<ControlsProps> = ({
                                                                     onChange={(e) => setTransparencyChain(e.target.value)}
                                                                     className="w-full appearance-none bg-transparent py-1.5 pl-2 pr-4 text-xs font-mono outline-none"
                                                                 >
-                                                                    <option value="">Select Chain</option>
+                                                                    <option value="__none__" disabled>Select Chain</option>
                                                                     <option value="All">All Chains</option>
                                                                     {chains.map(c => (
-                                                                        <option key={c.name} value={c.name}>Chain {c.name}</option>
+                                                                        <option key={c.name} value={c.name}>{c.name ? `Chain ${c.name}` : 'Molecule'}</option>
                                                                     ))}
                                                                 </select>
                                                                 <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 opacity-50 pointer-events-none" />
@@ -1663,7 +1663,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                                     >
                                                                         <option value="All">All</option>
                                                                         {chains.map(c => (
-                                                                            <option key={c.name} value={c.name}>:{c.name}</option>
+                                                                            <option key={c.name} value={c.name}>{c.name ? `:${c.name}` : 'Molecule'}</option>
                                                                         ))}
                                                                     </select>
                                                                     <ChevronDown className="absolute right-1 top-1/2 -translate-y-1/2 w-3 h-3 opacity-50 pointer-events-none" />
@@ -1700,7 +1700,7 @@ export const Controls: React.FC<ControlsProps> = ({
 
                                                     <button
                                                         onClick={handleAddTransparencyRule}
-                                                        disabled={transparencyMode === 'chain' && !transparencyChain}
+                                                        disabled={transparencyMode === 'chain' && transparencyChain === '__none__'}
                                                         className="w-full py-1.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg text-xs font-bold transition-all shadow-sm active:scale-95 flex items-center justify-center"
                                                     >
                                                         <Plus size={14} className="mr-1" />
@@ -1780,9 +1780,9 @@ export const Controls: React.FC<ControlsProps> = ({
                                                                             onChange={(e) => setSelectedChainForStyle(e.target.value)}
                                                                             className="w-full appearance-none bg-transparent py-1.5 pl-2 pr-6 text-xs font-mono outline-none"
                                                                         >
-                                                                            <option value="" disabled>Select</option>
+                                                                            <option value="__none__" disabled>Select</option>
                                                                             {chains.map(c => (
-                                                                                <option key={c.name} value={c.name}>:{c.name}</option>
+                                                                                <option key={c.name} value={c.name}>{c.name ? `:${c.name}` : 'Molecule'}</option>
                                                                             ))}
                                                                         </select>
                                                                         <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 opacity-50 pointer-events-none" />
@@ -1809,12 +1809,12 @@ export const Controls: React.FC<ControlsProps> = ({
                                                                         </div>
                                                                         <button
                                                                             onClick={() => {
-                                                                                if (selectedChainForStyle) {
+                                                                                if (selectedChainForStyle && selectedChainForStyle !== '__none__') {
                                                                                     setChainStyle(selectedChainForStyle, selectedStyleForChain);
                                                                                 }
                                                                             }}
-                                                                            disabled={!selectedChainForStyle}
-                                                                            className="px-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg text-xs font-bold transition-all shadow-sm active:scale-95 flex items-center justify-center"
+                                                                            disabled={selectedChainForStyle === '__none__'}
+                                                                            className="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg text-xs font-bold transition-all shadow-sm active:scale-95 flex items-center justify-center gap-1.5 shrink-0"
                                                                         >
                                                                             Set
                                                                         </button>
@@ -1861,7 +1861,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                                         >
                                                                             <option value="All">All</option>
                                                                             {chains.map(c => (
-                                                                                <option key={c.name} value={c.name}>:{c.name}</option>
+                                                                                <option key={c.name} value={c.name}>{c.name ? `:${c.name}` : 'Molecule'}</option>
                                                                             ))}
                                                                         </select>
                                                                         <ChevronDown className="absolute right-1 top-1/2 -translate-y-1/2 w-3 h-3 opacity-50 pointer-events-none" />
@@ -2119,13 +2119,13 @@ export const Controls: React.FC<ControlsProps> = ({
                                         onChange={(e) => setViewSequenceChain(e.target.value)}
                                         className={`bg-transparent border-none text-[10px] outline-none cursor-pointer text-right ${subtleText}`}
                                     >
-                                        <option value="">All Chains</option>
-                                        {chains.map(c => <option key={c.name} value={c.name}>Chain {c.name}</option>)}
+                                        <option value="All">All Chains</option>
+                                        {chains.map(c => <option key={c.name} value={c.name}>{c.name ? `Chain ${c.name}` : 'Molecule'}</option>)}
                                     </select>
                                 </div>
                                 <div className={`h-24 p-1 overflow-y-auto scrollbar-thin ${isLightMode ? 'bg-neutral-50' : 'bg-neutral-800'} rounded`} ref={sequenceContainerRef}>
                                     {chains.length === 0 ? <p className={`italic text-[10px] ${subtleText}`}>No sequence data</p> : (
-                                        chains.filter(c => viewSequenceChain ? c.name === viewSequenceChain : true).map(c => (
+                                        chains.filter(c => viewSequenceChain && viewSequenceChain !== 'All' ? c.name === viewSequenceChain : true).map(c => (
                                             <div key={c.name} className="mb-3 relative">
                                                 <div className={`sticky top-0 z-10 py-1 px-1 mb-1 text-[10px] font-extrabold uppercase tracking-widest border-b shadow-sm ${isLightMode ? 'bg-neutral-100 border-neutral-200 text-neutral-800' : 'bg-neutral-800 border-neutral-700 text-white'}`}>
                                                     Chain {c.name}
