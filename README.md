@@ -21,9 +21,7 @@
 
 <br />
 
-<div align="center">
-  <img src="public/preview-readme-transparent.gif" alt="Quercus Viewer Preview" />
-</div>
+![Quercus Viewer Preview](public/preview-readme-transparent.gif)
 
 <br />
 
