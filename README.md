@@ -21,7 +21,7 @@
 
 <br />
 
-![Quercus Viewer Preview](public/preview-readme.png)
+![Quercus Viewer Preview](public/preview-readme.gif)
 
 <br />
 
