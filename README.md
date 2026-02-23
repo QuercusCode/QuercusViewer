@@ -22,7 +22,7 @@
 <br />
 
 <div align="center">
-  <img src="public/preview-readme.gif" alt="Quercus Viewer Preview" />
+  <img src="public/preview-readme-transparent.gif" alt="Quercus Viewer Preview" />
 </div>
 
 <br />
