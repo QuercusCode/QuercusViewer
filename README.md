@@ -7,11 +7,21 @@
 </div>
 
 <div align="center">
+  <a href="https://quercuscode.github.io/QuercusViewer/" target="_blank">
+    <img src="https://img.shields.io/badge/Try%20Live%20Demo-000000?style=for-the-badge&logo=vercel&logoColor=white" alt="Live Demo" />
+  </a>
+</div>
+<br/>
+<div align="center">
   <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React" />
   <img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
   <img src="https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite" />
   <img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind CSS" />
 </div>
+
+<br />
+
+![Quercus Viewer Preview](public/og-card.png)
 
 <br />
 
@@ -30,6 +40,17 @@
 
 ---
 
+## 🛠 Tech Stack
+
+Under the hood, Quercus Viewer leverages modern web technologies for maximum performance and maintainability:
+* **React 18** for declarative UI.
+* **TypeScript** for robust type safety.
+* **NGL Viewer** for high-performance WebGL 3D rendering.
+* **Tailwind CSS** for rapid, utility-first styling.
+* **Vite** for lightning-fast build tooling.
+
+---
+
 ## 🚀 Quick Start
 
 Get running locally in seconds:
@@ -45,10 +66,24 @@ Open `http://localhost:5173` to start viewing.
 
 ---
 
-## 🤝 Support & License
+## 🤝 Contributing & Support
+
+We welcome contributions! Feel free to open a [GitHub Issue](https://github.com/QuercusCode/QuercusProteinViewer/issues) for bugs, feature requests, or submit a Pull Request.
 
 If you find this tool useful for your research or education, consider supporting its development:
 
 [![Buy Me A Coffee](https://img.shields.io/badge/Buy_Me_A_Coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/amirmcheraghali)
+
+---
+
+## 📫 Contact
+
+Have questions or want to collaborate? Connect with me directly:
+* **Email**: [codequercus@gmail.com](mailto:codequercus@gmail.com)
+* **LinkedIn**: [Amir Mohammad Cheraghali](https://www.linkedin.com/in/amir-m-cheraghali-195b23207/)
+
+---
+
+## 📄 License
 
 MIT License. Data powered by [RCSB PDB](https://www.rcsb.org/) and [PubChem](https://pubchem.ncbi.nlm.nih.gov/). 3D Engine: [NGL Viewer](http://nglviewer.org/).
