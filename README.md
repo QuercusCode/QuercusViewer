@@ -75,7 +75,11 @@ We welcome contributions! Feel free to open a [GitHub Issue](https://github.com/
 
 If you find this tool useful for your research or education, consider supporting its development:
 
-[![Buy Me A Coffee](https://img.shields.io/badge/Buy_Me_A_Coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/amirmcheraghali)
+<div align="center">
+  <a href="https://buymeacoffee.com/amirmcheraghali">
+    <img src="https://img.shields.io/badge/Buy_Me_A_Coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black" alt="Buy Me A Coffee" />
+  </a>
+</div>
 
 ---
 
