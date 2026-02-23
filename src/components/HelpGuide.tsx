@@ -627,6 +627,44 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
                             </li>
                         </ul>
                     </div>
+
+                    <div className="bg-gradient-to-br from-indigo-500/10 to-blue-500/10 border border-indigo-500/20 p-4 rounded-xl">
+                        <h4 className="text-sm font-bold text-white mb-2 flex items-center gap-2">
+                            <Share2 className="w-4 h-4 text-indigo-400" /> Share Visualization
+                        </h4>
+                        <p className="text-xs text-neutral-300 mb-3 leading-relaxed">
+                            Share your current state via links, iframe embeds, or live sessions.
+                        </p>
+                        <div className="space-y-3">
+                            <div className="bg-black/20 p-3 rounded-lg border border-white/5">
+                                <strong className="text-white text-xs block mb-1">Select Views to Share</strong>
+                                <p className="text-[11px] text-neutral-400">
+                                    Choose which specific viewports (1-4) you want to include in your shared link or widget.
+                                </p>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <div className="bg-black/20 p-3 rounded-lg border border-white/5">
+                                    <strong className="text-white text-xs block mb-1">Share Link</strong>
+                                    <p className="text-[11px] text-neutral-400">
+                                        Generate a direct URL to send to others. It reconstructs the exact state you configured.
+                                    </p>
+                                </div>
+                                <div className="bg-black/20 p-3 rounded-lg border border-white/5">
+                                    <strong className="text-white text-xs block mb-1">Embed Widget</strong>
+                                    <p className="text-[11px] text-neutral-400">
+                                        Get an <code className="bg-white/10 px-1 rounded">{'<iframe>'}</code> code snippet to embed the viewer directly into your website or blog.
+                                    </p>
+                                </div>
+                                <div className="bg-black/20 p-3 rounded-lg border border-white/5">
+                                    <strong className="text-white text-xs block mb-1">Live Session</strong>
+                                    <p className="text-[11px] text-neutral-400">
+                                        Start a real-time collaboration session to sync camera and representation changes instantly.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div className="mt-4 p-3 bg-rose-500/10 border border-rose-500/20 rounded-lg">
                         <strong className="text-rose-400 text-xs block mb-1">Pro Tip: Transparent PNGs</strong>
                         <p className="text-[11px] text-neutral-400">
