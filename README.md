@@ -21,7 +21,7 @@
 
 <br />
 
-![Quercus Viewer Preview](public/og-card.png)
+![Quercus Viewer Preview](public/Preview%20readme.png)
 
 <br />
 
@@ -43,6 +43,7 @@
 ## 🛠 Tech Stack
 
 Under the hood, Quercus Viewer leverages modern web technologies for maximum performance and maintainability:
+
 * **React 18** for declarative UI.
 * **TypeScript** for robust type safety.
 * **NGL Viewer** for high-performance WebGL 3D rendering.
@@ -79,6 +80,7 @@ If you find this tool useful for your research or education, consider supporting
 ## 📫 Contact
 
 Have questions or want to collaborate? Connect with me directly:
+
 * **Email**: [codequercus@gmail.com](mailto:codequercus@gmail.com)
 * **LinkedIn**: [Amir Mohammad Cheraghali](https://www.linkedin.com/in/amir-m-cheraghali-195b23207/)
 
