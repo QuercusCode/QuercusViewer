@@ -21,7 +21,7 @@
 
 <br />
 
-![Quercus Viewer Preview](public/Preview%20readme.png)
+![Quercus Viewer Preview](public/preview-readme.png)
 
 <br />
 
@@ -82,7 +82,7 @@ If you find this tool useful for your research or education, consider supporting
 Have questions or want to collaborate? Connect with me directly:
 
 * **Email**: [codequercus@gmail.com](mailto:codequercus@gmail.com)
-* **LinkedIn**: [Amir Mohammad Cheraghali](https://www.linkedin.com/in/amir-m-cheraghali-195b23207/)
+* **LinkedIn**: [Amir M. Cheraghali](https://www.linkedin.com/in/amir-m-cheraghali-195b23207/)
 
 ---
 
