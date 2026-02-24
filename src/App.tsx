@@ -3350,7 +3350,7 @@ function App() {
       {
         isEmbedMode && (
           <a
-            href="https://quercusviewer.com"
+            href="https://quercuscode.github.io/QuercusViewer/"
             target="_blank"
             rel="noopener noreferrer" // Moved to bottom-left, smaller size, logo icon
             className="fixed bottom-2 left-2 md:bottom-3 md:left-3 z-50 px-1.5 py-0.5 md:px-2 md:py-1 bg-black/80 backdrop-blur-md text-white text-[9px] md:text-[10px] font-bold rounded-full shadow-lg border border-white/20 hover:scale-105 transition-transform flex items-center gap-1 md:gap-1.5"

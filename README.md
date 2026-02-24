@@ -7,7 +7,7 @@
 </div>
 
 <div align="center">
-  <a href="https://quercusviewer.com" target="_blank">
+  <a href="https://quercuscode.github.io/QuercusViewer/" target="_blank">
     <img src="https://img.shields.io/badge/Try%20Live%20Demo-000000?style=for-the-badge&logo=vercel&logoColor=white" alt="Live Demo" />
   </a>
 </div>
