@@ -1077,9 +1077,24 @@ function App() {
       }, handleTourHighlight, isChemicalContext);
     } else {
       // Load default structure explicitly if none loaded
+      // We fetch the local file to avoid RCSB rate limits and ensure it loads instantly
       const defaultId = isChemicalContext ? '2244' : '2B3P';
+      const localPath = isChemicalContext ? undefined : `models/${defaultId}.pdb`;
+
       setPdbId(defaultId);
-      setFile(null); // Ensure no file conflict
+
+      if (localPath) {
+        fetch(localPath)
+          .then(res => res.blob())
+          .then(blob => {
+            const file = new File([blob], `${defaultId}.pdb`, { type: 'chemical/x-pdb' });
+            setFile(file);
+          })
+          .catch(err => console.error("Failed to fetch local default file for tour:", err));
+      } else {
+        setFile(null);
+      }
+
       setProteinTitle(null);
 
       // Wait for load to propagate before starting tour

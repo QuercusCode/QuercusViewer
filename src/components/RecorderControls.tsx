@@ -162,7 +162,7 @@ export const RecorderControls = ({
                         {onEnterStudio && (
                             <button
                                 onClick={onEnterStudio}
-                                className={`w-full flex items-center justify-center gap-2 p-3 rounded-xl mb-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-lg shadow-blue-900/20 transition-all hover:scale-[1.02] active:scale-[0.98]`}
+                                className={`w-full flex items-center justify-center gap-2 p-3 rounded-xl mb-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-lg shadow-blue-900/20 transition-all hover:scale-[1.02] active:scale-[0.98] animate-pulse ring-2 ring-blue-400 ring-offset-2 ring-offset-neutral-900 dark:ring-offset-neutral-900`}
                             >
                                 <Film className="w-4 h-4" />
                                 <span className="text-xs font-bold uppercase tracking-wider">Launch Studio</span>
