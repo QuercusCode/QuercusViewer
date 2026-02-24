@@ -2,6 +2,12 @@
 <html lang="en">
 
 <head>
+  <script>
+    if (window.location.hostname === "quercuscode.github.io") {
+      var path = window.location.pathname.replace('/QuercusViewer', '');
+      window.location.replace("https://quercusviewer.com" + path + window.location.search + window.location.hash);
+    }
+  </script>
   <meta charset="UTF-8" />
   <link rel="icon" type="image/png" href="logo/icon-black.png" media="(prefers-color-scheme: light)" />
   <link rel="icon" type="image/png" href="logo/icon-white.png" media="(prefers-color-scheme: dark)" />
