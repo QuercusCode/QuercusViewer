@@ -183,13 +183,7 @@ export const LandingOverlay: React.FC<LandingOverlayProps> = ({ isVisible, onDis
 
                         <button
                             onClick={() => {
-                                // For 4V6X (Ribosome), it must be fetched as mmCIF from RCSB since it's too large for PDB format.
-                                // We'll just pass the ID and let the main viewer handle the network fetch instead of forcing a local .pdb path.
-                                if (moleculeOfTheDay.id === '4V6X') {
-                                    onLoadPdb(moleculeOfTheDay.id);
-                                } else {
-                                    onLoadPdb(moleculeOfTheDay.id, `models/${moleculeOfTheDay.id}.pdb`);
-                                }
+                                onLoadPdb(moleculeOfTheDay.id, `models/${moleculeOfTheDay.id}.pdb`);
                                 onDismiss();
                             }}
                             className="w-full py-4 rounded-xl bg-white text-black font-bold text-sm transition-all flex items-center justify-center gap-2 hover:bg-gray-200 hover:scale-[1.02]"
