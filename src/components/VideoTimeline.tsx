@@ -141,17 +141,31 @@ export const VideoTimeline = ({
             const handleGlobalMove = (e: MouseEvent) => {
                 // Calculate time relative to container
                 if (containerRef.current) {
-                    // Logic duplicated from xToTime but needs clientX
-                    // We can reuse xToTime if we pass clientX
                     const time = xToTime(e.clientX);
-                    onSeek(time);
+                    if (onSeek) onSeek(time);
                 }
             };
+            const handleGlobalTouchMove = (e: TouchEvent) => {
+                if (containerRef.current && e.touches.length > 0) {
+                    const time = xToTime(e.touches[0].clientX);
+                    if (onSeek) onSeek(time);
+                }
+            };
+
             window.addEventListener('mouseup', handleGlobalUp);
             window.addEventListener('mousemove', handleGlobalMove);
+            window.addEventListener('touchend', handleGlobalUp);
+            window.addEventListener('touchcancel', handleGlobalUp);
+            // using passive: false so we could potentially prevent scroll if we wanted to lock it to horizontal only,
+            // but typical timeline behavior on mobile is okay with default touch mapping unless it scrolls
+            window.addEventListener('touchmove', handleGlobalTouchMove, { passive: true });
+
             return () => {
                 window.removeEventListener('mouseup', handleGlobalUp);
                 window.removeEventListener('mousemove', handleGlobalMove);
+                window.removeEventListener('touchend', handleGlobalUp);
+                window.removeEventListener('touchcancel', handleGlobalUp);
+                window.removeEventListener('touchmove', handleGlobalTouchMove);
             };
         }
     }, [isScrubbing, onSeek, duration, zoomLevel, scrollLeft]); // Re-attach if deps change
@@ -636,8 +650,24 @@ export const VideoTimeline = ({
                         className="absolute top-0 bottom-0 w-0.5 bg-red-500 z-50 pointer-events-none"
                         style={{ left: `${(playbackTime / duration) * 100}%` }}
                     >
-                        <div className="absolute top-0 -translate-y-1/2 left-1/2 -translate-x-1/2 w-5 h-5 md:w-3 md:h-3 bg-red-500 rounded-full border-2 md:border border-white shadow-md flex items-center justify-center">
-                            <div className="w-1.5 h-1.5 bg-white/90 rounded-full md:hidden" />
+                        {/* Interactive Safe Area Wrapper for Mobile Grabbing */}
+                        <div
+                            className="absolute top-0 -translate-y-1/2 left-1/2 -translate-x-1/2 w-12 h-12 md:w-6 md:h-6 flex items-center justify-center cursor-ew-resize pointer-events-auto"
+                            onMouseDown={(e) => {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                setIsScrubbing(true);
+                                if (onSeek) onSeek(playbackTime);
+                            }}
+                            onTouchStart={(e) => {
+                                e.stopPropagation();
+                                setIsScrubbing(true);
+                            }}
+                        >
+                            {/* Visual Red Dot */}
+                            <div className="w-5 h-5 md:w-3 md:h-3 bg-red-500 rounded-full border-2 md:border border-white shadow-md flex items-center justify-center">
+                                <div className="w-1.5 h-1.5 bg-white/90 rounded-full md:hidden" />
+                            </div>
                         </div>
                     </div>
 
