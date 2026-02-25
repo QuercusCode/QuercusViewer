@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
     ArrowLeft, Play, Pause, Scissors, Trash2, Download,
     Settings, Layers, Music, Type, Film, Pencil, Undo, Redo,
-    Image as ImageIcon, Monitor, Camera, Plus, X
+    Image as ImageIcon, Monitor, Camera, Plus
 } from 'lucide-react';
 import { VideoTimeline } from './VideoTimeline';
 import type { useSessionRecorder } from '../hooks/useSessionRecorder';
@@ -126,10 +126,10 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
     if (!session) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex flex-col pointer-events-none bg-neutral-950/50 backdrop-blur-sm md:bg-transparent md:backdrop-blur-none">
+        <div className="fixed inset-0 z-50 flex flex-col pointer-events-none">
             {/* TOP BAR */}
-            <div className="h-14 bg-neutral-900/95 backdrop-blur border-b border-white/10 flex items-center justify-between px-2 md:px-4 pointer-events-auto">
-                <div className="flex items-center gap-2 md:gap-4">
+            <div className="h-14 bg-neutral-900/95 backdrop-blur border-b border-white/10 flex items-center justify-between px-4 pointer-events-auto">
+                <div className="flex items-center gap-4">
                     <button
                         onClick={onExit}
                         className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/70 hover:text-white"
@@ -146,7 +146,7 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                         <button
                             onClick={undo}
                             disabled={!canUndo}
-                            className={`p - 2 rounded - full transition - colors ${canUndo ? 'hover:bg-white/10 text-white' : 'text-white/30 cursor-not-allowed'} `}
+                            className={`p-2 rounded-full transition-colors ${canUndo ? 'hover:bg-white/10 text-white' : 'text-white/30 cursor-not-allowed'}`}
                             title="Undo (Ctrl+Z)"
                         >
                             <Undo className="w-4 h-4" />
@@ -154,7 +154,7 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                         <button
                             onClick={redo}
                             disabled={!canRedo}
-                            className={`p - 2 rounded - full transition - colors ${canRedo ? 'hover:bg-white/10 text-white' : 'text-white/30 cursor-not-allowed'} `}
+                            className={`p-2 rounded-full transition-colors ${canRedo ? 'hover:bg-white/10 text-white' : 'text-white/30 cursor-not-allowed'}`}
                             title="Redo (Ctrl+Shift+Z)"
                         >
                             <Redo className="w-4 h-4" />
@@ -162,10 +162,10 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                     </div>
 
                     {/* Divider */}
-                    <div className="h-6 w-px bg-white/10 mx-1 md:mx-2" />
+                    <div className="h-6 w-px bg-white/10 mx-2" />
 
-                    {/* Editable Title (Hidden on small mobile) */}
-                    <div className="group hidden sm:block">
+                    {/* Editable Title */}
+                    <div className="group">
                         {isEditingTitle ? (
                             <input
                                 autoFocus
@@ -197,74 +197,75 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                 </div>
 
                 <div className="flex items-center gap-2">
-                    <button className="hidden md:block px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 rounded text-xs font-medium text-white transition-colors">
+                    <button className="px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 rounded text-xs font-medium text-white transition-colors">
                         Drafts
                     </button>
                     <button
                         onClick={exportVideo}
-                        className="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 rounded text-xs font-medium text-white transition-colors flex items-center gap-2 shadow-lg shadow-purple-900/20"
+                        className="p-2 md:px-3 md:py-1.5 bg-purple-600 hover:bg-purple-500 rounded-lg md:rounded text-xs font-medium text-white transition-colors flex items-center gap-2 shadow-lg shadow-purple-900/20"
+                        title="Export Video"
                     >
-                        <Film className="w-3.5 h-3.5" />
-                        Export Video
+                        <Film className="w-4 h-4 md:w-3.5 md:h-3.5" />
+                        <span className="hidden md:inline">Export Video</span>
                     </button>
                     <button
                         onClick={exportSession}
-                        className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 rounded text-xs font-medium text-white transition-colors flex items-center gap-2 shadow-lg shadow-blue-900/20"
+                        className="p-2 md:px-3 md:py-1.5 bg-blue-600 hover:bg-blue-500 rounded-lg md:rounded text-xs font-medium text-white transition-colors flex items-center gap-2 shadow-lg shadow-blue-900/20"
+                        title="Save Project"
                     >
-                        <Download className="w-3.5 h-3.5" />
-                        <span className="hidden sm:inline">Save Project</span>
-                        <span className="sm:hidden">Save</span>
+                        <Download className="w-4 h-4 md:w-3.5 md:h-3.5" />
+                        <span className="hidden md:inline">Save Project</span>
                     </button>
                 </div>
             </div>
 
             {/* MAIN CONTENT AREA */}
             <div className="flex-1 flex min-h-0 relative">
-                {/* LEFT TOOLBAR */}
-                <div className="absolute left-0 h-full w-14 md:w-16 bg-neutral-900/95 backdrop-blur border-r border-white/10 flex flex-col items-center py-2 md:py-4 gap-2 md:gap-4 pointer-events-auto z-40 md:relative">
+                {/* TOOLBAR (Left on Desktop, Bottom on Mobile) */}
+                <div className="absolute bottom-0 inset-x-0 h-16 flex-row overflow-x-auto overflow-y-hidden md:relative md:inset-auto md:w-16 md:h-auto md:flex-col bg-neutral-900/95 backdrop-blur border-t md:border-t-0 md:border-r border-white/10 flex items-center py-2 md:py-4 px-4 md:px-0 gap-4 pointer-events-auto z-50">
                     <ToolButton
                         icon={<Scissors className="w-5 h-5" />}
                         label="Edit Recording"
                         active={activeTool === 'edit'}
-                        onClick={() => setActiveTool('edit')}
+                        onClick={() => setActiveTool(activeTool === 'edit' ? 'default' : 'edit')}
                     />
                     <ToolButton
                         icon={<Settings className="w-5 h-5" />}
                         label="Settings"
                         active={activeTool === 'settings'}
-                        onClick={() => setActiveTool('settings')}
+                        onClick={() => setActiveTool(activeTool === 'settings' ? 'default' : 'settings')}
                     />
                     <ToolButton
                         icon={<Layers className="w-5 h-5" />}
                         label="Tracks"
                         active={activeTool === 'tracks'}
-                        onClick={() => setActiveTool('tracks')}
+                        onClick={() => setActiveTool(activeTool === 'tracks' ? 'default' : 'tracks')}
                     />
                     <ToolButton
                         icon={<Music className="w-5 h-5" />}
                         label="Audio"
                         active={activeTool === 'audio'}
-                        onClick={() => setActiveTool('audio')}
+                        onClick={() => setActiveTool(activeTool === 'audio' ? 'default' : 'audio')}
                     />
                     <ToolButton
                         icon={<Type className="w-5 h-5" />}
                         label="Text"
                         active={activeTool === 'text'}
-                        onClick={() => setActiveTool('text')}
+                        onClick={() => setActiveTool(activeTool === 'text' ? 'default' : 'text')}
                     />
                 </div>
 
                 {/* VISUAL AREA (The hole) */}
-                <div className="flex-1 relative pl-14 md:pl-0">
+                <div className="flex-1 relative mb-16 md:mb-0">
                     {/* Floating Transport Controls */}
-                    <div className="absolute bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 bg-neutral-900/80 backdrop-blur-md rounded-full px-2 md:px-4 py-1.5 md:py-2 flex items-center gap-2 md:gap-4 text-white pointer-events-auto border border-white/10 shadow-2xl z-30 scale-90 md:scale-100">
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-neutral-900/80 backdrop-blur-md rounded-full px-4 py-2 flex items-center gap-4 text-white pointer-events-auto border border-white/10 shadow-2xl z-40">
                         <span className="text-xs font-mono ml-2">{formatTime(playbackTime)}</span>
 
                         <div className="h-4 w-px bg-white/20" />
 
                         <button
                             onClick={isPlaying ? pause : play}
-                            className="w-12 h-12 bg-white text-black rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-lg"
+                            className="w-10 h-10 md:w-12 md:h-12 bg-white text-black rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-lg"
                         >
                             {isPlaying ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current ml-0.5" />}
                         </button>
@@ -284,13 +285,13 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                     </div>
                 </div>
 
-                {/* RIGHT PROPERTIES PANEL (Drawer on mobile) */}
+                {/* RIGHT PROPERTIES PANEL / MOBILE BOTTOM SHEET */}
                 <div className={`
-                    absolute right - 0 h - full z - 40 bg - neutral - 900 / 95 backdrop - blur border - l border - white / 10 flex flex - col pointer - events - auto transition - transform duration - 300
-w - 64 md: w - 80 md:relative md: translate - x - 0
-                    ${activeTool !== 'default' ? 'translate-x-0' : 'translate-x-full md:translate-x-0'}
-`}>
-                    <div className="p-3 md:p-4 border-b border-white/10 flex items-center justify-between">
+                    absolute inset-x-0 bottom-16 bg-neutral-900/95 backdrop-blur-xl border-t border-white/10 rounded-t-2xl shadow-[0_-10px_40px_rgba(0,0,0,0.5)] z-50 transition-transform duration-300 ease-in-out pointer-events-auto flex flex-col h-[55%]
+                    md:relative md:inset-auto md:w-80 md:h-auto md:border-t-0 md:border-l md:rounded-none md:shadow-none md:translate-y-0
+                    ${activeTool === 'default' ? 'translate-y-full md:translate-y-0' : 'translate-y-0'}
+                `}>
+                    <div className="p-4 border-b border-white/10 flex items-center justify-between">
                         <h2 className="text-xs font-bold text-white/50 uppercase tracking-wider">
                             {activeTool === 'settings' && 'Studio Settings'}
                             {activeTool === 'tracks' && 'Timeline Tracks'}
@@ -299,16 +300,16 @@ w - 64 md: w - 80 md:relative md: translate - x - 0
                             {activeTool === 'edit' && 'Edit Recording'}
                             {activeTool === 'default' && (selectedSegmentIds.length > 0 ? 'Clip Properties' : 'Project Properties')}
                         </h2>
-                        {/* Mobile Close Button for Drawer */}
+                        {/* Mobile Close Button */}
                         <button
-                            className="md:hidden p-1 bg-white/5 hover:bg-white/10 rounded-full text-white cursor-pointer"
+                            className="md:hidden text-blue-500 font-bold text-xs"
                             onClick={() => setActiveTool('default')}
                         >
-                            <X className="w-4 h-4" />
+                            Done
                         </button>
                     </div>
 
-                    <div className="p-3 md:p-4 space-y-4 md:space-y-6 overflow-y-auto flex-1 custom-scrollbar">
+                    <div className="p-4 space-y-6 overflow-y-auto flex-1 custom-scrollbar">
                         {/* Segment Tools - Show when segments selected AND tool is default (or force override?) */}
                         {/* Let's prioritize explicit Tool selection. If user clicks Settings, show Settings even if segment selected. */}
                         {activeTool === 'default' && selectedSegmentIds.length > 0 ? (
@@ -341,10 +342,10 @@ w - 64 md: w - 80 md:relative md: translate - x - 0
                                             <button
                                                 key={speed}
                                                 onClick={() => setSpeedFactor(speed)}
-                                                className={`flex - 1 py - 1.5 rounded text - xs font - bold transition - all ${speedFactor === speed
-                                                        ? 'bg-blue-600 text-white shadow'
-                                                        : 'text-white/50 hover:text-white hover:bg-white/5'
-                                                    } `}
+                                                className={`flex-1 py-1.5 rounded text-xs font-bold transition-all ${speedFactor === speed
+                                                    ? 'bg-blue-600 text-white shadow'
+                                                    : 'text-white/50 hover:text-white hover:bg-white/5'
+                                                    }`}
                                             >
                                                 {speed}x
                                             </button>
@@ -387,9 +388,9 @@ w - 64 md: w - 80 md:relative md: translate - x - 0
                                                             transition: hasFade ? undefined : { type: 'fade', duration: 1000 }
                                                         });
                                                     }}
-                                                    className={`w - 8 h - 4 rounded - full transition - colors relative ${selectedSegments[0].transition ? 'bg-purple-600' : 'bg-white/10'} `}
+                                                    className={`w-8 h-4 rounded-full transition-colors relative ${selectedSegments[0].transition ? 'bg-purple-600' : 'bg-white/10'}`}
                                                 >
-                                                    <div className={`absolute top - 0.5 left - 0.5 w - 3 h - 3 bg - white rounded - full transition - transform ${selectedSegments[0].transition ? 'translate-x-4' : 'translate-x-0'} `} />
+                                                    <div className={`absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full transition-transform ${selectedSegments[0].transition ? 'translate-x-4' : 'translate-x-0'}`} />
                                                 </button>
                                             </div>
                                         </div>
@@ -528,9 +529,9 @@ w - 64 md: w - 80 md:relative md: translate - x - 0
                                                 onClick={() => updateMetadata({
                                                     settings: { ...session.metadata.settings, ssao: !session.metadata.settings?.ssao }
                                                 })}
-                                                className={`w - 8 h - 4 rounded - full transition - colors relative ${session.metadata.settings?.ssao ? 'bg-green-500' : 'bg-white/10'} `}
+                                                className={`w-8 h-4 rounded-full transition-colors relative ${session.metadata.settings?.ssao ? 'bg-green-500' : 'bg-white/10'}`}
                                             >
-                                                <div className={`absolute top - 0.5 left - 0.5 w - 3 h - 3 bg - white rounded - full transition - transform ${session.metadata.settings?.ssao ? 'translate-x-4' : 'translate-x-0'} `} />
+                                                <div className={`absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full transition-transform ${session.metadata.settings?.ssao ? 'translate-x-4' : 'translate-x-0'}`} />
                                             </button>
                                         </div>
                                         <div className="flex items-center justify-between">
@@ -539,9 +540,9 @@ w - 64 md: w - 80 md:relative md: translate - x - 0
                                                 onClick={() => updateMetadata({
                                                     settings: { ...session.metadata.settings, resolutionScale: session.metadata.settings?.resolutionScale === 2 ? 1 : 2 }
                                                 })}
-                                                className={`w - 8 h - 4 rounded - full transition - colors relative ${session.metadata.settings?.resolutionScale === 2 ? 'bg-purple-600' : 'bg-white/10'} `}
+                                                className={`w-8 h-4 rounded-full transition-colors relative ${session.metadata.settings?.resolutionScale === 2 ? 'bg-purple-600' : 'bg-white/10'}`}
                                             >
-                                                <div className={`absolute top - 0.5 left - 0.5 w - 3 h - 3 bg - white rounded - full transition - transform ${session.metadata.settings?.resolutionScale === 2 ? 'translate-x-4' : 'translate-x-0'} `} />
+                                                <div className={`absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full transition-transform ${session.metadata.settings?.resolutionScale === 2 ? 'translate-x-4' : 'translate-x-0'}`} />
                                             </button>
                                         </div>
                                         <div className="flex items-center justify-between">
@@ -563,9 +564,9 @@ w - 64 md: w - 80 md:relative md: translate - x - 0
                                                 onClick={() => updateMetadata({
                                                     settings: { ...session.metadata.settings, showCursor: !session.metadata.settings?.showCursor }
                                                 })}
-                                                className={`w - 8 h - 4 rounded - full transition - colors relative ${session.metadata.settings?.showCursor ? 'bg-blue-600' : 'bg-white/10'} `}
+                                                className={`w-8 h-4 rounded-full transition-colors relative ${session.metadata.settings?.showCursor ? 'bg-blue-600' : 'bg-white/10'}`}
                                             >
-                                                <div className={`absolute top - 0.5 left - 0.5 w - 3 h - 3 bg - white rounded - full transition - transform ${session.metadata.settings?.showCursor ? 'translate-x-4' : 'translate-x-0'} `} />
+                                                <div className={`absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full transition-transform ${session.metadata.settings?.showCursor ? 'translate-x-4' : 'translate-x-0'}`} />
                                             </button>
                                         </div>
                                     </div>
@@ -584,9 +585,9 @@ w - 64 md: w - 80 md:relative md: translate - x - 0
                                                 onClick={() => updateMetadata({
                                                     settings: { ...session.metadata.settings, showWatermark: !session.metadata.settings?.showWatermark }
                                                 })}
-                                                className={`w - 8 h - 4 rounded - full transition - colors relative ${session.metadata.settings?.showWatermark ? 'bg-blue-600' : 'bg-white/10'} `}
+                                                className={`w-8 h-4 rounded-full transition-colors relative ${session.metadata.settings?.showWatermark ? 'bg-blue-600' : 'bg-white/10'}`}
                                             >
-                                                <div className={`absolute top - 0.5 left - 0.5 w - 3 h - 3 bg - white rounded - full transition - transform ${session.metadata.settings?.showWatermark ? 'translate-x-4' : 'translate-x-0'} `} />
+                                                <div className={`absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full transition-transform ${session.metadata.settings?.showWatermark ? 'translate-x-4' : 'translate-x-0'}`} />
                                             </button>
                                         </div>
 
@@ -608,8 +609,8 @@ w - 64 md: w - 80 md:relative md: translate - x - 0
                                                                 onClick={() => updateMetadata({
                                                                     settings: { ...session.metadata.settings, watermarkPosition: pos as any }
                                                                 })}
-                                                                title={`Position: ${pos.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')} `}
-                                                                className={`rounded border ${session.metadata.settings?.watermarkPosition === pos ? 'bg-blue-500 border-blue-400' : 'bg-neutral-800 border-white/10 hover:bg-neutral-700'} `}
+                                                                title={`Position: ${pos.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}`}
+                                                                className={`rounded border ${session.metadata.settings?.watermarkPosition === pos ? 'bg-blue-500 border-blue-400' : 'bg-neutral-800 border-white/10 hover:bg-neutral-700'}`}
                                                             />
                                                         ))}
                                                     </div>
@@ -730,10 +731,10 @@ w - 64 md: w - 80 md:relative md: translate - x - 0
                                                 <div
                                                     key={seg.id}
                                                     onClick={(e) => toggleSegmentSelection(seg.id, e.shiftKey || e.metaKey || e.ctrlKey)}
-                                                    className={`p - 2 rounded flex items - center gap - 2 text - xs border transition - colors cursor - pointer ${isSelected
-                                                            ? 'bg-blue-600/20 border-blue-500/50 text-white'
-                                                            : 'bg-neutral-800 border-white/5 text-white/70 hover:bg-white/5'
-                                                        } `}
+                                                    className={`p-2 rounded flex items-center gap-2 text-xs border transition-colors cursor-pointer ${isSelected
+                                                        ? 'bg-blue-600/20 border-blue-500/50 text-white'
+                                                        : 'bg-neutral-800 border-white/5 text-white/70 hover:bg-white/5'
+                                                        }`}
                                                 >
                                                     <span className="font-mono text-white/30 text-[10px] w-4">{idx + 1}</span>
                                                     <div className="flex-1 truncate">
@@ -892,12 +893,12 @@ w - 64 md: w - 80 md:relative md: translate - x - 0
                                                 <div
                                                     key={clip.id}
                                                     onClick={() => setSelectedAudioClipId(clip.id)}
-                                                    className={`p - 2 rounded border flex items - center gap - 2 cursor - pointer transition - colors ${selectedAudioClipId === clip.id
-                                                            ? 'bg-blue-600/20 border-blue-500/50'
-                                                            : 'bg-neutral-800 border-white/5 hover:bg-neutral-700'
-                                                        } `}
+                                                    className={`p-2 rounded border flex items-center gap-2 cursor-pointer transition-colors ${selectedAudioClipId === clip.id
+                                                        ? 'bg-blue-600/20 border-blue-500/50'
+                                                        : 'bg-neutral-800 border-white/5 hover:bg-neutral-700'
+                                                        }`}
                                                 >
-                                                    <div className={`w - 6 h - 6 rounded flex items - center justify - center ${clip.type === 'music' ? 'bg-purple-500/20 text-purple-400' : 'bg-green-500/20 text-green-400'} `}>
+                                                    <div className={`w-6 h-6 rounded flex items-center justify-center ${clip.type === 'music' ? 'bg-purple-500/20 text-purple-400' : 'bg-green-500/20 text-green-400'}`}>
                                                         <Music className="w-3 h-3" />
                                                     </div>
                                                     <div className="flex-1 min-w-0">
@@ -1007,10 +1008,10 @@ w - 64 md: w - 80 md:relative md: translate - x - 0
                                     <div className="flex gap-2 items-center flex-wrap">
                                         <button
                                             onClick={() => setIsTrimMode(!isTrimMode)}
-                                            className={`px - 3 py - 1.5 rounded text - xs transition - colors ${isTrimMode
-                                                    ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                                                    : 'bg-blue-600/20 hover:bg-blue-600/40 border border-blue-600/30 text-white'
-                                                } `}
+                                            className={`px-3 py-1.5 rounded text-xs transition-colors ${isTrimMode
+                                                ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                                                : 'bg-blue-600/20 hover:bg-blue-600/40 border border-blue-600/30 text-white'
+                                                }`}
                                         >
                                             {isTrimMode ? '✓ Trimming' : 'Start Trim'}
                                         </button>
@@ -1128,10 +1129,10 @@ w - 64 md: w - 80 md:relative md: translate - x - 0
                                             <button
                                                 key={speed}
                                                 onClick={() => setSpeedFactor(speed)}
-                                                className={`flex - 1 py - 1.5 rounded text - xs font - bold transition - all ${speedFactor === speed
-                                                        ? 'bg-blue-600 text-white shadow'
-                                                        : 'text-white/50 hover:text-white hover:bg-white/5'
-                                                    } `}
+                                                className={`flex-1 py-1.5 rounded text-xs font-bold transition-all ${speedFactor === speed
+                                                    ? 'bg-blue-600 text-white shadow'
+                                                    : 'text-white/50 hover:text-white hover:bg-white/5'
+                                                    }`}
                                             >
                                                 {speed}x
                                             </button>
@@ -1168,8 +1169,8 @@ w - 64 md: w - 80 md:relative md: translate - x - 0
             </div>
 
             {/* BOTTOM TIMELINE */}
-            <div className={`h - 28 sm: h - 32 md: h - 48 bg - neutral - 900 / 95 backdrop - blur border - t border - white / 10 flex flex - col pointer - events - auto relative transition - all duration - 300 ${isTrimMode ? 'ring-1 ring-blue-500/50' : ''} `}>
-                <div className="flex-1 relative mt-1 md:mt-2 px-2 md:px-6">
+            <div className={`h-32 md:h-48 mb-16 md:mb-0 bg-neutral-900/95 backdrop-blur border-t border-white/10 flex flex-col pointer-events-auto relative transition-all duration-300 z-40 ${isTrimMode ? 'ring-1 ring-blue-500/50' : ''}`}>
+                <div className="flex-1 relative mt-2 px-6">
                     <VideoTimeline
                         session={session}
                         segments={segments}
@@ -1200,7 +1201,7 @@ w - 64 md: w - 80 md:relative md: translate - x - 0
 const ToolButton = ({ icon, label, active = false, onClick }: { icon: React.ReactNode, label: string, active?: boolean, onClick?: () => void }) => (
     <button
         onClick={onClick}
-        className={`w - 10 h - 10 md: w - 10 md: h - 10 shrink - 0 rounded - xl flex items - center justify - center transition - all ${active ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-white/40 hover:bg-white/5 hover:text-white'} `}
+        className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${active ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-white/40 hover:bg-white/5 hover:text-white'}`}
         title={label}
     >
         {icon}

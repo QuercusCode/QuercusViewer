@@ -1753,7 +1753,14 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
 
             // Handle Container Resize (Robust)
             const resizeObserver = new ResizeObserver(() => {
-                stage.handleResize();
+                if (containerRef.current && containerRef.current.clientWidth > 0 && containerRef.current.clientHeight > 0) {
+                    // Debounce using requestAnimationFrame to avoid firing during uninitialized render cycles
+                    window.requestAnimationFrame(() => {
+                        try {
+                            if (stageRef.current) stageRef.current.handleResize();
+                        } catch (e) { /* ignore layout jitter errors */ }
+                    });
+                }
             });
             if (containerRef.current) {
                 resizeObserver.observe(containerRef.current);

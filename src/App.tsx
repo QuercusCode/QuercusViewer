@@ -621,6 +621,12 @@ function App() {
     // Check for onboarding tour
     const hasSeenTour = localStorage.getItem('hasSeenViewerTour');
     if (!hasSeenTour) {
+      // Mark as seen immediately on mobile so they aren't trapped by driver.js crashes
+      if (window.innerWidth < 768) {
+        localStorage.setItem('hasSeenViewerTour', 'true');
+        return;
+      }
+
       // Explicitly load default structure for the tour locally
       fetch(`${import.meta.env.BASE_URL}models/2B3P.pdb`)
         .then(res => res.blob())
