@@ -862,12 +862,21 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
 
                             {/* Sidebar */}
                             <div className={`w-full md:w-64 flex-shrink-0 border-b md:border-b-0 md:border-r border-neutral-800 bg-neutral-900/50 flex-col min-h-0 ${showMobileList ? 'flex' : 'hidden md:flex'}`}>
-                                <div className="p-5 border-b border-neutral-800">
-                                    <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                                        <CircleHelp className="w-5 h-5 text-blue-500" />
-                                        User Manual
-                                    </h2>
-                                    <p className="text-[10px] text-neutral-500 mt-1 uppercase tracking-wider font-semibold">Quercus Viewer v1.0</p>
+                                <div className="p-5 border-b border-neutral-800 flex items-start justify-between">
+                                    <div>
+                                        <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                                            <CircleHelp className="w-5 h-5 text-blue-500" />
+                                            User Manual
+                                        </h2>
+                                        <p className="text-[10px] text-neutral-500 mt-1 uppercase tracking-wider font-semibold">Quercus Viewer v1.0</p>
+                                    </div>
+                                    <button
+                                        onClick={() => setIsOpen(false)}
+                                        className="md:hidden p-2 bg-neutral-800 text-neutral-400 hover:text-white rounded-full transition-colors flex items-center justify-center -mr-1 -mt-1"
+                                        title="Close Manual"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </button>
                                 </div>
                                 <div className="flex-1 overflow-y-auto p-3 space-y-1 scrollbar-thin scrollbar-thumb-neutral-800">
                                     {features.map(feature => (
