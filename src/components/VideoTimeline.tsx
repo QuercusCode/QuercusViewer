@@ -636,7 +636,9 @@ export const VideoTimeline = ({
                         className="absolute top-0 bottom-0 w-0.5 bg-red-500 z-50 pointer-events-none"
                         style={{ left: `${(playbackTime / duration) * 100}%` }}
                     >
-                        <div className="absolute -top-1.5 -left-1.5 w-3 h-3 bg-red-500 rounded-full border border-white shadow-sm" />
+                        <div className="absolute top-0 -translate-y-1/2 left-1/2 -translate-x-1/2 w-5 h-5 md:w-3 md:h-3 bg-red-500 rounded-full border-2 md:border border-white shadow-md flex items-center justify-center">
+                            <div className="w-1.5 h-1.5 bg-white/90 rounded-full md:hidden" />
+                        </div>
                     </div>
 
                     {/* Hover Line */}
