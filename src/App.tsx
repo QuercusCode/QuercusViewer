@@ -621,17 +621,21 @@ function App() {
     // Check for onboarding tour
     const hasSeenTour = localStorage.getItem('hasSeenViewerTour');
     if (!hasSeenTour) {
-      // Explicitly load default structure for the tour
-      setPdbId('2B3P');
-      setFile(null);
-      setProteinTitle(null);
+      // Explicitly load default structure for the tour locally
+      fetch(`${import.meta.env.BASE_URL}models/2B3P.pdb`)
+        .then(res => res.blob())
+        .then(blob => {
+          setFile(new File([blob], "2B3P.pdb", { type: "chemical/x-pdb" }));
+          setPdbId('');
+          setProteinTitle(null);
 
-      // Delay to ensure the structure fetches and UI mounts
-      setTimeout(() => {
-        startOnboardingTour(() => {
-          localStorage.setItem('hasSeenViewerTour', 'true');
-        }, handleTourHighlight, false);
-      }, 2000);
+          // Delay to ensure the structure mounts in NGL viewport
+          setTimeout(() => {
+            startOnboardingTour(() => {
+              localStorage.setItem('hasSeenViewerTour', 'true');
+            }, handleTourHighlight, false);
+          }, 1500);
+        });
     }
   }, []);
 
@@ -1091,17 +1095,34 @@ function App() {
       }, handleTourHighlight, isChemicalContext);
     } else {
       // Load default structure explicitly if none loaded
-      const defaultId = isChemicalContext ? '2244' : '2B3P';
-      setPdbId(defaultId);
-      setFile(null); // Ensure no file conflict
-      setProteinTitle(null);
+      if (isChemicalContext) {
+        setPdbId('2244');
+        setFile(null); // Ensure no file conflict
+        setProteinTitle(null);
 
-      // Wait for load to propagate before starting tour
-      setTimeout(() => {
-        startOnboardingTour(() => {
-          localStorage.setItem('hasSeenViewerTour', 'true');
-        }, handleTourHighlight, isChemicalContext);
-      }, 2000); // 2s delay to allow fetching and rendering
+        // Wait for load to propagate before starting tour
+        setTimeout(() => {
+          startOnboardingTour(() => {
+            localStorage.setItem('hasSeenViewerTour', 'true');
+          }, handleTourHighlight, true);
+        }, 2000); // 2s delay to allow fetching and rendering
+      } else {
+        // Fetch local 2B3P robustly for the tour
+        fetch(`${import.meta.env.BASE_URL}models/2B3P.pdb`)
+          .then(res => res.blob())
+          .then(blob => {
+            setFile(new File([blob], "2B3P.pdb", { type: "chemical/x-pdb" }));
+            setPdbId('');
+            setProteinTitle(null);
+
+            // Wait for parse to propagate
+            setTimeout(() => {
+              startOnboardingTour(() => {
+                localStorage.setItem('hasSeenViewerTour', 'true');
+              }, handleTourHighlight, false);
+            }, 1000);
+          });
+      }
     }
   };
 

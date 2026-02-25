@@ -14,6 +14,11 @@
   #root {
     @apply w-full h-full;
   }
+
+  /* Disable CSS Transitions during Tour to fix mobile layout measuring */
+  body.driver-active * {
+    transition: none !important;
+  }
 }
 
 /* Custom Brand Color Overrides for Embeds */
