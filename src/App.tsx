@@ -621,12 +621,17 @@ function App() {
     // Check for onboarding tour
     const hasSeenTour = localStorage.getItem('hasSeenViewerTour');
     if (!hasSeenTour) {
-      // Delay slightly to ensure UI is mounted
+      // Explicitly load default structure for the tour
+      setPdbId('2B3P');
+      setFile(null);
+      setProteinTitle(null);
+
+      // Delay to ensure the structure fetches and UI mounts
       setTimeout(() => {
         startOnboardingTour(() => {
           localStorage.setItem('hasSeenViewerTour', 'true');
-        });
-      }, 1500);
+        }, handleTourHighlight, false);
+      }, 2000);
     }
   }, []);
 
@@ -1007,6 +1012,15 @@ function App() {
 
   const handleTourHighlight = (elementId: string) => {
     console.log('Tour highlight:', elementId); // Debug log
+
+    // If on mobile, expand/collapse the mobile sidebar so tooltips anchor correctly
+    if (window.innerWidth < 768) {
+      if (elementId === '#protein-viewer-canvas') {
+        setIsMobileMenuOpen(false);
+      } else {
+        setIsMobileMenuOpen(true);
+      }
+    }
 
     // Close all and open only the target section
     const newSections = {
