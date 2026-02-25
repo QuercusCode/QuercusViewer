@@ -1,8 +1,9 @@
+```javascript
 import React, { useState, useEffect, useRef } from 'react';
 import {
     ArrowLeft, Play, Pause, Scissors, Trash2, Download,
     Settings, Layers, Music, Type, Film, Pencil, Undo, Redo,
-    Image as ImageIcon, Monitor, Camera, Plus
+    Image as ImageIcon, Monitor, Camera, Plus, X
 } from 'lucide-react';
 import { VideoTimeline } from './VideoTimeline';
 import type { useSessionRecorder } from '../hooks/useSessionRecorder';
@@ -126,10 +127,10 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
     if (!session) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex flex-col pointer-events-none">
+        <div className="fixed inset-0 z-50 flex flex-col pointer-events-none bg-neutral-950/50 backdrop-blur-sm md:bg-transparent md:backdrop-blur-none">
             {/* TOP BAR */}
-            <div className="h-14 bg-neutral-900/95 backdrop-blur border-b border-white/10 flex items-center justify-between px-4 pointer-events-auto">
-                <div className="flex items-center gap-4">
+            <div className="h-14 bg-neutral-900/95 backdrop-blur border-b border-white/10 flex items-center justify-between px-2 md:px-4 pointer-events-auto">
+                <div className="flex items-center gap-2 md:gap-4">
                     <button
                         onClick={onExit}
                         className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/70 hover:text-white"
@@ -146,7 +147,7 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                         <button
                             onClick={undo}
                             disabled={!canUndo}
-                            className={`p-2 rounded-full transition-colors ${canUndo ? 'hover:bg-white/10 text-white' : 'text-white/30 cursor-not-allowed'}`}
+                            className={`p - 2 rounded - full transition - colors ${ canUndo ? 'hover:bg-white/10 text-white' : 'text-white/30 cursor-not-allowed' } `}
                             title="Undo (Ctrl+Z)"
                         >
                             <Undo className="w-4 h-4" />
@@ -154,7 +155,7 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                         <button
                             onClick={redo}
                             disabled={!canRedo}
-                            className={`p-2 rounded-full transition-colors ${canRedo ? 'hover:bg-white/10 text-white' : 'text-white/30 cursor-not-allowed'}`}
+                            className={`p - 2 rounded - full transition - colors ${ canRedo ? 'hover:bg-white/10 text-white' : 'text-white/30 cursor-not-allowed' } `}
                             title="Redo (Ctrl+Shift+Z)"
                         >
                             <Redo className="w-4 h-4" />
@@ -162,10 +163,10 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                     </div>
 
                     {/* Divider */}
-                    <div className="h-6 w-px bg-white/10 mx-2" />
+                    <div className="h-6 w-px bg-white/10 mx-1 md:mx-2" />
 
-                    {/* Editable Title */}
-                    <div className="group">
+                    {/* Editable Title (Hidden on small mobile) */}
+                    <div className="group hidden sm:block">
                         {isEditingTitle ? (
                             <input
                                 autoFocus
@@ -197,7 +198,7 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                 </div>
 
                 <div className="flex items-center gap-2">
-                    <button className="px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 rounded text-xs font-medium text-white transition-colors">
+                    <button className="hidden md:block px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 rounded text-xs font-medium text-white transition-colors">
                         Drafts
                     </button>
                     <button
@@ -212,15 +213,16 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                         className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 rounded text-xs font-medium text-white transition-colors flex items-center gap-2 shadow-lg shadow-blue-900/20"
                     >
                         <Download className="w-3.5 h-3.5" />
-                        Save Project
+                        <span className="hidden sm:inline">Save Project</span>
+                        <span className="sm:hidden">Save</span>
                     </button>
                 </div>
             </div>
 
             {/* MAIN CONTENT AREA */}
-            <div className="flex-1 flex min-h-0">
+            <div className="flex-1 flex min-h-0 relative">
                 {/* LEFT TOOLBAR */}
-                <div className="w-16 bg-neutral-900/95 backdrop-blur border-r border-white/10 flex flex-col items-center py-4 gap-4 pointer-events-auto z-50">
+                <div className="absolute left-0 h-full w-14 md:w-16 bg-neutral-900/95 backdrop-blur border-r border-white/10 flex flex-col items-center py-2 md:py-4 gap-2 md:gap-4 pointer-events-auto z-40 md:relative">
                     <ToolButton
                         icon={<Scissors className="w-5 h-5" />}
                         label="Edit Recording"
@@ -254,9 +256,9 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                 </div>
 
                 {/* VISUAL AREA (The hole) */}
-                <div className="flex-1 relative">
+                <div className="flex-1 relative pl-14 md:pl-0">
                     {/* Floating Transport Controls */}
-                    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-neutral-900/80 backdrop-blur-md rounded-full px-4 py-2 flex items-center gap-4 text-white pointer-events-auto border border-white/10 shadow-2xl z-50">
+                    <div className="absolute bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 bg-neutral-900/80 backdrop-blur-md rounded-full px-2 md:px-4 py-1.5 md:py-2 flex items-center gap-2 md:gap-4 text-white pointer-events-auto border border-white/10 shadow-2xl z-30 scale-90 md:scale-100">
                         <span className="text-xs font-mono ml-2">{formatTime(playbackTime)}</span>
 
                         <div className="h-4 w-px bg-white/20" />
@@ -283,9 +285,13 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                     </div>
                 </div>
 
-                {/* RIGHT PROPERTIES PANEL */}
-                <div className="w-80 bg-neutral-900/95 backdrop-blur border-l border-white/10 flex flex-col pointer-events-auto">
-                    <div className="p-4 border-b border-white/10">
+                {/* RIGHT PROPERTIES PANEL (Drawer on mobile) */}
+                <div className={`
+                    absolute right - 0 h - full z - 40 bg - neutral - 900 / 95 backdrop - blur border - l border - white / 10 flex flex - col pointer - events - auto transition - transform duration - 300
+w - 64 md: w - 80 md:relative md: translate - x - 0
+                    ${ activeTool !== 'default' ? 'translate-x-0' : 'translate-x-full md:translate-x-0' }
+`}>
+                    <div className="p-3 md:p-4 border-b border-white/10 flex items-center justify-between">
                         <h2 className="text-xs font-bold text-white/50 uppercase tracking-wider">
                             {activeTool === 'settings' && 'Studio Settings'}
                             {activeTool === 'tracks' && 'Timeline Tracks'}
@@ -294,9 +300,16 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                             {activeTool === 'edit' && 'Edit Recording'}
                             {activeTool === 'default' && (selectedSegmentIds.length > 0 ? 'Clip Properties' : 'Project Properties')}
                         </h2>
+                        {/* Mobile Close Button for Drawer */}
+                        <button
+                            className="md:hidden p-1 bg-white/5 hover:bg-white/10 rounded-full text-white cursor-pointer"
+                            onClick={() => setActiveTool('default')}
+                        >
+                            <X className="w-4 h-4" />
+                        </button>
                     </div>
 
-                    <div className="p-4 space-y-6 overflow-y-auto flex-1 custom-scrollbar">
+                    <div className="p-3 md:p-4 space-y-4 md:space-y-6 overflow-y-auto flex-1 custom-scrollbar">
                         {/* Segment Tools - Show when segments selected AND tool is default (or force override?) */}
                         {/* Let's prioritize explicit Tool selection. If user clicks Settings, show Settings even if segment selected. */}
                         {activeTool === 'default' && selectedSegmentIds.length > 0 ? (
@@ -329,10 +342,11 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                             <button
                                                 key={speed}
                                                 onClick={() => setSpeedFactor(speed)}
-                                                className={`flex-1 py-1.5 rounded text-xs font-bold transition-all ${speedFactor === speed
-                                                    ? 'bg-blue-600 text-white shadow'
-                                                    : 'text-white/50 hover:text-white hover:bg-white/5'
-                                                    }`}
+                                                className={`flex - 1 py - 1.5 rounded text - xs font - bold transition - all ${
+    speedFactor === speed
+    ? 'bg-blue-600 text-white shadow'
+    : 'text-white/50 hover:text-white hover:bg-white/5'
+} `}
                                             >
                                                 {speed}x
                                             </button>
@@ -375,9 +389,9 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                                             transition: hasFade ? undefined : { type: 'fade', duration: 1000 }
                                                         });
                                                     }}
-                                                    className={`w-8 h-4 rounded-full transition-colors relative ${selectedSegments[0].transition ? 'bg-purple-600' : 'bg-white/10'}`}
+                                                    className={`w - 8 h - 4 rounded - full transition - colors relative ${ selectedSegments[0].transition ? 'bg-purple-600' : 'bg-white/10' } `}
                                                 >
-                                                    <div className={`absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full transition-transform ${selectedSegments[0].transition ? 'translate-x-4' : 'translate-x-0'}`} />
+                                                    <div className={`absolute top - 0.5 left - 0.5 w - 3 h - 3 bg - white rounded - full transition - transform ${ selectedSegments[0].transition ? 'translate-x-4' : 'translate-x-0' } `} />
                                                 </button>
                                             </div>
                                         </div>
@@ -516,9 +530,9 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                                 onClick={() => updateMetadata({
                                                     settings: { ...session.metadata.settings, ssao: !session.metadata.settings?.ssao }
                                                 })}
-                                                className={`w-8 h-4 rounded-full transition-colors relative ${session.metadata.settings?.ssao ? 'bg-green-500' : 'bg-white/10'}`}
+                                                className={`w - 8 h - 4 rounded - full transition - colors relative ${ session.metadata.settings?.ssao ? 'bg-green-500' : 'bg-white/10' } `}
                                             >
-                                                <div className={`absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full transition-transform ${session.metadata.settings?.ssao ? 'translate-x-4' : 'translate-x-0'}`} />
+                                                <div className={`absolute top - 0.5 left - 0.5 w - 3 h - 3 bg - white rounded - full transition - transform ${ session.metadata.settings?.ssao ? 'translate-x-4' : 'translate-x-0' } `} />
                                             </button>
                                         </div>
                                         <div className="flex items-center justify-between">
@@ -527,9 +541,9 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                                 onClick={() => updateMetadata({
                                                     settings: { ...session.metadata.settings, resolutionScale: session.metadata.settings?.resolutionScale === 2 ? 1 : 2 }
                                                 })}
-                                                className={`w-8 h-4 rounded-full transition-colors relative ${session.metadata.settings?.resolutionScale === 2 ? 'bg-purple-600' : 'bg-white/10'}`}
+                                                className={`w - 8 h - 4 rounded - full transition - colors relative ${ session.metadata.settings?.resolutionScale === 2 ? 'bg-purple-600' : 'bg-white/10' } `}
                                             >
-                                                <div className={`absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full transition-transform ${session.metadata.settings?.resolutionScale === 2 ? 'translate-x-4' : 'translate-x-0'}`} />
+                                                <div className={`absolute top - 0.5 left - 0.5 w - 3 h - 3 bg - white rounded - full transition - transform ${ session.metadata.settings?.resolutionScale === 2 ? 'translate-x-4' : 'translate-x-0' } `} />
                                             </button>
                                         </div>
                                         <div className="flex items-center justify-between">
@@ -551,9 +565,9 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                                 onClick={() => updateMetadata({
                                                     settings: { ...session.metadata.settings, showCursor: !session.metadata.settings?.showCursor }
                                                 })}
-                                                className={`w-8 h-4 rounded-full transition-colors relative ${session.metadata.settings?.showCursor ? 'bg-blue-600' : 'bg-white/10'}`}
+                                                className={`w - 8 h - 4 rounded - full transition - colors relative ${ session.metadata.settings?.showCursor ? 'bg-blue-600' : 'bg-white/10' } `}
                                             >
-                                                <div className={`absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full transition-transform ${session.metadata.settings?.showCursor ? 'translate-x-4' : 'translate-x-0'}`} />
+                                                <div className={`absolute top - 0.5 left - 0.5 w - 3 h - 3 bg - white rounded - full transition - transform ${ session.metadata.settings?.showCursor ? 'translate-x-4' : 'translate-x-0' } `} />
                                             </button>
                                         </div>
                                     </div>
@@ -572,9 +586,9 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                                 onClick={() => updateMetadata({
                                                     settings: { ...session.metadata.settings, showWatermark: !session.metadata.settings?.showWatermark }
                                                 })}
-                                                className={`w-8 h-4 rounded-full transition-colors relative ${session.metadata.settings?.showWatermark ? 'bg-blue-600' : 'bg-white/10'}`}
+                                                className={`w - 8 h - 4 rounded - full transition - colors relative ${ session.metadata.settings?.showWatermark ? 'bg-blue-600' : 'bg-white/10' } `}
                                             >
-                                                <div className={`absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full transition-transform ${session.metadata.settings?.showWatermark ? 'translate-x-4' : 'translate-x-0'}`} />
+                                                <div className={`absolute top - 0.5 left - 0.5 w - 3 h - 3 bg - white rounded - full transition - transform ${ session.metadata.settings?.showWatermark ? 'translate-x-4' : 'translate-x-0' } `} />
                                             </button>
                                         </div>
 
@@ -596,8 +610,8 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                                                 onClick={() => updateMetadata({
                                                                     settings: { ...session.metadata.settings, watermarkPosition: pos as any }
                                                                 })}
-                                                                title={`Position: ${pos.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}`}
-                                                                className={`rounded border ${session.metadata.settings?.watermarkPosition === pos ? 'bg-blue-500 border-blue-400' : 'bg-neutral-800 border-white/10 hover:bg-neutral-700'}`}
+                                                                title={`Position: ${ pos.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') } `}
+                                                                className={`rounded border ${ session.metadata.settings?.watermarkPosition === pos ? 'bg-blue-500 border-blue-400' : 'bg-neutral-800 border-white/10 hover:bg-neutral-700' } `}
                                                             />
                                                         ))}
                                                     </div>
@@ -718,10 +732,11 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                                 <div
                                                     key={seg.id}
                                                     onClick={(e) => toggleSegmentSelection(seg.id, e.shiftKey || e.metaKey || e.ctrlKey)}
-                                                    className={`p-2 rounded flex items-center gap-2 text-xs border transition-colors cursor-pointer ${isSelected
-                                                        ? 'bg-blue-600/20 border-blue-500/50 text-white'
-                                                        : 'bg-neutral-800 border-white/5 text-white/70 hover:bg-white/5'
-                                                        }`}
+                                                    className={`p - 2 rounded flex items - center gap - 2 text - xs border transition - colors cursor - pointer ${
+    isSelected
+        ? 'bg-blue-600/20 border-blue-500/50 text-white'
+        : 'bg-neutral-800 border-white/5 text-white/70 hover:bg-white/5'
+} `}
                                                 >
                                                     <span className="font-mono text-white/30 text-[10px] w-4">{idx + 1}</span>
                                                     <div className="flex-1 truncate">
@@ -880,12 +895,13 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                                 <div
                                                     key={clip.id}
                                                     onClick={() => setSelectedAudioClipId(clip.id)}
-                                                    className={`p-2 rounded border flex items-center gap-2 cursor-pointer transition-colors ${selectedAudioClipId === clip.id
-                                                        ? 'bg-blue-600/20 border-blue-500/50'
-                                                        : 'bg-neutral-800 border-white/5 hover:bg-neutral-700'
-                                                        }`}
+                                                    className={`p - 2 rounded border flex items - center gap - 2 cursor - pointer transition - colors ${
+    selectedAudioClipId === clip.id
+    ? 'bg-blue-600/20 border-blue-500/50'
+    : 'bg-neutral-800 border-white/5 hover:bg-neutral-700'
+} `}
                                                 >
-                                                    <div className={`w-6 h-6 rounded flex items-center justify-center ${clip.type === 'music' ? 'bg-purple-500/20 text-purple-400' : 'bg-green-500/20 text-green-400'}`}>
+                                                    <div className={`w - 6 h - 6 rounded flex items - center justify - center ${ clip.type === 'music' ? 'bg-purple-500/20 text-purple-400' : 'bg-green-500/20 text-green-400' } `}>
                                                         <Music className="w-3 h-3" />
                                                     </div>
                                                     <div className="flex-1 min-w-0">
@@ -995,10 +1011,11 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                     <div className="flex gap-2 items-center flex-wrap">
                                         <button
                                             onClick={() => setIsTrimMode(!isTrimMode)}
-                                            className={`px-3 py-1.5 rounded text-xs transition-colors ${isTrimMode
-                                                ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                                                : 'bg-blue-600/20 hover:bg-blue-600/40 border border-blue-600/30 text-white'
-                                                }`}
+                                            className={`px - 3 py - 1.5 rounded text - xs transition - colors ${
+    isTrimMode
+        ? 'bg-blue-600 hover:bg-blue-700 text-white'
+        : 'bg-blue-600/20 hover:bg-blue-600/40 border border-blue-600/30 text-white'
+} `}
                                         >
                                             {isTrimMode ? '✓ Trimming' : 'Start Trim'}
                                         </button>
@@ -1116,10 +1133,11 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                             <button
                                                 key={speed}
                                                 onClick={() => setSpeedFactor(speed)}
-                                                className={`flex-1 py-1.5 rounded text-xs font-bold transition-all ${speedFactor === speed
-                                                    ? 'bg-blue-600 text-white shadow'
-                                                    : 'text-white/50 hover:text-white hover:bg-white/5'
-                                                    }`}
+                                                className={`flex - 1 py - 1.5 rounded text - xs font - bold transition - all ${
+    speedFactor === speed
+    ? 'bg-blue-600 text-white shadow'
+    : 'text-white/50 hover:text-white hover:bg-white/5'
+} `}
                                             >
                                                 {speed}x
                                             </button>
@@ -1156,8 +1174,8 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
             </div>
 
             {/* BOTTOM TIMELINE */}
-            <div className={`h-48 bg-neutral-900/95 backdrop-blur border-t border-white/10 flex flex-col pointer-events-auto relative transition-all duration-300 ${isTrimMode ? 'ring-1 ring-blue-500/50' : ''}`}>
-                <div className="flex-1 relative mt-2 px-6">
+            <div className={`h - 28 sm: h - 32 md: h - 48 bg - neutral - 900 / 95 backdrop - blur border - t border - white / 10 flex flex - col pointer - events - auto relative transition - all duration - 300 ${ isTrimMode ? 'ring-1 ring-blue-500/50' : '' } `}>
+                <div className="flex-1 relative mt-1 md:mt-2 px-2 md:px-6">
                     <VideoTimeline
                         session={session}
                         segments={segments}
@@ -1188,7 +1206,7 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
 const ToolButton = ({ icon, label, active = false, onClick }: { icon: React.ReactNode, label: string, active?: boolean, onClick?: () => void }) => (
     <button
         onClick={onClick}
-        className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${active ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-white/40 hover:bg-white/5 hover:text-white'}`}
+        className={`w - 10 h - 10 md: w - 10 md: h - 10 shrink - 0 rounded - xl flex items - center justify - center transition - all ${ active ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-white/40 hover:bg-white/5 hover:text-white' } `}
         title={label}
     >
         {icon}
