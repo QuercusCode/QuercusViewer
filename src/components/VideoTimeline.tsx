@@ -393,23 +393,23 @@ export const VideoTimeline = ({
     const eventBlocks = getEventBlocks();
 
     return (
-        <div className="space-y-2">
+        <div className="space-y-1 md:space-y-2 flex flex-col h-full">
             {/* Timeline Toolbar */}
             <div className="flex justify-between items-center text-xs px-1">
                 <div className="opacity-60 font-mono">
                     {formatTime(playbackTime)} / {formatTime(duration)}
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 md:gap-2">
                     <button
                         onClick={() => setZoomLevel(Math.max(1, zoomLevel - 0.5))}
-                        className="p-1 hover:bg-white/10 rounded"
+                        className="p-1.5 md:p-1 hover:bg-white/10 rounded"
                     >
                         -
                     </button>
                     <span className="opacity-60 text-[10px] w-8 text-center">{Math.round(zoomLevel * 100)}%</span>
                     <button
                         onClick={() => setZoomLevel(Math.min(10, zoomLevel + 0.5))}
-                        className="p-1 hover:bg-white/10 rounded"
+                        className="p-1.5 md:p-1 hover:bg-white/10 rounded"
                     >
                         +
                     </button>
@@ -419,15 +419,12 @@ export const VideoTimeline = ({
             {/* Timeline Track Container (Scrollable Parent) */}
             <div
                 ref={containerRef}
-                className="relative bg-black/40 rounded-lg border border-white/10 overflow-x-auto overflow-y-hidden cursor-pointer select-none py-2 space-y-1"
+                className={`relative bg-black/40 rounded-lg border border-white/10 overflow-x-auto overflow-y-hidden cursor-pointer select-none py-2 space-y-1 flex-1 ${audioClips.length > 0 ? 'min-h-[6rem] md:min-h-[10rem]' : 'min-h-[4rem] md:min-h-[6rem]'}`}
                 onMouseDown={handleTimelineMouseDown}
                 onMouseMove={handleMouseMove}
                 onMouseUp={handleMouseUp}
                 onMouseLeave={handleMouseLeave}
                 onScroll={(e) => setScrollLeft(e.currentTarget.scrollLeft)}
-                style={{
-                    minHeight: audioClips.length > 0 ? '10rem' : '6rem'
-                }}
             >
                 {/* Content Wrapper */}
                 <div
@@ -447,7 +444,7 @@ export const VideoTimeline = ({
                     </div>
 
                     {/* VIDEO TRACK */}
-                    <div className="relative h-16 mb-2">
+                    <div className="relative h-10 md:h-16 mb-1 md:mb-2 flex-shrink-0">
                         {/* Segment Blocks */}
                         {segments.length > 0 && segments.map(seg => {
                             const isDragging = draggingSegmentId === seg.id;
@@ -548,7 +545,7 @@ export const VideoTimeline = ({
 
                     {/* AUDIO TRACKS */}
                     {audioClips.length > 0 && (
-                        <div className="relative h-12 border-t border-white/10 bg-black/20 mt-1">
+                        <div className="relative h-8 md:h-12 border-t border-white/10 bg-black/20 mt-1 flex-shrink-0">
                             {audioClips.map(clip => {
                                 const isDraft = draggingAudioId === clip.id || resizingAudioId === clip.id;
                                 const currentStartTime = isDraft ? dragAudioStartTime : clip.startTime;
@@ -658,7 +655,7 @@ export const VideoTimeline = ({
             </div>
 
             {/* Event Legend */}
-            <div className="flex gap-3 text-xs flex-wrap">
+            <div className="hidden md:flex gap-3 text-xs flex-wrap pb-2">
                 {Object.entries(eventColors).map(([type, color]) => (
                     <div key={type} className="flex items-center gap-1.5">
                         <div className="w-3 h-3 rounded" style={{ backgroundColor: color }} />

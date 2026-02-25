@@ -287,10 +287,10 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
 
                 {/* RIGHT PROPERTIES PANEL / MOBILE BOTTOM SHEET */}
                 <div className={`
-                    absolute inset-x-0 bottom-16 bg-neutral-900/95 backdrop-blur-xl border-t border-white/10 rounded-t-2xl shadow-[0_-10px_40px_rgba(0,0,0,0.5)] z-50 transition-transform duration-300 ease-in-out pointer-events-auto flex flex-col h-[55%]
-                    md:relative md:inset-auto md:w-80 md:h-auto md:border-t-0 md:border-l md:rounded-none md:shadow-none md:translate-y-0
-                    ${activeTool === 'default' ? 'translate-y-full md:translate-y-0' : 'translate-y-0'}
-                `}>
+                absolute inset-x-0 bottom-16 bg-neutral-900/95 backdrop-blur-xl border-t border-white/10 rounded-t-2xl shadow-[0_-10px_40px_rgba(0,0,0,0.5)] z-50 transition-all duration-300 ease-in-out pointer-events-auto flex flex-col h-[55%]
+                md:relative md:inset-auto md:w-80 md:h-auto md:border-t-0 md:border-l md:rounded-none md:shadow-none md:translate-y-0 md:opacity-100 md:pointer-events-auto
+                ${activeTool === 'default' ? 'translate-y-[150%] opacity-0 pointer-events-none md:translate-y-0 md:opacity-100 md:pointer-events-auto' : 'translate-y-0 opacity-100'}
+            `}>
                     <div className="p-4 border-b border-white/10 flex items-center justify-between">
                         <h2 className="text-xs font-bold text-white/50 uppercase tracking-wider">
                             {activeTool === 'settings' && 'Studio Settings'}
@@ -1169,8 +1169,8 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
             </div>
 
             {/* BOTTOM TIMELINE */}
-            <div className={`h-32 md:h-48 mb-16 md:mb-0 bg-neutral-900/95 backdrop-blur border-t border-white/10 flex flex-col pointer-events-auto relative transition-all duration-300 z-40 ${isTrimMode ? 'ring-1 ring-blue-500/50' : ''}`}>
-                <div className="flex-1 relative mt-2 px-6">
+            <div className={`h-32 md:h-48 mb-16 md:mb-0 bg-neutral-900/95 backdrop-blur border-t border-white/10 flex flex-col pointer-events-auto relative transition-all duration-300 z-40 flex-shrink-0 ${isTrimMode ? 'ring-1 ring-blue-500/50' : ''}`}>
+                <div className="flex-1 relative mt-1 md:mt-2 px-2 md:px-6 overflow-hidden">
                     <VideoTimeline
                         session={session}
                         segments={segments}
