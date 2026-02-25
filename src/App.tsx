@@ -3338,7 +3338,7 @@ function App() {
         }}
         onStartTour={() => {
           setShowLanding(false);
-          setTimeout(() => startOnboardingTour(() => { }), 500);
+          handleStartTour();
         }}
         onLoadPdb={(id, fileUrl) => {
           if (activeController) {
