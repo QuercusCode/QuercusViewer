@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
     ArrowLeft, Play, Pause, Scissors, Trash2, Download,
     Settings, Layers, Music, Type, Film, Pencil, Undo, Redo,
-    Image as ImageIcon, Monitor, Camera, Plus
+    Image as ImageIcon, Monitor, Camera, Plus, Menu
 } from 'lucide-react';
 import { VideoTimeline } from './VideoTimeline';
 import type { useSessionRecorder } from '../hooks/useSessionRecorder';
@@ -47,6 +47,7 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
     } = recorder;
 
     const [isEditingTitle, setIsEditingTitle] = useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     const selectedSegments = segments.filter(s => selectedSegmentIds.includes(s.id));
 
@@ -196,26 +197,66 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                     </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                {/* Desktop Actions */}
+                <div className="hidden md:flex items-center gap-2">
                     <button className="px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 rounded text-xs font-medium text-white transition-colors">
                         Drafts
                     </button>
                     <button
                         onClick={exportVideo}
-                        className="p-2 md:px-3 md:py-1.5 bg-purple-600 hover:bg-purple-500 rounded-lg md:rounded text-xs font-medium text-white transition-colors flex items-center gap-2 shadow-lg shadow-purple-900/20"
+                        className="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 rounded text-xs font-medium text-white transition-colors flex items-center gap-2 shadow-lg shadow-purple-900/20"
                         title="Export Video"
                     >
-                        <Film className="w-4 h-4 md:w-3.5 md:h-3.5" />
-                        <span className="hidden md:inline">Export Video</span>
+                        <Film className="w-3.5 h-3.5" />
+                        <span>Export Video</span>
                     </button>
                     <button
                         onClick={exportSession}
-                        className="p-2 md:px-3 md:py-1.5 bg-blue-600 hover:bg-blue-500 rounded-lg md:rounded text-xs font-medium text-white transition-colors flex items-center gap-2 shadow-lg shadow-blue-900/20"
+                        className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 rounded text-xs font-medium text-white transition-colors flex items-center gap-2 shadow-lg shadow-blue-900/20"
                         title="Save Project"
                     >
-                        <Download className="w-4 h-4 md:w-3.5 md:h-3.5" />
-                        <span className="hidden md:inline">Save Project</span>
+                        <Download className="w-3.5 h-3.5" />
+                        <span>Save Project</span>
                     </button>
+                </div>
+
+                {/* Mobile Actions Menu */}
+                <div className="md:hidden relative">
+                    <button
+                        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                        className={`p-2 rounded-lg transition-colors flex items-center justify-center ${isMobileMenuOpen ? 'bg-neutral-700 text-white' : 'bg-neutral-800 hover:bg-neutral-700 text-white/90'}`}
+                        title="Actions"
+                    >
+                        <Menu className="w-5 h-5" />
+                    </button>
+
+                    {isMobileMenuOpen && (
+                        <>
+                            <div className="fixed inset-0 z-40" onClick={() => setIsMobileMenuOpen(false)} />
+                            <div className="absolute right-0 top-full mt-2 w-48 bg-neutral-900 border border-white/10 rounded-xl shadow-2xl flex flex-col py-1 overflow-hidden z-50">
+                                <button
+                                    className="px-4 py-3 text-sm text-left hover:bg-white/10 text-white transition-colors w-full border-b border-white/5"
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                >
+                                    Drafts
+                                </button>
+                                <button
+                                    onClick={() => { setIsMobileMenuOpen(false); exportVideo(); }}
+                                    className="px-4 py-3 text-sm text-left hover:bg-white/10 text-white transition-colors w-full flex items-center justify-between border-b border-white/5"
+                                >
+                                    <span>Export Video</span>
+                                    <Film className="w-4 h-4 text-purple-400" />
+                                </button>
+                                <button
+                                    onClick={() => { setIsMobileMenuOpen(false); exportSession(); }}
+                                    className="px-4 py-3 text-sm text-left hover:bg-white/10 text-white transition-colors w-full flex items-center justify-between"
+                                >
+                                    <span>Save Project</span>
+                                    <Download className="w-4 h-4 text-blue-400" />
+                                </button>
+                            </div>
+                        </>
+                    )}
                 </div>
             </div>
 
