@@ -91,27 +91,38 @@ export const GalleryModal: React.FC<GalleryModalProps> = ({
                 bgColor, borderColor
             )}>
                 {/* Header */}
-                <div className={clsx("flex items-center justify-between px-6 py-4 border-b", borderColor)}>
-                    <div className="flex items-center gap-4">
-                        <div className={clsx("p-2 rounded-lg", isLightMode ? "bg-blue-50 text-blue-600" : "bg-blue-500/10 text-blue-400")}>
-                            <Grid className="w-5 h-5" />
+                <div className={clsx("flex flex-col md:flex-row items-start md:items-center justify-between px-4 sm:px-6 py-4 border-b gap-4 md:gap-0", borderColor)}>
+                    {/* Title and Mobile Close Button */}
+                    <div className="flex items-start md:items-center justify-between w-full md:w-auto gap-4">
+                        <div className="flex items-center gap-3 sm:gap-4">
+                            <div className={clsx("p-2 rounded-lg flex-shrink-0", isLightMode ? "bg-blue-50 text-blue-600" : "bg-blue-500/10 text-blue-400")}>
+                                <Grid className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <h2 className={clsx("text-base sm:text-lg font-bold", textColor)}>Media Gallery</h2>
+                                <p className={clsx("text-[10px] sm:text-xs", subtleText)}>
+                                    {items.length} items • {snapshots.length} images, {movies.length} videos
+                                </p>
+                            </div>
                         </div>
-                        <div>
-                            <h2 className={clsx("text-lg font-bold", textColor)}>Media Gallery</h2>
-                            <p className={clsx("text-xs", subtleText)}>
-                                {items.length} items • {snapshots.length} images, {movies.length} videos
-                            </p>
-                        </div>
+
+                        {/* Mobile Close */}
+                        <button
+                            onClick={onClose}
+                            className={clsx("md:hidden p-2 rounded-full hover:bg-black/5 transition-colors flex-shrink-0", isLightMode ? "text-neutral-400 hover:text-neutral-600" : "text-neutral-500 hover:text-neutral-300")}
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
                     </div>
 
                     {/* Tabs */}
-                    <div className={clsx("flex p-1 rounded-lg border", isLightMode ? "bg-neutral-50/50 border-neutral-200" : "bg-neutral-800/50 border-neutral-800")}>
+                    <div className={clsx("flex p-1 rounded-lg border w-full md:w-auto", isLightMode ? "bg-neutral-50/50 border-neutral-200" : "bg-neutral-800/50 border-neutral-800")}>
                         {(['all', 'snapshots', 'movies'] as const).map(tab => (
                             <button
                                 key={tab}
                                 onClick={() => setActiveTab(tab)}
                                 className={clsx(
-                                    "px-4 py-1.5 rounded-md text-xs font-bold capitalize transition-all",
+                                    "flex-1 md:flex-none px-4 py-1.5 rounded-md text-xs font-bold capitalize transition-all",
                                     activeTab === tab
                                         ? (isLightMode ? "bg-white text-blue-600 shadow-sm" : "bg-neutral-700 text-white shadow-sm")
                                         : (isLightMode ? "text-neutral-500 hover:text-neutral-700" : "text-neutral-400 hover:text-neutral-200")
@@ -122,9 +133,10 @@ export const GalleryModal: React.FC<GalleryModalProps> = ({
                         ))}
                     </div>
 
+                    {/* Desktop Close */}
                     <button
                         onClick={onClose}
-                        className={clsx("p-2 rounded-full hover:bg-black/5 transition-colors", isLightMode ? "text-neutral-400 hover:text-neutral-600" : "text-neutral-500 hover:text-neutral-300")}
+                        className={clsx("hidden md:block p-2 rounded-full hover:bg-black/5 transition-colors flex-shrink-0", isLightMode ? "text-neutral-400 hover:text-neutral-600" : "text-neutral-500 hover:text-neutral-300")}
                     >
                         <X className="w-6 h-6" />
                     </button>
