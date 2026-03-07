@@ -1,115 +1,152 @@
+import { useState } from 'react';
 import { useAuth } from '../../lib/AuthContext';
-import { User, Mail, Shield, Bell } from 'lucide-react';
+import { User, Mail, Shield, Loader2 } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
 
 export const AccountSettings = () => {
     const { user } = useAuth();
+    const [fullName, setFullName] = useState(user?.user_metadata?.full_name || '');
+    const [isSaving, setIsSaving] = useState(false);
+    const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
+    const [newPassword, setNewPassword] = useState('');
+    const [isChangingPassword, setIsChangingPassword] = useState(false);
+    const [passwordStatus, setPasswordStatus] = useState<'idle' | 'success' | 'error'>('idle');
+
+    const handleSaveProfile = async () => {
+        setIsSaving(true);
+        setSaveStatus('idle');
+        const { error } = await supabase.auth.updateUser({ data: { full_name: fullName } });
+        setIsSaving(false);
+        setSaveStatus(error ? 'error' : 'success');
+        setTimeout(() => setSaveStatus('idle'), 3000);
+    };
+
+    const handleChangePassword = async () => {
+        if (!newPassword || newPassword.length < 6) return;
+        setIsChangingPassword(true);
+        setPasswordStatus('idle');
+        const { error } = await supabase.auth.updateUser({ password: newPassword });
+        setIsChangingPassword(false);
+        setPasswordStatus(error ? 'error' : 'success');
+        setNewPassword('');
+        setTimeout(() => setPasswordStatus('idle'), 3000);
+    };
 
     return (
-        <div className="max-w-4xl mx-auto space-y-8">
+        <div className="max-w-3xl mx-auto space-y-6">
             <div>
-                <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Account Settings</h1>
-                <p className="text-sm text-gray-500 mt-1">Manage your profile, preferences, and security.</p>
+                <h1 className="text-xl font-semibold text-white tracking-tight">Account Settings</h1>
+                <p className="text-sm text-neutral-500 mt-0.5">Manage your profile and security preferences.</p>
             </div>
 
-            <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-                <div className="p-6 md:p-8 space-y-8">
-
-                    {/* Profile Section */}
-                    <section className="flex flex-col md:flex-row gap-8 items-start">
-                        <div className="w-full md:w-1/3">
-                            <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2">
-                                <User className="w-4 h-4 text-blue-500" />
-                                Profile Information
-                            </h2>
-                            <p className="text-sm text-gray-500 mt-1">Update your account's profile information and email address.</p>
+            {/* Profile Card */}
+            <div className="bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden">
+                <div className="px-6 py-4 border-b border-neutral-800 flex items-center gap-2">
+                    <User className="w-4 h-4 text-blue-400" />
+                    <h2 className="text-sm font-semibold text-white">Profile Information</h2>
+                </div>
+                <div className="p-6 space-y-5">
+                    {/* Avatar */}
+                    <div className="flex items-center gap-4">
+                        <img
+                            className="h-16 w-16 rounded-full border-2 border-neutral-700 object-cover"
+                            src={user?.user_metadata?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.email?.split('@')[0] || 'U')}&background=2563eb&color=fff&size=128`}
+                            alt="Profile"
+                        />
+                        <div>
+                            <p className="text-sm font-medium text-neutral-200">{user?.email}</p>
+                            <p className="text-xs text-neutral-500 mt-0.5">Joined {new Date(user?.created_at || '').toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</p>
                         </div>
+                    </div>
 
-                        <div className="w-full md:w-2/3 space-y-4">
-                            <div className="flex items-center gap-4">
-                                <img
-                                    className="h-16 w-16 rounded-full border border-gray-200 bg-gray-50 object-cover"
-                                    src={user?.user_metadata?.avatar_url || `https://ui-avatars.com/api/?name=${user?.email || 'User'}&background=random`}
-                                    alt="Profile"
-                                />
-                                <button className="text-sm font-medium text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors">
-                                    Change Avatar
-                                </button>
-                            </div>
+                    {/* Full Name */}
+                    <div>
+                        <label className="block text-sm font-medium text-neutral-300 mb-1.5">Display Name</label>
+                        <input
+                            type="text"
+                            value={fullName}
+                            onChange={e => setFullName(e.target.value)}
+                            className="w-full max-w-sm px-3 py-2.5 bg-neutral-950 border border-neutral-700 rounded-lg text-sm text-white placeholder-neutral-600 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="Enter your full name"
+                        />
+                    </div>
 
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-                                <input
-                                    type="text"
-                                    defaultValue={user?.user_metadata?.full_name || ''}
-                                    className="w-full max-w-md px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
-                                <div className="flex rounded-md shadow-sm max-w-md">
-                                    <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 sm:text-sm">
-                                        <Mail className="h-4 w-4" />
-                                    </span>
-                                    <input
-                                        type="email"
-                                        disabled
-                                        defaultValue={user?.email || ''}
-                                        className="flex-1 block w-full px-3 py-2 border border-gray-300 rounded-none rounded-r-lg bg-gray-50 text-gray-500 sm:text-sm cursor-not-allowed"
-                                    />
-                                </div>
-                                <p className="text-xs text-gray-500 mt-1">To change your email, please contact support.</p>
-                            </div>
-
-                            <div className="pt-2">
-                                <button className="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm">
-                                    Save Changes
-                                </button>
-                            </div>
+                    {/* Email (readonly) */}
+                    <div>
+                        <label className="block text-sm font-medium text-neutral-300 mb-1.5">Email Address</label>
+                        <div className="relative max-w-sm">
+                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-600" />
+                            <input
+                                type="email"
+                                disabled
+                                value={user?.email || ''}
+                                className="w-full pl-9 pr-3 py-2.5 bg-neutral-950 border border-neutral-800 rounded-lg text-sm text-neutral-500 cursor-not-allowed"
+                            />
                         </div>
-                    </section>
+                        <p className="text-xs text-neutral-600 mt-1.5">Email cannot be changed.</p>
+                    </div>
 
-                    <hr className="border-gray-200" />
+                    {/* Save Button */}
+                    <div className="flex items-center gap-3 pt-2">
+                        <button
+                            onClick={handleSaveProfile}
+                            disabled={isSaving}
+                            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                        >
+                            {isSaving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                            Save Changes
+                        </button>
+                        {saveStatus === 'success' && <span className="text-sm text-green-400">Saved!</span>}
+                        {saveStatus === 'error' && <span className="text-sm text-red-400">Failed to save.</span>}
+                    </div>
+                </div>
+            </div>
 
-                    {/* Security Section (Placeholder) */}
-                    <section className="flex flex-col md:flex-row gap-8 items-start">
-                        <div className="w-full md:w-1/3">
-                            <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2">
-                                <Shield className="w-4 h-4 text-green-500" />
-                                Security
-                            </h2>
-                            <p className="text-sm text-gray-500 mt-1">Manage your password and security preferences.</p>
-                        </div>
+            {/* Security Card */}
+            <div className="bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden">
+                <div className="px-6 py-4 border-b border-neutral-800 flex items-center gap-2">
+                    <Shield className="w-4 h-4 text-green-400" />
+                    <h2 className="text-sm font-semibold text-white">Security</h2>
+                </div>
+                <div className="p-6 space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-neutral-300 mb-1.5">New Password</label>
+                        <input
+                            type="password"
+                            value={newPassword}
+                            onChange={e => setNewPassword(e.target.value)}
+                            className="w-full max-w-sm px-3 py-2.5 bg-neutral-950 border border-neutral-700 rounded-lg text-sm text-white placeholder-neutral-600 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="Enter new password (min 6 chars)"
+                        />
+                    </div>
+                    <div className="flex items-center gap-3 pt-1">
+                        <button
+                            onClick={handleChangePassword}
+                            disabled={isChangingPassword || newPassword.length < 6}
+                            className="flex items-center gap-2 border border-neutral-700 hover:border-neutral-500 hover:bg-neutral-800 text-neutral-300 px-4 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-40"
+                        >
+                            {isChangingPassword && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                            Change Password
+                        </button>
+                        {passwordStatus === 'success' && <span className="text-sm text-green-400">Password updated!</span>}
+                        {passwordStatus === 'error' && <span className="text-sm text-red-400">Failed to update password.</span>}
+                    </div>
+                </div>
+            </div>
 
-                        <div className="w-full md:w-2/3 space-y-4">
-                            <button className="border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-                                Change Password
-                            </button>
-                        </div>
-                    </section>
-
-                    <hr className="border-gray-200" />
-
-                    {/* Notifications Section (Placeholder) */}
-                    <section className="flex flex-col md:flex-row gap-8 items-start">
-                        <div className="w-full md:w-1/3">
-                            <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2">
-                                <Bell className="w-4 h-4 text-purple-500" />
-                                Notifications
-                            </h2>
-                            <p className="text-sm text-gray-500 mt-1">Choose what updates you want to receive.</p>
-                        </div>
-
-                        <div className="w-full md:w-2/3 space-y-4">
-                            <div className="flex items-center justify-between py-2">
-                                <span className="text-sm text-gray-700">Email me when a new structure is shared with me</span>
-                                <button className="bg-blue-600 relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out">
-                                    <span className="translate-x-5 pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
-                                </button>
-                            </div>
-                        </div>
-                    </section>
-
+            {/* Danger Zone */}
+            <div className="bg-neutral-900 border border-red-500/20 rounded-xl overflow-hidden">
+                <div className="px-6 py-4 border-b border-red-500/20 flex items-center gap-2">
+                    <h2 className="text-sm font-semibold text-red-400">Danger Zone</h2>
+                </div>
+                <div className="p-6 flex items-center justify-between gap-4">
+                    <div>
+                        <p className="text-sm font-medium text-neutral-200">Delete Account</p>
+                        <p className="text-xs text-neutral-500 mt-0.5">Permanently deletes your account and all associated data.</p>
+                    </div>
+                    <button className="shrink-0 border border-red-500/40 text-red-400 hover:bg-red-500/10 hover:border-red-400 px-4 py-2 rounded-lg text-sm font-medium transition-all">
+                        Delete Account
+                    </button>
                 </div>
             </div>
         </div>

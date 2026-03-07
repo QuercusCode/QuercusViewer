@@ -4,7 +4,7 @@ import { DashboardHeader } from './DashboardHeader';
 
 export const DashboardLayout = () => {
     return (
-        <div className="min-h-screen flex bg-gray-50 flex-col md:flex-row font-sans">
+        <div className="min-h-screen flex bg-neutral-950 flex-col md:flex-row font-sans">
             <DashboardSidebar />
             <div className="flex-1 flex flex-col min-w-0">
                 <DashboardHeader />
