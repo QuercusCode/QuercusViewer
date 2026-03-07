@@ -1,0 +1,15 @@
+🔬 Excited to launch QuercusViewer! 🌟
+
+A blazing fast, web-based 3D structure viewer powered by NGL. Whether you're exploring complex proteins or simple molecules, QuercusViewer offers top-tier visualization directly in your browser without any installations!
+
+✨ Key Features:
+- ⚡ **Instant Loading**: Render massive PDBs effortlessly.
+- 🎨 **Rich Styling**: Cartoon, Ball & Stick, Surface modes, and customizable color schemes (pLDDT, chains, hydrophobicity).
+- 🎬 **Built-in Studio Mode**: An interactive video editor right in your browser! Scrub the timeline, add camera tracks, and export high-quality animations.
+- 📸 **High-Res Exports**: Snapshot your discoveries at publication-ready 3x resolution.
+- �� **Live Collaboration**: Share a link and explore structures synchronously with colleagues anywhere in the world.
+- 📱 **Mobile Optimized**: Fully responsive UI so you can analyze structures on the go.
+
+Check it out live now at [Link to your website here]!
+
+#Bioinformatics #StructuralBiology #ProteinScience #WebDev #OpenScience #DataVisualization

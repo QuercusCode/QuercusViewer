@@ -11,6 +11,7 @@
     "download": "node scripts/download_models.js"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.98.0",
     "@types/peerjs": "^0.0.30",
     "@types/qrcode": "^1.5.6",
     "clsx": "^2.1.1",
@@ -26,6 +27,7 @@
     "react": "^19.2.0",
     "react-colorful": "^5.6.1",
     "react-dom": "^19.2.0",
+    "react-router-dom": "^6.30.3",
     "sass": "^1.97.3",
     "tailwind-merge": "^3.4.0"
   },
