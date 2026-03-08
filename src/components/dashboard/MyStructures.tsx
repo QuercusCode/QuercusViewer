@@ -3,19 +3,14 @@ import {
     Plus, Star, Clock, Search, Upload, Dna, Trash2, ExternalLink,
     Loader2, AlertCircle, Download, Check, Pencil, Share2,
     FileText, Filter, List, LayoutGrid, Database, NotebookPen,
-    ChevronDown, ChevronUp, Import
+    ChevronDown, ChevronUp, Import, Tag, Copy, X, Square, CheckSquare
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../lib/AuthContext';
 import {
-    listStructures,
-    uploadStructure,
-    toggleStar,
-    deleteStructure,
-    renameStructure,
-    updateNotes,
-    importFromRCSB,
-    getDownloadUrl,
+    listStructures, uploadStructure, toggleStar, deleteStructure,
+    renameStructure, updateNotes, updateTags, importFromRCSB,
+    duplicateStructure, getDownloadUrl,
     type Structure,
 } from '../../lib/structuresService';
 
@@ -27,18 +22,97 @@ function formatBytes(bytes: number | null): string {
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
-
 function timeAgo(iso: string): string {
-    const diff = Date.now() - new Date(iso).getTime();
-    const mins = Math.floor(diff / 60_000);
-    if (mins < 1) return 'just now';
-    if (mins < 60) return `${mins}m ago`;
-    const hrs = Math.floor(mins / 60);
-    if (hrs < 24) return `${hrs}h ago`;
-    const days = Math.floor(hrs / 24);
-    if (days < 7) return `${days}d ago`;
-    return new Date(iso).toLocaleDateString();
+    const d = Date.now() - new Date(iso).getTime(), m = Math.floor(d / 60000);
+    if (m < 1) return 'just now';
+    if (m < 60) return `${m}m ago`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h}h ago`;
+    const dy = Math.floor(h / 24);
+    return dy < 7 ? `${dy}d ago` : new Date(iso).toLocaleDateString();
 }
+
+// ── Tag system ────────────────────────────────────────────────────
+
+const PRESET_TAGS: { label: string; color: string }[] = [
+    { label: 'Protein', color: 'bg-blue-500/15 border-blue-500/30 text-blue-400' },
+    { label: 'Ligand', color: 'bg-violet-500/15 border-violet-500/30 text-violet-400' },
+    { label: 'Drug target', color: 'bg-orange-500/15 border-orange-500/30 text-orange-400' },
+    { label: 'Published', color: 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400' },
+    { label: 'In progress', color: 'bg-yellow-500/15 border-yellow-500/30 text-yellow-400' },
+    { label: 'Mutant', color: 'bg-pink-500/15 border-pink-500/30 text-pink-400' },
+    { label: 'Control', color: 'bg-neutral-500/15 border-neutral-500/30 text-neutral-400' },
+    { label: 'Complex', color: 'bg-cyan-500/15 border-cyan-500/30 text-cyan-400' },
+];
+
+function tagColor(label: string): string {
+    return PRESET_TAGS.find(t => t.label.toLowerCase() === label.toLowerCase())?.color
+        ?? 'bg-neutral-500/15 border-neutral-500/30 text-neutral-400';
+}
+
+interface TagEditorProps {
+    tags: string[];
+    onChange: (tags: string[]) => void;
+}
+
+function TagEditor({ tags, onChange }: TagEditorProps) {
+    const [open, setOpen] = useState(false);
+    const [custom, setCustom] = useState('');
+    const ref = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handler = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, []);
+
+    const addTag = (label: string) => {
+        const t = label.trim();
+        if (!t || tags.includes(t)) return;
+        onChange([...tags, t]);
+    };
+    const removeTag = (label: string) => onChange(tags.filter(t => t !== label));
+
+    return (
+        <div className="mb-3" ref={ref}>
+            <div className="flex flex-wrap gap-1.5 items-center">
+                {tags.map(t => (
+                    <span key={t} className={`inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-md border ${tagColor(t)}`}>
+                        {t}
+                        <button onClick={() => removeTag(t)} className="opacity-60 hover:opacity-100"><X className="w-2.5 h-2.5" /></button>
+                    </span>
+                ))}
+                <button onClick={() => setOpen(p => !p)}
+                    className="inline-flex items-center gap-1 text-[10px] text-neutral-600 hover:text-neutral-300 border border-dashed border-neutral-700 hover:border-neutral-500 rounded-md px-1.5 py-0.5 transition-all">
+                    <Tag className="w-2.5 h-2.5" />Add tag
+                </button>
+            </div>
+
+            {open && (
+                <div className="mt-2 bg-neutral-800 border border-neutral-700 rounded-xl p-2.5 shadow-xl">
+                    <div className="flex flex-wrap gap-1.5 mb-2">
+                        {PRESET_TAGS.filter(p => !tags.includes(p.label)).map(p => (
+                            <button key={p.label} onClick={() => { addTag(p.label); setOpen(false); }}
+                                className={`text-[10px] font-medium px-2 py-1 rounded-md border transition-all hover:opacity-90 ${p.color}`}>
+                                {p.label}
+                            </button>
+                        ))}
+                    </div>
+                    <div className="flex gap-1">
+                        <input value={custom} onChange={e => setCustom(e.target.value)}
+                            onKeyDown={e => { if (e.key === 'Enter') { addTag(custom); setCustom(''); setOpen(false); } }}
+                            placeholder="Custom tag…"
+                            className="flex-1 bg-neutral-700 rounded-lg text-xs text-white placeholder-neutral-500 px-2.5 py-1.5 outline-none border border-transparent focus:border-blue-500/50" />
+                        <button onClick={() => { addTag(custom); setCustom(''); setOpen(false); }}
+                            className="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-medium transition-colors">+</button>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
+// ── File type styles ──────────────────────────────────────────────
 
 const TYPE_BADGE: Record<string, string> = {
     PDB: 'bg-blue-500/10 border-blue-500/30 text-blue-400',
@@ -55,19 +129,29 @@ const TYPE_STRIP: Record<string, string> = {
     MOL: 'from-orange-500 to-orange-700',
 };
 
-// ─── Structure Card (Grid view) ───────────────────────────────────
+// ── Structure card ────────────────────────────────────────────────
 
 interface CardProps {
     item: Structure;
+    selected: boolean;
+    selectMode: boolean;
+    onSelect: (id: string) => void;
     onToggleStar: (s: Structure) => void;
     onDelete: (s: Structure) => void;
     onRename: (id: string, name: string) => void;
     onNotesChange: (id: string, notes: string) => void;
+    onTagsChange: (id: string, tags: string[]) => void;
+    onDuplicate: (s: Structure) => void;
     onOpen: (s: Structure) => void;
     openingId: string | null;
+    duplicatingId: string | null;
 }
 
-function StructureCard({ item, onToggleStar, onDelete, onRename, onNotesChange, onOpen, openingId }: CardProps) {
+function StructureCard({
+    item, selected, selectMode, onSelect,
+    onToggleStar, onDelete, onRename, onNotesChange, onTagsChange,
+    onDuplicate, onOpen, openingId, duplicatingId
+}: CardProps) {
     const [editing, setEditing] = useState(false);
     const [draftName, setDraftName] = useState(item.name);
     const [showNotes, setShowNotes] = useState(false);
@@ -101,9 +185,7 @@ function StructureCard({ item, onToggleStar, onDelete, onRename, onNotesChange, 
         try {
             const url = await getDownloadUrl(item.file_path);
             const a = document.createElement('a');
-            a.href = url;
-            a.download = `${item.name}.${item.file_type.toLowerCase()}`;
-            a.click();
+            a.href = url; a.download = `${item.name}.${item.file_type.toLowerCase()}`; a.click();
         } catch { /* ignore */ } finally { setDownloading(false); }
     };
 
@@ -111,100 +193,142 @@ function StructureCard({ item, onToggleStar, onDelete, onRename, onNotesChange, 
     const badge = TYPE_BADGE[item.file_type] ?? 'bg-neutral-500/10 border-neutral-500/30 text-neutral-400';
 
     return (
-        <div className="group bg-neutral-900/80 border border-neutral-800 rounded-2xl overflow-hidden hover:border-neutral-600 transition-all duration-200 hover:shadow-xl hover:shadow-black/30 flex flex-col">
+        <div
+            className={`group bg-neutral-900/80 border rounded-2xl overflow-hidden transition-all duration-200 hover:shadow-xl hover:shadow-black/30 flex flex-col relative
+                ${selected ? 'border-blue-500/60 shadow-blue-500/10 shadow-lg' : 'border-neutral-800 hover:border-neutral-600'}`}
+            onClick={() => selectMode && onSelect(item.id)}
+        >
             {/* Gradient strip */}
             <div className={`h-1 w-full bg-gradient-to-r ${strip}`} />
 
-            <div className="p-5 flex flex-col flex-1">
+            {/* Select checkbox */}
+            {selectMode && (
+                <div className="absolute top-3 left-3 z-10">
+                    <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all
+                        ${selected ? 'bg-blue-500 border-blue-500' : 'bg-neutral-800 border-neutral-600 hover:border-blue-400'}`}>
+                        {selected && <Check className="w-3 h-3 text-white" />}
+                    </div>
+                </div>
+            )}
+
+            <div className={`p-5 flex flex-col flex-1 ${selectMode ? 'cursor-pointer' : ''}`}>
                 {/* Top row */}
-                <div className="flex items-start justify-between mb-3">
+                <div className={`flex items-start justify-between mb-3 ${selectMode ? 'pl-6' : ''}`}>
                     <div className="flex items-center gap-2">
                         <div className="h-9 w-9 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center shrink-0">
-                            <Dna className="w-4.5 h-4.5 text-white/50" />
+                            <Dna className="w-4 h-4 text-white/50" />
                         </div>
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${badge}`}>{item.file_type}</span>
                     </div>
-                    <button onClick={() => onToggleStar(item)} className="p-1.5 rounded-lg hover:bg-white/5 transition-colors">
-                        <Star className={`w-4 h-4 transition-all ${item.starred ? 'text-amber-400 fill-amber-400' : 'text-neutral-600 hover:text-amber-400'}`} />
-                    </button>
+                    {!selectMode && (
+                        <button onClick={() => onToggleStar(item)} className="p-1.5 rounded-lg hover:bg-white/5 transition-colors">
+                            <Star className={`w-4 h-4 transition-all ${item.starred ? 'text-amber-400 fill-amber-400' : 'text-neutral-600 hover:text-amber-400'}`} />
+                        </button>
+                    )}
                 </div>
 
                 {/* Name */}
                 {editing ? (
-                    <input
-                        ref={inputRef}
-                        value={draftName}
+                    <input ref={inputRef} value={draftName}
                         onChange={e => setDraftName(e.target.value)}
                         onBlur={commitRename}
                         onKeyDown={e => { if (e.key === 'Enter') commitRename(); if (e.key === 'Escape') { setEditing(false); setDraftName(item.name); } }}
-                        className="text-sm font-semibold text-white bg-neutral-800 border border-blue-500/60 rounded-lg px-2.5 py-1 w-full outline-none focus:ring-1 focus:ring-blue-500 mb-1"
-                    />
+                        onClick={e => e.stopPropagation()}
+                        className="text-sm font-semibold text-white bg-neutral-800 border border-blue-500/60 rounded-lg px-2.5 py-1 w-full outline-none focus:ring-1 focus:ring-blue-500 mb-1" />
                 ) : (
-                    <button onClick={() => setEditing(true)} className="group/name flex items-center gap-1.5 text-left mb-1 w-full min-w-0" title="Click to rename">
+                    <button onClick={e => { e.stopPropagation(); if (!selectMode) setEditing(true); }}
+                        className="group/name flex items-center gap-1.5 text-left mb-1 w-full min-w-0" title="Click to rename">
                         <span className="text-sm font-semibold text-neutral-100 truncate">{item.name}</span>
-                        <Pencil className="w-3 h-3 text-neutral-600 opacity-0 group-hover/name:opacity-100 transition-all shrink-0" />
+                        {!selectMode && <Pencil className="w-3 h-3 text-neutral-600 opacity-0 group-hover/name:opacity-100 transition-all shrink-0" />}
                     </button>
                 )}
 
                 {/* Metadata */}
-                <div className="flex items-center gap-3 text-xs text-neutral-500 mb-4">
+                <div className="flex items-center gap-3 text-xs text-neutral-500 mb-3">
                     <span className="flex items-center gap-1"><FileText className="w-3 h-3" />{formatBytes(item.file_size)}</span>
                     <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{timeAgo(item.created_at)}</span>
                 </div>
 
-                {/* Notes section */}
-                <div className="mb-4">
-                    <button
-                        onClick={() => setShowNotes(p => !p)}
-                        className="flex items-center gap-1.5 text-xs text-neutral-500 hover:text-neutral-300 transition-colors mb-1.5"
-                    >
-                        <NotebookPen className="w-3 h-3" />
-                        {draftNotes ? 'Notes' : 'Add notes'}
-                        {showNotes ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                    </button>
-                    {showNotes && (
-                        <textarea
-                            value={draftNotes}
-                            onChange={e => setDraftNotes(e.target.value)}
-                            onBlur={() => { if (draftNotes !== (item.notes ?? '')) onNotesChange(item.id, draftNotes); }}
-                            placeholder="E.g. wild-type structure from PDB, used in paper doi:10.1234/..."
-                            rows={3}
-                            className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-xs text-neutral-300 placeholder-neutral-600 resize-none focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                        />
-                    )}
-                </div>
+                {/* Tags */}
+                {!selectMode && (
+                    <TagEditor
+                        tags={item.tags ?? []}
+                        onChange={tags => onTagsChange(item.id, tags)}
+                    />
+                )}
+                {selectMode && item.tags?.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mb-3">
+                        {item.tags.map(t => (
+                            <span key={t} className={`text-[10px] font-medium px-1.5 py-0.5 rounded-md border ${tagColor(t)}`}>{t}</span>
+                        ))}
+                    </div>
+                )}
+
+                {/* Notes */}
+                {!selectMode && (
+                    <div className="mb-4">
+                        <button onClick={e => { e.stopPropagation(); setShowNotes(p => !p); }}
+                            className="flex items-center gap-1.5 text-xs text-neutral-500 hover:text-neutral-300 transition-colors mb-1.5">
+                            <NotebookPen className="w-3 h-3" />
+                            {draftNotes ? 'Notes' : 'Add notes'}
+                            {showNotes ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                        </button>
+                        {showNotes && (
+                            <textarea value={draftNotes}
+                                onChange={e => setDraftNotes(e.target.value)}
+                                onBlur={() => { if (draftNotes !== (item.notes ?? '')) onNotesChange(item.id, draftNotes); }}
+                                onClick={e => e.stopPropagation()}
+                                placeholder="Source, experiment notes, doi:10.1234/…"
+                                rows={3}
+                                className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-xs text-neutral-300 placeholder-neutral-600 resize-none focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500" />
+                        )}
+                    </div>
+                )}
 
                 {/* Action bar */}
-                <div className="mt-auto grid grid-cols-4 gap-1.5">
-                    <button onClick={() => onOpen(item)} disabled={!!openingId} title="Open in 3D Viewer"
-                        className="flex flex-col items-center gap-1 py-2 rounded-xl bg-blue-600/10 hover:bg-blue-600/25 border border-blue-500/20 hover:border-blue-500/40 text-blue-400 transition-all disabled:opacity-50">
-                        {openingId === item.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <ExternalLink className="w-4 h-4" />}
-                        <span className="text-[9px] font-medium">Open</span>
-                    </button>
-                    <button onClick={handleDownload} disabled={downloading} title="Download file"
-                        className="flex flex-col items-center gap-1 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 border border-neutral-700/50 hover:border-neutral-600 text-neutral-400 hover:text-white transition-all disabled:opacity-50">
-                        {downloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-                        <span className="text-[9px] font-medium">Download</span>
-                    </button>
-                    <button onClick={handleShare} title="Copy share link"
-                        className="flex flex-col items-center gap-1 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 border border-neutral-700/50 hover:border-neutral-600 text-neutral-400 hover:text-white transition-all">
-                        {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Share2 className="w-4 h-4" />}
-                        <span className={`text-[9px] font-medium ${copied ? 'text-emerald-400' : ''}`}>{copied ? 'Copied!' : 'Share'}</span>
-                    </button>
-                    <button onClick={() => onDelete(item)} title="Delete"
-                        className="flex flex-col items-center gap-1 py-2 rounded-xl bg-neutral-800 hover:bg-red-500/15 border border-neutral-700/50 hover:border-red-500/30 text-neutral-600 hover:text-red-400 transition-all">
-                        <Trash2 className="w-4 h-4" />
-                        <span className="text-[9px] font-medium">Delete</span>
-                    </button>
-                </div>
+                {!selectMode && (
+                    <div className="mt-auto space-y-1.5">
+                        {/* Primary: Open */}
+                        <button onClick={() => onOpen(item)} disabled={!!openingId}
+                            className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-blue-600/10 hover:bg-blue-600/25 border border-blue-500/20 hover:border-blue-500/40 text-blue-400 text-xs font-medium transition-all disabled:opacity-50">
+                            {openingId === item.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <ExternalLink className="w-4 h-4" />}
+                            Open in Viewer
+                        </button>
+                        {/* Secondary: 4 small buttons */}
+                        <div className="grid grid-cols-4 gap-1.5">
+                            <button onClick={handleDownload} disabled={downloading} title="Download"
+                                className="flex flex-col items-center gap-1 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 border border-neutral-700/50 text-neutral-400 hover:text-white transition-all disabled:opacity-50">
+                                {downloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+                                <span className="text-[9px]">Download</span>
+                            </button>
+                            <button onClick={handleShare} title="Copy link"
+                                className="flex flex-col items-center gap-1 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 border border-neutral-700/50 text-neutral-400 hover:text-white transition-all">
+                                {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Share2 className="w-3.5 h-3.5" />}
+                                <span className={`text-[9px] ${copied ? 'text-emerald-400' : ''}`}>{copied ? 'Copied' : 'Share'}</span>
+                            </button>
+                            <button onClick={() => onDuplicate(item)} disabled={duplicatingId === item.id} title="Duplicate"
+                                className="flex flex-col items-center gap-1 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 border border-neutral-700/50 text-neutral-400 hover:text-white transition-all disabled:opacity-50">
+                                {duplicatingId === item.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Copy className="w-3.5 h-3.5" />}
+                                <span className="text-[9px]">Duplicate</span>
+                            </button>
+                            <button onClick={() => onDelete(item)} title="Delete"
+                                className="flex flex-col items-center gap-1 py-2 rounded-xl bg-neutral-800 hover:bg-red-500/15 border border-neutral-700/50 hover:border-red-500/30 text-neutral-600 hover:text-red-400 transition-all">
+                                <Trash2 className="w-3.5 h-3.5" />
+                                <span className="text-[9px]">Delete</span>
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );
 }
 
-// ─── List row ──────────────────────────────────────────────────────
+// ── List row ──────────────────────────────────────────────────────
 
-function StructureRow({ item, onToggleStar, onDelete, onRename, onOpen, openingId }: Omit<CardProps, 'onNotesChange'>) {
+function StructureRow({ item, selected, selectMode, onSelect, onToggleStar, onDelete, onRename, onOpen, openingId }: Pick<CardProps,
+    'item' | 'selected' | 'selectMode' | 'onSelect' | 'onToggleStar' | 'onDelete' | 'onRename' | 'onOpen' | 'openingId'>) {
+
     const [editing, setEditing] = useState(false);
     const [draftName, setDraftName] = useState(item.name);
     const [downloading, setDownloading] = useState(false);
@@ -219,65 +343,83 @@ function StructureRow({ item, onToggleStar, onDelete, onRename, onOpen, openingI
         if (t && t !== item.name) onRename(item.id, t);
         else setDraftName(item.name);
     };
-
     const handleDownload = async () => {
         setDownloading(true);
-        try {
-            const url = await getDownloadUrl(item.file_path);
-            const a = document.createElement('a');
-            a.href = url; a.download = `${item.name}.${item.file_type.toLowerCase()}`; a.click();
-        } catch { /* ignore */ } finally { setDownloading(false); }
+        try { const url = await getDownloadUrl(item.file_path); const a = document.createElement('a'); a.href = url; a.download = `${item.name}.${item.file_type.toLowerCase()}`; a.click(); }
+        catch { /* ignore */ } finally { setDownloading(false); }
     };
-
     const badge = TYPE_BADGE[item.file_type] ?? 'bg-neutral-500/10 border-neutral-500/30 text-neutral-400';
 
     return (
-        <tr className="group border-b border-neutral-800 hover:bg-neutral-800/40 transition-colors">
-            <td className="px-4 py-3">
+        <tr className={`group border-b border-neutral-800 hover:bg-neutral-800/40 transition-colors cursor-pointer
+            ${selected ? 'bg-blue-500/5' : ''}`}
+            onClick={() => selectMode && onSelect(item.id)}>
+            <td className="px-4 py-3 w-8">
+                {selectMode && (
+                    <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-all ${selected ? 'bg-blue-500 border-blue-500' : 'border-neutral-600 hover:border-blue-400'}`}>
+                        {selected && <Check className="w-2.5 h-2.5 text-white" />}
+                    </div>
+                )}
+            </td>
+            <td className="px-3 py-3">
                 <div className="flex items-center gap-3">
                     <Dna className="w-4 h-4 text-neutral-600 shrink-0" />
                     {editing ? (
                         <input ref={inputRef} value={draftName} onChange={e => setDraftName(e.target.value)}
                             onBlur={commitRename}
                             onKeyDown={e => { if (e.key === 'Enter') commitRename(); if (e.key === 'Escape') { setEditing(false); setDraftName(item.name); } }}
+                            onClick={e => e.stopPropagation()}
                             className="text-sm text-white bg-neutral-700 border border-blue-500/60 rounded px-2 py-0.5 outline-none w-40" />
                     ) : (
-                        <button onClick={() => setEditing(true)} className="group/n flex items-center gap-1 min-w-0">
+                        <button onClick={e => { e.stopPropagation(); setEditing(true); }} className="group/n flex items-center gap-1 min-w-0">
                             <span className="text-sm text-neutral-100 truncate max-w-[160px]">{item.name}</span>
-                            <Pencil className="w-3 h-3 text-neutral-600 opacity-0 group-hover/n:opacity-100 shrink-0" />
+                            {!selectMode && <Pencil className="w-3 h-3 text-neutral-600 opacity-0 group-hover/n:opacity-100 shrink-0" />}
                         </button>
                     )}
                 </div>
             </td>
-            <td className="px-3 py-3"><span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${badge}`}>{item.file_type}</span></td>
+            <td className="px-3 py-3">
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${badge}`}>{item.file_type}</span>
+            </td>
+            <td className="px-3 py-3">
+                <div className="flex flex-wrap gap-1">
+                    {(item.tags ?? []).map(t => (
+                        <span key={t} className={`text-[9px] font-medium px-1.5 py-0.5 rounded-md border ${tagColor(t)}`}>{t}</span>
+                    ))}
+                </div>
+            </td>
             <td className="px-3 py-3 text-xs text-neutral-500">{formatBytes(item.file_size)}</td>
             <td className="px-3 py-3 text-xs text-neutral-500">{timeAgo(item.created_at)}</td>
             <td className="px-3 py-3">
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                    <button onClick={() => onOpen(item)} disabled={!!openingId} title="Open" className="p-1.5 rounded-lg hover:bg-blue-500/20 text-neutral-500 hover:text-blue-400 transition-colors disabled:opacity-50">
-                        {openingId === item.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ExternalLink className="w-3.5 h-3.5" />}
-                    </button>
-                    <button onClick={handleDownload} disabled={downloading} title="Download" className="p-1.5 rounded-lg hover:bg-neutral-700 text-neutral-500 hover:text-white transition-colors disabled:opacity-50">
-                        {downloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
-                    </button>
-                    <button onClick={() => onToggleStar(item)} className="p-1.5 rounded-lg hover:bg-neutral-700 transition-colors">
-                        <Star className={`w-3.5 h-3.5 ${item.starred ? 'text-amber-400 fill-amber-400' : 'text-neutral-600 hover:text-amber-400'}`} />
-                    </button>
-                    <button onClick={() => onDelete(item)} title="Delete" className="p-1.5 rounded-lg hover:bg-red-500/10 text-neutral-600 hover:text-red-400 transition-colors">
-                        <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                </div>
+                {!selectMode && (
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                        <button onClick={e => { e.stopPropagation(); onOpen(item); }} disabled={!!openingId} title="Open"
+                            className="p-1.5 rounded-lg hover:bg-blue-500/20 text-neutral-500 hover:text-blue-400 transition-colors disabled:opacity-50">
+                            {openingId === item.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ExternalLink className="w-3.5 h-3.5" />}
+                        </button>
+                        <button onClick={e => { e.stopPropagation(); handleDownload(); }} disabled={downloading} title="Download"
+                            className="p-1.5 rounded-lg hover:bg-neutral-700 text-neutral-500 hover:text-white transition-colors disabled:opacity-50">
+                            {downloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+                        </button>
+                        <button onClick={e => { e.stopPropagation(); onToggleStar(item); }} className="p-1.5 rounded-lg hover:bg-neutral-700 transition-colors">
+                            <Star className={`w-3.5 h-3.5 ${item.starred ? 'text-amber-400 fill-amber-400' : 'text-neutral-600 hover:text-amber-400'}`} />
+                        </button>
+                        <button onClick={e => { e.stopPropagation(); onDelete(item); }} title="Delete"
+                            className="p-1.5 rounded-lg hover:bg-red-500/10 text-neutral-600 hover:text-red-400 transition-colors">
+                            <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                    </div>
+                )}
             </td>
         </tr>
     );
 }
 
-// ─── Storage bar ──────────────────────────────────────────────────
+// ── Storage bar ───────────────────────────────────────────────────
 
-const MAX_FREE_BYTES = 1024 * 1024 * 1024; // 1 GB display cap (Supabase free tier is 1 GB storage)
-
+const MAX_FREE_BYTES = 1024 * 1024 * 1024;
 function StorageBar({ structures }: { structures: Structure[] }) {
-    const used = structures.reduce((sum, s) => sum + (s.file_size ?? 0), 0);
+    const used = structures.reduce((s, x) => s + (x.file_size ?? 0), 0);
     const pct = Math.min((used / MAX_FREE_BYTES) * 100, 100);
     const color = pct > 80 ? 'bg-red-500' : pct > 50 ? 'bg-amber-500' : 'bg-blue-500';
     return (
@@ -296,62 +438,42 @@ function StorageBar({ structures }: { structures: Structure[] }) {
     );
 }
 
-// ─── RCSB Import bar ─────────────────────────────────────────────
+// ── RCSB Import bar ───────────────────────────────────────────────
 
-interface RCSBImportProps {
-    userId: string;
-    onImported: (s: Structure) => void;
-}
-
-function RCSBImport({ userId, onImported }: RCSBImportProps) {
+function RCSBImport({ userId, onImported }: { userId: string; onImported: (s: Structure) => void }) {
     const [pdbId, setPdbId] = useState('');
     const [loading, setLoading] = useState(false);
     const [err, setErr] = useState('');
     const [ok, setOk] = useState('');
 
-    const handleImport = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setErr(''); setOk('');
-        setLoading(true);
+    const handle = async (e: React.FormEvent) => {
+        e.preventDefault(); setErr(''); setOk(''); setLoading(true);
         try {
             const s = await importFromRCSB(pdbId, userId);
-            onImported(s);
-            setOk(`"${s.name}" imported!`);
-            setPdbId('');
+            onImported(s); setOk(`"${s.name}" imported!`); setPdbId('');
             setTimeout(() => setOk(''), 3000);
-        } catch (ex: any) {
-            setErr(ex.message ?? 'Import failed');
-        } finally {
-            setLoading(false);
-        }
+        } catch (ex: any) { setErr(ex.message ?? 'Import failed'); }
+        finally { setLoading(false); }
     };
 
     return (
-        <form onSubmit={handleImport} className="flex items-center gap-2 bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3">
+        <form onSubmit={handle} className="flex items-center gap-2 bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3">
             <Import className="w-4 h-4 text-neutral-500 shrink-0" />
             <span className="text-xs text-neutral-500 whitespace-nowrap hidden sm:block">Import from RCSB</span>
-            <input
-                value={pdbId}
-                onChange={e => { setPdbId(e.target.value.toUpperCase()); setErr(''); setOk(''); }}
-                placeholder="PDB ID (e.g. 1CRN)"
-                maxLength={4}
-                className="flex-1 min-w-0 bg-transparent text-sm text-white placeholder-neutral-600 outline-none uppercase font-mono tracking-widest"
-            />
+            <input value={pdbId} onChange={e => { setPdbId(e.target.value.toUpperCase()); setErr(''); setOk(''); }}
+                placeholder="PDB ID (e.g. 1CRN)" maxLength={4}
+                className="flex-1 min-w-0 bg-transparent text-sm text-white placeholder-neutral-600 outline-none uppercase font-mono tracking-widest" />
             {err && <span className="text-xs text-red-400 whitespace-nowrap">{err}</span>}
             {ok && <span className="text-xs text-emerald-400 whitespace-nowrap flex items-center gap-1"><Check className="w-3 h-3" />{ok}</span>}
-            <button
-                type="submit"
-                disabled={pdbId.length !== 4 || loading}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg text-xs font-medium transition-colors shrink-0"
-            >
-                {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Import className="w-3.5 h-3.5" />}
-                Import
+            <button type="submit" disabled={pdbId.length !== 4 || loading}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg text-xs font-medium transition-colors shrink-0">
+                {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Import className="w-3.5 h-3.5" />}Import
             </button>
         </form>
     );
 }
 
-// ─── Page ─────────────────────────────────────────────────────────
+// ── Page ──────────────────────────────────────────────────────────
 
 type SortKey = 'date' | 'name' | 'size';
 type ViewMode = 'grid' | 'list';
@@ -370,6 +492,12 @@ export const MyStructures = () => {
     const [sortBy, setSortBy] = useState<SortKey>('date');
     const [viewMode, setViewMode] = useState<ViewMode>('grid');
     const [openingId, setOpeningId] = useState<string | null>(null);
+    const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
+    const [activeTag, setActiveTag] = useState<string | null>(null);
+
+    // Bulk select
+    const [selectMode, setSelectMode] = useState(false);
+    const [selected, setSelected] = useState<Set<string>>(new Set());
 
     const reload = useCallback(async () => {
         if (!user) return;
@@ -380,12 +508,18 @@ export const MyStructures = () => {
 
     useEffect(() => { reload(); }, [reload]);
 
+    // All unique tags in library
+    const allTags = [...new Set(structures.flatMap(s => s.tags ?? []))].sort();
+
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file || !user) return;
         e.target.value = '';
         setUploading(true);
-        try { const s = await uploadStructure(file, user.id); setStructures(prev => [s, ...prev]); }
+        try {
+            const s = await uploadStructure(file, user.id);
+            setStructures(prev => [s, ...prev]);
+        }
         catch (ex: any) { setError(ex.message ?? 'Upload failed'); }
         finally { setUploading(false); }
     };
@@ -393,8 +527,7 @@ export const MyStructures = () => {
     const handleToggleStar = async (s: Structure) => {
         const next = !s.starred;
         setStructures(prev => prev.map(x => x.id === s.id ? { ...x, starred: next } : x));
-        try { await toggleStar(s.id, next); }
-        catch { setStructures(prev => prev.map(x => x.id === s.id ? { ...x, starred: s.starred } : x)); }
+        try { await toggleStar(s.id, next); } catch { setStructures(prev => prev.map(x => x.id === s.id ? { ...x, starred: s.starred } : x)); }
     };
 
     const handleRename = async (id: string, name: string) => {
@@ -407,11 +540,24 @@ export const MyStructures = () => {
         try { await updateNotes(id, notes); } catch { reload(); }
     };
 
+    const handleTagsChange = async (id: string, tags: string[]) => {
+        setStructures(prev => prev.map(x => x.id === id ? { ...x, tags } : x));
+        try { await updateTags(id, tags); } catch { reload(); }
+    };
+
     const handleDelete = async (s: Structure) => {
         if (!confirm(`Delete "${s.name}"? This cannot be undone.`)) return;
         setStructures(prev => prev.filter(x => x.id !== s.id));
         try { await deleteStructure(s.id, s.file_path); }
         catch (ex: any) { setError(ex.message ?? 'Delete failed'); reload(); }
+    };
+
+    const handleDuplicate = async (s: Structure) => {
+        if (!user) return;
+        setDuplicatingId(s.id);
+        try { const copy = await duplicateStructure(s, user.id); setStructures(prev => [copy, ...prev]); }
+        catch (ex: any) { setError(ex.message ?? 'Duplicate failed'); }
+        finally { setDuplicatingId(null); }
     };
 
     const handleOpen = async (s: Structure) => {
@@ -424,16 +570,50 @@ export const MyStructures = () => {
         finally { setOpeningId(null); }
     };
 
-    // Sorting + filtering
+    // Bulk actions
+    const toggleSelect = (id: string) => setSelected(prev => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s; });
+    const selectAll = () => setSelected(new Set(filtered.map(s => s.id)));
+    const deselectAll = () => setSelected(new Set());
+    const cancelSelect = () => { setSelectMode(false); setSelected(new Set()); };
+
+    const handleBulkDelete = async () => {
+        const ids = [...selected];
+        if (!confirm(`Delete ${ids.length} structure${ids.length > 1 ? 's' : ''}? This cannot be undone.`)) return;
+        const toDelete = structures.filter(s => ids.includes(s.id));
+        setStructures(prev => prev.filter(s => !ids.includes(s.id)));
+        setSelected(new Set());
+        setSelectMode(false);
+        for (const s of toDelete) {
+            try { await deleteStructure(s.id, s.file_path); } catch { /* best effort */ }
+        }
+    };
+
+    const handleBulkDownload = async () => {
+        const toDownload = structures.filter(s => selected.has(s.id));
+        for (const s of toDownload) {
+            try {
+                const url = await getDownloadUrl(s.file_path);
+                const a = document.createElement('a');
+                a.href = url; a.download = `${s.name}.${s.file_type.toLowerCase()}`;
+                document.body.appendChild(a); a.click(); document.body.removeChild(a);
+                await new Promise(r => setTimeout(r, 300)); // small delay between downloads
+            } catch { /* best effort */ }
+        }
+    };
+
+    // Filtering + sorting
     let filtered = structures.filter(s => {
         if (showStarred && !s.starred) return false;
+        if (activeTag && !(s.tags ?? []).includes(activeTag)) return false;
         return s.name.toLowerCase().includes(searchQuery.toLowerCase());
     });
     if (sortBy === 'name') filtered = [...filtered].sort((a, b) => a.name.localeCompare(b.name));
     else if (sortBy === 'size') filtered = [...filtered].sort((a, b) => (b.file_size ?? 0) - (a.file_size ?? 0));
 
+    const sharedCardProps = { openingId, duplicatingId };
+
     return (
-        <div className="max-w-6xl mx-auto space-y-5">
+        <div className="max-w-6xl mx-auto space-y-5 pb-24">
             <input ref={fileInputRef} type="file" accept={ACCEPTED_EXTS} className="hidden" onChange={handleFileChange} />
 
             {/* Header */}
@@ -445,12 +625,12 @@ export const MyStructures = () => {
                     </p>
                 </div>
                 <button onClick={() => fileInputRef.current?.click()} disabled={uploading}
-                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm w-fit">
+                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-60 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors w-fit">
                     {uploading ? <><Loader2 className="w-4 h-4 animate-spin" />Uploading…</> : <><Upload className="w-4 h-4" />Upload Structure</>}
                 </button>
             </div>
 
-            {/* Info bars: Storage + RCSB Import */}
+            {/* Info bars */}
             {!loading && user && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <StorageBar structures={structures} />
@@ -462,13 +642,13 @@ export const MyStructures = () => {
             {error && (
                 <div className="flex items-start gap-3 bg-red-500/10 border border-red-500/30 text-red-400 rounded-lg px-4 py-3 text-sm">
                     <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" /><span>{error}</span>
-                    <button onClick={() => setError(null)} className="ml-auto text-red-400/60 hover:text-red-400">✕</button>
+                    <button onClick={() => setError(null)} className="ml-auto opacity-60 hover:opacity-100">✕</button>
                 </div>
             )}
 
             {/* Toolbar */}
-            <div className="flex flex-wrap items-center gap-3">
-                <div className="relative flex-1 min-w-[180px] max-w-xs">
+            <div className="flex flex-wrap items-center gap-2">
+                <div className="relative flex-1 min-w-[160px] max-w-xs">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500" />
                     <input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
                         placeholder="Filter structures…"
@@ -478,14 +658,34 @@ export const MyStructures = () => {
                     className={`flex items-center gap-2 px-3 py-2 text-sm border rounded-lg transition-all ${showStarred ? 'text-amber-400 border-amber-400/50 bg-amber-500/5' : 'text-neutral-400 bg-neutral-900 border-neutral-700 hover:text-amber-400'}`}>
                     <Star className={`w-4 h-4 ${showStarred ? 'fill-amber-400' : ''}`} />Starred
                 </button>
-                <div className="flex items-center gap-1 bg-neutral-900 border border-neutral-700 rounded-lg p-1 text-xs">
+
+                {/* Tag filter */}
+                {allTags.length > 0 && (
+                    <div className="flex items-center gap-1.5 overflow-x-auto">
+                        {activeTag && (
+                            <button onClick={() => setActiveTag(null)}
+                                className="flex items-center gap-1 text-xs text-neutral-400 hover:text-white border border-neutral-700 rounded-lg px-2 py-1.5 transition-all">
+                                <X className="w-3 h-3" />Clear
+                            </button>
+                        )}
+                        {allTags.map(t => (
+                            <button key={t} onClick={() => setActiveTag(activeTag === t ? null : t)}
+                                className={`text-[10px] font-medium px-2 py-1 rounded-md border whitespace-nowrap transition-all ${activeTag === t ? tagColor(t) : 'bg-neutral-900 border-neutral-700 text-neutral-500 hover:text-neutral-300'}`}>
+                                {t}
+                            </button>
+                        ))}
+                    </div>
+                )}
+
+                <div className="flex items-center gap-1 bg-neutral-900 border border-neutral-700 rounded-lg p-1 text-xs ml-auto">
                     <Filter className="w-3.5 h-3.5 text-neutral-500 ml-1 mr-0.5" />
                     {(['date', 'name', 'size'] as SortKey[]).map(k => (
                         <button key={k} onClick={() => setSortBy(k)}
                             className={`px-2.5 py-1 rounded-md font-medium capitalize transition-all ${sortBy === k ? 'bg-neutral-700 text-white' : 'text-neutral-500 hover:text-neutral-300'}`}>{k}</button>
                     ))}
                 </div>
-                {/* Grid/List toggle */}
+
+                {/* View toggle */}
                 <div className="flex items-center gap-0.5 bg-neutral-900 border border-neutral-700 rounded-lg p-1">
                     <button onClick={() => setViewMode('grid')} title="Grid view"
                         className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-neutral-700 text-white' : 'text-neutral-500 hover:text-neutral-300'}`}>
@@ -496,12 +696,31 @@ export const MyStructures = () => {
                         <List className="w-3.5 h-3.5" />
                     </button>
                 </div>
+
+                {/* Bulk select toggle */}
+                {!selectMode ? (
+                    <button onClick={() => setSelectMode(true)}
+                        className="flex items-center gap-1.5 px-3 py-2 text-sm text-neutral-400 bg-neutral-900 border border-neutral-700 rounded-lg hover:text-white hover:border-neutral-600 transition-all">
+                        <Square className="w-3.5 h-3.5" />Select
+                    </button>
+                ) : (
+                    <div className="flex items-center gap-2">
+                        <button onClick={selected.size === filtered.length ? deselectAll : selectAll}
+                            className="flex items-center gap-1.5 px-3 py-2 text-sm text-blue-400 bg-blue-500/10 border border-blue-500/30 rounded-lg hover:bg-blue-500/20 transition-all">
+                            <CheckSquare className="w-3.5 h-3.5" />
+                            {selected.size === filtered.length ? 'Deselect all' : 'Select all'}
+                        </button>
+                        <button onClick={cancelSelect} className="p-2 text-neutral-500 hover:text-white rounded-lg border border-neutral-700 hover:border-neutral-600 transition-all">
+                            <X className="w-4 h-4" />
+                        </button>
+                    </div>
+                )}
             </div>
 
             {/* Loading */}
             {loading && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {[1, 2, 3].map(i => <div key={i} className="bg-neutral-900 border border-neutral-800 rounded-2xl animate-pulse h-60" />)}
+                    {[1, 2, 3].map(i => <div key={i} className="bg-neutral-900 border border-neutral-800 rounded-2xl animate-pulse h-64" />)}
                 </div>
             )}
 
@@ -511,40 +730,47 @@ export const MyStructures = () => {
                     <Dna className="w-12 h-12 mx-auto mb-4 text-neutral-700" />
                     <p className="text-base font-medium text-neutral-400 mb-1">No structures yet</p>
                     <p className="text-sm text-neutral-600 mb-4">Upload a file or import by PDB ID above.</p>
-                    <button onClick={() => fileInputRef.current?.click()} className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors">
+                    <button onClick={() => fileInputRef.current?.click()}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors">
                         <Upload className="w-4 h-4" />Upload your first structure
                     </button>
                 </div>
             )}
 
-            {/* Grid view */}
+            {/* Grid */}
             {!loading && structures.length > 0 && viewMode === 'grid' && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {filtered.map(item => (
                         <StructureCard key={item.id} item={item}
+                            selected={selected.has(item.id)} selectMode={selectMode} onSelect={toggleSelect}
                             onToggleStar={handleToggleStar} onDelete={handleDelete}
                             onRename={handleRename} onNotesChange={handleNotesChange}
-                            onOpen={handleOpen} openingId={openingId} />
+                            onTagsChange={handleTagsChange} onDuplicate={handleDuplicate}
+                            onOpen={handleOpen} {...sharedCardProps} />
                     ))}
-                    <button onClick={() => fileInputRef.current?.click()}
-                        className="border-2 border-dashed border-neutral-800 rounded-2xl p-5 flex flex-col items-center justify-center text-neutral-600 hover:text-blue-400 hover:border-blue-500/40 hover:bg-blue-500/5 transition-all min-h-[240px] group">
-                        <div className="w-10 h-10 rounded-full bg-neutral-800 group-hover:bg-blue-500/10 flex items-center justify-center mb-3 transition-colors">
-                            <Plus className="w-5 h-5" />
-                        </div>
-                        <span className="text-sm font-medium">Upload New Structure</span>
-                        <span className="text-xs mt-1 text-neutral-700 group-hover:text-neutral-500 transition-colors">.pdb · .cif · .sdf · .mol</span>
-                    </button>
+                    {!selectMode && (
+                        <button onClick={() => fileInputRef.current?.click()}
+                            className="border-2 border-dashed border-neutral-800 rounded-2xl p-5 flex flex-col items-center justify-center text-neutral-600 hover:text-blue-400 hover:border-blue-500/40 hover:bg-blue-500/5 transition-all min-h-[280px] group">
+                            <div className="w-10 h-10 rounded-full bg-neutral-800 group-hover:bg-blue-500/10 flex items-center justify-center mb-3 transition-colors">
+                                <Plus className="w-5 h-5" />
+                            </div>
+                            <span className="text-sm font-medium">Upload New Structure</span>
+                            <span className="text-xs mt-1 text-neutral-700 group-hover:text-neutral-500">.pdb · .cif · .sdf · .mol</span>
+                        </button>
+                    )}
                 </div>
             )}
 
-            {/* List view */}
+            {/* List */}
             {!loading && structures.length > 0 && viewMode === 'list' && (
                 <div className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden">
                     <table className="w-full text-left">
                         <thead>
                             <tr className="border-b border-neutral-800">
-                                <th className="px-4 py-3 text-xs font-medium text-neutral-500">Name</th>
+                                <th className="px-4 py-3 w-8" />
+                                <th className="px-3 py-3 text-xs font-medium text-neutral-500">Name</th>
                                 <th className="px-3 py-3 text-xs font-medium text-neutral-500">Type</th>
+                                <th className="px-3 py-3 text-xs font-medium text-neutral-500">Tags</th>
                                 <th className="px-3 py-3 text-xs font-medium text-neutral-500">Size</th>
                                 <th className="px-3 py-3 text-xs font-medium text-neutral-500">Uploaded</th>
                                 <th className="px-3 py-3 text-xs font-medium text-neutral-500">Actions</th>
@@ -553,6 +779,7 @@ export const MyStructures = () => {
                         <tbody>
                             {filtered.map(item => (
                                 <StructureRow key={item.id} item={item}
+                                    selected={selected.has(item.id)} selectMode={selectMode} onSelect={toggleSelect}
                                     onToggleStar={handleToggleStar} onDelete={handleDelete}
                                     onRename={handleRename} onOpen={handleOpen} openingId={openingId} />
                             ))}
@@ -565,10 +792,29 @@ export const MyStructures = () => {
                 <p className="text-center text-neutral-500 text-sm py-8">No structures match your filter.</p>
             )}
 
-            {!loading && structures.length > 0 && (
-                <p className="text-xs text-neutral-600 text-center pb-2">
-                    💡 Click a name to rename · Click notes to add a description · Files auto-save when uploaded in the viewer
+            {!loading && structures.length > 0 && !selectMode && (
+                <p className="text-xs text-neutral-600 text-center">
+                    💡 Click a name to rename · Add tags and notes per structure · Files auto-save when uploaded in the viewer
                 </p>
+            )}
+
+            {/* Bulk action floating bar */}
+            {selectMode && selected.size > 0 && (
+                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-neutral-800 border border-neutral-600 rounded-2xl px-5 py-3 shadow-2xl shadow-black/50">
+                    <span className="text-sm font-medium text-white">{selected.size} selected</span>
+                    <div className="w-px h-4 bg-neutral-600" />
+                    <button onClick={handleBulkDownload}
+                        className="flex items-center gap-2 px-3 py-1.5 text-sm text-neutral-300 hover:text-white hover:bg-neutral-700 rounded-lg transition-all">
+                        <Download className="w-4 h-4" />Download all
+                    </button>
+                    <button onClick={handleBulkDelete}
+                        className="flex items-center gap-2 px-3 py-1.5 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-all">
+                        <Trash2 className="w-4 h-4" />Delete all
+                    </button>
+                    <button onClick={cancelSelect} className="p-1.5 text-neutral-500 hover:text-white transition-colors">
+                        <X className="w-4 h-4" />
+                    </button>
+                </div>
             )}
         </div>
     );

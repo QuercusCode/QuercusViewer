@@ -9,6 +9,7 @@ export interface Structure {
     file_size: number | null;
     starred: boolean;
     notes: string | null;
+    tags: string[];
     created_at: string;
 }
 
@@ -77,6 +78,23 @@ export async function renameStructure(id: string, name: string): Promise<void> {
 export async function updateNotes(id: string, notes: string): Promise<void> {
     const { error } = await supabase.from('structures').update({ notes }).eq('id', id);
     if (error) throw new Error(error.message);
+}
+
+/** Update the tags array for a structure */
+export async function updateTags(id: string, tags: string[]): Promise<void> {
+    const { error } = await supabase.from('structures').update({ tags }).eq('id', id);
+    if (error) throw new Error(error.message);
+}
+
+/** Duplicate a structure — re-downloads the file and saves as a new entry */
+export async function duplicateStructure(s: Structure, userId: string): Promise<Structure> {
+    const url = await getDownloadUrl(s.file_path);
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Could not fetch original file');
+    const blob = await res.blob();
+    const ext = s.file_type.toLowerCase();
+    const file = new File([blob], `${s.name} (copy).${ext}`, { type: 'application/octet-stream' });
+    return uploadStructure(file, userId);
 }
 
 /** Fetch a PDB file from RCSB and upload it directly to Supabase Storage */
