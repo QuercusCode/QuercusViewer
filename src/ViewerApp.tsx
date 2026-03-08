@@ -65,6 +65,7 @@ import { RecorderControls } from './components/RecorderControls';
 import { StudioLayout } from './components/StudioLayout';
 import { useAuth } from './lib/AuthContext';
 import { Link } from 'react-router-dom';
+import { uploadStructure } from './lib/structuresService';
 
 const deepEqual = (a: any, b: any): boolean => {
   if (a === b) return true;
@@ -787,13 +788,24 @@ function App() {
     // Load locally
     handleUpload(file);
 
+    // Auto-save to Supabase if user is logged in (silent — never blocks the viewer)
+    if (user?.id) {
+      const ext = file.name.split('.').pop()?.toLowerCase() ?? 'pdb';
+      const allowedExts = ['pdb', 'cif', 'mmcif', 'sdf', 'mol', 'mol2'];
+      if (allowedExts.includes(ext)) {
+        uploadStructure(file, user.id).catch(err =>
+          console.warn('[AutoSave] Could not save structure to dashboard:', err)
+        );
+      }
+    }
+
     // Broadcast if Host
     if (peerSession.isHost) {
       console.log('Broadcasting File:', file.name);
       peerSession.broadcastFile(file);
       sendSystemLog(`Shared file: ${file.name}`);
     }
-  }, [handleUpload, peerSession, sendSystemLog]);
+  }, [handleUpload, peerSession, sendSystemLog, user]);
 
   // 2. File Receiver (Guests)
   useEffect(() => {
