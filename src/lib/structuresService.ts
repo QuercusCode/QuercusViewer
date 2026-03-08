@@ -8,6 +8,7 @@ export interface Structure {
     file_type: string;
     file_size: number | null;
     starred: boolean;
+    notes: string | null;
     created_at: string;
 }
 
@@ -70,6 +71,26 @@ export async function deleteStructure(id: string, filePath: string): Promise<voi
 export async function renameStructure(id: string, name: string): Promise<void> {
     const { error } = await supabase.from('structures').update({ name }).eq('id', id);
     if (error) throw new Error(error.message);
+}
+
+/** Update the notes for a structure */
+export async function updateNotes(id: string, notes: string): Promise<void> {
+    const { error } = await supabase.from('structures').update({ notes }).eq('id', id);
+    if (error) throw new Error(error.message);
+}
+
+/** Fetch a PDB file from RCSB and upload it directly to Supabase Storage */
+export async function importFromRCSB(pdbId: string, userId: string): Promise<Structure> {
+    const id = pdbId.trim().toUpperCase();
+    if (!/^[A-Z0-9]{4}$/.test(id)) throw new Error('Invalid PDB ID — must be 4 characters (e.g. 1CRN)');
+
+    const url = `https://files.rcsb.org/download/${id}.pdb`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`PDB ID "${id}" not found on RCSB`);
+
+    const blob = await res.blob();
+    const file = new File([blob], `${id}.pdb`, { type: 'chemical/x-pdb' });
+    return uploadStructure(file, userId);
 }
 
 /** Get a short-lived signed URL for a private file */
