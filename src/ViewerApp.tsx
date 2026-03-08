@@ -229,33 +229,54 @@ function App() {
     }
   }, []);
 
-  // Dashboard "Open in Viewer" bridge — reads a signed Supabase URL from sessionStorage
+  // Dashboard "Open in Viewer" bridge — single structure
   useEffect(() => {
     const raw = sessionStorage.getItem('pendingStructure');
     if (!raw) return;
-    sessionStorage.removeItem('pendingStructure'); // consume immediately
+    sessionStorage.removeItem('pendingStructure');
 
     let pending: { url: string; name: string; fileType: string } | null = null;
     try { pending = JSON.parse(raw); } catch { return; }
     if (!pending?.url) return;
 
     const { url, name, fileType } = pending;
-
     fetch(url)
-      .then(res => {
-        if (!res.ok) throw new Error('Failed to fetch structure');
-        return res.blob();
-      })
+      .then(res => { if (!res.ok) throw new Error('Failed to fetch structure'); return res.blob(); })
       .then(blob => {
-        const fileName = `${name}.${fileType}`;
-        const file = new File([blob], fileName, { type: 'application/octet-stream' });
-        const isCif = fileType === 'cif' || fileType === 'mmcif';
-        controllers[0].handleUpload(file, isCif);
-        // Dismiss the landing overlay if visible
+        const file = new File([blob], `${name}.${fileType}`, { type: 'application/octet-stream' });
+        controllers[0].handleUpload(file, fileType === 'cif' || fileType === 'mmcif');
         setShowLanding(false);
       })
       .catch(err => console.error('[pendingStructure] load error:', err));
-    // Run only on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Dashboard "Compare in Multi-view" bridge — array of structures
+  useEffect(() => {
+    const raw = sessionStorage.getItem('pendingStructures');
+    if (!raw) return;
+    sessionStorage.removeItem('pendingStructures');
+
+    let items: { url: string; name: string; fileType: string }[] = [];
+    try { items = JSON.parse(raw); } catch { return; }
+    if (!items.length) return;
+
+    const count = Math.min(items.length, 4);
+    const modeMap: Record<number, 'single' | 'dual' | 'triple' | 'quad'> = {
+      1: 'single', 2: 'dual', 3: 'triple', 4: 'quad',
+    };
+    setViewMode(modeMap[count] ?? 'dual');
+    setShowLanding(false);
+
+    items.slice(0, 4).forEach((item, idx) => {
+      fetch(item.url)
+        .then(res => { if (!res.ok) throw new Error('fetch failed'); return res.blob(); })
+        .then(blob => {
+          const file = new File([blob], `${item.name}.${item.fileType}`, { type: 'application/octet-stream' });
+          controllers[idx].handleUpload(file, item.fileType === 'cif' || item.fileType === 'mmcif');
+        })
+        .catch(err => console.error(`[pendingStructures][${idx}] load error:`, err));
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

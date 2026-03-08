@@ -3,16 +3,19 @@ import {
     Plus, Star, Clock, Search, Upload, Dna, Trash2, ExternalLink,
     Loader2, AlertCircle, Download, Check, Pencil, Share2,
     FileText, Filter, List, LayoutGrid, Database, NotebookPen,
-    ChevronDown, ChevronUp, Import, Tag, Copy, X, Square, CheckSquare
+    ChevronDown, ChevronUp, Import, Tag, Copy, X, Square, CheckSquare,
+    Layers, Beaker, Microscope, Globe
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../lib/AuthContext';
 import {
     listStructures, uploadStructure, toggleStar, deleteStructure,
     renameStructure, updateNotes, updateTags, importFromRCSB,
-    duplicateStructure, getDownloadUrl,
-    type Structure,
+    duplicateStructure, getDownloadUrl, exportAllAsZip,
+    listCollections,
+    type Structure, type Collection,
 } from '../../lib/structuresService';
+import { CollectionsSidebar } from './CollectionsSidebar';
 
 const ACCEPTED_EXTS = '.pdb,.cif,.mmcif,.sdf,.mol';
 
@@ -243,11 +246,32 @@ function StructureCard({
                     </button>
                 )}
 
-                {/* Metadata */}
-                <div className="flex items-center gap-3 text-xs text-neutral-500 mb-3">
+                {/* File metadata */}
+                <div className="flex items-center gap-3 text-xs text-neutral-500 mb-2">
                     <span className="flex items-center gap-1"><FileText className="w-3 h-3" />{formatBytes(item.file_size)}</span>
                     <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{timeAgo(item.created_at)}</span>
                 </div>
+
+                {/* RCSB metadata */}
+                {item.metadata && (
+                    <div className="grid grid-cols-2 gap-1.5 mb-3">
+                        {item.metadata.organism && (
+                            <div className="flex items-center gap-1 text-[10px] text-neutral-500 truncate" title={item.metadata.organism}>
+                                <Globe className="w-2.5 h-2.5 shrink-0" />{item.metadata.organism}
+                            </div>
+                        )}
+                        {item.metadata.method && (
+                            <div className="flex items-center gap-1 text-[10px] text-neutral-500 truncate" title={item.metadata.method}>
+                                <Microscope className="w-2.5 h-2.5 shrink-0" />{item.metadata.method}
+                            </div>
+                        )}
+                        {item.metadata.resolution != null && (
+                            <div className="flex items-center gap-1 text-[10px] text-neutral-500">
+                                <Beaker className="w-2.5 h-2.5 shrink-0" />{item.metadata.resolution.toFixed(2)} Å
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 {/* Tags */}
                 {!selectMode && (
@@ -478,6 +502,25 @@ function RCSBImport({ userId, onImported }: { userId: string; onImported: (s: St
 type SortKey = 'date' | 'name' | 'size';
 type ViewMode = 'grid' | 'list';
 
+// ── ZIP export progress ────────────────────────────────────────────
+function ExportZipButton({ structures }: { structures: Structure[] }) {
+    const [exporting, setExporting] = useState(false);
+    const handle = async () => {
+        setExporting(true);
+        try { await exportAllAsZip(structures); }
+        catch (e: any) { alert(e.message ?? 'Export failed'); }
+        finally { setExporting(false); }
+    };
+    return (
+        <button onClick={handle} disabled={exporting || structures.length === 0}
+            title="Export all as ZIP"
+            className="flex items-center gap-2 px-3 py-2 text-sm text-neutral-400 bg-neutral-900 border border-neutral-700 rounded-lg hover:text-white hover:border-neutral-600 disabled:opacity-50 transition-all">
+            {exporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+            Export ZIP
+        </button>
+    );
+}
+
 export const MyStructures = () => {
     const { user } = useAuth();
     const navigate = useNavigate();
@@ -499,9 +542,18 @@ export const MyStructures = () => {
     const [selectMode, setSelectMode] = useState(false);
     const [selected, setSelected] = useState<Set<string>>(new Set());
 
+    // Collections
+    const [collections, setCollections] = useState<Collection[]>([]);
+    const [activeCollection, setActiveCollection] = useState<string | null>(null);
+
     const reload = useCallback(async () => {
         if (!user) return;
-        try { setError(null); setStructures(await listStructures(user.id)); }
+        try {
+            setError(null);
+            const [structs, cols] = await Promise.all([listStructures(user.id), listCollections(user.id)]);
+            setStructures(structs);
+            setCollections(cols);
+        }
         catch (ex: any) { setError(ex.message ?? 'Failed to load'); }
         finally { setLoading(false); }
     }, [user]);
@@ -601,10 +653,28 @@ export const MyStructures = () => {
         }
     };
 
+    // Collections counts
+    const collectionCounts: Record<string, number> = { '__all__': structures.length };
+    for (const c of collections) collectionCounts[c.id] = structures.filter(s => s.collection_id === c.id).length;
+    const uncategorizedCount = structures.filter(s => !s.collection_id).length;
+
+    const handleCompareInMultiview = async () => {
+        if (!user) return;
+        const toCompare = structures.filter(s => selected.has(s.id)).slice(0, 4);
+        const items = await Promise.all(toCompare.map(async s => {
+            const url = await getDownloadUrl(s.file_path);
+            return { url, name: s.name, fileType: s.file_type.toLowerCase() };
+        }));
+        sessionStorage.setItem('pendingStructures', JSON.stringify(items));
+        navigate('/');
+    };
+
     // Filtering + sorting
     let filtered = structures.filter(s => {
         if (showStarred && !s.starred) return false;
         if (activeTag && !(s.tags ?? []).includes(activeTag)) return false;
+        if (activeCollection === '__none__' && s.collection_id) return false;
+        if (activeCollection && activeCollection !== '__none__' && s.collection_id !== activeCollection) return false;
         return s.name.toLowerCase().includes(searchQuery.toLowerCase());
     });
     if (sortBy === 'name') filtered = [...filtered].sort((a, b) => a.name.localeCompare(b.name));
@@ -624,10 +694,13 @@ export const MyStructures = () => {
                         {loading ? 'Loading…' : `${structures.length} structure${structures.length !== 1 ? 's' : ''} · ${structures.filter(s => s.starred).length} starred`}
                     </p>
                 </div>
-                <button onClick={() => fileInputRef.current?.click()} disabled={uploading}
-                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-60 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors w-fit">
-                    {uploading ? <><Loader2 className="w-4 h-4 animate-spin" />Uploading…</> : <><Upload className="w-4 h-4" />Upload Structure</>}
-                </button>
+                <div className="flex items-center gap-2">
+                    {!loading && <ExportZipButton structures={structures} />}
+                    <button onClick={() => fileInputRef.current?.click()} disabled={uploading}
+                        className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-60 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                        {uploading ? <><Loader2 className="w-4 h-4 animate-spin" />Uploading…</> : <><Upload className="w-4 h-4" />Upload Structure</>}
+                    </button>
+                </div>
             </div>
 
             {/* Info bars */}
@@ -638,171 +711,200 @@ export const MyStructures = () => {
                 </div>
             )}
 
-            {/* Error */}
-            {error && (
-                <div className="flex items-start gap-3 bg-red-500/10 border border-red-500/30 text-red-400 rounded-lg px-4 py-3 text-sm">
-                    <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" /><span>{error}</span>
-                    <button onClick={() => setError(null)} className="ml-auto opacity-60 hover:opacity-100">✕</button>
-                </div>
-            )}
+            {/* Main layout with collections sidebar */}
+            <div className="flex gap-6">
 
-            {/* Toolbar */}
-            <div className="flex flex-wrap items-center gap-2">
-                <div className="relative flex-1 min-w-[160px] max-w-xs">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500" />
-                    <input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-                        placeholder="Filter structures…"
-                        className="w-full pl-9 pr-3 py-2 bg-neutral-900 border border-neutral-700 rounded-lg text-sm text-white placeholder-neutral-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
-                </div>
-                <button onClick={() => setShowStarred(p => !p)}
-                    className={`flex items-center gap-2 px-3 py-2 text-sm border rounded-lg transition-all ${showStarred ? 'text-amber-400 border-amber-400/50 bg-amber-500/5' : 'text-neutral-400 bg-neutral-900 border-neutral-700 hover:text-amber-400'}`}>
-                    <Star className={`w-4 h-4 ${showStarred ? 'fill-amber-400' : ''}`} />Starred
-                </button>
-
-                {/* Tag filter */}
-                {allTags.length > 0 && (
-                    <div className="flex items-center gap-1.5 overflow-x-auto">
-                        {activeTag && (
-                            <button onClick={() => setActiveTag(null)}
-                                className="flex items-center gap-1 text-xs text-neutral-400 hover:text-white border border-neutral-700 rounded-lg px-2 py-1.5 transition-all">
-                                <X className="w-3 h-3" />Clear
-                            </button>
-                        )}
-                        {allTags.map(t => (
-                            <button key={t} onClick={() => setActiveTag(activeTag === t ? null : t)}
-                                className={`text-[10px] font-medium px-2 py-1 rounded-md border whitespace-nowrap transition-all ${activeTag === t ? tagColor(t) : 'bg-neutral-900 border-neutral-700 text-neutral-500 hover:text-neutral-300'}`}>
-                                {t}
-                            </button>
-                        ))}
+                {/* Error */}
+                {error && (
+                    <div className="flex items-start gap-3 bg-red-500/10 border border-red-500/30 text-red-400 rounded-lg px-4 py-3 text-sm">
+                        <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" /><span>{error}</span>
+                        <button onClick={() => setError(null)} className="ml-auto opacity-60 hover:opacity-100">✕</button>
                     </div>
                 )}
 
-                <div className="flex items-center gap-1 bg-neutral-900 border border-neutral-700 rounded-lg p-1 text-xs ml-auto">
-                    <Filter className="w-3.5 h-3.5 text-neutral-500 ml-1 mr-0.5" />
-                    {(['date', 'name', 'size'] as SortKey[]).map(k => (
-                        <button key={k} onClick={() => setSortBy(k)}
-                            className={`px-2.5 py-1 rounded-md font-medium capitalize transition-all ${sortBy === k ? 'bg-neutral-700 text-white' : 'text-neutral-500 hover:text-neutral-300'}`}>{k}</button>
-                    ))}
-                </div>
-
-                {/* View toggle */}
-                <div className="flex items-center gap-0.5 bg-neutral-900 border border-neutral-700 rounded-lg p-1">
-                    <button onClick={() => setViewMode('grid')} title="Grid view"
-                        className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-neutral-700 text-white' : 'text-neutral-500 hover:text-neutral-300'}`}>
-                        <LayoutGrid className="w-3.5 h-3.5" />
-                    </button>
-                    <button onClick={() => setViewMode('list')} title="List view"
-                        className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-neutral-700 text-white' : 'text-neutral-500 hover:text-neutral-300'}`}>
-                        <List className="w-3.5 h-3.5" />
-                    </button>
-                </div>
-
-                {/* Bulk select toggle */}
-                {!selectMode ? (
-                    <button onClick={() => setSelectMode(true)}
-                        className="flex items-center gap-1.5 px-3 py-2 text-sm text-neutral-400 bg-neutral-900 border border-neutral-700 rounded-lg hover:text-white hover:border-neutral-600 transition-all">
-                        <Square className="w-3.5 h-3.5" />Select
-                    </button>
-                ) : (
-                    <div className="flex items-center gap-2">
-                        <button onClick={selected.size === filtered.length ? deselectAll : selectAll}
-                            className="flex items-center gap-1.5 px-3 py-2 text-sm text-blue-400 bg-blue-500/10 border border-blue-500/30 rounded-lg hover:bg-blue-500/20 transition-all">
-                            <CheckSquare className="w-3.5 h-3.5" />
-                            {selected.size === filtered.length ? 'Deselect all' : 'Select all'}
-                        </button>
-                        <button onClick={cancelSelect} className="p-2 text-neutral-500 hover:text-white rounded-lg border border-neutral-700 hover:border-neutral-600 transition-all">
-                            <X className="w-4 h-4" />
-                        </button>
-                    </div>
+                {/* Collections sidebar */}
+                {!loading && (
+                    <CollectionsSidebar
+                        userId={user?.id ?? ''}
+                        collections={collections}
+                        activeCollection={activeCollection}
+                        counts={collectionCounts}
+                        uncategorizedCount={uncategorizedCount}
+                        onSelect={setActiveCollection}
+                        onCreated={c => setCollections(prev => [...prev, c])}
+                        onRenamed={(id, name) => setCollections(prev => prev.map(c => c.id === id ? { ...c, name } : c))}
+                        onDeleted={id => setCollections(prev => prev.filter(c => c.id !== id))}
+                    />
                 )}
-            </div>
 
-            {/* Loading */}
-            {loading && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {[1, 2, 3].map(i => <div key={i} className="bg-neutral-900 border border-neutral-800 rounded-2xl animate-pulse h-64" />)}
-                </div>
-            )}
+                {/* Main content */}
+                <div className="flex-1 min-w-0 space-y-5">
+                    {/* Toolbar */}
+                    <div className="flex flex-wrap items-center gap-2">
+                        <div className="relative flex-1 min-w-[160px] max-w-xs">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500" />
+                            <input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+                                placeholder="Filter structures…"
+                                className="w-full pl-9 pr-3 py-2 bg-neutral-900 border border-neutral-700 rounded-lg text-sm text-white placeholder-neutral-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                        </div>
+                        <button onClick={() => setShowStarred(p => !p)}
+                            className={`flex items-center gap-2 px-3 py-2 text-sm border rounded-lg transition-all ${showStarred ? 'text-amber-400 border-amber-400/50 bg-amber-500/5' : 'text-neutral-400 bg-neutral-900 border-neutral-700 hover:text-amber-400'}`}>
+                            <Star className={`w-4 h-4 ${showStarred ? 'fill-amber-400' : ''}`} />Starred
+                        </button>
 
-            {/* Empty */}
-            {!loading && structures.length === 0 && (
-                <div className="text-center py-20">
-                    <Dna className="w-12 h-12 mx-auto mb-4 text-neutral-700" />
-                    <p className="text-base font-medium text-neutral-400 mb-1">No structures yet</p>
-                    <p className="text-sm text-neutral-600 mb-4">Upload a file or import by PDB ID above.</p>
-                    <button onClick={() => fileInputRef.current?.click()}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors">
-                        <Upload className="w-4 h-4" />Upload your first structure
-                    </button>
-                </div>
-            )}
-
-            {/* Grid */}
-            {!loading && structures.length > 0 && viewMode === 'grid' && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {filtered.map(item => (
-                        <StructureCard key={item.id} item={item}
-                            selected={selected.has(item.id)} selectMode={selectMode} onSelect={toggleSelect}
-                            onToggleStar={handleToggleStar} onDelete={handleDelete}
-                            onRename={handleRename} onNotesChange={handleNotesChange}
-                            onTagsChange={handleTagsChange} onDuplicate={handleDuplicate}
-                            onOpen={handleOpen} {...sharedCardProps} />
-                    ))}
-                    {!selectMode && (
-                        <button onClick={() => fileInputRef.current?.click()}
-                            className="border-2 border-dashed border-neutral-800 rounded-2xl p-5 flex flex-col items-center justify-center text-neutral-600 hover:text-blue-400 hover:border-blue-500/40 hover:bg-blue-500/5 transition-all min-h-[280px] group">
-                            <div className="w-10 h-10 rounded-full bg-neutral-800 group-hover:bg-blue-500/10 flex items-center justify-center mb-3 transition-colors">
-                                <Plus className="w-5 h-5" />
+                        {/* Tag filter */}
+                        {allTags.length > 0 && (
+                            <div className="flex items-center gap-1.5 overflow-x-auto">
+                                {activeTag && (
+                                    <button onClick={() => setActiveTag(null)}
+                                        className="flex items-center gap-1 text-xs text-neutral-400 hover:text-white border border-neutral-700 rounded-lg px-2 py-1.5 transition-all">
+                                        <X className="w-3 h-3" />Clear
+                                    </button>
+                                )}
+                                {allTags.map(t => (
+                                    <button key={t} onClick={() => setActiveTag(activeTag === t ? null : t)}
+                                        className={`text-[10px] font-medium px-2 py-1 rounded-md border whitespace-nowrap transition-all ${activeTag === t ? tagColor(t) : 'bg-neutral-900 border-neutral-700 text-neutral-500 hover:text-neutral-300'}`}>
+                                        {t}
+                                    </button>
+                                ))}
                             </div>
-                            <span className="text-sm font-medium">Upload New Structure</span>
-                            <span className="text-xs mt-1 text-neutral-700 group-hover:text-neutral-500">.pdb · .cif · .sdf · .mol</span>
-                        </button>
-                    )}
-                </div>
-            )}
+                        )}
 
-            {/* List */}
-            {!loading && structures.length > 0 && viewMode === 'list' && (
-                <div className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden">
-                    <table className="w-full text-left">
-                        <thead>
-                            <tr className="border-b border-neutral-800">
-                                <th className="px-4 py-3 w-8" />
-                                <th className="px-3 py-3 text-xs font-medium text-neutral-500">Name</th>
-                                <th className="px-3 py-3 text-xs font-medium text-neutral-500">Type</th>
-                                <th className="px-3 py-3 text-xs font-medium text-neutral-500">Tags</th>
-                                <th className="px-3 py-3 text-xs font-medium text-neutral-500">Size</th>
-                                <th className="px-3 py-3 text-xs font-medium text-neutral-500">Uploaded</th>
-                                <th className="px-3 py-3 text-xs font-medium text-neutral-500">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+                        <div className="flex items-center gap-1 bg-neutral-900 border border-neutral-700 rounded-lg p-1 text-xs ml-auto">
+                            <Filter className="w-3.5 h-3.5 text-neutral-500 ml-1 mr-0.5" />
+                            {(['date', 'name', 'size'] as SortKey[]).map(k => (
+                                <button key={k} onClick={() => setSortBy(k)}
+                                    className={`px-2.5 py-1 rounded-md font-medium capitalize transition-all ${sortBy === k ? 'bg-neutral-700 text-white' : 'text-neutral-500 hover:text-neutral-300'}`}>{k}</button>
+                            ))}
+                        </div>
+
+                        {/* View toggle */}
+                        <div className="flex items-center gap-0.5 bg-neutral-900 border border-neutral-700 rounded-lg p-1">
+                            <button onClick={() => setViewMode('grid')} title="Grid view"
+                                className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-neutral-700 text-white' : 'text-neutral-500 hover:text-neutral-300'}`}>
+                                <LayoutGrid className="w-3.5 h-3.5" />
+                            </button>
+                            <button onClick={() => setViewMode('list')} title="List view"
+                                className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-neutral-700 text-white' : 'text-neutral-500 hover:text-neutral-300'}`}>
+                                <List className="w-3.5 h-3.5" />
+                            </button>
+                        </div>
+
+                        {/* Bulk select toggle */}
+                        {!selectMode ? (
+                            <button onClick={() => setSelectMode(true)}
+                                className="flex items-center gap-1.5 px-3 py-2 text-sm text-neutral-400 bg-neutral-900 border border-neutral-700 rounded-lg hover:text-white hover:border-neutral-600 transition-all">
+                                <Square className="w-3.5 h-3.5" />Select
+                            </button>
+                        ) : (
+                            <div className="flex items-center gap-2">
+                                <button onClick={selected.size === filtered.length ? deselectAll : selectAll}
+                                    className="flex items-center gap-1.5 px-3 py-2 text-sm text-blue-400 bg-blue-500/10 border border-blue-500/30 rounded-lg hover:bg-blue-500/20 transition-all">
+                                    <CheckSquare className="w-3.5 h-3.5" />
+                                    {selected.size === filtered.length ? 'Deselect all' : 'Select all'}
+                                </button>
+                                <button onClick={cancelSelect} className="p-2 text-neutral-500 hover:text-white rounded-lg border border-neutral-700 hover:border-neutral-600 transition-all">
+                                    <X className="w-4 h-4" />
+                                </button>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Loading */}
+                    {loading && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {[1, 2, 3].map(i => <div key={i} className="bg-neutral-900 border border-neutral-800 rounded-2xl animate-pulse h-64" />)}
+                        </div>
+                    )}
+
+                    {/* Empty */}
+                    {!loading && structures.length === 0 && (
+                        <div className="text-center py-20">
+                            <Dna className="w-12 h-12 mx-auto mb-4 text-neutral-700" />
+                            <p className="text-base font-medium text-neutral-400 mb-1">No structures yet</p>
+                            <p className="text-sm text-neutral-600 mb-4">Upload a file or import by PDB ID above.</p>
+                            <button onClick={() => fileInputRef.current?.click()}
+                                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors">
+                                <Upload className="w-4 h-4" />Upload your first structure
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Grid */}
+                    {!loading && structures.length > 0 && viewMode === 'grid' && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                             {filtered.map(item => (
-                                <StructureRow key={item.id} item={item}
+                                <StructureCard key={item.id} item={item}
                                     selected={selected.has(item.id)} selectMode={selectMode} onSelect={toggleSelect}
                                     onToggleStar={handleToggleStar} onDelete={handleDelete}
-                                    onRename={handleRename} onOpen={handleOpen} openingId={openingId} />
+                                    onRename={handleRename} onNotesChange={handleNotesChange}
+                                    onTagsChange={handleTagsChange} onDuplicate={handleDuplicate}
+                                    onOpen={handleOpen} {...sharedCardProps} />
                             ))}
-                        </tbody>
-                    </table>
-                </div>
-            )}
+                            {!selectMode && (
+                                <button onClick={() => fileInputRef.current?.click()}
+                                    className="border-2 border-dashed border-neutral-800 rounded-2xl p-5 flex flex-col items-center justify-center text-neutral-600 hover:text-blue-400 hover:border-blue-500/40 hover:bg-blue-500/5 transition-all min-h-[280px] group">
+                                    <div className="w-10 h-10 rounded-full bg-neutral-800 group-hover:bg-blue-500/10 flex items-center justify-center mb-3 transition-colors">
+                                        <Plus className="w-5 h-5" />
+                                    </div>
+                                    <span className="text-sm font-medium">Upload New Structure</span>
+                                    <span className="text-xs mt-1 text-neutral-700 group-hover:text-neutral-500">.pdb · .cif · .sdf · .mol</span>
+                                </button>
+                            )}
+                        </div>
+                    )}
 
-            {!loading && structures.length > 0 && filtered.length === 0 && (
-                <p className="text-center text-neutral-500 text-sm py-8">No structures match your filter.</p>
-            )}
+                    {/* List */}
+                    {!loading && structures.length > 0 && viewMode === 'list' && (
+                        <div className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden">
+                            <table className="w-full text-left">
+                                <thead>
+                                    <tr className="border-b border-neutral-800">
+                                        <th className="px-4 py-3 w-8" />
+                                        <th className="px-3 py-3 text-xs font-medium text-neutral-500">Name</th>
+                                        <th className="px-3 py-3 text-xs font-medium text-neutral-500">Type</th>
+                                        <th className="px-3 py-3 text-xs font-medium text-neutral-500">Tags</th>
+                                        <th className="px-3 py-3 text-xs font-medium text-neutral-500">Size</th>
+                                        <th className="px-3 py-3 text-xs font-medium text-neutral-500">Uploaded</th>
+                                        <th className="px-3 py-3 text-xs font-medium text-neutral-500">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {filtered.map(item => (
+                                        <StructureRow key={item.id} item={item}
+                                            selected={selected.has(item.id)} selectMode={selectMode} onSelect={toggleSelect}
+                                            onToggleStar={handleToggleStar} onDelete={handleDelete}
+                                            onRename={handleRename} onOpen={handleOpen} openingId={openingId} />
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
 
-            {!loading && structures.length > 0 && !selectMode && (
-                <p className="text-xs text-neutral-600 text-center">
-                    💡 Click a name to rename · Add tags and notes per structure · Files auto-save when uploaded in the viewer
-                </p>
-            )}
+                    {!loading && structures.length > 0 && filtered.length === 0 && (
+                        <p className="text-center text-neutral-500 text-sm py-8">No structures match your filter.</p>
+                    )}
+
+                    {!loading && structures.length > 0 && !selectMode && (
+                        <p className="text-xs text-neutral-600 text-center">
+                            💡 Click a name to rename · Add tags and notes · Files auto-save when uploaded in the viewer
+                        </p>
+                    )}
+
+                </div> {/* end main content */}
+            </div> {/* end flex layout */}
 
             {/* Bulk action floating bar */}
             {selectMode && selected.size > 0 && (
                 <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-neutral-800 border border-neutral-600 rounded-2xl px-5 py-3 shadow-2xl shadow-black/50">
                     <span className="text-sm font-medium text-white">{selected.size} selected</span>
                     <div className="w-px h-4 bg-neutral-600" />
+                    {selected.size >= 2 && selected.size <= 4 && (
+                        <button onClick={handleCompareInMultiview}
+                            className="flex items-center gap-2 px-3 py-1.5 text-sm text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 rounded-lg transition-all">
+                            <Layers className="w-4 h-4" />Compare in Viewer
+                        </button>
+                    )}
                     <button onClick={handleBulkDownload}
                         className="flex items-center gap-2 px-3 py-1.5 text-sm text-neutral-300 hover:text-white hover:bg-neutral-700 rounded-lg transition-all">
                         <Download className="w-4 h-4" />Download all
