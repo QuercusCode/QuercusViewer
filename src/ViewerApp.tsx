@@ -228,6 +228,36 @@ function App() {
     }
   }, []);
 
+  // Dashboard "Open in Viewer" bridge — reads a signed Supabase URL from sessionStorage
+  useEffect(() => {
+    const raw = sessionStorage.getItem('pendingStructure');
+    if (!raw) return;
+    sessionStorage.removeItem('pendingStructure'); // consume immediately
+
+    let pending: { url: string; name: string; fileType: string } | null = null;
+    try { pending = JSON.parse(raw); } catch { return; }
+    if (!pending?.url) return;
+
+    const { url, name, fileType } = pending;
+
+    fetch(url)
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to fetch structure');
+        return res.blob();
+      })
+      .then(blob => {
+        const fileName = `${name}.${fileType}`;
+        const file = new File([blob], fileName, { type: 'application/octet-stream' });
+        const isCif = fileType === 'cif' || fileType === 'mmcif';
+        controllers[0].handleUpload(file, isCif);
+        // Dismiss the landing overlay if visible
+        setShowLanding(false);
+      })
+      .catch(err => console.error('[pendingStructure] load error:', err));
+    // Run only on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
 
   // Sync Incoming State
 
