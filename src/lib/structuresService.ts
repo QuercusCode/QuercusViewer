@@ -66,6 +66,12 @@ export async function deleteStructure(id: string, filePath: string): Promise<voi
     if (error) throw new Error(error.message);
 }
 
+/** Rename a structure */
+export async function renameStructure(id: string, name: string): Promise<void> {
+    const { error } = await supabase.from('structures').update({ name }).eq('id', id);
+    if (error) throw new Error(error.message);
+}
+
 /** Get a short-lived signed URL for a private file */
 export async function getDownloadUrl(filePath: string): Promise<string> {
     const { data, error } = await supabase.storage
@@ -75,3 +81,4 @@ export async function getDownloadUrl(filePath: string): Promise<string> {
     if (error || !data?.signedUrl) throw new Error('Could not generate download URL');
     return data.signedUrl;
 }
+
