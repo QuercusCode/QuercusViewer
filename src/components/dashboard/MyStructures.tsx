@@ -115,6 +115,110 @@ function TagEditor({ tags, onChange }: TagEditorProps) {
     );
 }
 
+// ── Skeleton card (shimmer while loading) ─────────────────────────
+
+function SkeletonCard() {
+    return (
+        <div className="bg-neutral-900/80 border border-neutral-800 rounded-2xl overflow-hidden flex flex-col animate-pulse">
+            <div className="h-1 w-full bg-neutral-800" />
+            <div className="h-36 bg-neutral-800/60" />
+            <div className="p-5 space-y-3">
+                <div className="flex items-center gap-2">
+                    <div className="h-9 w-9 rounded-xl bg-neutral-800" />
+                    <div className="h-5 w-12 rounded-md bg-neutral-800" />
+                </div>
+                <div className="h-4 w-3/4 rounded-lg bg-neutral-800" />
+                <div className="flex gap-3">
+                    <div className="h-3 w-16 rounded bg-neutral-800" />
+                    <div className="h-3 w-12 rounded bg-neutral-800" />
+                </div>
+                <div className="h-8 w-full rounded-xl bg-neutral-800 mt-2" />
+            </div>
+        </div>
+    );
+}
+
+// ── Hover preview popover ─────────────────────────────────────────
+
+function HoverPreview({ item }: { item: Structure }) {
+    const badge = TYPE_BADGE[item.file_type] ?? 'bg-neutral-500/10 border-neutral-500/30 text-neutral-400';
+    const rcsbId = item.name.match(/^[1-9][A-Z0-9]{3}$/i)?.[0]?.toUpperCase();
+    return (
+        <div
+            className="absolute z-50 left-full top-0 ml-3 w-72 bg-neutral-900 border border-neutral-700 rounded-2xl shadow-2xl shadow-black/60 overflow-hidden pointer-events-none"
+            style={{ minWidth: 260 }}
+        >
+            {/* Thumbnail */}
+            {rcsbId && (
+                <div className="relative h-36 bg-neutral-800 overflow-hidden">
+                    <img
+                        src={`https://cdn.rcsb.org/images/structures/${rcsbId.toLowerCase()}_assembly-1.jpeg`}
+                        alt={rcsbId}
+                        className="w-full h-full object-cover"
+                        onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-neutral-900/80 to-transparent" />
+                    <span className="absolute bottom-2 left-3 text-xs font-mono text-white/80 bg-black/40 backdrop-blur-sm px-2 py-0.5 rounded-md">{rcsbId}</span>
+                </div>
+            )}
+            <div className="p-4 space-y-3">
+                {/* Name */}
+                <div>
+                    <p className="text-sm font-semibold text-white leading-snug">{item.metadata?.title || item.name}</p>
+                    <span className={`inline-block text-[10px] font-bold px-1.5 py-0.5 rounded-md border mt-1 ${badge}`}>{item.file_type}</span>
+                </div>
+                {/* RCSB metadata grid */}
+                {item.metadata && (
+                    <div className="grid grid-cols-2 gap-2">
+                        {item.metadata.organism && (
+                            <div>
+                                <p className="text-[9px] text-neutral-600 uppercase tracking-wider mb-0.5">Organism</p>
+                                <p className="text-xs text-neutral-300 truncate">{item.metadata.organism}</p>
+                            </div>
+                        )}
+                        {item.metadata.method && (
+                            <div>
+                                <p className="text-[9px] text-neutral-600 uppercase tracking-wider mb-0.5">Method</p>
+                                <p className="text-xs text-neutral-300">{item.metadata.method}</p>
+                            </div>
+                        )}
+                        {item.metadata.resolution != null && (
+                            <div>
+                                <p className="text-[9px] text-neutral-600 uppercase tracking-wider mb-0.5">Resolution</p>
+                                <p className="text-xs text-neutral-300">{item.metadata.resolution.toFixed(2)} Å</p>
+                            </div>
+                        )}
+                        <div>
+                            <p className="text-[9px] text-neutral-600 uppercase tracking-wider mb-0.5">Uploaded</p>
+                            <p className="text-xs text-neutral-300">{timeAgo(item.created_at)}</p>
+                        </div>
+                    </div>
+                )}
+                {/* Notes preview */}
+                {item.notes && (
+                    <div className="pt-2 border-t border-neutral-800">
+                        <p className="text-[9px] text-neutral-600 uppercase tracking-wider mb-1">Notes</p>
+                        <p className="text-xs text-neutral-400 line-clamp-3 leading-relaxed">{item.notes}</p>
+                    </div>
+                )}
+                {/* Tags */}
+                {(item.tags ?? []).length > 0 && (
+                    <div className="flex flex-wrap gap-1 pt-1">
+                        {item.tags.map(t => (
+                            <span key={t} className={`text-[9px] font-medium px-1.5 py-0.5 rounded-md border ${tagColor(t)}`}>{t}</span>
+                        ))}
+                    </div>
+                )}
+                {/* Stats */}
+                <div className="flex items-center gap-3 pt-1 border-t border-neutral-800 text-[10px] text-neutral-600">
+                    <span>{formatBytes(item.file_size)}</span>
+                    {(item.view_count ?? 0) > 0 && <span className="flex items-center gap-0.5"><Eye className="w-2.5 h-2.5" />{item.view_count} opens</span>}
+                </div>
+            </div>
+        </div>
+    );
+}
+
 // ── File type styles ──────────────────────────────────────────────
 
 const TYPE_BADGE: Record<string, string> = {
@@ -161,7 +265,12 @@ function StructureCard({
     const [draftNotes, setDraftNotes] = useState(item.notes ?? '');
     const [copied, setCopied] = useState(false);
     const [downloading, setDownloading] = useState(false);
+    const [hovered, setHovered] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
+
+    // Derive RCSB ID from name (4-char PDB format) or metadata
+    const rcsbId = item.name.match(/^[1-9][A-Z0-9]{3}$/i)?.[0]?.toUpperCase();
+    const hasThumbnail = !!(rcsbId && item.metadata);
 
     useEffect(() => { setDraftName(item.name); }, [item.name]);
     useEffect(() => { setDraftNotes(item.notes ?? ''); }, [item.notes]);
@@ -200,9 +309,30 @@ function StructureCard({
             className={`group bg-neutral-900/80 border rounded-2xl overflow-hidden transition-all duration-200 hover:shadow-xl hover:shadow-black/30 flex flex-col relative
                 ${selected ? 'border-blue-500/60 shadow-blue-500/10 shadow-lg' : 'border-neutral-800 hover:border-neutral-600'}`}
             onClick={() => selectMode && onSelect(item.id)}
+            onMouseEnter={() => !selectMode && setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
         >
-            {/* Gradient strip */}
-            <div className={`h-1 w-full bg-gradient-to-r ${strip}`} />
+            {/* Hover preview popover */}
+            {hovered && !selectMode && <HoverPreview item={item} />}
+
+            {/* Gradient strip or RCSB Thumbnail */}
+            {hasThumbnail ? (
+                <div className="relative h-36 overflow-hidden bg-neutral-800">
+                    <img
+                        src={`https://cdn.rcsb.org/images/structures/${rcsbId!.toLowerCase()}_assembly-1.jpeg`}
+                        alt={rcsbId}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        onError={e => {
+                            const el = e.target as HTMLImageElement;
+                            el.parentElement!.style.display = 'none';
+                        }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-neutral-900/70 via-transparent to-transparent" />
+                    <span className={`absolute top-2 right-2 text-[10px] font-bold px-2 py-0.5 rounded-md border backdrop-blur-sm ${badge}`}>{item.file_type}</span>
+                </div>
+            ) : (
+                <div className={`h-1 w-full bg-gradient-to-r ${strip}`} />
+            )}
 
             {/* Select checkbox */}
             {selectMode && (
@@ -825,7 +955,7 @@ export const MyStructures = () => {
                     {/* Loading */}
                     {loading && (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {[1, 2, 3].map(i => <div key={i} className="bg-neutral-900 border border-neutral-800 rounded-2xl animate-pulse h-64" />)}
+                            {[1, 2, 3, 4, 5, 6].map(i => <SkeletonCard key={i} />)}
                         </div>
                     )}
 
