@@ -15,6 +15,7 @@ export interface Collection {
     user_id: string;
     name: string;
     color: string;
+    parent_id?: string | null;
     created_at: string;
 }
 
@@ -202,19 +203,30 @@ export async function listCollections(userId: string): Promise<Collection[]> {
     return (data ?? []) as Collection[];
 }
 
-export async function createCollection(userId: string, name: string, color = 'blue'): Promise<Collection> {
+export async function createCollection(userId: string, name: string, color: string, parentId?: string | null): Promise<Collection> {
     const { data, error } = await supabase
         .from('collections')
-        .insert({ user_id: userId, name, color })
+        .insert({ user_id: userId, name, color, parent_id: parentId || null })
         .select()
         .single();
-    if (error) throw new Error(error.message);
-    return data as Collection;
+
+    if (error) throw error;
+    return data;
 }
 
 export async function renameCollection(id: string, name: string): Promise<void> {
     const { error } = await supabase.from('collections').update({ name }).eq('id', id);
-    if (error) throw new Error(error.message);
+    if (error) throw error;
+}
+
+export async function moveStructure(structureId: string, destCollectionId: string | null): Promise<void> {
+    const { error } = await supabase.from('structures').update({ collection_id: destCollectionId }).eq('id', structureId);
+    if (error) throw error;
+}
+
+export async function moveCollection(collectionId: string, destParentId: string | null): Promise<void> {
+    const { error } = await supabase.from('collections').update({ parent_id: destParentId }).eq('id', collectionId);
+    if (error) throw error;
 }
 
 export async function deleteCollection(id: string): Promise<void> {

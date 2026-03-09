@@ -1,10 +1,10 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
     Plus, Star, Clock, Search, Upload, Dna, Trash2, ExternalLink,
     Loader2, AlertCircle, Download, Check, Pencil, Share2,
     FileText, Filter, List, LayoutGrid, Database, NotebookPen,
     ChevronDown, ChevronUp, Import, Tag, Copy, X, Square, CheckSquare,
-    Layers, Beaker, Microscope, Globe, Eye
+    Layers, Beaker, Microscope, Globe, Eye, Folder, ChevronRight, FolderInput
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../lib/AuthContext';
@@ -15,7 +15,30 @@ import {
     listCollections, incrementViewCount, logActivity,
     type Structure, type Collection,
 } from '../../lib/structuresService';
-import { CollectionsSidebar } from './CollectionsSidebar';
+// Re-using the constants since I deleted CollectionsSidebar
+const COLOR_CLASSES: Record<string, string> = {
+    blue: 'text-blue-400 bg-blue-500/15 border-blue-500/30',
+    violet: 'text-violet-400 bg-violet-500/15 border-violet-500/30',
+    emerald: 'text-emerald-400 bg-emerald-500/15 border-emerald-500/30',
+    orange: 'text-orange-400 bg-orange-500/15 border-orange-500/30',
+    pink: 'text-pink-400 bg-pink-500/15 border-pink-500/30',
+    amber: 'text-amber-400 bg-amber-500/15 border-amber-500/30',
+    cyan: 'text-cyan-400 bg-cyan-500/15 border-cyan-500/30',
+    rose: 'text-rose-400 bg-rose-500/15 border-rose-500/30',
+};
+
+const DOT: Record<string, string> = {
+    blue: 'bg-blue-400',
+    violet: 'bg-violet-400',
+    emerald: 'bg-emerald-400',
+    orange: 'bg-orange-400',
+    pink: 'bg-pink-400',
+    amber: 'bg-amber-400',
+    cyan: 'bg-cyan-400',
+    rose: 'bg-rose-400',
+};
+
+import { FolderTreeSidebar } from './FolderTreeSidebar';
 
 const ACCEPTED_EXTS = '.pdb,.cif,.mmcif,.sdf,.mol';
 
@@ -236,6 +259,26 @@ const TYPE_STRIP: Record<string, string> = {
     MOL: 'from-orange-500 to-orange-700',
 };
 
+// ── Folder card ───────────────────────────────────────────────────
+
+function FolderCard({ collection, count, onOpen }: { collection: Collection, count: number, onOpen: () => void }) {
+    return (
+        <button onClick={onOpen}
+            className="flex flex-col bg-neutral-900/80 border border-neutral-800 hover:border-neutral-600 rounded-2xl overflow-hidden transition-all duration-200 hover:shadow-xl hover:shadow-black/30 group text-left">
+            <div className={`h-1.5 w-full ${DOT[collection.color] ?? 'bg-blue-500'}`} />
+            <div className="p-4 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-neutral-800 group-hover:bg-neutral-700 transition-colors">
+                    <Folder className={`w-5 h-5 ${COLOR_CLASSES[collection.color]?.split(' ')[0] ?? 'text-blue-400'}`} />
+                </div>
+                <div className="min-w-0 flex-1">
+                    <h3 className="font-semibold text-neutral-200 text-sm truncate group-hover:text-white">{collection.name}</h3>
+                    <p className="text-xs text-neutral-500">{count} items</p>
+                </div>
+            </div>
+        </button>
+    );
+}
+
 // ── Structure card ────────────────────────────────────────────────
 
 interface CardProps {
@@ -249,6 +292,7 @@ interface CardProps {
     onNotesChange: (id: string, notes: string) => void;
     onTagsChange: (id: string, tags: string[]) => void;
     onDuplicate: (s: Structure) => void;
+    onMove: (s: Structure) => void;
     onOpen: (s: Structure) => void;
     openingId: string | null;
     duplicatingId: string | null;
@@ -257,7 +301,7 @@ interface CardProps {
 function StructureCard({
     item, selected, selectMode, onSelect,
     onToggleStar, onDelete, onRename, onNotesChange, onTagsChange,
-    onDuplicate, onOpen, openingId, duplicatingId
+    onDuplicate, onMove, onOpen, openingId, duplicatingId
 }: CardProps) {
     const [editing, setEditing] = useState(false);
     const [draftName, setDraftName] = useState(item.name);
@@ -457,12 +501,12 @@ function StructureCard({
                                 {openingId === item.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <ExternalLink className="w-4 h-4" />}
                                 Open in Viewer
                             </button>
-                            {/* Secondary: 4 small buttons */}
-                            <div className="grid grid-cols-4 gap-1.5">
+                            {/* Secondary: 5 small buttons */}
+                            <div className="grid grid-cols-5 gap-1.5">
                                 <button onClick={handleDownload} disabled={downloading} title="Download"
                                     className="flex flex-col items-center gap-1 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 border border-neutral-700/50 text-neutral-400 hover:text-white transition-all disabled:opacity-50">
                                     {downloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
-                                    <span className="text-[9px]">Download</span>
+                                    <span className="text-[9px]">Downld</span>
                                 </button>
                                 <button onClick={handleShare} title="Copy link"
                                     className="flex flex-col items-center gap-1 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 border border-neutral-700/50 text-neutral-400 hover:text-white transition-all">
@@ -472,7 +516,12 @@ function StructureCard({
                                 <button onClick={() => onDuplicate(item)} disabled={duplicatingId === item.id} title="Duplicate"
                                     className="flex flex-col items-center gap-1 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 border border-neutral-700/50 text-neutral-400 hover:text-white transition-all disabled:opacity-50">
                                     {duplicatingId === item.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Copy className="w-3.5 h-3.5" />}
-                                    <span className="text-[9px]">Duplicate</span>
+                                    <span className="text-[9px]">Clone</span>
+                                </button>
+                                <button onClick={() => onMove(item)} title="Move to folder"
+                                    className="flex flex-col items-center gap-1 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 border border-neutral-700/50 text-neutral-400 hover:text-white transition-all">
+                                    <FolderInput className="w-3.5 h-3.5" />
+                                    <span className="text-[9px]">Move</span>
                                 </button>
                                 <button onClick={() => onDelete(item)} title="Delete"
                                     className="flex flex-col items-center gap-1 py-2 rounded-xl bg-neutral-800 hover:bg-red-500/15 border border-neutral-700/50 hover:border-red-500/30 text-neutral-600 hover:text-red-400 transition-all">
@@ -490,8 +539,8 @@ function StructureCard({
 
 // ── List row ──────────────────────────────────────────────────────
 
-function StructureRow({ item, selected, selectMode, onSelect, onToggleStar, onDelete, onRename, onOpen, openingId }: Pick<CardProps,
-    'item' | 'selected' | 'selectMode' | 'onSelect' | 'onToggleStar' | 'onDelete' | 'onRename' | 'onOpen' | 'openingId'>) {
+function StructureRow({ item, selected, selectMode, onSelect, onToggleStar, onDelete, onRename, onOpen, onMove, openingId }: Pick<CardProps,
+    'item' | 'selected' | 'selectMode' | 'onSelect' | 'onToggleStar' | 'onDelete' | 'onRename' | 'onOpen' | 'onMove' | 'openingId'>) {
 
     const [editing, setEditing] = useState(false);
     const [draftName, setDraftName] = useState(item.name);
@@ -567,6 +616,10 @@ function StructureRow({ item, selected, selectMode, onSelect, onToggleStar, onDe
                         </button>
                         <button onClick={e => { e.stopPropagation(); onToggleStar(item); }} className="p-1.5 rounded-lg hover:bg-neutral-700 transition-colors">
                             <Star className={`w-3.5 h-3.5 ${item.starred ? 'text-amber-400 fill-amber-400' : 'text-neutral-600 hover:text-amber-400'}`} />
+                        </button>
+                        <button onClick={e => { e.stopPropagation(); onMove(item); }} title="Move to folder"
+                            className="p-1.5 rounded-lg hover:bg-neutral-700 text-neutral-500 hover:text-white transition-colors">
+                            <FolderInput className="w-3.5 h-3.5" />
                         </button>
                         <button onClick={e => { e.stopPropagation(); onDelete(item); }} title="Delete"
                             className="p-1.5 rounded-lg hover:bg-red-500/10 text-neutral-600 hover:text-red-400 transition-colors">
@@ -669,6 +722,9 @@ export const MyStructures = () => {
     const [structures, setStructures] = useState<Structure[]>([]);
     const [loading, setLoading] = useState(true);
     const [uploading, setUploading] = useState(false);
+
+    // New State for Moving Structure
+    const [movingStructure, setMovingStructure] = useState<Structure | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [showStarred, setShowStarred] = useState(false);
@@ -805,6 +861,25 @@ export const MyStructures = () => {
     for (const c of collections) collectionCounts[c.id] = structures.filter(s => s.collection_id === c.id).length;
     const uncategorizedCount = structures.filter(s => !s.collection_id).length;
 
+    // Hierarchy computations
+    const currentBreadcrumbs = useMemo(() => {
+        if (!activeCollection || activeCollection === '__none__') return [];
+        const path: Collection[] = [];
+        let currId: string | null = activeCollection;
+        while (currId) {
+            const col = collections.find(c => c.id === currId);
+            if (!col) break;
+            path.unshift(col);
+            currId = col.parent_id || null;
+        }
+        return path;
+    }, [activeCollection, collections]);
+
+    const activeSubfolders = useMemo(() => {
+        if (activeCollection === '__none__') return [];
+        return collections.filter(c => c.parent_id === activeCollection);
+    }, [activeCollection, collections]);
+
     const handleCompareInMultiview = async () => {
         if (!user) return;
         const toCompare = structures.filter(s => selected.has(s.id)).slice(0, 4);
@@ -814,6 +889,20 @@ export const MyStructures = () => {
         }));
         sessionStorage.setItem('pendingStructures', JSON.stringify(items));
         navigate('/');
+    };
+
+    const handleMoveConfirm = async (destId: string | null) => {
+        if (!movingStructure) return;
+        try {
+            // Import dynamically since it's added in structuresService
+            const { moveStructure } = await import('../../lib/structuresService');
+            await moveStructure(movingStructure.id, destId);
+            setStructures(prev => prev.map(s => s.id === movingStructure.id ? { ...s, collection_id: destId } : s));
+        } catch (e: any) {
+            setError(e.message || 'Failed to move structure');
+        } finally {
+            setMovingStructure(null);
+        }
     };
 
     // Filtering + sorting
@@ -827,7 +916,7 @@ export const MyStructures = () => {
     if (sortBy === 'name') filtered = [...filtered].sort((a, b) => a.name.localeCompare(b.name));
     else if (sortBy === 'size') filtered = [...filtered].sort((a, b) => (b.file_size ?? 0) - (a.file_size ?? 0));
 
-    const sharedCardProps = { openingId, duplicatingId };
+    const sharedCardProps = { openingId, duplicatingId, onMove: setMovingStructure };
 
     return (
         <div className="max-w-6xl mx-auto space-y-5 pb-24">
@@ -870,9 +959,9 @@ export const MyStructures = () => {
                 )}
 
                 {/* Collections sidebar */}
-                {!loading && (
-                    <CollectionsSidebar
-                        userId={user?.id ?? ''}
+                {!loading && user && (
+                    <FolderTreeSidebar
+                        userId={user.id}
                         collections={collections}
                         activeCollection={activeCollection}
                         counts={collectionCounts}
@@ -977,9 +1066,33 @@ export const MyStructures = () => {
                         </div>
                     )}
 
+                    {/* Breadcrumbs Header */}
+                    {!loading && activeCollection && activeCollection !== '__none__' && (
+                        <div className="flex items-center gap-2 text-sm text-neutral-500 mb-2 px-1">
+                            <button onClick={() => setActiveCollection(null)} className="hover:text-white transition-colors">Library</button>
+                            {currentBreadcrumbs.map((crumb: Collection, idx: number) => (
+                                <React.Fragment key={crumb.id}>
+                                    <ChevronRight className="w-3.5 h-3.5" />
+                                    <button
+                                        onClick={() => setActiveCollection(crumb.id)}
+                                        className={idx === currentBreadcrumbs.length - 1 ? "text-neutral-200 font-medium" : "hover:text-white transition-colors"}
+                                    >
+                                        {crumb.name}
+                                    </button>
+                                </React.Fragment>
+                            ))}
+                        </div>
+                    )}
+
                     {/* Grid */}
-                    {!loading && structures.length > 0 && viewMode === 'grid' && (
+                    {!loading && viewMode === 'grid' && (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {/* Render Subfolders */}
+                            {activeSubfolders.map((sub: Collection) => (
+                                <FolderCard key={sub.id} collection={sub} count={collectionCounts[sub.id] || 0} onOpen={() => setActiveCollection(sub.id)} />
+                            ))}
+
+                            {/* Render Structures */}
                             {filtered.map(item => (
                                 <StructureCard key={item.id} item={item}
                                     selected={selected.has(item.id)} selectMode={selectMode} onSelect={toggleSelect}
@@ -988,6 +1101,7 @@ export const MyStructures = () => {
                                     onTagsChange={handleTagsChange} onDuplicate={handleDuplicate}
                                     onOpen={handleOpen} {...sharedCardProps} />
                             ))}
+
                             {!selectMode && (
                                 <button onClick={() => fileInputRef.current?.click()}
                                     className="border-2 border-dashed border-neutral-800 rounded-2xl p-5 flex flex-col items-center justify-center text-neutral-600 hover:text-blue-400 hover:border-blue-500/40 hover:bg-blue-500/5 transition-all min-h-[280px] group">
@@ -1021,7 +1135,7 @@ export const MyStructures = () => {
                                         <StructureRow key={item.id} item={item}
                                             selected={selected.has(item.id)} selectMode={selectMode} onSelect={toggleSelect}
                                             onToggleStar={handleToggleStar} onDelete={handleDelete}
-                                            onRename={handleRename} onOpen={handleOpen} openingId={openingId} />
+                                            onRename={handleRename} onMove={setMovingStructure} onOpen={handleOpen} openingId={openingId} />
                                     ))}
                                 </tbody>
                             </table>
@@ -1065,6 +1179,64 @@ export const MyStructures = () => {
                     </button>
                 </div>
             )}
+            {/* Move Modal */}
+            {movingStructure && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+                    <div className="bg-neutral-900 border border-neutral-800 rounded-2xl w-full max-w-md shadow-2xl flex flex-col max-h-[80vh]">
+                        <div className="p-5 border-b border-neutral-800 flex justify-between items-center shrink-0">
+                            <div>
+                                <h3 className="text-sm font-semibold text-white">Move Structure</h3>
+                                <p className="text-xs text-neutral-500 mt-0.5 truncate max-w-xs">{movingStructure.name}</p>
+                            </div>
+                            <button onClick={() => setMovingStructure(null)} className="p-1.5 text-neutral-500 hover:text-white rounded-lg hover:bg-neutral-800 transition-colors">
+                                <X className="w-4 h-4" />
+                            </button>
+                        </div>
+
+                        <div className="p-2 overflow-y-auto flex-1 custom-scrollbar">
+                            <button onClick={() => handleMoveConfirm(null)}
+                                className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm transition-all focus:outline-none mb-1 text-left
+                                    ${movingStructure.collection_id === null ? 'bg-blue-500/10 text-blue-400 font-medium' : 'text-neutral-300 hover:bg-neutral-800/50'}`}>
+                                <Database className="w-4 h-4 shrink-0" />
+                                <span className="flex-1">Library Overview</span>
+                                {movingStructure.collection_id === null && <Check className="w-4 h-4 text-blue-400" />}
+                            </button>
+
+                            {/* Flat rendered list indicating nesting depth */}
+                            {collections.map(c => {
+                                let depth = 0;
+                                let parent = c.parent_id;
+                                while (parent) {
+                                    depth++;
+                                    const p = collections.find(x => x.id === parent);
+                                    parent = p?.parent_id || null;
+                                }
+
+                                const isCurrent = movingStructure.collection_id === c.id;
+                                return (
+                                    <button key={c.id} onClick={() => handleMoveConfirm(c.id)}
+                                        className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm transition-all focus:outline-none text-left
+                                            ${isCurrent ? 'bg-blue-500/10 text-blue-400 font-medium' : 'text-neutral-300 hover:bg-neutral-800/50'}`}
+                                        style={{ paddingLeft: `${depth * 16 + 12}px` }}>
+                                        <Folder className="w-4 h-4 shrink-0 opacity-50" />
+                                        <span className={`w-2 h-2 rounded-full shrink-0 ${DOT[c.color] ?? 'bg-neutral-400'}`} />
+                                        <span className="flex-1 truncate">{c.name}</span>
+                                        {isCurrent && <Check className="w-4 h-4 text-blue-400" />}
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        <div className="p-4 border-t border-neutral-800 flex justify-end gap-2 shrink-0 bg-neutral-900/50 rounded-b-2xl">
+                            <button onClick={() => setMovingStructure(null)}
+                                className="px-4 py-2 text-sm font-medium text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-lg transition-colors">
+                                Cancel
+                            </button>
+                            {/* Disabled: The user has to click a row to instantly move, so explicit Move button is purely visual/optional */}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
-};
+}
