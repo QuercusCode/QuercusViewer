@@ -4,7 +4,7 @@ import {
     Loader2, AlertCircle, Download, Check, Pencil, Share2,
     FileText, Filter, List, LayoutGrid, Database, NotebookPen,
     ChevronDown, ChevronUp, Import, Tag, Copy, X, Square, CheckSquare,
-    Layers, Beaker, Microscope, Globe
+    Layers, Beaker, Microscope, Globe, Eye
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../lib/AuthContext';
@@ -12,7 +12,7 @@ import {
     listStructures, uploadStructure, toggleStar, deleteStructure,
     renameStructure, updateNotes, updateTags, importFromRCSB,
     duplicateStructure, getDownloadUrl, exportAllAsZip,
-    listCollections,
+    listCollections, incrementViewCount, logActivity,
     type Structure, type Collection,
 } from '../../lib/structuresService';
 import { CollectionsSidebar } from './CollectionsSidebar';
@@ -250,6 +250,11 @@ function StructureCard({
                 <div className="flex items-center gap-3 text-xs text-neutral-500 mb-2">
                     <span className="flex items-center gap-1"><FileText className="w-3 h-3" />{formatBytes(item.file_size)}</span>
                     <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{timeAgo(item.created_at)}</span>
+                    {(item.view_count ?? 0) > 0 && (
+                        <span className="flex items-center gap-1 ml-auto text-neutral-600">
+                            <Eye className="w-3 h-3" />{item.view_count}
+                        </span>
+                    )}
                 </div>
 
                 {/* RCSB metadata */}
@@ -617,6 +622,13 @@ export const MyStructures = () => {
         try {
             const url = await getDownloadUrl(s.file_path);
             sessionStorage.setItem('pendingStructure', JSON.stringify({ url, name: s.name, fileType: s.file_type.toLowerCase() }));
+            // Fire analytics (non-blocking)
+            if (user) {
+                incrementViewCount(s.id).then(() => {
+                    setStructures(prev => prev.map(p => p.id === s.id ? { ...p, view_count: (p.view_count ?? 0) + 1 } : p));
+                }).catch(() => { });
+                logActivity(user.id, 'open', s.id, s.name).catch(() => { });
+            }
             navigate('/');
         } catch (ex: any) { setError(ex.message ?? 'Could not open'); }
         finally { setOpeningId(null); }

@@ -30,6 +30,18 @@ export interface Structure {
     tags: string[];
     metadata: RCSBMeta | null;
     collection_id: string | null;
+    view_count: number;
+    created_at: string;
+}
+
+export type ActivityAction = 'upload' | 'open' | 'share' | 'delete' | 'import_rcsb' | 'duplicate';
+
+export interface ActivityLog {
+    id: string;
+    user_id: string;
+    structure_id: string | null;
+    structure_name: string | null;
+    action: ActivityAction;
     created_at: string;
 }
 
@@ -237,4 +249,45 @@ export async function exportAllAsZip(structures: Structure[]): Promise<void> {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(a.href);
+}
+
+// ─── Analytics ────────────────────────────────────────────────────
+
+/** Atomically increment the view_count for a structure (fire-and-forget ok) */
+export async function incrementViewCount(id: string): Promise<void> {
+    // Use a Postgres RPC for atomic increment if available, otherwise do a read-modify-write
+    const { data } = await supabase
+        .from('structures')
+        .select('view_count')
+        .eq('id', id)
+        .single();
+    const next = ((data?.view_count ?? 0) as number) + 1;
+    await supabase.from('structures').update({ view_count: next }).eq('id', id);
+}
+
+/** Write an activity log entry into the activity_log table */
+export async function logActivity(
+    userId: string,
+    action: ActivityAction,
+    structureId?: string,
+    structureName?: string,
+): Promise<void> {
+    await supabase.from('activity_log').insert({
+        user_id: userId,
+        action,
+        structure_id: structureId ?? null,
+        structure_name: structureName ?? null,
+    });
+}
+
+/** Fetch the most recent activity log entries for a user */
+export async function getActivityLog(userId: string, limit = 30): Promise<ActivityLog[]> {
+    const { data, error } = await supabase
+        .from('activity_log')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(limit);
+    if (error) throw new Error(error.message);
+    return (data ?? []) as ActivityLog[];
 }

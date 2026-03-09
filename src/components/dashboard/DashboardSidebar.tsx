@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { FolderOpen, Video, Settings, LogOut, ChevronLeft, Atom } from 'lucide-react';
+import { FolderOpen, Video, Settings, LogOut, ChevronLeft, Atom, BarChart2 } from 'lucide-react';
 import { useAuth } from '../../lib/AuthContext';
 
 export const DashboardSidebar = () => {
@@ -15,6 +15,7 @@ export const DashboardSidebar = () => {
     const navItems = [
         { label: 'My Structures', path: '/dashboard/structures', icon: FolderOpen },
         { label: 'Studio Drafts', path: '/dashboard/drafts', icon: Video },
+        { label: 'Activity', path: '/dashboard/activity', icon: BarChart2 },
         { label: 'Account Settings', path: '/dashboard/settings', icon: Settings },
     ];
 

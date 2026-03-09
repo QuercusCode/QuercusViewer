@@ -6,6 +6,7 @@ import { MyStructures } from './components/dashboard/MyStructures';
 import { StudioDrafts } from './components/dashboard/StudioDrafts';
 import { AuthPage } from './components/auth/AuthPage';
 import { AccountSettings } from './components/dashboard/AccountSettings';
+import { ActivityTimeline } from './components/dashboard/ActivityTimeline';
 
 // Protected Route Wrapper
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -48,6 +49,7 @@ function App() {
                         <Route path="structures" element={<MyStructures />} />
                         <Route path="drafts" element={<StudioDrafts />} />
                         <Route path="settings" element={<AccountSettings />} />
+                        <Route path="activity" element={<ActivityTimeline />} />
                     </Route>
 
                     {/* Catch all route - redirect to home */}
