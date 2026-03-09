@@ -4,7 +4,7 @@ import {
     Loader2, AlertCircle, Download, Check, Pencil, Share2,
     FileText, Filter, List, LayoutGrid, Database, NotebookPen,
     ChevronDown, ChevronUp, Import, Tag, Copy, X, CheckSquare,
-    Layers, Beaker, Microscope, Globe, Eye, Folder, ChevronRight, FolderInput, Pin
+    Layers, Beaker, Microscope, Globe, Eye, Folder, ChevronRight, FolderInput, Pin, PanelRight
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../lib/AuthContext';
@@ -36,6 +36,13 @@ const DOT: Record<string, string> = {
     amber: 'bg-amber-400',
     cyan: 'bg-cyan-400',
     rose: 'bg-rose-400',
+};
+
+export type FilterRule = {
+    id: string;
+    field: 'size' | 'type' | 'name';
+    operator: 'contains' | '>' | '<' | '==';
+    value: string;
 };
 
 import { FolderTreeSidebar } from './FolderTreeSidebar';
@@ -239,6 +246,129 @@ function HoverPreview({ item }: { item: Structure }) {
                 </div>
             </div>
         </div >
+    );
+}
+
+// ── Quick Look Modal ──────────────────────────────────────────────
+
+function QuickLookModal({ item, onClose, onOpen }: { item: Structure; onClose: () => void; onOpen: (s: Structure) => void }) {
+    if (!item) return null;
+    const badge = TYPE_BADGE[item.file_type] ?? 'bg-neutral-500/10 border-neutral-500/30 text-neutral-400';
+    const rcsbId = item.name.match(/^[1-9][A-Z0-9]{3}$/i)?.[0]?.toUpperCase();
+
+    // Close on click outside
+    const handleBackdropClick = (e: React.MouseEvent) => {
+        if (e.target === e.currentTarget) onClose();
+    };
+
+    return (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 sm:p-8" onClick={handleBackdropClick}>
+            <div className="relative w-full max-w-4xl max-h-[90vh] bg-neutral-900 border border-neutral-800 rounded-3xl shadow-2xl flex flex-col md:flex-row overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+
+                {/* Visual Preview Side (Left) */}
+                <div className="md:w-3/5 bg-neutral-950 relative flex items-center justify-center border-b md:border-b-0 md:border-r border-neutral-800 p-8 min-h-[300px]">
+                    {rcsbId ? (
+                        <div className="relative w-full h-full flex flex-col items-center justify-center">
+                            <img
+                                src={`https://cdn.rcsb.org/images/structures/${rcsbId.toLowerCase()}_assembly-1.jpeg`}
+                                alt={rcsbId}
+                                className="w-full h-full object-contain max-h-[60vh]"
+                                onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-neutral-950/80 via-transparent to-transparent pointer-events-none" />
+                        </div>
+                    ) : (
+                        <div className="flex flex-col items-center justify-center text-neutral-600">
+                            <Dna className="w-24 h-24 mb-4 opacity-50" />
+                            <p className="text-lg font-medium text-neutral-500">No Preview Available</p>
+                            <p className="text-sm">Cannot fetch RCSB thumbnail for this uploaded file.</p>
+                        </div>
+                    )}
+
+                    {/* Action Float */}
+                    <div className="absolute bottom-6 left-0 right-0 flex justify-center">
+                        <button onClick={() => onOpen(item)}
+                            className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-full font-medium shadow-lg shadow-blue-500/20 active:scale-95 transition-all flex items-center gap-2">
+                            <ExternalLink className="w-4 h-4" /> Open in Viewer
+                        </button>
+                    </div>
+                </div>
+
+                {/* Metadata Side (Right) */}
+                <div className="md:w-2/5 flex flex-col overflow-y-auto scrollbar-hide bg-neutral-900">
+                    <div className="p-6 md:p-8 space-y-8">
+                        <div>
+                            <h2 className="text-2xl font-bold text-white leading-tight mb-2">{item.metadata?.title || item.name}</h2>
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <span className={`text-[11px] font-bold px-2 py-0.5 rounded-md border ${badge}`}>{item.file_type}</span>
+                                {item.starred && <span className="text-[11px] font-bold px-2 py-0.5 rounded-md border border-amber-500/30 bg-amber-500/10 text-amber-400 flex items-center gap-1"><Star className="w-3 h-3 fill-amber-400" /> Starred</span>}
+                                {(item.view_count ?? 0) > 0 && <span className="text-[11px] font-medium px-2 py-0.5 rounded border border-neutral-700 bg-neutral-800 text-neutral-400"><Eye className="w-3 h-3 inline mr-1" />{item.view_count} views</span>}
+                            </div>
+                        </div>
+
+                        {/* Metadata Grid */}
+                        <div className="space-y-4">
+                            <h3 className="text-xs font-bold text-neutral-500 uppercase tracking-wider">Information</h3>
+                            <div className="grid grid-cols-2 gap-y-4 gap-x-4">
+                                <div>
+                                    <p className="text-[10px] text-neutral-500 uppercase tracking-wider mb-1">Size</p>
+                                    <p className="text-sm font-medium text-neutral-200">{formatBytes(item.file_size)}</p>
+                                </div>
+                                <div>
+                                    <p className="text-[10px] text-neutral-500 uppercase tracking-wider mb-1">Uploaded</p>
+                                    <p className="text-sm font-medium text-neutral-200">{timeAgo(item.created_at)}</p>
+                                </div>
+                                {item.metadata?.resolution != null && (
+                                    <div>
+                                        <p className="text-[10px] text-neutral-500 uppercase tracking-wider mb-1">Resolution</p>
+                                        <p className="text-sm font-medium text-neutral-200">{item.metadata.resolution.toFixed(2)} Å</p>
+                                    </div>
+                                )}
+                                {item.metadata?.method && (
+                                    <div className="col-span-2">
+                                        <p className="text-[10px] text-neutral-500 uppercase tracking-wider mb-1">Method</p>
+                                        <p className="text-sm font-medium text-neutral-200">{item.metadata.method}</p>
+                                    </div>
+                                )}
+                                {item.metadata?.organism && (
+                                    <div className="col-span-2">
+                                        <p className="text-[10px] text-neutral-500 uppercase tracking-wider mb-1">Organism</p>
+                                        <p className="text-sm font-medium text-neutral-200">{item.metadata.organism}</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Tags */}
+                        {(item.tags ?? []).length > 0 && (
+                            <div className="space-y-3">
+                                <h3 className="text-xs font-bold text-neutral-500 uppercase tracking-wider">Tags</h3>
+                                <div className="flex flex-wrap gap-1.5">
+                                    {item.tags.map(t => (
+                                        <span key={t} className={`text-xs font-medium px-2 py-1 rounded-md border ${tagColor(t)}`}>{t}</span>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Notes */}
+                        {item.notes && (
+                            <div className="space-y-3">
+                                <h3 className="text-xs font-bold text-neutral-500 uppercase tracking-wider">Notes</h3>
+                                <div className="p-3 bg-neutral-950 rounded-xl border border-neutral-800 text-sm text-neutral-300 whitespace-pre-wrap leading-relaxed">
+                                    {item.notes}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Close Button Cross */}
+                <button onClick={onClose} className="absolute top-4 right-4 p-2 bg-neutral-900/50 hover:bg-neutral-800 text-neutral-400 hover:text-white rounded-full backdrop-blur transition-colors hidden md:block z-10">
+                    <X className="w-5 h-5" />
+                </button>
+            </div>
+        </div>
     );
 }
 
@@ -631,6 +761,7 @@ function StructureCard({
     );
 }
 
+
 // ── List row ──────────────────────────────────────────────────────
 
 function StructureRow({ item, selected, onSelect, onToggleStar, onDelete, onRename, onOpen, onMove, openingId, onContextMenu, onDoubleClick }: Pick<CardProps,
@@ -793,6 +924,7 @@ export const MyStructures = () => {
     const [structures, setStructures] = useState<Structure[]>([]);
     const [loading, setLoading] = useState(true);
     const [uploading, setUploading] = useState(false);
+    const [quickLookId, setQuickLookId] = useState<string | null>(null);
 
     // New State for Moving Structure
     const [movingStructure, setMovingStructure] = useState<Structure | null>(null);
@@ -815,6 +947,13 @@ export const MyStructures = () => {
     // Selection
     const [selected, setSelected] = useState<Set<string>>(new Set());
     const [lastSelectedId, setLastSelectedId] = useState<string | null>(null);
+
+    // Inspector Sidebar
+    const [showInspector, setShowInspector] = useState(() => localStorage.getItem('quercus_show_inspector') === 'true');
+    useEffect(() => { localStorage.setItem('quercus_show_inspector', showInspector.toString()); }, [showInspector]);
+
+    // Advanced Filters
+    const [filters, setFilters] = useState<FilterRule[]>([]);
 
     // Column resizing
     const [columnWidths, setColumnWidths] = useState<Record<string, number>>({
@@ -859,6 +998,21 @@ export const MyStructures = () => {
 
     // Collections
     const [collections, setCollections] = useState<Collection[]>([]);
+
+    // Custom folder colors
+    const [folderColors, setFolderColors] = useState<Record<string, string>>(() => {
+        try { return JSON.parse(localStorage.getItem('quercus_folder_colors') || '{}'); } catch { return {}; }
+    });
+    useEffect(() => { localStorage.setItem('quercus_folder_colors', JSON.stringify(folderColors)); }, [folderColors]);
+
+    const handleSetFolderColor = (id: string, color: string) => {
+        setFolderColors(prev => ({ ...prev, [id]: color }));
+    };
+
+    const mappedCollections = useMemo(() => collections.map(c => ({
+        ...c,
+        color: folderColors[c.id] || c.color
+    })), [collections, folderColors]);
     const [activeCollection, setActiveCollection] = useState<string | null>(null);
 
     const reload = useCallback(async () => {
@@ -879,15 +1033,53 @@ export const MyStructures = () => {
     const allTags = [...new Set(structures.flatMap(s => s.tags ?? []))].sort();
 
     // Filtering + sorting
-    let filtered = structures.filter(s => {
-        if (showStarred && !s.starred) return false;
-        if (activeTag && !(s.tags ?? []).includes(activeTag)) return false;
-        if (activeCollection === '__none__' && s.collection_id) return false;
-        if (activeCollection && activeCollection !== '__none__' && s.collection_id !== activeCollection) return false;
-        return s.name.toLowerCase().includes(searchQuery.toLowerCase());
-    });
-    if (sortBy === 'name') filtered = [...filtered].sort((a, b) => a.name.localeCompare(b.name));
-    else if (sortBy === 'size') filtered = [...filtered].sort((a, b) => (b.file_size ?? 0) - (a.file_size ?? 0));
+    const filtered = useMemo(() => {
+        let result = structures;
+
+        const isTrashView = activeCollection === '__trash__';
+
+        if (isTrashView) {
+            result = result.filter(s => s.metadata?.is_deleted);
+        } else {
+            result = result.filter(s => !s.metadata?.is_deleted);
+
+            if (showStarred) result = result.filter(s => s.starred);
+            if (activeTag) result = result.filter(s => (s.tags ?? []).includes(activeTag));
+            if (activeCollection === '__none__') result = result.filter(s => !s.collection_id);
+            else if (activeCollection) result = result.filter(s => s.collection_id === activeCollection);
+        }
+
+        if (searchQuery) {
+            const q = searchQuery.toLowerCase();
+            result = result.filter(s => s.name.toLowerCase().includes(q));
+        }
+
+        // Apply advanced filters
+        for (const f of filters) {
+            if (!f.value) continue;
+            if (f.field === 'type') {
+                const val = f.value.toLowerCase();
+                if (f.operator === '==') result = result.filter(s => s.file_type.toLowerCase() === val);
+                else if (f.operator === 'contains') result = result.filter(s => s.file_type.toLowerCase().includes(val));
+            } else if (f.field === 'size') {
+                const mb = parseFloat(f.value);
+                if (isNaN(mb)) continue;
+                const bytes = mb * 1024 * 1024;
+                if (f.operator === '>') result = result.filter(s => (s.file_size || 0) > bytes);
+                if (f.operator === '<') result = result.filter(s => (s.file_size || 0) < bytes);
+            } else if (f.field === 'name') {
+                const val = f.value.toLowerCase();
+                if (f.operator === 'contains') result = result.filter(s => s.name.toLowerCase().includes(val));
+                if (f.operator === '==') result = result.filter(s => s.name.toLowerCase() === val);
+            }
+        }
+
+        return [...result].sort((a, b) => {
+            if (sortBy === 'name') return a.name.localeCompare(b.name);
+            if (sortBy === 'size') return (b.file_size ?? 0) - (a.file_size ?? 0);
+            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        });
+    }, [structures, activeCollection, showStarred, activeTag, searchQuery, sortBy, filters]);
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -949,10 +1141,21 @@ export const MyStructures = () => {
     };
 
     const handleDelete = async (s: Structure) => {
-        if (!confirm(`Delete "${s.name}"? This cannot be undone.`)) return;
-        setStructures(prev => prev.filter(x => x.id !== s.id));
-        try { await deleteStructure(s.id, s.file_path); }
-        catch (ex: any) { setError(ex.message ?? 'Delete failed'); reload(); }
+        const isTrash = activeCollection === '__trash__';
+        if (isTrash) {
+            if (!confirm(`Permanently delete "${s.name}"? This cannot be undone.`)) return;
+            setStructures(prev => prev.filter(x => x.id !== s.id));
+            try { await deleteStructure(s.id, s.file_path); }
+            catch (ex: any) { setError(ex.message ?? 'Delete failed'); reload(); }
+        } else {
+            // Soft delete
+            setStructures(prev => prev.map(x => x.id === s.id ? { ...x, metadata: { ...x.metadata, is_deleted: true } as any } : x));
+            try {
+                const { moveToTrash } = await import('../../lib/structuresService');
+                await moveToTrash(s.id, s.metadata);
+            }
+            catch (ex: any) { setError(ex.message ?? 'Move to Trash failed'); reload(); }
+        }
     };
 
     const handleDuplicate = async (s: Structure) => {
@@ -1045,22 +1248,58 @@ export const MyStructures = () => {
             } else if (e.key === 'F2' && selected.size === 1) {
                 e.preventDefault();
                 setOpeningId("rename-" + Array.from(selected)[0]);
+            } else if (e.code === 'Space') {
+                e.preventDefault();
+                if (quickLookId) {
+                    setQuickLookId(null);
+                } else if (selected.size === 1) {
+                    setQuickLookId(Array.from(selected)[0]);
+                }
+            } else if (e.key === 'Escape') {
+                if (quickLookId) setQuickLookId(null);
             }
         };
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [selected, structures, filtered]);
+    }, [selected, structures, filtered, quickLookId]);
 
     const handleBulkDelete = async () => {
         const ids = [...selected];
-        if (!confirm(`Delete ${ids.length} structure${ids.length > 1 ? 's' : ''}? This cannot be undone.`)) return;
-        const toDelete = structures.filter(s => ids.includes(s.id));
-        setStructures(prev => prev.filter(s => !ids.includes(s.id)));
-        setSelected(new Set());
-        for (const s of toDelete) {
-            try { await deleteStructure(s.id, s.file_path); } catch { /* best effort */ }
+        const isTrash = activeCollection === '__trash__';
+
+        if (isTrash) {
+            if (!confirm(`Permanently delete ${ids.length} structure${ids.length > 1 ? 's' : ''}? This cannot be undone.`)) return;
+            const toDelete = structures.filter(s => ids.includes(s.id));
+            setStructures(prev => prev.filter(s => !ids.includes(s.id)));
+            setSelected(new Set());
+            for (const s of toDelete) {
+                try { await deleteStructure(s.id, s.file_path); } catch { /* best effort */ }
+            }
+        } else {
+            const toDelete = structures.filter(s => ids.includes(s.id));
+            setStructures(prev => prev.map(s => ids.includes(s.id) ? { ...s, metadata: { ...s.metadata, is_deleted: true } as any } : s));
+            setSelected(new Set());
+            const { moveToTrash } = await import('../../lib/structuresService');
+            for (const s of toDelete) {
+                try { await moveToTrash(s.id, s.metadata); } catch { /* best effort */ }
+            }
         }
+    };
+
+    const handleRestore = async (s: Structure) => {
+        setStructures(prev => prev.map(x => {
+            if (x.id !== s.id) return x;
+            const updatedMeta = { ...x.metadata };
+            delete updatedMeta.is_deleted;
+            delete updatedMeta.deleted_at;
+            return { ...x, metadata: updatedMeta as any };
+        }));
+        try {
+            const { restoreFromTrash } = await import('../../lib/structuresService');
+            await restoreFromTrash(s.id, s.metadata);
+        }
+        catch (ex: any) { setError(ex.message ?? 'Restore failed'); reload(); }
     };
 
     const handleBulkDownload = async () => {
@@ -1078,7 +1317,7 @@ export const MyStructures = () => {
 
     // Collections counts
     const collectionCounts: Record<string, number> = { '__all__': structures.length };
-    for (const c of collections) collectionCounts[c.id] = structures.filter(s => s.collection_id === c.id).length;
+    for (const c of mappedCollections) collectionCounts[c.id] = structures.filter(s => s.collection_id === c.id).length;
     const uncategorizedCount = structures.filter(s => !s.collection_id).length;
 
     // Hierarchy computations
@@ -1087,18 +1326,18 @@ export const MyStructures = () => {
         const path: Collection[] = [];
         let currId: string | null = activeCollection;
         while (currId) {
-            const col = collections.find(c => c.id === currId);
+            const col = mappedCollections.find(c => c.id === currId);
             if (!col) break;
             path.unshift(col);
             currId = col.parent_id || null;
         }
         return path;
-    }, [activeCollection, collections]);
+    }, [activeCollection, mappedCollections]);
 
     const activeSubfolders = useMemo(() => {
         if (activeCollection === '__none__') return [];
-        return collections.filter(c => c.parent_id === activeCollection);
-    }, [activeCollection, collections]);
+        return mappedCollections.filter(c => c.parent_id === activeCollection);
+    }, [activeCollection, mappedCollections]);
 
     const recentStructures = useMemo(() => {
         return [...structures].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 5);
@@ -1209,7 +1448,7 @@ export const MyStructures = () => {
                     <div className="hidden sm:block">
                         <FolderTreeSidebar
                             userId={user.id}
-                            collections={collections}
+                            collections={mappedCollections}
                             activeCollection={activeCollection}
                             counts={collectionCounts}
                             uncategorizedCount={uncategorizedCount}
@@ -1320,7 +1559,11 @@ export const MyStructures = () => {
                         )}
 
                         <div className="flex items-center gap-1 bg-neutral-900 border border-neutral-700 rounded-lg p-1 text-xs ml-auto">
-                            <Filter className="w-3.5 h-3.5 text-neutral-500 ml-1 mr-0.5" />
+                            <button onClick={() => setFilters(prev => [...prev, { id: Date.now().toString(), field: 'type', operator: '==', value: '' }])}
+                                className="flex items-center gap-1 px-2.5 py-1 text-blue-400 hover:text-blue-300 font-medium transition-colors border-r border-neutral-700 mr-1 pr-3">
+                                <Filter className="w-3.5 h-3.5" />+ Rule
+                            </button>
+                            <div className="flex items-center text-neutral-500 mr-0.5"><Filter className="w-3.5 h-3.5 ml-1 mr-1" />Sort</div>
                             {(['date', 'name', 'size'] as SortKey[]).map(k => (
                                 <button key={k} onClick={() => setSortBy(k)}
                                     className={`px-2.5 py-1 rounded-md font-medium capitalize transition-all ${sortBy === k ? 'bg-neutral-700 text-white' : 'text-neutral-500 hover:text-neutral-300'}`}>{k}</button>
@@ -1337,10 +1580,47 @@ export const MyStructures = () => {
                                 className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-neutral-700 text-white' : 'text-neutral-500 hover:text-neutral-300'}`}>
                                 <List className="w-3.5 h-3.5" />
                             </button>
+                            <div className="w-px h-4 mx-1.5 bg-neutral-700" />
+                            <button onClick={() => setShowInspector(prev => !prev)} title="Toggle Inspector"
+                                className={`p-1.5 rounded-md transition-all ${showInspector ? 'bg-neutral-700 text-white' : 'text-neutral-500 hover:text-neutral-300'}`}>
+                                <PanelRight className="w-3.5 h-3.5" />
+                            </button>
                         </div>
 
                         {/* Removed Bulk select toggle */}
                     </div>
+
+                    {/* Advanced Filters Builder UI */}
+                    {filters.length > 0 && (
+                        <div className="flex flex-col gap-2 w-full mb-4 bg-neutral-900 overflow-hidden rounded-xl border border-neutral-800 animate-in fade-in slide-in-from-top-4 duration-200">
+                            <div className="bg-neutral-800/50 px-3 py-2 border-b border-neutral-800 flex items-center justify-between">
+                                <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-1.5">
+                                    <Filter className="w-3.5 h-3.5" /> Advanced Rules
+                                </span>
+                                <button onClick={() => setFilters([])} className="text-[10px] font-medium text-neutral-500 hover:text-red-400 uppercase tracking-wide transition-colors">Clear all</button>
+                            </div>
+                            <div className="p-3 flex flex-wrap gap-2.5">
+                                {filters.map(f => (
+                                    <div key={f.id} className="flex items-center bg-black/40 border border-neutral-700/60 rounded-lg text-sm shadow-sm ring-1 ring-white/5 overflow-hidden">
+                                        <select value={f.field} onChange={e => setFilters(prev => prev.map(x => x.id === f.id ? { ...x, field: e.target.value as any } : x))} className="bg-neutral-800 text-white outline-none px-2 py-1.5 font-medium border-r border-neutral-700/60 cursor-pointer appearance-none">
+                                            <option value="name">Name</option>
+                                            <option value="type">Type</option>
+                                            <option value="size">Size (MB)</option>
+                                        </select>
+                                        <select value={f.operator} onChange={e => setFilters(prev => prev.map(x => x.id === f.id ? { ...x, operator: e.target.value as any } : x))} className="bg-transparent text-neutral-400 outline-none px-2 py-1.5 cursor-pointer appearance-none border-r border-neutral-700/60 hover:text-white transition-colors">
+                                            <option value="contains">contains</option>
+                                            <option value="==">is exactly</option>
+                                            {f.field === 'size' && <><option value=">">greater than</option><option value="<">less than</option></>}
+                                        </select>
+                                        <input type={f.field === 'size' ? "number" : "text"} value={f.value} onChange={e => setFilters(prev => prev.map(x => x.id === f.id ? { ...x, value: e.target.value } : x))} placeholder="Value" className="w-24 bg-transparent px-2 py-1.5 text-white outline-none placeholder-neutral-600 focus:bg-white/5 transition-colors" />
+                                        <button onClick={() => setFilters(prev => prev.filter(x => x.id !== f.id))} className="px-2 py-1.5 text-neutral-500 hover:text-red-400 hover:bg-red-500/10 transition-colors border-l border-neutral-700/60">
+                                            <X className="w-3.5 h-3.5" />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
                     {/* Loading */}
                     {loading && (
@@ -1465,7 +1745,30 @@ export const MyStructures = () => {
                     )}
 
                 </div> {/* end main content */}
+
+                {/* Inspector Sidebar */}
+                {showInspector && (
+                    <div className="hidden xl:flex w-80 shrink-0 flex-col bg-neutral-900 border border-neutral-800 rounded-2xl overflow-y-auto custom-scrollbar h-[calc(100vh-140px)] sticky top-6">
+                        <InspectorPane
+                            item={selected.size === 1 ? structures.find(s => s.id === Array.from(selected)[0]) || null : null}
+                            selectionCount={selected.size}
+                            onClose={() => setShowInspector(false)}
+                            onNotesChange={handleNotesChange}
+                            onRestore={handleRestore}
+                            onDelete={handleDelete}
+                        />
+                    </div>
+                )}
             </div> {/* end flex layout */}
+
+            {/* Quick Look Modal */}
+            {quickLookId && (
+                <QuickLookModal
+                    item={structures.find(s => s.id === quickLookId)!}
+                    onClose={() => setQuickLookId(null)}
+                    onOpen={(s) => { setQuickLookId(null); handleOpen(s); }}
+                />
+            )}
 
             {/* Bulk action floating bar */}
             {selected.size > 0 && (
@@ -1515,12 +1818,12 @@ export const MyStructures = () => {
                             </button>
 
                             {/* Flat rendered list indicating nesting depth */}
-                            {collections.map(c => {
+                            {mappedCollections.map(c => {
                                 let depth = 0;
                                 let parent = c.parent_id;
                                 while (parent) {
                                     depth++;
-                                    const p = collections.find(x => x.id === parent);
+                                    const p = mappedCollections.find(x => x.id === parent);
                                     parent = p?.parent_id || null;
                                 }
 
@@ -1561,31 +1864,45 @@ export const MyStructures = () => {
                 >
                     {contextMenu.type === 'structure' ? (
                         <>
-                            <button onClick={() => { handleOpen(contextMenu.item); setContextMenu(null); }} className="flex items-center gap-2.5 px-3 py-1.5 text-neutral-300 hover:text-white hover:bg-blue-500/20 text-left">
-                                <ExternalLink className="w-4 h-4 text-blue-400" /> Open in Viewer
-                            </button>
-                            <div className="h-px bg-neutral-800 my-1 mx-2" />
-                            <button onClick={() => { setOpeningId("rename-" + contextMenu.item.id); setContextMenu(null); }} className="flex items-center gap-2.5 px-3 py-1.5 text-neutral-400 hover:text-white hover:bg-neutral-800 text-left">
-                                <Pencil className="w-4 h-4" /> Rename...
-                            </button>
-                            <button onClick={() => { setMovingStructure(contextMenu.item); setContextMenu(null); }} className="flex items-center gap-2.5 px-3 py-1.5 text-neutral-400 hover:text-white hover:bg-neutral-800 text-left">
-                                <FolderInput className="w-4 h-4" /> Move to...
-                            </button>
-                            <button onClick={() => { handleDuplicate(contextMenu.item); setContextMenu(null); }} className="flex items-center gap-2.5 px-3 py-1.5 text-neutral-400 hover:text-white hover:bg-neutral-800 text-left">
-                                <Copy className="w-4 h-4" /> Duplicate
-                            </button>
-                            <div className="h-px bg-neutral-800 my-1 mx-2" />
-                            <button onClick={async () => {
-                                const url = await getDownloadUrl(contextMenu.item.file_path);
-                                const a = document.createElement('a'); a.href = url; a.download = `${contextMenu.item.name}.${contextMenu.item.file_type.toLowerCase()}`; a.click();
-                                setContextMenu(null);
-                            }} className="flex items-center gap-2.5 px-3 py-1.5 text-neutral-400 hover:text-white hover:bg-neutral-800 text-left">
-                                <Download className="w-4 h-4" /> Download File
-                            </button>
-                            <div className="h-px bg-neutral-800 my-1 mx-2" />
-                            <button onClick={() => { handleDelete(contextMenu.item); setContextMenu(null); }} className="flex items-center gap-2.5 px-3 py-1.5 text-red-500 hover:text-red-400 hover:bg-red-500/10 text-left">
-                                <Trash2 className="w-4 h-4" /> Delete
-                            </button>
+                            {activeCollection === '__trash__' ? (
+                                <>
+                                    <button onClick={() => { handleRestore(contextMenu.item); setContextMenu(null); }} className="flex items-center gap-2.5 px-3 py-1.5 text-blue-400 hover:text-white hover:bg-blue-500/10 text-left">
+                                        <FolderInput className="w-4 h-4" /> Restore
+                                    </button>
+                                    <div className="h-px bg-neutral-800 my-1 mx-2" />
+                                    <button onClick={() => { handleDelete(contextMenu.item); setContextMenu(null); }} className="flex items-center gap-2.5 px-3 py-1.5 text-red-500 hover:text-red-400 hover:bg-red-500/10 text-left">
+                                        <Trash2 className="w-4 h-4" /> Delete Permanently
+                                    </button>
+                                </>
+                            ) : (
+                                <>
+                                    <button onClick={() => { handleOpen(contextMenu.item); setContextMenu(null); }} className="flex items-center gap-2.5 px-3 py-1.5 text-neutral-300 hover:text-white hover:bg-blue-500/20 text-left">
+                                        <ExternalLink className="w-4 h-4 text-blue-400" /> Open in Viewer
+                                    </button>
+                                    <div className="h-px bg-neutral-800 my-1 mx-2" />
+                                    <button onClick={() => { setOpeningId("rename-" + contextMenu.item.id); setContextMenu(null); }} className="flex items-center gap-2.5 px-3 py-1.5 text-neutral-400 hover:text-white hover:bg-neutral-800 text-left">
+                                        <Pencil className="w-4 h-4" /> Rename...
+                                    </button>
+                                    <button onClick={() => { setMovingStructure(contextMenu.item); setContextMenu(null); }} className="flex items-center gap-2.5 px-3 py-1.5 text-neutral-400 hover:text-white hover:bg-neutral-800 text-left">
+                                        <FolderInput className="w-4 h-4" /> Move to...
+                                    </button>
+                                    <button onClick={() => { handleDuplicate(contextMenu.item); setContextMenu(null); }} className="flex items-center gap-2.5 px-3 py-1.5 text-neutral-400 hover:text-white hover:bg-neutral-800 text-left">
+                                        <Copy className="w-4 h-4" /> Duplicate
+                                    </button>
+                                    <div className="h-px bg-neutral-800 my-1 mx-2" />
+                                    <button onClick={async () => {
+                                        const url = await getDownloadUrl(contextMenu.item.file_path);
+                                        const a = document.createElement('a'); a.href = url; a.download = `${contextMenu.item.name}.${contextMenu.item.file_type.toLowerCase()}`; a.click();
+                                        setContextMenu(null);
+                                    }} className="flex items-center gap-2.5 px-3 py-1.5 text-neutral-400 hover:text-white hover:bg-neutral-800 text-left">
+                                        <Download className="w-4 h-4" /> Download File
+                                    </button>
+                                    <div className="h-px bg-neutral-800 my-1 mx-2" />
+                                    <button onClick={() => { handleDelete(contextMenu.item); setContextMenu(null); }} className="flex items-center gap-2.5 px-3 py-1.5 text-red-500 hover:text-red-400 hover:bg-red-500/10 text-left">
+                                        <Trash2 className="w-4 h-4" /> Move to Trash
+                                    </button>
+                                </>
+                            )}
                         </>
                     ) : (
                         <>
@@ -1596,6 +1913,21 @@ export const MyStructures = () => {
                                 <Pin className={`w-4 h-4 ${pinnedCollectionIds.includes(contextMenu.item.id) ? 'text-blue-400 rotate-45' : 'text-neutral-500'}`} />
                                 {pinnedCollectionIds.includes(contextMenu.item.id) ? 'Unpin from Quick Access' : 'Pin to Quick Access'}
                             </button>
+                            <div className="h-px bg-neutral-800 my-1 mx-2" />
+
+                            {/* Color Tag Picker row */}
+                            <div className="px-3 py-2 flex gap-1.5 flex-wrap items-center">
+                                <Tag className="w-3.5 h-3.5 text-neutral-500 mr-1" />
+                                {Object.keys(COLOR_CLASSES).map(colorKey => (
+                                    <button
+                                        key={colorKey}
+                                        onClick={(e) => { e.stopPropagation(); handleSetFolderColor(contextMenu.item.id, colorKey); setContextMenu(null); }}
+                                        className={`w-4 h-4 rounded-full shadow-sm hover:scale-125 transition-transform ${DOT[colorKey] || 'bg-neutral-500'} ${contextMenu.item.color === colorKey ? 'ring-2 ring-white ring-offset-1 ring-offset-neutral-900 pointer-events-none' : 'border border-neutral-800'}`}
+                                        title={colorKey.charAt(0).toUpperCase() + colorKey.slice(1)}
+                                    />
+                                ))}
+                            </div>
+
                             <div className="h-px bg-neutral-800 my-1 mx-2" />
                             <button onClick={async () => {
                                 try {
@@ -1637,6 +1969,153 @@ export const MyStructures = () => {
                     )}
                 </div>
             )}
+        </div>
+    );
+}
+
+// ── Inspector Pane ────────────────────────────────────────────────
+
+function InspectorPane({ item, selectionCount, onClose, onNotesChange, onRestore, onDelete }: {
+    item: Structure | null;
+    selectionCount: number;
+    onClose: () => void;
+    onNotesChange: (id: string, notes: string) => void;
+    onRestore: (s: Structure) => void;
+    onDelete: (s: Structure) => void;
+}) {
+    const [draftNotes, setDraftNotes] = useState('');
+
+    useEffect(() => {
+        if (item) setDraftNotes(item.notes || '');
+    }, [item?.id]);
+
+    if (!item) {
+        return (
+            <div className="flex-1 flex flex-col items-center justify-center text-center p-6 text-neutral-500">
+                <PanelRight className="w-12 h-12 mb-4 opacity-20" />
+                <h3 className="font-medium text-neutral-400 mb-1">Inspector</h3>
+                <p className="text-sm">
+                    {selectionCount === 0
+                        ? "Select a single file to view its details."
+                        : `${selectionCount} files selected.`}
+                </p>
+                {selectionCount > 1 && <p className="text-xs mt-2 opacity-70">Bulk editing is available in the bottom bar.</p>}
+            </div>
+        );
+    }
+
+    const badge = TYPE_BADGE[item.file_type] ?? 'bg-neutral-500/10 border-neutral-500/30 text-neutral-400';
+
+    return (
+        <div className="flex flex-col h-full animate-in fade-in duration-200">
+            <div className="flex items-center justify-between p-4 border-b border-neutral-800 shrink-0 sticky top-0 bg-neutral-900/90 backdrop-blur-md">
+                <h3 className="font-semibold text-white capitalize">Get Info</h3>
+                <button onClick={onClose} className="p-1 rounded-md text-neutral-500 hover:text-white hover:bg-neutral-800 transition-colors">
+                    <X className="w-4 h-4" />
+                </button>
+            </div>
+
+            <div className="flex-1 p-4 space-y-6">
+
+                {/* Header section */}
+                <div>
+                    <h2 className="text-lg font-bold text-neutral-200 leading-tight mb-2 break-words">{item.name}</h2>
+                    <div className="flex flex-wrap gap-1.5">
+                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md border ${badge}`}>{item.file_type.toUpperCase()}</span>
+                        <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-md border border-neutral-700 bg-neutral-800 text-neutral-400">{formatBytes(item.file_size)}</span>
+                    </div>
+                </div>
+
+                {/* Notes Editor */}
+                <div>
+                    <h4 className="text-[11px] font-bold text-neutral-500 uppercase tracking-wider mb-2 flex items-center justify-between">
+                        Notes
+                        {draftNotes !== (item.notes || '') && <span className="text-[10px] text-blue-400 lowercase italic normal-case">Unsaved changes</span>}
+                    </h4>
+                    <textarea
+                        value={draftNotes}
+                        onChange={e => setDraftNotes(e.target.value)}
+                        onBlur={() => {
+                            const t = draftNotes.trim();
+                            if (t !== (item.notes || '')) onNotesChange(item.id, t);
+                        }}
+                        placeholder="Add notes, context, or observations..."
+                        className="w-full h-32 bg-neutral-950 border border-neutral-800 rounded-xl p-3 text-sm text-neutral-300 placeholder-neutral-600 focus:outline-none focus:border-blue-500/50 resize-y transition-colors"
+                    />
+                </div>
+
+                {/* Tags Read-only view (for now) */}
+                {(item.tags ?? []).length > 0 && (
+                    <div>
+                        <h4 className="text-[11px] font-bold text-neutral-500 uppercase tracking-wider mb-2">Tags</h4>
+                        <div className="flex flex-wrap gap-1">
+                            {item.tags.map(t => (
+                                <span key={t} className={`text-[11px] font-medium px-2 py-0.5 rounded-md border ${tagColor(t)}`}>{t}</span>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* Metadata */}
+                <div>
+                    <h4 className="text-[11px] font-bold text-neutral-500 uppercase tracking-wider mb-2">Metadata</h4>
+                    <div className="grid grid-cols-2 gap-3 bg-neutral-950 border border-neutral-800 rounded-xl p-4">
+                        <div>
+                            <p className="text-[10px] text-neutral-600 mb-0.5">Uploaded</p>
+                            <p className="text-xs text-neutral-300 font-medium">{timeAgo(item.created_at)}</p>
+                        </div>
+                        {item.metadata?.resolution != null && (
+                            <div>
+                                <p className="text-[10px] text-neutral-600 mb-0.5">Resolution</p>
+                                <p className="text-xs text-neutral-300 font-medium">{item.metadata.resolution.toFixed(2)} Å</p>
+                            </div>
+                        )}
+                        {item.metadata?.method && (
+                            <div className="col-span-2">
+                                <p className="text-[10px] text-neutral-600 mb-0.5">Exp. Method</p>
+                                <p className="text-xs text-neutral-300 font-medium">{item.metadata.method}</p>
+                            </div>
+                        )}
+                        {item.metadata?.organism && (
+                            <div className="col-span-2">
+                                <p className="text-[10px] text-neutral-600 mb-0.5">Organism</p>
+                                <p className="text-xs text-neutral-300 font-medium">{item.metadata.organism}</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Activity stats */}
+                <div>
+                    <h4 className="text-[11px] font-bold text-neutral-500 uppercase tracking-wider mb-2">Activity Tracker</h4>
+                    <div className="flex gap-4">
+                        <div className="flex flex-col items-center flex-1 bg-neutral-950 border border-neutral-800 rounded-xl p-3">
+                            <Star className={`w-4 h-4 mb-1 ${item.starred ? 'text-amber-400 fill-amber-400' : 'text-neutral-600'}`} />
+                            <p className="text-xs text-neutral-400">{item.starred ? 'Starred' : 'Not Starred'}</p>
+                        </div>
+                        <div className="flex flex-col items-center flex-1 bg-neutral-950 border border-neutral-800 rounded-xl p-3">
+                            <Eye className="w-4 h-4 mb-1 text-blue-400" />
+                            <p className="text-xs text-neutral-400">{item.view_count || 0} Opens</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Trash Actions */}
+                {item.metadata?.is_deleted && (
+                    <div className="pt-2">
+                        <h4 className="text-[11px] font-bold text-red-500/80 uppercase tracking-wider mb-2">Trash Actions</h4>
+                        <div className="flex gap-2">
+                            <button onClick={() => onRestore(item)} className="flex-1 flex items-center justify-center gap-2 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 py-2 rounded-xl text-sm font-medium transition-colors">
+                                <FolderInput className="w-4 h-4" /> Restore
+                            </button>
+                            <button onClick={() => onDelete(item)} className="flex-1 flex items-center justify-center gap-2 bg-red-500/10 text-red-500 hover:bg-red-500/20 py-2 rounded-xl text-sm font-medium transition-colors">
+                                <Trash2 className="w-4 h-4" /> Delete
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+            </div>
         </div>
     );
 }

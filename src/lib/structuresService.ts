@@ -8,6 +8,8 @@ export interface RCSBMeta {
     method: string;
     resolution: number | null;
     organism: string;
+    is_deleted?: boolean;
+    deleted_at?: string;
 }
 
 export interface Collection {
@@ -105,6 +107,26 @@ export async function deleteStructure(id: string, filePath: string): Promise<voi
 
 export async function renameStructure(id: string, name: string): Promise<void> {
     const { error } = await supabase.from('structures').update({ name }).eq('id', id);
+    if (error) throw new Error(error.message);
+}
+
+export async function moveToTrash(id: string, currentMetadata: RCSBMeta | null): Promise<void> {
+    const updatedMetadata: RCSBMeta = {
+        ...(currentMetadata || { title: '', method: '', resolution: null, organism: '' }),
+        is_deleted: true,
+        deleted_at: new Date().toISOString()
+    };
+    const { error } = await supabase.from('structures').update({ metadata: updatedMetadata }).eq('id', id);
+    if (error) throw new Error(error.message);
+}
+
+export async function restoreFromTrash(id: string, currentMetadata: RCSBMeta | null): Promise<void> {
+    if (!currentMetadata) return;
+    const updatedMetadata: RCSBMeta = { ...currentMetadata };
+    delete updatedMetadata.is_deleted;
+    delete updatedMetadata.deleted_at;
+
+    const { error } = await supabase.from('structures').update({ metadata: updatedMetadata }).eq('id', id);
     if (error) throw new Error(error.message);
 }
 

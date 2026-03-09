@@ -248,13 +248,23 @@ export function FolderTreeSidebar({
                     <div className="pt-4 mt-4 border-t border-neutral-800/50">
                         <button onClick={() => onSelect('__none__')}
                             className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm transition-all focus:outline-none
-                                ${activeCollection === '__none__' ? 'bg-neutral-800 text-white' : 'text-neutral-500 hover:bg-neutral-800/60 hover:text-neutral-300'}`}>
+                                ${activeCollection === '__none__' ? 'bg-blue-500/10 text-blue-400 font-medium' : 'text-neutral-400 hover:bg-neutral-800/60 hover:text-neutral-200'}`}>
                             <Folder className="w-4 h-4 shrink-0" />
                             <span className="truncate flex-1 text-left text-[13px]">Uncategorized</span>
                             <span className="text-[10px] text-neutral-600 bg-neutral-900 px-1.5 rounded">{uncategorizedCount}</span>
                         </button>
                     </div>
                 )}
+
+                {/* Trash */}
+                <div className="pt-2 mt-2 border-t border-neutral-800/50 mb-8">
+                    <button onClick={() => onSelect('__trash__')}
+                        className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm transition-all focus:outline-none
+                            ${activeCollection === '__trash__' ? 'bg-red-500/10 text-red-500 font-medium' : 'text-neutral-500 hover:bg-red-500/10 hover:text-red-400'}`}>
+                        <Trash2 className="w-4 h-4 shrink-0" />
+                        <span className="truncate flex-1 text-left text-[13px]">Trash</span>
+                    </button>
+                </div>
             </div>
         </div>
     );
