@@ -663,9 +663,9 @@ function StructureRow({ item, selected, onSelect, onToggleStar, onDelete, onRena
     };
 
     return (
-        <tr className={`group relative bg-neutral-900 border transition-all duration-300 flex flex-col cursor-pointer
-            ${selected ? 'ring-2 ring-blue-500 border-blue-500/50 bg-blue-500/10' : 'border-neutral-800 hover:border-neutral-600'}
-            ${openingId === item.id ? 'opacity-50 scale-95' : 'hover:-translate-y-1 hover:shadow-xl'}`}
+        <tr className={`group border-b transition-colors cursor-pointer
+            ${selected ? 'bg-blue-500/10 border-blue-500/50' : 'border-neutral-800 hover:bg-neutral-800/40'}
+            ${openingId === item.id ? 'opacity-50' : ''}`}
             onContextMenu={e => onContextMenu(e, 'structure', item)}
             onClick={(e) => onSelect(e, item.id)}
             onDoubleClick={() => onDoubleClick?.(item.id)}
@@ -1412,7 +1412,7 @@ export const MyStructures = () => {
                             <table className="w-full text-left table-fixed">
                                 <thead>
                                     <tr className="border-b border-neutral-800">
-                                        <th className="px-4 py-3 w-12" />
+                                        <th className="px-4 py-3 w-8" />
                                         <th className="px-3 py-3 text-xs font-medium text-neutral-500 relative group/th" style={{ width: columnWidths.name }}>
                                             Name
                                             <div className="absolute right-0 top-0 bottom-0 w-1 flex items-center justify-center cursor-col-resize hover:bg-blue-500 transition-colors z-10" onMouseDown={e => handleResize('name', e)} />
