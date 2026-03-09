@@ -3,8 +3,8 @@ import {
     Plus, Star, Clock, Search, Upload, Dna, Trash2, ExternalLink,
     Loader2, AlertCircle, Download, Check, Pencil, Share2,
     FileText, Filter, List, LayoutGrid, Database, NotebookPen,
-    ChevronDown, ChevronUp, Import, Tag, Copy, X, Square, CheckSquare,
-    Layers, Beaker, Microscope, Globe, Eye, Folder, ChevronRight, FolderInput
+    ChevronDown, ChevronUp, Import, Tag, Copy, X, CheckSquare,
+    Layers, Beaker, Microscope, Globe, Eye, Folder, ChevronRight, FolderInput, Pin
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../lib/AuthContext';
@@ -103,7 +103,7 @@ function TagEditor({ tags, onChange }: TagEditorProps) {
         <div className="mb-3" ref={ref}>
             <div className="flex flex-wrap gap-1.5 items-center">
                 {tags.map(t => (
-                    <span key={t} className={`inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-md border ${tagColor(t)}`}>
+                    <span key={t} className={`inline - flex items - center gap - 1 text - [10px] font - medium px - 1.5 py - 0.5 rounded - md border ${tagColor(t)} `}>
                         {t}
                         <button onClick={() => removeTag(t)} className="opacity-60 hover:opacity-100"><X className="w-2.5 h-2.5" /></button>
                     </span>
@@ -119,7 +119,7 @@ function TagEditor({ tags, onChange }: TagEditorProps) {
                     <div className="flex flex-wrap gap-1.5 mb-2">
                         {PRESET_TAGS.filter(p => !tags.includes(p.label)).map(p => (
                             <button key={p.label} onClick={() => { addTag(p.label); setOpen(false); }}
-                                className={`text-[10px] font-medium px-2 py-1 rounded-md border transition-all hover:opacity-90 ${p.color}`}>
+                                className={`text - [10px] font - medium px - 2 py - 1 rounded - md border transition - all hover: opacity - 90 ${p.color} `}>
                                 {p.label}
                             </button>
                         ))}
@@ -180,9 +180,9 @@ function HoverPreview({ item }: { item: Structure }) {
                         className="w-full h-full object-cover"
                         onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-neutral-900/80 to-transparent" />
+                    < div className="absolute inset-0 bg-gradient-to-t from-neutral-900/80 to-transparent" />
                     <span className="absolute bottom-2 left-3 text-xs font-mono text-white/80 bg-black/40 backdrop-blur-sm px-2 py-0.5 rounded-md">{rcsbId}</span>
-                </div>
+                </div >
             )}
             <div className="p-4 space-y-3 overflow-y-auto overflow-x-hidden flex-1 scrollbar-hide">
                 {/* Name */}
@@ -238,7 +238,7 @@ function HoverPreview({ item }: { item: Structure }) {
                     {(item.view_count ?? 0) > 0 && <span className="flex items-center gap-0.5"><Eye className="w-2.5 h-2.5" />{item.view_count} opens</span>}
                 </div>
             </div>
-        </div>
+        </div >
     );
 }
 
@@ -270,7 +270,7 @@ type ContextMenuPayload = {
 
 // ── Folder card ───────────────────────────────────────────────────
 
-function FolderCard({ collection, count, onOpen, onDropStructure, onContextMenu }: { collection: Collection, count: number, onOpen: () => void, onDropStructure: (structureId: string, folderId: string) => void, onContextMenu: (e: React.MouseEvent, type: 'folder', item: any) => void }) {
+function FolderCard({ collection, count, onOpen, onDropStructure, onContextMenu, previews = [] }: { collection: Collection, count: number, onOpen: () => void, onDropStructure: (structureId: string, folderId: string) => void, onContextMenu: (e: React.MouseEvent, type: 'folder', item: any) => void, previews?: Structure[] }) {
     const [isDragOver, setIsDragOver] = useState(false);
 
     return (
@@ -287,8 +287,21 @@ function FolderCard({ collection, count, onOpen, onDropStructure, onContextMenu 
             className={`flex flex-col bg-neutral-900/80 border hover:border-neutral-600 rounded-2xl overflow-hidden transition-all duration-200 hover:shadow-xl hover:shadow-black/30 group text-left ${isDragOver ? 'border-blue-500 ring-2 ring-blue-500/50 bg-blue-500/10' : 'border-neutral-800'}`}>
             <div className={`h-1.5 w-full ${DOT[collection.color] ?? 'bg-blue-500'}`} />
             <div className="p-4 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-neutral-800 group-hover:bg-neutral-700 transition-colors">
-                    <Folder className={`w-5 h-5 ${COLOR_CLASSES[collection.color]?.split(' ')[0] ?? 'text-blue-400'}`} />
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 bg-neutral-800 group-hover:bg-neutral-700 transition-colors relative isolate">
+                    {previews.length > 0 ? (
+                        <>
+                            <Folder className={`w-6 h-6 absolute opacity-20 ${COLOR_CLASSES[collection.color]?.split(' ')[0] ?? 'text-blue-400'}`} />
+                            <div className="flex -space-x-1.5 z-10 w-full h-full items-center justify-center">
+                                {previews.map((p, i) => (
+                                    <div key={p.id} className="w-[18px] h-6 rounded-[3px] border border-neutral-700/80 bg-neutral-900 shadow-sm flex items-center justify-center relative shadow-black/40" style={{ zIndex: 10 - i }}>
+                                        <span className={`text-[5px] font-bold ${TYPE_BADGE[p.file_type]?.split(' ')[2] ?? 'text-white'}`}>{p.file_type}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </>
+                    ) : (
+                        <Folder className={`w-6 h-6 ${COLOR_CLASSES[collection.color]?.split(' ')[0] ?? 'text-blue-400'}`} />
+                    )}
                 </div>
                 <div className="min-w-0 flex-1">
                     <h3 className="font-semibold text-neutral-200 text-sm truncate group-hover:text-white">{collection.name}</h3>
@@ -341,11 +354,11 @@ function FolderRow({ collection, count, onOpen, onDropStructure, onContextMenu }
 interface CardProps {
     item: Structure;
     selected: boolean;
-    selectMode: boolean;
-    onSelect: (id: string) => void;
-    onToggleStar: (s: Structure) => void;
-    onDelete: (s: Structure) => void;
-    onRename: (id: string, name: string) => void;
+    onSelect: (e: React.MouseEvent, id: string) => void;
+    onDoubleClick?: (id: string) => void;
+    onToggleStar: (s: Structure) => Promise<void>;
+    onDelete: (s: Structure) => Promise<void>;
+    onRename: (id: string, name: string) => Promise<void>;
     onNotesChange: (id: string, notes: string) => void;
     onTagsChange: (id: string, tags: string[]) => void;
     onDuplicate: (s: Structure) => void;
@@ -357,9 +370,9 @@ interface CardProps {
 }
 
 function StructureCard({
-    item, selected, selectMode, onSelect,
+    item, selected, onSelect,
     onToggleStar, onDelete, onRename, onNotesChange, onTagsChange,
-    onDuplicate, onMove, onOpen, openingId, duplicatingId, onContextMenu
+    onDuplicate, onMove, onOpen, openingId, duplicatingId, onContextMenu, onDoubleClick
 }: CardProps) {
     const [showMenu, setShowMenu] = useState(false);
     const [editing, setEditing] = useState(false);
@@ -432,15 +445,16 @@ function StructureCard({
         <div
             className={`group rounded-2xl transition-all duration-200 hover:shadow-xl hover:shadow-black/30 flex flex-col relative z-0 hover:z-50
                 ${selected ? 'shadow-blue-500/10 shadow-lg' : ''}`}
-            onClick={() => selectMode && onSelect(item.id)}
+            onClick={e => onSelect(e, item.id)}
+            onDoubleClick={() => onDoubleClick?.(item.id)}
             onContextMenu={e => onContextMenu(e, 'structure', item)}
-            onMouseEnter={() => !selectMode && setHovered(true)}
+            onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
             draggable
             onDragStart={handleDragStart}
         >
             {/* Hover preview popover (escapes bounds) */}
-            {hovered && !selectMode && <HoverPreview item={item} />}
+            {hovered && <HoverPreview item={item} />}
 
             {/* Inner clipping wrapper */}
             <div className={`flex-1 flex flex-col bg-neutral-900/80 border rounded-2xl overflow-hidden transition-colors
@@ -462,33 +476,36 @@ function StructureCard({
                         <span className={`absolute top-2 right-2 text-[10px] font-bold px-2 py-0.5 rounded-md border backdrop-blur-sm ${badge}`}>{item.file_type}</span>
                     </div>
                 ) : (
-                    <div className={`h-1 w-full bg-gradient-to-r ${strip}`} />
-                )}
-
-                {/* Select checkbox */}
-                {selectMode && (
-                    <div className="absolute top-3 left-3 z-10">
-                        <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all
-                        ${selected ? 'bg-blue-500 border-blue-500' : 'bg-neutral-800 border-neutral-600 hover:border-blue-400'}`}>
-                            {selected && <Check className="w-3 h-3 text-white" />}
+                    <div className={`h-1 w-full bg-gradient-to-r ${strip}`} >
+                        <div className={`absolute top-2 left-2 z-10 
+                ${selected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} 
+                transition-opacity duration-200`}>
+                            <button onClick={(e) => {
+                                e.stopPropagation();
+                                onSelect(e, item.id);
+                            }}
+                                className={`p-1.5 rounded-md backdrop-blur-md border shadow-sm transition-all
+                    ${selected
+                                        ? 'bg-blue-500/90 border-blue-400 text-white'
+                                        : 'bg-black/40 border-white/20 text-neutral-300 hover:bg-black/60 hover:text-white hover:border-white/40'}`}>
+                                <CheckSquare className="w-4 h-4" />
+                            </button>
                         </div>
                     </div>
                 )}
 
-                <div className={`p-5 flex flex-col flex-1 ${selectMode ? 'cursor-pointer' : ''}`}>
+                <div className={`p-5 flex flex-col flex-1`}>
                     {/* Top row */}
-                    <div className={`flex items-start justify-between mb-3 ${selectMode ? 'pl-6' : ''}`}>
+                    <div className={`flex items-start justify-between mb-3 ${selected ? 'pl-6' : ''}`}>
                         <div className="flex items-center gap-2">
                             <div className="h-9 w-9 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center shrink-0">
                                 <Dna className="w-4 h-4 text-white/50" />
                             </div>
                             <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${badge}`}>{item.file_type}</span>
                         </div>
-                        {!selectMode && (
-                            <button onClick={() => onToggleStar(item)} className="p-1.5 rounded-lg hover:bg-white/5 transition-colors">
-                                <Star className={`w-4 h-4 transition-all ${item.starred ? 'text-amber-400 fill-amber-400' : 'text-neutral-600 hover:text-amber-400'}`} />
-                            </button>
-                        )}
+                        <button onClick={() => onToggleStar(item)} className="p-1.5 rounded-lg hover:bg-white/5 transition-colors">
+                            <Star className={`w-4 h-4 transition-all ${item.starred ? 'text-amber-400 fill-amber-400' : 'text-neutral-600 hover:text-amber-400'}`} />
+                        </button>
                     </div>
 
                     {/* Name */}
@@ -500,10 +517,10 @@ function StructureCard({
                             onClick={e => e.stopPropagation()}
                             className="text-sm font-semibold text-white bg-neutral-800 border border-blue-500/60 rounded-lg px-2.5 py-1 w-full outline-none focus:ring-1 focus:ring-blue-500 mb-1" />
                     ) : (
-                        <button onClick={e => { e.stopPropagation(); if (!selectMode) setEditing(true); }}
+                        <button onClick={e => { e.stopPropagation(); setEditing(true); }}
                             className="group/name flex items-center gap-1.5 text-left mb-1 w-full min-w-0" title="Click to rename">
                             <span className="text-sm font-semibold text-neutral-100 truncate">{item.name}</span>
-                            {!selectMode && <Pencil className="w-3 h-3 text-neutral-600 opacity-0 group-hover/name:opacity-100 transition-all shrink-0" />}
+                            <Pencil className="w-3 h-3 text-neutral-600 opacity-0 group-hover/name:opacity-100 transition-all shrink-0" />
                         </button>
                     )}
 
@@ -540,13 +557,11 @@ function StructureCard({
                     )}
 
                     {/* Tags */}
-                    {!selectMode && (
-                        <TagEditor
-                            tags={item.tags ?? []}
-                            onChange={tags => onTagsChange(item.id, tags)}
-                        />
-                    )}
-                    {selectMode && item.tags?.length > 0 && (
+                    <TagEditor
+                        tags={item.tags ?? []}
+                        onChange={tags => onTagsChange(item.id, tags)}
+                    />
+                    {item.tags?.length > 0 && (
                         <div className="flex flex-wrap gap-1.5 mb-3">
                             {item.tags.map(t => (
                                 <span key={t} className={`text-[10px] font-medium px-1.5 py-0.5 rounded-md border ${tagColor(t)}`}>{t}</span>
@@ -555,65 +570,61 @@ function StructureCard({
                     )}
 
                     {/* Notes */}
-                    {!selectMode && (
-                        <div className="mb-4">
-                            <button onClick={e => { e.stopPropagation(); setShowNotes(p => !p); }}
-                                className="flex items-center gap-1.5 text-xs text-neutral-500 hover:text-neutral-300 transition-colors mb-1.5">
-                                <NotebookPen className="w-3 h-3" />
-                                {draftNotes ? 'Notes' : 'Add notes'}
-                                {showNotes ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                            </button>
-                            {showNotes && (
-                                <textarea value={draftNotes}
-                                    onChange={e => setDraftNotes(e.target.value)}
-                                    onBlur={() => { if (draftNotes !== (item.notes ?? '')) onNotesChange(item.id, draftNotes); }}
-                                    onClick={e => e.stopPropagation()}
-                                    placeholder="Source, experiment notes, doi:10.1234/…"
-                                    rows={3}
-                                    className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-xs text-neutral-300 placeholder-neutral-600 resize-none focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500" />
-                            )}
-                        </div>
-                    )}
+                    <div className="mb-4">
+                        <button onClick={e => { e.stopPropagation(); setShowNotes(p => !p); }}
+                            className="flex items-center gap-1.5 text-xs text-neutral-500 hover:text-neutral-300 transition-colors mb-1.5">
+                            <NotebookPen className="w-3 h-3" />
+                            {draftNotes ? 'Notes' : 'Add notes'}
+                            {showNotes ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                        </button>
+                        {showNotes && (
+                            <textarea value={draftNotes}
+                                onChange={e => setDraftNotes(e.target.value)}
+                                onBlur={() => { if (draftNotes !== (item.notes ?? '')) onNotesChange(item.id, draftNotes); }}
+                                onClick={e => e.stopPropagation()}
+                                placeholder="Source, experiment notes, doi:10.1234/…"
+                                rows={3}
+                                className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-xs text-neutral-300 placeholder-neutral-600 resize-none focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500" />
+                        )}
+                    </div>
 
                     {/* Action bar */}
-                    {!selectMode && (
-                        <div className="mt-auto space-y-1.5">
-                            {/* Primary: Open */}
-                            <button onClick={() => onOpen(item)} disabled={!!openingId}
-                                className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-blue-600/10 hover:bg-blue-600/25 border border-blue-500/20 hover:border-blue-500/40 text-blue-400 text-xs font-medium transition-all disabled:opacity-50">
-                                {openingId === item.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <ExternalLink className="w-4 h-4" />}
-                                Open in Viewer
+                    <div className="mt-auto space-y-1.5">
+                        {/* Primary: Open */}
+                        <button onClick={() => onOpen(item)} disabled={!!openingId}
+                            className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-blue-600/10 hover:bg-blue-600/25 border border-blue-500/20 hover:border-blue-500/40 text-blue-400 text-xs font-medium transition-all disabled:opacity-50">
+                            {openingId === item.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <ExternalLink className="w-4 h-4" />}
+                            Open in Viewer
+                        </button>
+                        {/* Secondary: 5 small buttons */}
+                        <div className="grid grid-cols-5 gap-1.5">
+                            <button onClick={handleDownload} disabled={downloading} title="Download"
+                                className="flex flex-col items-center gap-1 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 border border-neutral-700/50 text-neutral-400 hover:text-white transition-all disabled:opacity-50">
+                                {downloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+                                <span className="text-[9px]">Downld</span>
                             </button>
-                            {/* Secondary: 5 small buttons */}
-                            <div className="grid grid-cols-5 gap-1.5">
-                                <button onClick={handleDownload} disabled={downloading} title="Download"
-                                    className="flex flex-col items-center gap-1 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 border border-neutral-700/50 text-neutral-400 hover:text-white transition-all disabled:opacity-50">
-                                    {downloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
-                                    <span className="text-[9px]">Downld</span>
-                                </button>
-                                <button onClick={handleShare} title="Copy link"
-                                    className="flex flex-col items-center gap-1 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 border border-neutral-700/50 text-neutral-400 hover:text-white transition-all">
-                                    {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Share2 className="w-3.5 h-3.5" />}
-                                    <span className={`text-[9px] ${copied ? 'text-emerald-400' : ''}`}>{copied ? 'Copied' : 'Share'}</span>
-                                </button>
-                                <button onClick={() => onDuplicate(item)} disabled={duplicatingId === item.id} title="Duplicate"
-                                    className="flex flex-col items-center gap-1 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 border border-neutral-700/50 text-neutral-400 hover:text-white transition-all disabled:opacity-50">
-                                    {duplicatingId === item.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Copy className="w-3.5 h-3.5" />}
-                                    <span className="text-[9px]">Clone</span>
-                                </button>
-                                <button onClick={() => onMove(item)} title="Move to folder"
-                                    className="flex flex-col items-center gap-1 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 border border-neutral-700/50 text-neutral-400 hover:text-white transition-all">
-                                    <FolderInput className="w-3.5 h-3.5" />
-                                    <span className="text-[9px]">Move</span>
-                                </button>
-                                <button onClick={() => onDelete(item)} title="Delete"
-                                    className="flex flex-col items-center gap-1 py-2 rounded-xl bg-neutral-800 hover:bg-red-500/15 border border-neutral-700/50 hover:border-red-500/30 text-neutral-600 hover:text-red-400 transition-all">
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                    <span className="text-[9px]">Delete</span>
-                                </button>
-                            </div>
+                            <button onClick={handleShare} title="Copy link"
+                                className="flex flex-col items-center gap-1 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 border border-neutral-700/50 text-neutral-400 hover:text-white transition-all">
+                                {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Share2 className="w-3.5 h-3.5" />}
+                                <span className={`text-[9px] ${copied ? 'text-emerald-400' : ''}`}>{copied ? 'Copied' : 'Share'}</span>
+                            </button>
+                            <button onClick={() => onDuplicate(item)} disabled={duplicatingId === item.id} title="Duplicate"
+                                className="flex flex-col items-center gap-1 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 border border-neutral-700/50 text-neutral-400 hover:text-white transition-all disabled:opacity-50">
+                                {duplicatingId === item.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Copy className="w-3.5 h-3.5" />}
+                                <span className="text-[9px]">Clone</span>
+                            </button>
+                            <button onClick={() => onMove(item)} title="Move to folder"
+                                className="flex flex-col items-center gap-1 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 border border-neutral-700/50 text-neutral-400 hover:text-white transition-all">
+                                <FolderInput className="w-3.5 h-3.5" />
+                                <span className="text-[9px]">Move</span>
+                            </button>
+                            <button onClick={() => onDelete(item)} title="Delete"
+                                className="flex flex-col items-center gap-1 py-2 rounded-xl bg-neutral-800 hover:bg-red-500/15 border border-neutral-700/50 hover:border-red-500/30 text-neutral-600 hover:text-red-400 transition-all">
+                                <Trash2 className="w-3.5 h-3.5" />
+                                <span className="text-[9px]">Delete</span>
+                            </button>
                         </div>
-                    )}
+                    </div>
                 </div>
             </div>
         </div>
@@ -622,8 +633,8 @@ function StructureCard({
 
 // ── List row ──────────────────────────────────────────────────────
 
-function StructureRow({ item, selected, selectMode, onSelect, onToggleStar, onDelete, onRename, onOpen, onMove, openingId, onContextMenu }: Pick<CardProps,
-    'item' | 'selected' | 'selectMode' | 'onSelect' | 'onToggleStar' | 'onDelete' | 'onRename' | 'onOpen' | 'onMove' | 'openingId' | 'onContextMenu'>) {
+function StructureRow({ item, selected, onSelect, onToggleStar, onDelete, onRename, onOpen, onMove, openingId, onContextMenu, onDoubleClick }: Pick<CardProps,
+    'item' | 'selected' | 'onSelect' | 'onToggleStar' | 'onDelete' | 'onRename' | 'onOpen' | 'onMove' | 'openingId' | 'onContextMenu' | 'onDoubleClick'>) {
 
     const [editing, setEditing] = useState(false);
     const [draftName, setDraftName] = useState(item.name);
@@ -652,18 +663,18 @@ function StructureRow({ item, selected, selectMode, onSelect, onToggleStar, onDe
     };
 
     return (
-        <tr className={`group border-b border-neutral-800 hover:bg-neutral-800/40 transition-colors cursor-pointer
-            ${selected ? 'bg-blue-500/5' : ''}`}
-            onClick={() => selectMode && onSelect(item.id)}
+        <tr className={`group relative bg-neutral-900 border transition-all duration-300 flex flex-col cursor-pointer
+            ${selected ? 'ring-2 ring-blue-500 border-blue-500/50 bg-blue-500/10' : 'border-neutral-800 hover:border-neutral-600'}
+            ${openingId === item.id ? 'opacity-50 scale-95' : 'hover:-translate-y-1 hover:shadow-xl'}`}
             onContextMenu={e => onContextMenu(e, 'structure', item)}
+            onClick={(e) => onSelect(e, item.id)}
+            onDoubleClick={() => onDoubleClick?.(item.id)}
             draggable
             onDragStart={handleDragStart}>
             <td className="px-4 py-3 w-8">
-                {selectMode && (
-                    <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-all ${selected ? 'bg-blue-500 border-blue-500' : 'border-neutral-600 hover:border-blue-400'}`}>
-                        {selected && <Check className="w-2.5 h-2.5 text-white" />}
-                    </div>
-                )}
+                <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-all ${selected ? 'bg-blue-500 border-blue-500' : 'border-neutral-600 group-hover:border-blue-400'}`}>
+                    {selected && <Check className="w-2.5 h-2.5 text-white" />}
+                </div>
             </td>
             <td className="px-3 py-3">
                 <div className="flex items-center gap-3">
@@ -677,7 +688,7 @@ function StructureRow({ item, selected, selectMode, onSelect, onToggleStar, onDe
                     ) : (
                         <button onClick={e => { e.stopPropagation(); setEditing(true); }} className="group/n flex items-center gap-1 min-w-0">
                             <span className="text-sm text-neutral-100 truncate max-w-[160px]">{item.name}</span>
-                            {!selectMode && <Pencil className="w-3 h-3 text-neutral-600 opacity-0 group-hover/n:opacity-100 shrink-0" />}
+                            <Pencil className="w-3 h-3 text-neutral-600 opacity-0 group-hover/n:opacity-100 shrink-0" />
                         </button>
                     )}
                 </div>
@@ -695,29 +706,27 @@ function StructureRow({ item, selected, selectMode, onSelect, onToggleStar, onDe
             <td className="px-3 py-3 text-xs text-neutral-500">{formatBytes(item.file_size)}</td>
             <td className="px-3 py-3 text-xs text-neutral-500">{timeAgo(item.created_at)}</td>
             <td className="px-3 py-3">
-                {!selectMode && (
-                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                        <button onClick={e => { e.stopPropagation(); onOpen(item); }} disabled={!!openingId} title="Open"
-                            className="p-1.5 rounded-lg hover:bg-blue-500/20 text-neutral-500 hover:text-blue-400 transition-colors disabled:opacity-50">
-                            {openingId === item.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ExternalLink className="w-3.5 h-3.5" />}
-                        </button>
-                        <button onClick={e => { e.stopPropagation(); handleDownload(); }} disabled={downloading} title="Download"
-                            className="p-1.5 rounded-lg hover:bg-neutral-700 text-neutral-500 hover:text-white transition-colors disabled:opacity-50">
-                            {downloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
-                        </button>
-                        <button onClick={e => { e.stopPropagation(); onToggleStar(item); }} className="p-1.5 rounded-lg hover:bg-neutral-700 transition-colors">
-                            <Star className={`w-3.5 h-3.5 ${item.starred ? 'text-amber-400 fill-amber-400' : 'text-neutral-600 hover:text-amber-400'}`} />
-                        </button>
-                        <button onClick={e => { e.stopPropagation(); onMove(item); }} title="Move to folder"
-                            className="p-1.5 rounded-lg hover:bg-neutral-700 text-neutral-500 hover:text-white transition-colors">
-                            <FolderInput className="w-3.5 h-3.5" />
-                        </button>
-                        <button onClick={e => { e.stopPropagation(); onDelete(item); }} title="Delete"
-                            className="p-1.5 rounded-lg hover:bg-red-500/10 text-neutral-600 hover:text-red-400 transition-colors">
-                            <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                    </div>
-                )}
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                    <button onClick={e => { e.stopPropagation(); onOpen(item); }} disabled={!!openingId} title="Open"
+                        className="p-1.5 rounded-lg hover:bg-blue-500/20 text-neutral-500 hover:text-blue-400 transition-colors disabled:opacity-50">
+                        {openingId === item.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ExternalLink className="w-3.5 h-3.5" />}
+                    </button>
+                    <button onClick={e => { e.stopPropagation(); handleDownload(); }} disabled={downloading} title="Download"
+                        className="p-1.5 rounded-lg hover:bg-neutral-700 text-neutral-500 hover:text-white transition-colors disabled:opacity-50">
+                        {downloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+                    </button>
+                    <button onClick={e => { e.stopPropagation(); onToggleStar(item); }} className="p-1.5 rounded-lg hover:bg-neutral-700 transition-colors">
+                        <Star className={`w-3.5 h-3.5 ${item.starred ? 'text-amber-400 fill-amber-400' : 'text-neutral-600 hover:text-amber-400'}`} />
+                    </button>
+                    <button onClick={e => { e.stopPropagation(); onMove(item); }} title="Move to folder"
+                        className="p-1.5 rounded-lg hover:bg-neutral-700 text-neutral-500 hover:text-white transition-colors">
+                        <FolderInput className="w-3.5 h-3.5" />
+                    </button>
+                    <button onClick={e => { e.stopPropagation(); onDelete(item); }} title="Delete"
+                        className="p-1.5 rounded-lg hover:bg-red-500/10 text-neutral-600 hover:text-red-400 transition-colors">
+                        <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                </div>
             </td>
         </tr>
     );
@@ -801,10 +810,52 @@ export const MyStructures = () => {
 
     // Global Dropzone State
     const [isWindowDragOver, setIsWindowDragOver] = useState(false);
+    const [dragOverBreadcrumb, setDragOverBreadcrumb] = useState<string | null | undefined>(undefined);
 
-    // Bulk select
-    const [selectMode, setSelectMode] = useState(false);
+    // Selection
     const [selected, setSelected] = useState<Set<string>>(new Set());
+    const [lastSelectedId, setLastSelectedId] = useState<string | null>(null);
+
+    // Column resizing
+    const [columnWidths, setColumnWidths] = useState<Record<string, number>>({
+        name: 300,
+        type: 100,
+        tags: 150,
+        size: 100,
+        uploaded: 120,
+    });
+    const handleResize = (colKey: string, e: React.MouseEvent) => {
+        e.preventDefault();
+        const startX = e.clientX;
+        const startWidth = columnWidths[colKey];
+
+        const onMouseMove = (moveEvent: MouseEvent) => {
+            requestAnimationFrame(() => {
+                const newWidth = Math.max(50, startWidth + moveEvent.clientX - startX);
+                setColumnWidths(prev => ({ ...prev, [colKey]: newWidth }));
+            });
+        };
+
+        const onMouseUp = () => {
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+            document.body.style.cursor = '';
+        };
+
+        document.body.style.cursor = 'col-resize';
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+    };
+
+    // Pinned folders
+    const [pinnedCollectionIds, setPinnedCollectionIds] = useState<string[]>(() => {
+        try { return JSON.parse(localStorage.getItem('quercus_pinned_folders') || '[]'); } catch { return []; }
+    });
+    useEffect(() => { localStorage.setItem('quercus_pinned_folders', JSON.stringify(pinnedCollectionIds)); }, [pinnedCollectionIds]);
+
+    const handleTogglePin = (id: string) => {
+        setPinnedCollectionIds(prev => prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]);
+    };
 
     // Collections
     const [collections, setCollections] = useState<Collection[]>([]);
@@ -826,6 +877,17 @@ export const MyStructures = () => {
 
     // All unique tags in library
     const allTags = [...new Set(structures.flatMap(s => s.tags ?? []))].sort();
+
+    // Filtering + sorting
+    let filtered = structures.filter(s => {
+        if (showStarred && !s.starred) return false;
+        if (activeTag && !(s.tags ?? []).includes(activeTag)) return false;
+        if (activeCollection === '__none__' && s.collection_id) return false;
+        if (activeCollection && activeCollection !== '__none__' && s.collection_id !== activeCollection) return false;
+        return s.name.toLowerCase().includes(searchQuery.toLowerCase());
+    });
+    if (sortBy === 'name') filtered = [...filtered].sort((a, b) => a.name.localeCompare(b.name));
+    else if (sortBy === 'size') filtered = [...filtered].sort((a, b) => (b.file_size ?? 0) - (a.file_size ?? 0));
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -896,9 +958,14 @@ export const MyStructures = () => {
     const handleDuplicate = async (s: Structure) => {
         if (!user) return;
         setDuplicatingId(s.id);
-        try { const copy = await duplicateStructure(s, user.id); setStructures(prev => [copy, ...prev]); }
-        catch (ex: any) { setError(ex.message ?? 'Duplicate failed'); }
-        finally { setDuplicatingId(null); }
+        try {
+            const copy = await duplicateStructure(s, user.id);
+            setStructures(prev => [copy, ...prev]);
+        } catch (ex: any) {
+            setError(ex.message || 'Failed to duplicate');
+        } finally {
+            setDuplicatingId(null);
+        }
     };
 
     const handleOpen = async (s: Structure) => {
@@ -918,11 +985,72 @@ export const MyStructures = () => {
         finally { setOpeningId(null); }
     };
 
-    // Bulk actions
-    const toggleSelect = (id: string) => setSelected(prev => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s; });
+    // Advanced Selection Handling
+    const toggleSelect = (e: React.MouseEvent, id: string) => {
+        e.stopPropagation();
+
+        if (e.shiftKey && lastSelectedId) {
+            // Range select
+            const startIdx = filtered.findIndex(s => s.id === lastSelectedId);
+            const endIdx = filtered.findIndex(s => s.id === id);
+            if (startIdx !== -1 && endIdx !== -1) {
+                const sIdx = Math.min(startIdx, endIdx);
+                const eIdx = Math.max(startIdx, endIdx);
+                const rangeIds = filtered.slice(sIdx, eIdx + 1).map(s => s.id);
+
+                // If Cmd/Ctrl is also held, add to existing selection, otherwise replace
+                if (e.metaKey || e.ctrlKey) {
+                    setSelected(prev => new Set([...prev, ...rangeIds]));
+                } else {
+                    setSelected(new Set(rangeIds));
+                }
+            }
+        } else if (e.metaKey || e.ctrlKey) {
+            // Toggle select
+            setSelected(prev => {
+                const s = new Set(prev);
+                s.has(id) ? s.delete(id) : s.add(id);
+                return s;
+            });
+            setLastSelectedId(id);
+        } else {
+            // Single select (or deselect if clicking the only selected item)
+            setSelected(prev => {
+                if (prev.size === 1 && prev.has(id)) return new Set();
+                return new Set([id]);
+            });
+            setLastSelectedId(id);
+        }
+    };
+
     const selectAll = () => setSelected(new Set(filtered.map(s => s.id)));
-    const deselectAll = () => setSelected(new Set());
-    const cancelSelect = () => { setSelectMode(false); setSelected(new Set()); };
+    const deselectAll = () => { setSelected(new Set()); setLastSelectedId(null); };
+
+    // Global Keyboard Shortcuts
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            // Don't intercept if user is typing in an input
+            if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+
+            if ((e.metaKey || e.ctrlKey) && e.key === 'a') {
+                e.preventDefault();
+                selectAll();
+            } else if ((e.key === 'Delete' || e.key === 'Backspace') && selected.size > 0) {
+                e.preventDefault();
+                if (confirm(`Are you sure you want to delete ${selected.size} item(s)?`)) {
+                    const toDelete = structures.filter(s => selected.has(s.id));
+                    Promise.all(toDelete.map(handleDelete));
+                    deselectAll();
+                }
+            } else if (e.key === 'F2' && selected.size === 1) {
+                e.preventDefault();
+                setOpeningId("rename-" + Array.from(selected)[0]);
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [selected, structures, filtered]);
 
     const handleBulkDelete = async () => {
         const ids = [...selected];
@@ -930,7 +1058,6 @@ export const MyStructures = () => {
         const toDelete = structures.filter(s => ids.includes(s.id));
         setStructures(prev => prev.filter(s => !ids.includes(s.id)));
         setSelected(new Set());
-        setSelectMode(false);
         for (const s of toDelete) {
             try { await deleteStructure(s.id, s.file_path); } catch { /* best effort */ }
         }
@@ -972,6 +1099,10 @@ export const MyStructures = () => {
         if (activeCollection === '__none__') return [];
         return collections.filter(c => c.parent_id === activeCollection);
     }, [activeCollection, collections]);
+
+    const recentStructures = useMemo(() => {
+        return [...structures].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 5);
+    }, [structures]);
 
     const handleCompareInMultiview = async () => {
         if (!user) return;
@@ -1029,16 +1160,6 @@ export const MyStructures = () => {
         return () => document.removeEventListener('click', handleClick);
     }, []);
 
-    // Filtering + sorting
-    let filtered = structures.filter(s => {
-        if (showStarred && !s.starred) return false;
-        if (activeTag && !(s.tags ?? []).includes(activeTag)) return false;
-        if (activeCollection === '__none__' && s.collection_id) return false;
-        if (activeCollection && activeCollection !== '__none__' && s.collection_id !== activeCollection) return false;
-        return s.name.toLowerCase().includes(searchQuery.toLowerCase());
-    });
-    if (sortBy === 'name') filtered = [...filtered].sort((a, b) => a.name.localeCompare(b.name));
-    else if (sortBy === 'size') filtered = [...filtered].sort((a, b) => (b.file_size ?? 0) - (a.file_size ?? 0));
 
     const sharedCardProps = { openingId, duplicatingId, onMove: setMovingStructure, onContextMenu: handleContextMenu };
 
@@ -1097,6 +1218,10 @@ export const MyStructures = () => {
                             onRenamed={(id, name) => setCollections(prev => prev.map(c => c.id === id ? { ...c, name } : c))}
                             onDeleted={id => setCollections(prev => prev.filter(c => c.id !== id))}
                             onDropStructure={handleDropMove}
+                            recentStructures={recentStructures}
+                            pinnedCollectionIds={pinnedCollectionIds}
+                            onOpenStructure={handleOpen}
+                            onTogglePin={handleTogglePin}
                         />
                     </div>
                 )}
@@ -1106,14 +1231,37 @@ export const MyStructures = () => {
                     {/* Breadcrumbs Header */}
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 min-h-[32px]">
                         {!loading && (
-                            <div className="flex items-center gap-2 text-[15px] font-medium text-neutral-400 px-1 overflow-x-auto whitespace-nowrap hide-scrollbar">
-                                <button onClick={() => setActiveCollection(null)} className="hover:text-white transition-colors">Projects</button>
+                            <div className="flex items-center gap-2 text-[15px] font-medium text-neutral-400 px-1 overflow-x-auto whitespace-nowrap hide-scrollbar py-1">
+                                <button
+                                    onClick={() => setActiveCollection(null)}
+                                    // Root library dropzone
+                                    onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; setDragOverBreadcrumb(null); }}
+                                    onDragLeave={() => setDragOverBreadcrumb(undefined)}
+                                    onDrop={e => {
+                                        e.preventDefault(); setDragOverBreadcrumb(undefined);
+                                        const id = e.dataTransfer.getData('text/plain');
+                                        if (id) {
+                                            if (activeCollection) handleDropMove(id, ''); // move to root
+                                        }
+                                    }}
+                                    className={`transition-colors px-1.5 py-0.5 rounded ${dragOverBreadcrumb === null ? 'bg-blue-500/20 text-blue-400 ring-1 ring-blue-500/50' : 'hover:text-white'}`}>
+                                    Projects
+                                </button>
                                 {activeCollection && activeCollection !== '__none__' ? currentBreadcrumbs.map((crumb: Collection, idx: number) => (
                                     <React.Fragment key={crumb.id}>
                                         <span className="text-neutral-600">/</span>
                                         <button
                                             onClick={() => setActiveCollection(crumb.id)}
-                                            className={idx === currentBreadcrumbs.length - 1 ? "text-neutral-200" : "hover:text-white transition-colors"}
+                                            onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; setDragOverBreadcrumb(crumb.id); }}
+                                            onDragLeave={() => setDragOverBreadcrumb(undefined)}
+                                            onDrop={e => {
+                                                e.preventDefault(); setDragOverBreadcrumb(undefined);
+                                                const id = e.dataTransfer.getData('text/plain');
+                                                if (id && crumb.id !== activeCollection) { // If dropped onto a non-active breadcrumb ancestor
+                                                    handleDropMove(id, crumb.id);
+                                                }
+                                            }}
+                                            className={`transition-colors px-1.5 py-0.5 rounded ${dragOverBreadcrumb === crumb.id ? 'bg-blue-500/20 text-blue-400 ring-1 ring-blue-500/50' : (idx === currentBreadcrumbs.length - 1 ? "text-neutral-200" : "hover:text-white")}`}
                                         >
                                             {crumb.name}
                                         </button>
@@ -1191,24 +1339,7 @@ export const MyStructures = () => {
                             </button>
                         </div>
 
-                        {/* Bulk select toggle */}
-                        {!selectMode ? (
-                            <button onClick={() => setSelectMode(true)}
-                                className="flex items-center gap-1.5 px-3 py-2 text-sm text-neutral-400 bg-neutral-900 border border-neutral-700 rounded-lg hover:text-white hover:border-neutral-600 transition-all">
-                                <Square className="w-3.5 h-3.5" />Select
-                            </button>
-                        ) : (
-                            <div className="flex items-center gap-2">
-                                <button onClick={selected.size === filtered.length ? deselectAll : selectAll}
-                                    className="flex items-center gap-1.5 px-3 py-2 text-sm text-blue-400 bg-blue-500/10 border border-blue-500/30 rounded-lg hover:bg-blue-500/20 transition-all">
-                                    <CheckSquare className="w-3.5 h-3.5" />
-                                    {selected.size === filtered.length ? 'Deselect all' : 'Select all'}
-                                </button>
-                                <button onClick={cancelSelect} className="p-2 text-neutral-500 hover:text-white rounded-lg border border-neutral-700 hover:border-neutral-600 transition-all">
-                                    <X className="w-4 h-4" />
-                                </button>
-                            </div>
-                        )}
+                        {/* Removed Bulk select toggle */}
                     </div>
 
                     {/* Loading */}
@@ -1251,44 +1382,57 @@ export const MyStructures = () => {
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                             {/* Render Subfolders */}
                             {activeSubfolders.map((sub: Collection) => (
-                                <FolderCard key={sub.id} collection={sub} count={collectionCounts[sub.id] || 0} onOpen={() => setActiveCollection(sub.id)} onDropStructure={handleDropMove} onContextMenu={handleContextMenu} />
+                                <FolderCard key={sub.id} collection={sub} count={collectionCounts[sub.id] || 0} onOpen={() => setActiveCollection(sub.id)} onDropStructure={handleDropMove} onContextMenu={handleContextMenu} previews={structures.filter(s => s.collection_id === sub.id).slice(0, 3)} />
                             ))}
 
                             {/* Render Structures */}
                             {filtered.map(item => (
                                 <StructureCard key={item.id} item={item}
-                                    selected={selected.has(item.id)} selectMode={selectMode} onSelect={toggleSelect}
+                                    selected={selected.has(item.id)} onSelect={toggleSelect}
                                     onToggleStar={handleToggleStar} onDelete={handleDelete}
                                     onRename={handleRename} onNotesChange={handleNotesChange}
                                     onTagsChange={handleTagsChange} onDuplicate={handleDuplicate}
                                     onOpen={handleOpen} {...sharedCardProps} />
                             ))}
 
-                            {!selectMode && (
-                                <button onClick={() => fileInputRef.current?.click()}
-                                    className="border-2 border-dashed border-neutral-800 rounded-2xl p-5 flex flex-col items-center justify-center text-neutral-600 hover:text-blue-400 hover:border-blue-500/40 hover:bg-blue-500/5 transition-all min-h-[280px] group">
-                                    <div className="w-10 h-10 rounded-full bg-neutral-800 group-hover:bg-blue-500/10 flex items-center justify-center mb-3 transition-colors">
-                                        <Plus className="w-5 h-5" />
-                                    </div>
-                                    <span className="text-sm font-medium">Upload New Structure</span>
-                                    <span className="text-xs mt-1 text-neutral-700 group-hover:text-neutral-500">.pdb · .cif · .sdf · .mol</span>
-                                </button>
-                            )}
+                            <button onClick={() => fileInputRef.current?.click()}
+                                className="border-2 border-dashed border-neutral-800 rounded-2xl p-5 flex flex-col items-center justify-center text-neutral-600 hover:text-blue-400 hover:border-blue-500/40 hover:bg-blue-500/5 transition-all min-h-[280px] group">
+                                <div className="w-10 h-10 rounded-full bg-neutral-800 group-hover:bg-blue-500/10 flex items-center justify-center mb-3 transition-colors">
+                                    <Plus className="w-5 h-5" />
+                                </div>
+                                <span className="text-sm font-medium">Upload New Structure</span>
+                                <span className="text-xs mt-1 text-neutral-700 group-hover:text-neutral-500">.pdb · .cif · .sdf · .mol</span>
+                            </button>
                         </div>
                     )}
 
                     {/* List */}
                     {!loading && structures.length > 0 && viewMode === 'list' && (
                         <div className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden">
-                            <table className="w-full text-left">
+                            <table className="w-full text-left table-fixed">
                                 <thead>
                                     <tr className="border-b border-neutral-800">
-                                        <th className="px-4 py-3 w-8" />
-                                        <th className="px-3 py-3 text-xs font-medium text-neutral-500">Name</th>
-                                        <th className="px-3 py-3 text-xs font-medium text-neutral-500">Type</th>
-                                        <th className="px-3 py-3 text-xs font-medium text-neutral-500">Tags</th>
-                                        <th className="px-3 py-3 text-xs font-medium text-neutral-500">Size</th>
-                                        <th className="px-3 py-3 text-xs font-medium text-neutral-500">Uploaded</th>
+                                        <th className="px-4 py-3 w-12" />
+                                        <th className="px-3 py-3 text-xs font-medium text-neutral-500 relative group/th" style={{ width: columnWidths.name }}>
+                                            Name
+                                            <div className="absolute right-0 top-0 bottom-0 w-1 flex items-center justify-center cursor-col-resize hover:bg-blue-500 transition-colors z-10" onMouseDown={e => handleResize('name', e)} />
+                                        </th>
+                                        <th className="px-3 py-3 text-xs font-medium text-neutral-500 relative group/th" style={{ width: columnWidths.type }}>
+                                            Type
+                                            <div className="absolute right-0 top-0 bottom-0 w-1 flex items-center justify-center cursor-col-resize hover:bg-blue-500 transition-colors z-10" onMouseDown={e => handleResize('type', e)} />
+                                        </th>
+                                        <th className="px-3 py-3 text-xs font-medium text-neutral-500 relative group/th" style={{ width: columnWidths.tags }}>
+                                            Tags
+                                            <div className="absolute right-0 top-0 bottom-0 w-1 flex items-center justify-center cursor-col-resize hover:bg-blue-500 transition-colors z-10" onMouseDown={e => handleResize('tags', e)} />
+                                        </th>
+                                        <th className="px-3 py-3 text-xs font-medium text-neutral-500 relative group/th" style={{ width: columnWidths.size }}>
+                                            Size
+                                            <div className="absolute right-0 top-0 bottom-0 w-1 flex items-center justify-center cursor-col-resize hover:bg-blue-500 transition-colors z-10" onMouseDown={e => handleResize('size', e)} />
+                                        </th>
+                                        <th className="px-3 py-3 text-xs font-medium text-neutral-500 relative group/th" style={{ width: columnWidths.uploaded }}>
+                                            Uploaded
+                                            <div className="absolute right-0 top-0 bottom-0 w-1 flex items-center justify-center cursor-col-resize hover:bg-blue-500 transition-colors z-10" onMouseDown={e => handleResize('uploaded', e)} />
+                                        </th>
                                         <th className="px-3 py-3 text-xs font-medium text-neutral-500">Actions</th>
                                     </tr>
                                 </thead>
@@ -1301,7 +1445,7 @@ export const MyStructures = () => {
                                     {/* Render Structures */}
                                     {filtered.map(item => (
                                         <StructureRow key={item.id} item={item}
-                                            selected={selected.has(item.id)} selectMode={selectMode} onSelect={toggleSelect}
+                                            selected={selected.has(item.id)} onSelect={toggleSelect}
                                             onToggleStar={handleToggleStar} onDelete={handleDelete}
                                             onRename={handleRename} onMove={setMovingStructure} onOpen={handleOpen} openingId={openingId} onContextMenu={handleContextMenu} />
                                     ))}
@@ -1314,7 +1458,7 @@ export const MyStructures = () => {
                         <p className="text-center text-neutral-500 text-sm py-8">No structures match your filter.</p>
                     )}
 
-                    {!loading && structures.length > 0 && !selectMode && (
+                    {!loading && structures.length > 0 && selected.size === 0 && (
                         <p className="text-xs text-neutral-600 text-center">
                             💡 Click a name to rename · Add tags and notes · Files auto-save when uploaded in the viewer
                         </p>
@@ -1324,7 +1468,7 @@ export const MyStructures = () => {
             </div> {/* end flex layout */}
 
             {/* Bulk action floating bar */}
-            {selectMode && selected.size > 0 && (
+            {selected.size > 0 && (
                 <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-neutral-800 border border-neutral-600 rounded-2xl px-5 py-3 shadow-2xl shadow-black/50">
                     <span className="text-sm font-medium text-white">{selected.size} selected</span>
                     <div className="w-px h-4 bg-neutral-600" />
@@ -1342,7 +1486,7 @@ export const MyStructures = () => {
                         className="flex items-center gap-2 px-3 py-1.5 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-all">
                         <Trash2 className="w-4 h-4" />Delete all
                     </button>
-                    <button onClick={cancelSelect} className="p-1.5 text-neutral-500 hover:text-white transition-colors">
+                    <button onClick={deselectAll} className="p-1.5 text-neutral-500 hover:text-white transition-colors">
                         <X className="w-4 h-4" />
                     </button>
                 </div>
@@ -1447,6 +1591,10 @@ export const MyStructures = () => {
                         <>
                             <button onClick={() => { setActiveCollection(contextMenu.item.id); setContextMenu(null); }} className="flex items-center gap-2.5 px-3 py-1.5 text-neutral-300 hover:text-white hover:bg-neutral-800 text-left">
                                 <Folder className="w-4 h-4 text-blue-400" /> Open Folder
+                            </button>
+                            <button onClick={() => { handleTogglePin(contextMenu.item.id); setContextMenu(null); }} className="flex items-center gap-2.5 px-3 py-1.5 text-neutral-300 hover:text-white hover:bg-neutral-800 text-left">
+                                <Pin className={`w-4 h-4 ${pinnedCollectionIds.includes(contextMenu.item.id) ? 'text-blue-400 rotate-45' : 'text-neutral-500'}`} />
+                                {pinnedCollectionIds.includes(contextMenu.item.id) ? 'Unpin from Quick Access' : 'Pin to Quick Access'}
                             </button>
                             <div className="h-px bg-neutral-800 my-1 mx-2" />
                             <button onClick={async () => {

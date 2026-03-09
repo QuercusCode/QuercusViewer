@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
-import { Database, Folder, Plus, Pencil, Trash2, Check, X, Loader2, ChevronRight, ChevronDown } from 'lucide-react';
-import { createCollection, renameCollection, deleteCollection, type Collection } from '../../lib/structuresService';
+import { Database, Folder, Plus, Pencil, Trash2, Check, X, Loader2, ChevronRight, ChevronDown, Clock, Pin } from 'lucide-react';
+import { createCollection, renameCollection, deleteCollection, type Collection, type Structure } from '../../lib/structuresService';
 import { DOT } from './CollectionsSidebar'; // reuse colors
 
 interface Props {
@@ -14,11 +14,16 @@ interface Props {
     onRenamed: (id: string, name: string) => void;
     onDeleted: (id: string) => void;
     onDropStructure?: (structureId: string, folderId: string) => void;
+    recentStructures?: Structure[];
+    pinnedCollectionIds?: string[];
+    onOpenStructure?: (s: Structure) => void;
+    onTogglePin?: (id: string) => void;
 }
 
 export function FolderTreeSidebar({
     userId, collections, activeCollection, counts, uncategorizedCount,
-    onSelect, onCreated, onRenamed, onDeleted, onDropStructure
+    onSelect, onCreated, onRenamed, onDeleted, onDropStructure,
+    recentStructures, pinnedCollectionIds, onOpenStructure
 }: Props) {
     // Tree state
     const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
@@ -192,6 +197,32 @@ export function FolderTreeSidebar({
             </div>
 
             <div className="flex-1 overflow-y-auto px-2 pb-4 space-y-0.5 custom-scrollbar">
+
+                {/* Pinned / Quick Access */}
+                {((recentStructures && recentStructures.length > 0) || (pinnedCollectionIds && pinnedCollectionIds.length > 0)) && (
+                    <div className="mb-4">
+                        <p className="px-2 mb-1.5 text-[10px] font-bold text-neutral-500 uppercase tracking-widest mt-2">Quick Access</p>
+                        {pinnedCollectionIds?.map(id => {
+                            const c = collections.find(col => col.id === id);
+                            if (!c) return null;
+                            return (
+                                <button key={`pin-${id}`} onClick={() => onSelect(c.id)}
+                                    className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm transition-all focus:outline-none mb-0.5
+                                        ${activeCollection === c.id ? 'bg-blue-500/10 text-blue-400 font-medium' : 'text-neutral-400 hover:bg-neutral-800/60 hover:text-neutral-200'}`}>
+                                    <Pin className="w-3.5 h-3.5 shrink-0 text-blue-400/70 rotate-45" />
+                                    <span className="truncate flex-1 text-left text-[13px]">{c.name}</span>
+                                </button>
+                            );
+                        })}
+                        {recentStructures?.map(s => (
+                            <button key={`recent-${s.id}`} onClick={() => onOpenStructure?.(s)}
+                                className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm text-neutral-400 hover:bg-neutral-800/60 hover:text-neutral-200 transition-all focus:outline-none mb-0.5">
+                                <Clock className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                                <span className="truncate flex-1 text-left text-[13px]">{s.name}</span>
+                            </button>
+                        ))}
+                    </div>
+                )}
 
                 {/* All structures */}
                 <button onClick={() => onSelect(null)}
