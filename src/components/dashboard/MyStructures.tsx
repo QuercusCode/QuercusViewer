@@ -145,7 +145,8 @@ function HoverPreview({ item }: { item: Structure }) {
     const rcsbId = item.name.match(/^[1-9][A-Z0-9]{3}$/i)?.[0]?.toUpperCase();
     return (
         <div
-            className="absolute z-50 inset-0 w-full h-full bg-neutral-900 border border-neutral-700/80 rounded-2xl shadow-2xl shadow-black/80 overflow-hidden pointer-events-none flex flex-col"
+            className="absolute z-50 top-0 left-0 w-full bg-neutral-900 border border-neutral-700/80 rounded-2xl shadow-2xl shadow-black/80 overflow-hidden pointer-events-none flex flex-col"
+            style={{ maxHeight: 'calc(100% - 48px)' }}
         >
             {/* Thumbnail */}
             {rcsbId && (
