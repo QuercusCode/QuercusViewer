@@ -66,6 +66,7 @@ import { StudioLayout } from './components/StudioLayout';
 import { useAuth } from './lib/AuthContext';
 import { Link } from 'react-router-dom';
 import { uploadStructure } from './lib/structuresService';
+import { addRecentStructure } from './lib/recentStructures';
 
 const deepEqual = (a: any, b: any): boolean => {
   if (a === b) return true;
@@ -1603,6 +1604,53 @@ function App() {
     }
   };
 
+  // ── Quick Save to My Structures ────────────────────────────────
+  const [quickSaving, setQuickSaving] = useState(false);
+  const handleQuickSave = async () => {
+    if (!user?.id) { error("Sign in to save structures to your library."); return; }
+    const ctrl = controllers[0];
+    setQuickSaving(true);
+    try {
+      if (ctrl.file) {
+        await uploadStructure(ctrl.file, user.id);
+        success(`"${ctrl.file.name.replace(/\.[^/.]+$/, '')}" saved to My Structures ✓`);
+      } else if (ctrl.pdbId) {
+        const res = await fetch(`https://files.rcsb.org/download/${ctrl.pdbId.toUpperCase()}.pdb`);
+        if (!res.ok) throw new Error('Could not fetch from RCSB');
+        const blob = await res.blob();
+        const file = new File([blob], `${ctrl.pdbId.toUpperCase()}.pdb`, { type: 'chemical/x-pdb' });
+        await uploadStructure(file, user.id);
+        success(`"${ctrl.pdbId}" saved to My Structures ✓`);
+      } else {
+        error("No structure loaded to save.");
+      }
+    } catch (e: any) {
+      error(e?.message ?? "Quick save failed");
+    } finally {
+      setQuickSaving(false);
+    }
+  };
+
+  // ── Track recent structures in localStorage ────────────────────
+  useEffect(() => {
+    const ctrl = controllers[0];
+    if (ctrl.pdbId && ctrl.pdbId.length >= 4) {
+      addRecentStructure({
+        id: ctrl.pdbId.toUpperCase(),
+        name: proteinTitle || ctrl.pdbId.toUpperCase(),
+        pdbId: ctrl.pdbId.toUpperCase(),
+        fileType: ctrl.dataSource === 'pubchem' ? 'sdf' : 'pdb',
+      });
+    } else if (ctrl.file) {
+      addRecentStructure({
+        id: ctrl.file.name,
+        name: ctrl.file.name.replace(/\.[^/.]+$/, ''),
+        fileType: ctrl.file.name.split('.').pop()?.toLowerCase(),
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [controllers[0].pdbId, controllers[0].file]);
+
   const handleExportVideo = async () => {
     const viewer = viewerRef.current || viewerRefs[0].current;
     if (!viewer || !recorder.session) return;
@@ -2890,6 +2938,8 @@ function App() {
                     setIsRocking={setIsRocking}
 
                     onSaveSession={() => handleToolAction('save')}
+                    onQuickSave={handleQuickSave}
+                    quickSaving={quickSaving}
                     onLoadSession={handleLoadSession}
                     onDownloadPDB={handleDownloadPDB}
                     onDownloadSequence={handleDownloadSequence}

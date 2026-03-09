@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { ArrowRight, Upload, Play, BookOpen, Dna, Activity, Shuffle } from 'lucide-react';
+import { ArrowRight, Upload, Play, BookOpen, Dna, Activity, Shuffle, Clock, ChevronRight } from 'lucide-react';
 import clsx from 'clsx';
 import { FEATURED_MOLECULES } from '../data/featuredMolecules';
+import { getRecentStructures, type RecentStructure } from '../lib/recentStructures';
 
 interface LandingOverlayProps {
     isVisible: boolean;
@@ -14,6 +15,12 @@ interface LandingOverlayProps {
 export const LandingOverlay: React.FC<LandingOverlayProps> = ({ isVisible, onDismiss, onUpload, onStartTour, onLoadPdb }) => {
     const [shouldRender, setShouldRender] = useState(isVisible);
     const [isFadingOut, setIsFadingOut] = useState(false);
+    const [recentStructures, setRecentStructures] = useState<RecentStructure[]>([]);
+
+    // Load recent structures from localStorage each time the overlay opens
+    useEffect(() => {
+        if (isVisible) setRecentStructures(getRecentStructures());
+    }, [isVisible]);
 
     // Day of year logic for consistent daily rotation
     const dailyIndex = useMemo(() => {
@@ -32,14 +39,12 @@ export const LandingOverlay: React.FC<LandingOverlayProps> = ({ isVisible, onDis
     const handleShuffle = (e: React.MouseEvent) => {
         e.stopPropagation();
         setIsShuffling(true);
-        // Animate shuffle
         let count = 0;
         const interval = setInterval(() => {
             setSelectedIndex(prev => (prev + 1) % FEATURED_MOLECULES.length);
             count++;
             if (count > 5) {
                 clearInterval(interval);
-                // Pick a new random index that is different from current
                 let newIndex = Math.floor(Math.random() * FEATURED_MOLECULES.length);
                 while (newIndex === selectedIndex && FEATURED_MOLECULES.length > 1) {
                     newIndex = Math.floor(Math.random() * FEATURED_MOLECULES.length);
@@ -57,12 +62,21 @@ export const LandingOverlay: React.FC<LandingOverlayProps> = ({ isVisible, onDis
             setIsFadingOut(false);
         } else {
             setIsFadingOut(true);
-            const timer = setTimeout(() => setShouldRender(false), 500); // Match CSS transition
+            const timer = setTimeout(() => setShouldRender(false), 500);
             return () => clearTimeout(timer);
         }
     }, [isVisible]);
 
     if (!shouldRender) return null;
+
+    const timeAgo = (ts: number) => {
+        const m = Math.floor((Date.now() - ts) / 60000);
+        if (m < 1) return 'just now';
+        if (m < 60) return `${m}m ago`;
+        const h = Math.floor(m / 60);
+        if (h < 24) return `${h}h ago`;
+        return `${Math.floor(h / 24)}d ago`;
+    };
 
     return (
         <div className={clsx(
@@ -70,7 +84,7 @@ export const LandingOverlay: React.FC<LandingOverlayProps> = ({ isVisible, onDis
             isFadingOut ? "opacity-0 pointer-events-none" : "opacity-100",
             "bg-gradient-to-br from-black/90 via-black/80 to-transparent backdrop-blur-sm"
         )}>
-            {/* Background Interaction Layer (Click to dismiss if clicking empty space) */}
+            {/* Background Interaction Layer */}
             <div className="absolute inset-0 z-0" onClick={onDismiss} />
 
             {/* Logo */}
@@ -111,7 +125,7 @@ export const LandingOverlay: React.FC<LandingOverlayProps> = ({ isVisible, onDis
                         </button>
                     </div>
 
-                    <div className="pt-8 flex items-center justify-center md:justify-start gap-6 text-sm text-gray-500 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-500">
+                    <div className="pt-4 flex items-center justify-center md:justify-start gap-6 text-sm text-gray-500 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-500">
                         <button onClick={onUpload} className="hover:text-white transition-colors flex items-center gap-2">
                             <Upload size={16} /> Upload File
                         </button>
@@ -120,11 +134,34 @@ export const LandingOverlay: React.FC<LandingOverlayProps> = ({ isVisible, onDis
                             <Dna size={16} /> Load Example (2B3P)
                         </button>
                     </div>
+
+                    {/* ── Recently Viewed ── */}
+                    {recentStructures.length > 0 && (
+                        <div className="pt-2 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-700">
+                            <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
+                                <Clock size={12} />
+                                <span className="font-semibold uppercase tracking-wider">Recently Viewed</span>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                                {recentStructures.map(r => (
+                                    <button
+                                        key={r.id}
+                                        onClick={() => { onLoadPdb(r.pdbId ?? r.id); onDismiss(); }}
+                                        className="group flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-full text-xs text-gray-300 hover:text-white transition-all"
+                                    >
+                                        <Dna size={11} className="text-blue-400 opacity-70 group-hover:opacity-100" />
+                                        <span className="font-medium truncate max-w-[120px]">{r.name}</span>
+                                        <span className="text-gray-600 shrink-0">{timeAgo(r.timestamp)}</span>
+                                        <ChevronRight size={10} className="text-gray-600 group-hover:text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* FEATURED CARD (Right) */}
                 <div className="relative pointer-events-auto w-full max-w-md animate-in fade-in slide-in-from-right-8 duration-1000 delay-500 hidden md:block">
-                    {/* Glass Card - Enlarged */}
                     <div className="bg-black/40 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-2xl relative overflow-hidden group hover:border-white/20 transition-colors transform hover:-translate-y-2 duration-500">
                         <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity scale-150">
                             <Activity size={180} />

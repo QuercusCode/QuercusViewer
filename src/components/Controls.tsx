@@ -345,6 +345,8 @@ interface ControlsProps {
     onSaveSession: () => void;
     onLoadSession: (file: File) => void;
     onToggleContactMap: () => void;
+    onQuickSave?: () => void;
+    quickSaving?: boolean;
     movies: Movie[];
     colorPalette: ColorPalette;
     setColorPalette: (palette: ColorPalette) => void;
@@ -502,7 +504,9 @@ export const Controls: React.FC<ControlsProps> = ({
     setVisualizerEngine,
     onResetCamera,
     isRocking,
-    setIsRocking
+    setIsRocking,
+    onQuickSave,
+    quickSaving = false,
 }) => {
     // Motif Search State
     const [searchPattern, setSearchPattern] = useState('');
@@ -1010,6 +1014,21 @@ export const Controls: React.FC<ControlsProps> = ({
 
 
                         </div>
+
+                        {onQuickSave && (
+                            <button
+                                onClick={onQuickSave}
+                                disabled={quickSaving}
+                                className={`w-full flex items-center justify-center gap-2 border py-2 rounded-lg transition-all group ${cardBg} hover:opacity-80 disabled:opacity-50`}
+                                title="Save current structure to My Structures library"
+                            >
+                                {quickSaving
+                                    ? <svg className="animate-spin w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" /></svg>
+                                    : <svg className="w-3.5 h-3.5 group-hover:text-blue-500 transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" /><polyline points="17,21 17,13 7,13 7,21" /><polyline points="7,3 7,8 15,8" /></svg>
+                                }
+                                <span className="text-xs font-medium">{quickSaving ? 'Saving…' : 'Save to Library'}</span>
+                            </button>
+                        )}
                     </div>
 
                     {/* 2. STRUCTURE INFO (Always Visible if loaded) */}
