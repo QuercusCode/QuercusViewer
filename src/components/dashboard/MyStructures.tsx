@@ -279,6 +279,32 @@ function FolderCard({ collection, count, onOpen }: { collection: Collection, cou
     );
 }
 
+// ── Folder row ───────────────────────────────────────────────────
+
+function FolderRow({ collection, count, onOpen }: { collection: Collection, count: number, onOpen: () => void }) {
+    return (
+        <tr className="group border-b border-neutral-800 hover:bg-neutral-800/40 transition-colors cursor-pointer"
+            onClick={onOpen}>
+            <td className="px-4 py-3 w-8">
+                <div className="w-4 h-4" /> {/* Spacer for checkbox col */}
+            </td>
+            <td className="px-3 py-3 relative">
+                <div className="flex items-center gap-3">
+                    <Folder className={`w-4 h-4 ${COLOR_CLASSES[collection.color]?.split(' ')[0] ?? 'text-blue-400'} shrink-0`} />
+                    <span className="text-sm font-medium text-neutral-200 group-hover:text-white truncate">{collection.name}</span>
+                </div>
+            </td>
+            <td className="px-3 py-3">
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md border bg-neutral-800 text-neutral-400 border-neutral-700">Folder</span>
+            </td>
+            <td className="px-3 py-3 text-xs text-neutral-500">-</td>
+            <td className="px-3 py-3 text-xs text-neutral-500">{count === 1 ? '1 item' : `${count} items`}</td>
+            <td className="px-3 py-3 text-xs text-neutral-500">-</td>
+            <td className="px-3 py-3"></td>
+        </tr>
+    );
+}
+
 // ── Structure card ────────────────────────────────────────────────
 
 interface CardProps {
@@ -632,59 +658,30 @@ function StructureRow({ item, selected, selectMode, onSelect, onToggleStar, onDe
     );
 }
 
-// ── Storage bar ───────────────────────────────────────────────────
-
-const MAX_FREE_BYTES = 1024 * 1024 * 1024;
-function StorageBar({ structures }: { structures: Structure[] }) {
-    const used = structures.reduce((s, x) => s + (x.file_size ?? 0), 0);
-    const pct = Math.min((used / MAX_FREE_BYTES) * 100, 100);
-    const color = pct > 80 ? 'bg-red-500' : pct > 50 ? 'bg-amber-500' : 'bg-blue-500';
-    return (
-        <div className="flex items-center gap-3 bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3">
-            <Database className="w-4 h-4 text-neutral-500 shrink-0" />
-            <div className="flex-1">
-                <div className="flex justify-between text-xs text-neutral-500 mb-1.5">
-                    <span>Storage used</span>
-                    <span className="text-neutral-300 font-medium">{formatBytes(used)} <span className="text-neutral-600">/ 1 GB</span></span>
-                </div>
-                <div className="h-1.5 bg-neutral-800 rounded-full overflow-hidden">
-                    <div className={`h-full rounded-full transition-all ${color}`} style={{ width: `${pct}%` }} />
-                </div>
-            </div>
-        </div>
-    );
-}
-
 // ── RCSB Import bar ───────────────────────────────────────────────
 
 function RCSBImport({ userId, onImported }: { userId: string; onImported: (s: Structure) => void }) {
     const [pdbId, setPdbId] = useState('');
     const [loading, setLoading] = useState(false);
-    const [err, setErr] = useState('');
-    const [ok, setOk] = useState('');
 
     const handle = async (e: React.FormEvent) => {
-        e.preventDefault(); setErr(''); setOk(''); setLoading(true);
+        e.preventDefault(); setLoading(true);
         try {
             const s = await importFromRCSB(pdbId, userId);
-            onImported(s); setOk(`"${s.name}" imported!`); setPdbId('');
-            setTimeout(() => setOk(''), 3000);
-        } catch (ex: any) { setErr(ex.message ?? 'Import failed'); }
+            onImported(s); setPdbId('');
+        } catch (ex: any) { alert(ex.message ?? 'Import failed'); }
         finally { setLoading(false); }
     };
 
     return (
-        <form onSubmit={handle} className="flex items-center gap-2 bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3">
-            <Import className="w-4 h-4 text-neutral-500 shrink-0" />
-            <span className="text-xs text-neutral-500 whitespace-nowrap hidden sm:block">Import from RCSB</span>
-            <input value={pdbId} onChange={e => { setPdbId(e.target.value.toUpperCase()); setErr(''); setOk(''); }}
-                placeholder="PDB ID (e.g. 1CRN)" maxLength={4}
-                className="flex-1 min-w-0 bg-transparent text-sm text-white placeholder-neutral-600 outline-none uppercase font-mono tracking-widest" />
-            {err && <span className="text-xs text-red-400 whitespace-nowrap">{err}</span>}
-            {ok && <span className="text-xs text-emerald-400 whitespace-nowrap flex items-center gap-1"><Check className="w-3 h-3" />{ok}</span>}
-            <button type="submit" disabled={pdbId.length !== 4 || loading}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg text-xs font-medium transition-colors shrink-0">
-                {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Import className="w-3.5 h-3.5" />}Import
+        <form onSubmit={handle} className="flex items-center gap-1.5 bg-neutral-900 border border-neutral-700 hover:border-neutral-600 focus-within:border-blue-500/50 rounded-lg px-2.5 py-1.5 transition-colors w-40 shrink-0">
+            <Import className="w-3.5 h-3.5 text-neutral-500 shrink-0" />
+            <input value={pdbId} onChange={e => setPdbId(e.target.value.toUpperCase())}
+                placeholder="PDB" maxLength={4}
+                className="flex-1 min-w-0 bg-transparent text-sm text-white placeholder-neutral-500 outline-none uppercase font-mono tracking-widest" />
+            <button type="submit" disabled={pdbId.length !== 4 || loading} title="Import from RCSB"
+                className="text-blue-400 hover:text-blue-300 disabled:opacity-50 transition-colors">
+                {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ChevronRight className="w-3.5 h-3.5" />}
             </button>
         </form>
     );
@@ -729,7 +726,7 @@ export const MyStructures = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [showStarred, setShowStarred] = useState(false);
     const [sortBy, setSortBy] = useState<SortKey>('date');
-    const [viewMode, setViewMode] = useState<ViewMode>('grid');
+    const [viewMode, setViewMode] = useState<ViewMode>('list');
     const [openingId, setOpeningId] = useState<string | null>(null);
     const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
     const [activeTag, setActiveTag] = useState<string | null>(null);
@@ -919,40 +916,15 @@ export const MyStructures = () => {
     const sharedCardProps = { openingId, duplicatingId, onMove: setMovingStructure };
 
     return (
-        <div className="max-w-6xl mx-auto space-y-5 pb-24">
+        <div className="max-w-7xl mx-auto space-y-4 pb-24 px-2">
             <input ref={fileInputRef} type="file" accept={ACCEPTED_EXTS} className="hidden" onChange={handleFileChange} />
 
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-xl font-semibold text-white tracking-tight">My Structures</h1>
-                    <p className="text-sm text-neutral-500 mt-0.5">
-                        {loading ? 'Loading…' : `${structures.length} structure${structures.length !== 1 ? 's' : ''} · ${structures.filter(s => s.starred).length} starred`}
-                    </p>
-                </div>
-                <div className="flex items-center gap-2">
-                    {!loading && <ExportZipButton structures={structures} />}
-                    <button onClick={() => fileInputRef.current?.click()} disabled={uploading}
-                        className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-60 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-                        {uploading ? <><Loader2 className="w-4 h-4 animate-spin" />Uploading…</> : <><Upload className="w-4 h-4" />Upload Structure</>}
-                    </button>
-                </div>
-            </div>
-
-            {/* Info bars */}
-            {!loading && user && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <StorageBar structures={structures} />
-                    <RCSBImport userId={user.id} onImported={s => setStructures(prev => [s, ...prev])} />
-                </div>
-            )}
-
             {/* Main layout with collections sidebar */}
-            <div className="flex gap-6">
+            <div className="flex gap-2 sm:gap-6 relative">
 
-                {/* Error */}
+                {/* Error floating */}
                 {error && (
-                    <div className="flex items-start gap-3 bg-red-500/10 border border-red-500/30 text-red-400 rounded-lg px-4 py-3 text-sm">
+                    <div className="fixed top-4 right-4 z-50 flex items-start gap-3 bg-red-500/10 border border-red-500/30 text-red-400 rounded-lg px-4 py-3 text-sm shadow-xl shadow-black/50 backdrop-blur-md">
                         <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" /><span>{error}</span>
                         <button onClick={() => setError(null)} className="ml-auto opacity-60 hover:opacity-100">✕</button>
                     </div>
@@ -960,32 +932,71 @@ export const MyStructures = () => {
 
                 {/* Collections sidebar */}
                 {!loading && user && (
-                    <FolderTreeSidebar
-                        userId={user.id}
-                        collections={collections}
-                        activeCollection={activeCollection}
-                        counts={collectionCounts}
-                        uncategorizedCount={uncategorizedCount}
-                        onSelect={setActiveCollection}
-                        onCreated={c => setCollections(prev => [...prev, c])}
-                        onRenamed={(id, name) => setCollections(prev => prev.map(c => c.id === id ? { ...c, name } : c))}
-                        onDeleted={id => setCollections(prev => prev.filter(c => c.id !== id))}
-                    />
+                    <div className="hidden sm:block">
+                        <FolderTreeSidebar
+                            userId={user.id}
+                            collections={collections}
+                            activeCollection={activeCollection}
+                            counts={collectionCounts}
+                            uncategorizedCount={uncategorizedCount}
+                            onSelect={setActiveCollection}
+                            onCreated={c => setCollections(prev => [...prev, c])}
+                            onRenamed={(id, name) => setCollections(prev => prev.map(c => c.id === id ? { ...c, name } : c))}
+                            onDeleted={id => setCollections(prev => prev.filter(c => c.id !== id))}
+                        />
+                    </div>
                 )}
 
                 {/* Main content */}
-                <div className="flex-1 min-w-0 space-y-5">
+                <div className="flex-1 min-w-0 flex flex-col pt-2">
+                    {/* Breadcrumbs Header */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 min-h-[32px]">
+                        {!loading && (
+                            <div className="flex items-center gap-2 text-[15px] font-medium text-neutral-400 px-1 overflow-x-auto whitespace-nowrap hide-scrollbar">
+                                <button onClick={() => setActiveCollection(null)} className="hover:text-white transition-colors">Projects</button>
+                                {activeCollection && activeCollection !== '__none__' ? currentBreadcrumbs.map((crumb: Collection, idx: number) => (
+                                    <React.Fragment key={crumb.id}>
+                                        <span className="text-neutral-600">/</span>
+                                        <button
+                                            onClick={() => setActiveCollection(crumb.id)}
+                                            className={idx === currentBreadcrumbs.length - 1 ? "text-neutral-200" : "hover:text-white transition-colors"}
+                                        >
+                                            {crumb.name}
+                                        </button>
+                                    </React.Fragment>
+                                )) : activeCollection === '__none__' && (
+                                    <>
+                                        <span className="text-neutral-600">/</span>
+                                        <span className="text-neutral-200">Uncategorized</span>
+                                    </>
+                                )}
+                            </div>
+                        )}
+
+                        <div className="flex items-center gap-2 ml-auto shrink-0">
+                            {!loading && <ExportZipButton structures={structures} />}
+                            <button onClick={() => fileInputRef.current?.click()} disabled={uploading}
+                                className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 border border-blue-500 disabled:opacity-60 text-white px-3 py-1.5 rounded-lg text-sm transition-colors shadow-sm">
+                                {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+                                Upload
+                            </button>
+                        </div>
+                    </div>
+
                     {/* Toolbar */}
-                    <div className="flex flex-wrap items-center gap-2">
-                        <div className="relative flex-1 min-w-[160px] max-w-xs">
+                    <div className="flex flex-wrap items-center gap-2 mb-4">
+                        <div className="relative flex-1 min-w-[140px] max-w-xs">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500" />
                             <input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
                                 placeholder="Filter structures…"
-                                className="w-full pl-9 pr-3 py-2 bg-neutral-900 border border-neutral-700 rounded-lg text-sm text-white placeholder-neutral-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                                className="w-full pl-9 pr-3 py-1.5 bg-neutral-900 border border-neutral-700 rounded-lg text-sm text-white placeholder-neutral-500 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all" />
                         </div>
+
+                        {!loading && user && <RCSBImport userId={user.id} onImported={s => setStructures(prev => [s, ...prev])} />}
+
                         <button onClick={() => setShowStarred(p => !p)}
-                            className={`flex items-center gap-2 px-3 py-2 text-sm border rounded-lg transition-all ${showStarred ? 'text-amber-400 border-amber-400/50 bg-amber-500/5' : 'text-neutral-400 bg-neutral-900 border-neutral-700 hover:text-amber-400'}`}>
-                            <Star className={`w-4 h-4 ${showStarred ? 'fill-amber-400' : ''}`} />Starred
+                            className={`flex items-center gap-1.5 px-2.5 py-1.5 text-sm border rounded-lg transition-all ${showStarred ? 'text-amber-400 border-amber-400/50 bg-amber-500/5' : 'text-neutral-400 bg-neutral-900 border-neutral-700 hover:text-amber-400 hover:border-neutral-600'}`}>
+                            <Star className={`w-3.5 h-3.5 ${showStarred ? 'fill-amber-400' : ''}`} />Starred
                         </button>
 
                         {/* Tag filter */}
@@ -1066,21 +1077,18 @@ export const MyStructures = () => {
                         </div>
                     )}
 
-                    {/* Breadcrumbs Header */}
-                    {!loading && activeCollection && activeCollection !== '__none__' && (
-                        <div className="flex items-center gap-2 text-sm text-neutral-500 mb-2 px-1">
-                            <button onClick={() => setActiveCollection(null)} className="hover:text-white transition-colors">Library</button>
-                            {currentBreadcrumbs.map((crumb: Collection, idx: number) => (
-                                <React.Fragment key={crumb.id}>
-                                    <ChevronRight className="w-3.5 h-3.5" />
-                                    <button
-                                        onClick={() => setActiveCollection(crumb.id)}
-                                        className={idx === currentBreadcrumbs.length - 1 ? "text-neutral-200 font-medium" : "hover:text-white transition-colors"}
-                                    >
-                                        {crumb.name}
-                                    </button>
-                                </React.Fragment>
-                            ))}
+                    {/* Empty State */}
+                    {!loading && structures.length === 0 && (
+                        <div className="text-center py-32 bg-neutral-900/50 border border-neutral-800 rounded-xl mt-4">
+                            <Database className="w-12 h-12 mx-auto mb-4 text-neutral-700" />
+                            <p className="text-[15px] font-medium text-neutral-300 mb-1">Your library is empty</p>
+                            <p className="text-sm text-neutral-500 mb-6 max-w-sm mx-auto">Upload a molecular file or import from the RCSB database to get started.</p>
+                            <div className="flex items-center justify-center gap-3">
+                                <button onClick={() => fileInputRef.current?.click()}
+                                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors shadow shadow-blue-900/20">
+                                    <Upload className="w-4 h-4" />Upload File
+                                </button>
+                            </div>
                         </div>
                     )}
 
@@ -1131,6 +1139,12 @@ export const MyStructures = () => {
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    {/* Render Subfolders inline in table */}
+                                    {activeSubfolders.map((sub: Collection) => (
+                                        <FolderRow key={sub.id} collection={sub} count={collectionCounts[sub.id] || 0} onOpen={() => setActiveCollection(sub.id)} />
+                                    ))}
+
+                                    {/* Render Structures */}
                                     {filtered.map(item => (
                                         <StructureRow key={item.id} item={item}
                                             selected={selected.has(item.id)} selectMode={selectMode} onSelect={toggleSelect}
