@@ -306,178 +306,183 @@ function StructureCard({
 
     return (
         <div
-            className={`group bg-neutral-900/80 border rounded-2xl overflow-hidden transition-all duration-200 hover:shadow-xl hover:shadow-black/30 flex flex-col relative
-                ${selected ? 'border-blue-500/60 shadow-blue-500/10 shadow-lg' : 'border-neutral-800 hover:border-neutral-600'}`}
+            className={`group rounded-2xl transition-all duration-200 hover:shadow-xl hover:shadow-black/30 flex flex-col relative z-0 hover:z-50
+                ${selected ? 'shadow-blue-500/10 shadow-lg' : ''}`}
             onClick={() => selectMode && onSelect(item.id)}
             onMouseEnter={() => !selectMode && setHovered(true)}
             onMouseLeave={() => setHovered(false)}
         >
-            {/* Hover preview popover */}
+            {/* Hover preview popover (escapes bounds) */}
             {hovered && !selectMode && <HoverPreview item={item} />}
 
-            {/* Gradient strip or RCSB Thumbnail */}
-            {hasThumbnail ? (
-                <div className="relative h-36 overflow-hidden bg-neutral-800">
-                    <img
-                        src={`https://cdn.rcsb.org/images/structures/${rcsbId!.toLowerCase()}_assembly-1.jpeg`}
-                        alt={rcsbId}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                        onError={e => {
-                            const el = e.target as HTMLImageElement;
-                            el.parentElement!.style.display = 'none';
-                        }}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-neutral-900/70 via-transparent to-transparent" />
-                    <span className={`absolute top-2 right-2 text-[10px] font-bold px-2 py-0.5 rounded-md border backdrop-blur-sm ${badge}`}>{item.file_type}</span>
-                </div>
-            ) : (
-                <div className={`h-1 w-full bg-gradient-to-r ${strip}`} />
-            )}
+            {/* Inner clipping wrapper */}
+            <div className={`flex-1 flex flex-col bg-neutral-900/80 border rounded-2xl overflow-hidden transition-colors
+                ${selected ? 'border-blue-500/60' : 'border-neutral-800 group-hover:border-neutral-600'}`}>
 
-            {/* Select checkbox */}
-            {selectMode && (
-                <div className="absolute top-3 left-3 z-10">
-                    <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all
-                        ${selected ? 'bg-blue-500 border-blue-500' : 'bg-neutral-800 border-neutral-600 hover:border-blue-400'}`}>
-                        {selected && <Check className="w-3 h-3 text-white" />}
+                {/* Gradient strip or RCSB Thumbnail */}
+                {hasThumbnail ? (
+                    <div className="relative h-36 overflow-hidden bg-neutral-800">
+                        <img
+                            src={`https://cdn.rcsb.org/images/structures/${rcsbId!.toLowerCase()}_assembly-1.jpeg`}
+                            alt={rcsbId}
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                            onError={e => {
+                                const el = e.target as HTMLImageElement;
+                                el.parentElement!.style.display = 'none';
+                            }}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-neutral-900/70 via-transparent to-transparent" />
+                        <span className={`absolute top-2 right-2 text-[10px] font-bold px-2 py-0.5 rounded-md border backdrop-blur-sm ${badge}`}>{item.file_type}</span>
                     </div>
-                </div>
-            )}
-
-            <div className={`p-5 flex flex-col flex-1 ${selectMode ? 'cursor-pointer' : ''}`}>
-                {/* Top row */}
-                <div className={`flex items-start justify-between mb-3 ${selectMode ? 'pl-6' : ''}`}>
-                    <div className="flex items-center gap-2">
-                        <div className="h-9 w-9 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center shrink-0">
-                            <Dna className="w-4 h-4 text-white/50" />
-                        </div>
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${badge}`}>{item.file_type}</span>
-                    </div>
-                    {!selectMode && (
-                        <button onClick={() => onToggleStar(item)} className="p-1.5 rounded-lg hover:bg-white/5 transition-colors">
-                            <Star className={`w-4 h-4 transition-all ${item.starred ? 'text-amber-400 fill-amber-400' : 'text-neutral-600 hover:text-amber-400'}`} />
-                        </button>
-                    )}
-                </div>
-
-                {/* Name */}
-                {editing ? (
-                    <input ref={inputRef} value={draftName}
-                        onChange={e => setDraftName(e.target.value)}
-                        onBlur={commitRename}
-                        onKeyDown={e => { if (e.key === 'Enter') commitRename(); if (e.key === 'Escape') { setEditing(false); setDraftName(item.name); } }}
-                        onClick={e => e.stopPropagation()}
-                        className="text-sm font-semibold text-white bg-neutral-800 border border-blue-500/60 rounded-lg px-2.5 py-1 w-full outline-none focus:ring-1 focus:ring-blue-500 mb-1" />
                 ) : (
-                    <button onClick={e => { e.stopPropagation(); if (!selectMode) setEditing(true); }}
-                        className="group/name flex items-center gap-1.5 text-left mb-1 w-full min-w-0" title="Click to rename">
-                        <span className="text-sm font-semibold text-neutral-100 truncate">{item.name}</span>
-                        {!selectMode && <Pencil className="w-3 h-3 text-neutral-600 opacity-0 group-hover/name:opacity-100 transition-all shrink-0" />}
-                    </button>
+                    <div className={`h-1 w-full bg-gradient-to-r ${strip}`} />
                 )}
 
-                {/* File metadata */}
-                <div className="flex items-center gap-3 text-xs text-neutral-500 mb-2">
-                    <span className="flex items-center gap-1"><FileText className="w-3 h-3" />{formatBytes(item.file_size)}</span>
-                    <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{timeAgo(item.created_at)}</span>
-                    {(item.view_count ?? 0) > 0 && (
-                        <span className="flex items-center gap-1 ml-auto text-neutral-600">
-                            <Eye className="w-3 h-3" />{item.view_count}
-                        </span>
-                    )}
-                </div>
-
-                {/* RCSB metadata */}
-                {item.metadata && (
-                    <div className="grid grid-cols-2 gap-1.5 mb-3">
-                        {item.metadata.organism && (
-                            <div className="flex items-center gap-1 text-[10px] text-neutral-500 truncate" title={item.metadata.organism}>
-                                <Globe className="w-2.5 h-2.5 shrink-0" />{item.metadata.organism}
-                            </div>
-                        )}
-                        {item.metadata.method && (
-                            <div className="flex items-center gap-1 text-[10px] text-neutral-500 truncate" title={item.metadata.method}>
-                                <Microscope className="w-2.5 h-2.5 shrink-0" />{item.metadata.method}
-                            </div>
-                        )}
-                        {item.metadata.resolution != null && (
-                            <div className="flex items-center gap-1 text-[10px] text-neutral-500">
-                                <Beaker className="w-2.5 h-2.5 shrink-0" />{item.metadata.resolution.toFixed(2)} Å
-                            </div>
-                        )}
-                    </div>
-                )}
-
-                {/* Tags */}
-                {!selectMode && (
-                    <TagEditor
-                        tags={item.tags ?? []}
-                        onChange={tags => onTagsChange(item.id, tags)}
-                    />
-                )}
-                {selectMode && item.tags?.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mb-3">
-                        {item.tags.map(t => (
-                            <span key={t} className={`text-[10px] font-medium px-1.5 py-0.5 rounded-md border ${tagColor(t)}`}>{t}</span>
-                        ))}
-                    </div>
-                )}
-
-                {/* Notes */}
-                {!selectMode && (
-                    <div className="mb-4">
-                        <button onClick={e => { e.stopPropagation(); setShowNotes(p => !p); }}
-                            className="flex items-center gap-1.5 text-xs text-neutral-500 hover:text-neutral-300 transition-colors mb-1.5">
-                            <NotebookPen className="w-3 h-3" />
-                            {draftNotes ? 'Notes' : 'Add notes'}
-                            {showNotes ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                        </button>
-                        {showNotes && (
-                            <textarea value={draftNotes}
-                                onChange={e => setDraftNotes(e.target.value)}
-                                onBlur={() => { if (draftNotes !== (item.notes ?? '')) onNotesChange(item.id, draftNotes); }}
-                                onClick={e => e.stopPropagation()}
-                                placeholder="Source, experiment notes, doi:10.1234/…"
-                                rows={3}
-                                className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-xs text-neutral-300 placeholder-neutral-600 resize-none focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500" />
-                        )}
-                    </div>
-                )}
-
-                {/* Action bar */}
-                {!selectMode && (
-                    <div className="mt-auto space-y-1.5">
-                        {/* Primary: Open */}
-                        <button onClick={() => onOpen(item)} disabled={!!openingId}
-                            className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-blue-600/10 hover:bg-blue-600/25 border border-blue-500/20 hover:border-blue-500/40 text-blue-400 text-xs font-medium transition-all disabled:opacity-50">
-                            {openingId === item.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <ExternalLink className="w-4 h-4" />}
-                            Open in Viewer
-                        </button>
-                        {/* Secondary: 4 small buttons */}
-                        <div className="grid grid-cols-4 gap-1.5">
-                            <button onClick={handleDownload} disabled={downloading} title="Download"
-                                className="flex flex-col items-center gap-1 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 border border-neutral-700/50 text-neutral-400 hover:text-white transition-all disabled:opacity-50">
-                                {downloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
-                                <span className="text-[9px]">Download</span>
-                            </button>
-                            <button onClick={handleShare} title="Copy link"
-                                className="flex flex-col items-center gap-1 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 border border-neutral-700/50 text-neutral-400 hover:text-white transition-all">
-                                {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Share2 className="w-3.5 h-3.5" />}
-                                <span className={`text-[9px] ${copied ? 'text-emerald-400' : ''}`}>{copied ? 'Copied' : 'Share'}</span>
-                            </button>
-                            <button onClick={() => onDuplicate(item)} disabled={duplicatingId === item.id} title="Duplicate"
-                                className="flex flex-col items-center gap-1 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 border border-neutral-700/50 text-neutral-400 hover:text-white transition-all disabled:opacity-50">
-                                {duplicatingId === item.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Copy className="w-3.5 h-3.5" />}
-                                <span className="text-[9px]">Duplicate</span>
-                            </button>
-                            <button onClick={() => onDelete(item)} title="Delete"
-                                className="flex flex-col items-center gap-1 py-2 rounded-xl bg-neutral-800 hover:bg-red-500/15 border border-neutral-700/50 hover:border-red-500/30 text-neutral-600 hover:text-red-400 transition-all">
-                                <Trash2 className="w-3.5 h-3.5" />
-                                <span className="text-[9px]">Delete</span>
-                            </button>
+                {/* Select checkbox */}
+                {selectMode && (
+                    <div className="absolute top-3 left-3 z-10">
+                        <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all
+                        ${selected ? 'bg-blue-500 border-blue-500' : 'bg-neutral-800 border-neutral-600 hover:border-blue-400'}`}>
+                            {selected && <Check className="w-3 h-3 text-white" />}
                         </div>
                     </div>
                 )}
+
+                <div className={`p-5 flex flex-col flex-1 ${selectMode ? 'cursor-pointer' : ''}`}>
+                    {/* Top row */}
+                    <div className={`flex items-start justify-between mb-3 ${selectMode ? 'pl-6' : ''}`}>
+                        <div className="flex items-center gap-2">
+                            <div className="h-9 w-9 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center shrink-0">
+                                <Dna className="w-4 h-4 text-white/50" />
+                            </div>
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${badge}`}>{item.file_type}</span>
+                        </div>
+                        {!selectMode && (
+                            <button onClick={() => onToggleStar(item)} className="p-1.5 rounded-lg hover:bg-white/5 transition-colors">
+                                <Star className={`w-4 h-4 transition-all ${item.starred ? 'text-amber-400 fill-amber-400' : 'text-neutral-600 hover:text-amber-400'}`} />
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Name */}
+                    {editing ? (
+                        <input ref={inputRef} value={draftName}
+                            onChange={e => setDraftName(e.target.value)}
+                            onBlur={commitRename}
+                            onKeyDown={e => { if (e.key === 'Enter') commitRename(); if (e.key === 'Escape') { setEditing(false); setDraftName(item.name); } }}
+                            onClick={e => e.stopPropagation()}
+                            className="text-sm font-semibold text-white bg-neutral-800 border border-blue-500/60 rounded-lg px-2.5 py-1 w-full outline-none focus:ring-1 focus:ring-blue-500 mb-1" />
+                    ) : (
+                        <button onClick={e => { e.stopPropagation(); if (!selectMode) setEditing(true); }}
+                            className="group/name flex items-center gap-1.5 text-left mb-1 w-full min-w-0" title="Click to rename">
+                            <span className="text-sm font-semibold text-neutral-100 truncate">{item.name}</span>
+                            {!selectMode && <Pencil className="w-3 h-3 text-neutral-600 opacity-0 group-hover/name:opacity-100 transition-all shrink-0" />}
+                        </button>
+                    )}
+
+                    {/* File metadata */}
+                    <div className="flex items-center gap-3 text-xs text-neutral-500 mb-2">
+                        <span className="flex items-center gap-1"><FileText className="w-3 h-3" />{formatBytes(item.file_size)}</span>
+                        <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{timeAgo(item.created_at)}</span>
+                        {(item.view_count ?? 0) > 0 && (
+                            <span className="flex items-center gap-1 ml-auto text-neutral-600">
+                                <Eye className="w-3 h-3" />{item.view_count}
+                            </span>
+                        )}
+                    </div>
+
+                    {/* RCSB metadata */}
+                    {item.metadata && (
+                        <div className="grid grid-cols-2 gap-1.5 mb-3">
+                            {item.metadata.organism && (
+                                <div className="flex items-center gap-1 text-[10px] text-neutral-500 truncate" title={item.metadata.organism}>
+                                    <Globe className="w-2.5 h-2.5 shrink-0" />{item.metadata.organism}
+                                </div>
+                            )}
+                            {item.metadata.method && (
+                                <div className="flex items-center gap-1 text-[10px] text-neutral-500 truncate" title={item.metadata.method}>
+                                    <Microscope className="w-2.5 h-2.5 shrink-0" />{item.metadata.method}
+                                </div>
+                            )}
+                            {item.metadata.resolution != null && (
+                                <div className="flex items-center gap-1 text-[10px] text-neutral-500">
+                                    <Beaker className="w-2.5 h-2.5 shrink-0" />{item.metadata.resolution.toFixed(2)} Å
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Tags */}
+                    {!selectMode && (
+                        <TagEditor
+                            tags={item.tags ?? []}
+                            onChange={tags => onTagsChange(item.id, tags)}
+                        />
+                    )}
+                    {selectMode && item.tags?.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 mb-3">
+                            {item.tags.map(t => (
+                                <span key={t} className={`text-[10px] font-medium px-1.5 py-0.5 rounded-md border ${tagColor(t)}`}>{t}</span>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Notes */}
+                    {!selectMode && (
+                        <div className="mb-4">
+                            <button onClick={e => { e.stopPropagation(); setShowNotes(p => !p); }}
+                                className="flex items-center gap-1.5 text-xs text-neutral-500 hover:text-neutral-300 transition-colors mb-1.5">
+                                <NotebookPen className="w-3 h-3" />
+                                {draftNotes ? 'Notes' : 'Add notes'}
+                                {showNotes ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                            </button>
+                            {showNotes && (
+                                <textarea value={draftNotes}
+                                    onChange={e => setDraftNotes(e.target.value)}
+                                    onBlur={() => { if (draftNotes !== (item.notes ?? '')) onNotesChange(item.id, draftNotes); }}
+                                    onClick={e => e.stopPropagation()}
+                                    placeholder="Source, experiment notes, doi:10.1234/…"
+                                    rows={3}
+                                    className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-xs text-neutral-300 placeholder-neutral-600 resize-none focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500" />
+                            )}
+                        </div>
+                    )}
+
+                    {/* Action bar */}
+                    {!selectMode && (
+                        <div className="mt-auto space-y-1.5">
+                            {/* Primary: Open */}
+                            <button onClick={() => onOpen(item)} disabled={!!openingId}
+                                className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-blue-600/10 hover:bg-blue-600/25 border border-blue-500/20 hover:border-blue-500/40 text-blue-400 text-xs font-medium transition-all disabled:opacity-50">
+                                {openingId === item.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <ExternalLink className="w-4 h-4" />}
+                                Open in Viewer
+                            </button>
+                            {/* Secondary: 4 small buttons */}
+                            <div className="grid grid-cols-4 gap-1.5">
+                                <button onClick={handleDownload} disabled={downloading} title="Download"
+                                    className="flex flex-col items-center gap-1 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 border border-neutral-700/50 text-neutral-400 hover:text-white transition-all disabled:opacity-50">
+                                    {downloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+                                    <span className="text-[9px]">Download</span>
+                                </button>
+                                <button onClick={handleShare} title="Copy link"
+                                    className="flex flex-col items-center gap-1 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 border border-neutral-700/50 text-neutral-400 hover:text-white transition-all">
+                                    {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Share2 className="w-3.5 h-3.5" />}
+                                    <span className={`text-[9px] ${copied ? 'text-emerald-400' : ''}`}>{copied ? 'Copied' : 'Share'}</span>
+                                </button>
+                                <button onClick={() => onDuplicate(item)} disabled={duplicatingId === item.id} title="Duplicate"
+                                    className="flex flex-col items-center gap-1 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 border border-neutral-700/50 text-neutral-400 hover:text-white transition-all disabled:opacity-50">
+                                    {duplicatingId === item.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Copy className="w-3.5 h-3.5" />}
+                                    <span className="text-[9px]">Duplicate</span>
+                                </button>
+                                <button onClick={() => onDelete(item)} title="Delete"
+                                    className="flex flex-col items-center gap-1 py-2 rounded-xl bg-neutral-800 hover:bg-red-500/15 border border-neutral-700/50 hover:border-red-500/30 text-neutral-600 hover:text-red-400 transition-all">
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                    <span className="text-[9px]">Delete</span>
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );
