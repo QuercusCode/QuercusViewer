@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import {
     Database, Eye, Upload, FolderOpen, Star,
     Activity, TrendingUp, Loader2, Plus,
@@ -122,7 +122,6 @@ function QuickActions() {
 // ─── Top Structures ────────────────────────────────────────────────
 
 function TopStructures({ structures }: { structures: Structure[] }) {
-    const navigate = useNavigate();
     const top = [...structures]
         .filter(s => (s.view_count ?? 0) > 0)
         .sort((a, b) => (b.view_count ?? 0) - (a.view_count ?? 0))
