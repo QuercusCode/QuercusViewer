@@ -7,6 +7,7 @@ import { StudioDrafts } from './components/dashboard/StudioDrafts';
 import { AuthPage } from './components/auth/AuthPage';
 import { AccountSettings } from './components/dashboard/AccountSettings';
 import { ActivityTimeline } from './components/dashboard/ActivityTimeline';
+import { DashboardHome } from './components/dashboard/DashboardHome';
 
 // Protected Route Wrapper
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -43,8 +44,8 @@ function App() {
                             </ProtectedRoute>
                         }
                     >
-                        {/* Redirect /dashboard to /dashboard/structures */}
-                        <Route index element={<Navigate to="structures" replace />} />
+                        {/* Dashboard home — overview with stats */}
+                        <Route index element={<DashboardHome />} />
 
                         <Route path="structures" element={<MyStructures />} />
                         <Route path="drafts" element={<StudioDrafts />} />
