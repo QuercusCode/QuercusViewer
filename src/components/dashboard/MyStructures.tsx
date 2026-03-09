@@ -145,8 +145,7 @@ function HoverPreview({ item }: { item: Structure }) {
     const rcsbId = item.name.match(/^[1-9][A-Z0-9]{3}$/i)?.[0]?.toUpperCase();
     return (
         <div
-            className="absolute z-50 left-full top-0 ml-3 w-72 bg-neutral-900 border border-neutral-700 rounded-2xl shadow-2xl shadow-black/60 overflow-hidden pointer-events-none"
-            style={{ minWidth: 260 }}
+            className="absolute z-50 inset-0 w-full h-full bg-neutral-900 border border-neutral-700/80 rounded-2xl shadow-2xl shadow-black/80 overflow-hidden pointer-events-none flex flex-col"
         >
             {/* Thumbnail */}
             {rcsbId && (
@@ -161,7 +160,7 @@ function HoverPreview({ item }: { item: Structure }) {
                     <span className="absolute bottom-2 left-3 text-xs font-mono text-white/80 bg-black/40 backdrop-blur-sm px-2 py-0.5 rounded-md">{rcsbId}</span>
                 </div>
             )}
-            <div className="p-4 space-y-3">
+            <div className="p-4 space-y-3 overflow-y-auto overflow-x-hidden flex-1 scrollbar-hide">
                 {/* Name */}
                 <div>
                     <p className="text-sm font-semibold text-white leading-snug">{item.metadata?.title || item.name}</p>
