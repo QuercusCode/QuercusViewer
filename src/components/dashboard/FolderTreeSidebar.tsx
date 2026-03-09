@@ -13,32 +13,36 @@ interface Props {
     onCreated: (c: Collection) => void;
     onRenamed: (id: string, name: string) => void;
     onDeleted: (id: string) => void;
+    onDropStructure?: (structureId: string, folderId: string) => void;
 }
 
 export function FolderTreeSidebar({
     userId, collections, activeCollection, counts, uncategorizedCount,
-    onSelect, onCreated, onRenamed, onDeleted,
+    onSelect, onCreated, onRenamed, onDeleted, onDropStructure
 }: Props) {
     // Tree state
     const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
-    
+
     // Creation state
     const [creatingInId, setCreatingInId] = useState<string | 'root' | null>(null);
     const [newName, setNewName] = useState('');
     const [newColor, setNewColor] = useState('blue');
     const [saving, setSaving] = useState(false);
-    
+
     // Rename state
     const [renamingId, setRenamingId] = useState<string | null>(null);
     const [renameDraft, setRenameDraft] = useState('');
     const inputRef = useRef<HTMLInputElement>(null);
+
+    // Drag-and-drop state
+    const [dragOverId, setDragOverId] = useState<string | null>(null);
 
     useEffect(() => { if (creatingInId || renamingId) inputRef.current?.focus(); }, [creatingInId, renamingId]);
 
     // Build the tree hierarchy
     const foldersByParent = new Map<string | null, Collection[]>();
     foldersByParent.set(null, []);
-    
+
     collections.forEach(c => {
         const parent = c.parent_id || null;
         if (!foldersByParent.has(parent)) foldersByParent.set(parent, []);
@@ -104,20 +108,31 @@ export function FolderTreeSidebar({
                             </div>
                         ) : (
                             <button onClick={() => onSelect(c.id)}
+                                onDragOver={(e) => { e.preventDefault(); setDragOverId(c.id); }}
+                                onDragLeave={() => setDragOverId(null)}
+                                onDrop={(e) => {
+                                    e.preventDefault();
+                                    setDragOverId(null);
+                                    if (onDropStructure) {
+                                        const structureId = e.dataTransfer.getData('text/plain');
+                                        if (structureId) onDropStructure(structureId, c.id);
+                                    }
+                                }}
                                 className={`w-full flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-sm transition-all text-left relative focus:outline-none
-                                    ${isActive ? 'bg-neutral-800 text-white' : 'text-neutral-400 hover:bg-neutral-800/60 hover:text-neutral-200'}`}
+                                    ${dragOverId === c.id ? 'bg-blue-500/20 text-white ring-1 ring-blue-500 border border-blue-500/50' :
+                                        isActive ? 'bg-neutral-800 text-white border border-transparent' : 'text-neutral-400 hover:bg-neutral-800/60 hover:text-neutral-200 border border-transparent'}`}
                                 style={{ paddingLeft: `${depth * 12 + 8}px` }}
                             >
                                 {/* Expaner Icon */}
-                                <div onClick={(e) => hasChildren ? toggleExpand(c.id, e) : undefined} 
-                                     className={`w-4 h-4 flex items-center justify-center shrink-0 ${hasChildren ? 'hover:bg-neutral-700 rounded-sm cursor-pointer' : 'opacity-0'}`}>
+                                <div onClick={(e) => hasChildren ? toggleExpand(c.id, e) : undefined}
+                                    className={`w-4 h-4 flex items-center justify-center shrink-0 ${hasChildren ? 'hover:bg-neutral-700 rounded-sm cursor-pointer' : 'opacity-0'}`}>
                                     {isExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
                                 </div>
-                                
+
                                 <span className={`w-2 h-2 rounded-full shrink-0 ${DOT[c.color] ?? 'bg-neutral-400'}`} />
                                 <span className="truncate flex-1 text-[13px]">{c.name}</span>
                                 <span className="text-[10px] text-neutral-500 bg-neutral-900 px-1.5 rounded">{counts[c.id] ?? 0}</span>
-                                
+
                                 <span className="hidden group-hover:flex items-center gap-0.5 absolute right-2 bg-neutral-800 pl-1">
                                     <button onClick={e => { e.stopPropagation(); setCreatingInId(c.id); }} className="p-0.5 text-neutral-500 hover:text-blue-400"><Plus className="w-3 h-3" /></button>
                                     <button onClick={e => { e.stopPropagation(); setRenamingId(c.id); setRenameDraft(c.name); }} className="p-0.5 text-neutral-500 hover:text-white"><Pencil className="w-3 h-3" /></button>
@@ -126,14 +141,14 @@ export function FolderTreeSidebar({
                             </button>
                         )}
                     </div>
-                    
+
                     {/* Render children if expanded */}
                     {isExpanded && renderTree(c.id, depth + 1)}
-                    
+
                     {/* Render new folder inline creator */}
                     {creatingInId === c.id && isExpanded && (
                         <div className="pl-6 pr-2 py-1" style={{ paddingLeft: `${(depth + 1) * 12 + 8}px` }}>
-                             {renderCreatorBox()}
+                            {renderCreatorBox()}
                         </div>
                     )}
                 </div>
@@ -147,14 +162,14 @@ export function FolderTreeSidebar({
                 onKeyDown={e => { if (e.key === 'Enter') handleCreate(); if (e.key === 'Escape') setCreatingInId(null); }}
                 placeholder="Folder name…"
                 className="w-full bg-neutral-900 text-xs text-white placeholder-neutral-500 px-2.5 py-1.5 rounded border border-neutral-800 focus:border-blue-500/50 outline-none" />
-            
+
             <div className="flex flex-wrap gap-1">
                 {['blue', 'violet', 'emerald', 'orange', 'pink', 'amber', 'cyan', 'rose'].map(col => (
                     <button key={col} onClick={() => setNewColor(col)}
                         className={`w-3.5 h-3.5 rounded-full ${DOT[col]} transition-all ${newColor === col ? 'ring-2 ring-white/40 scale-125' : ''}`} />
                 ))}
             </div>
-            
+
             <div className="flex gap-1 pt-1">
                 <button onClick={handleCreate} disabled={saving || !newName.trim()}
                     className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded text-xs">
@@ -177,7 +192,7 @@ export function FolderTreeSidebar({
             </div>
 
             <div className="flex-1 overflow-y-auto px-2 pb-4 space-y-0.5 custom-scrollbar">
-                
+
                 {/* All structures */}
                 <button onClick={() => onSelect(null)}
                     className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm transition-all focus:outline-none mb-2

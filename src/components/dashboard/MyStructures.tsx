@@ -12,7 +12,7 @@ import {
     listStructures, uploadStructure, toggleStar, deleteStructure,
     renameStructure, updateNotes, updateTags, importFromRCSB,
     duplicateStructure, getDownloadUrl, exportAllAsZip,
-    listCollections, incrementViewCount, logActivity,
+    listCollections, incrementViewCount, logActivity, deleteCollection,
     type Structure, type Collection,
 } from '../../lib/structuresService';
 // Re-using the constants since I deleted CollectionsSidebar
@@ -259,12 +259,32 @@ const TYPE_STRIP: Record<string, string> = {
     MOL: 'from-orange-500 to-orange-700',
 };
 
+// ── Context Menu ──────────────────────────────────────────────────
+
+type ContextMenuPayload = {
+    x: number;
+    y: number;
+    type: 'folder' | 'structure';
+    item: any;
+};
+
 // ── Folder card ───────────────────────────────────────────────────
 
-function FolderCard({ collection, count, onOpen }: { collection: Collection, count: number, onOpen: () => void }) {
+function FolderCard({ collection, count, onOpen, onDropStructure, onContextMenu }: { collection: Collection, count: number, onOpen: () => void, onDropStructure: (structureId: string, folderId: string) => void, onContextMenu: (e: React.MouseEvent, type: 'folder', item: any) => void }) {
+    const [isDragOver, setIsDragOver] = useState(false);
+
     return (
         <button onClick={onOpen}
-            className="flex flex-col bg-neutral-900/80 border border-neutral-800 hover:border-neutral-600 rounded-2xl overflow-hidden transition-all duration-200 hover:shadow-xl hover:shadow-black/30 group text-left">
+            onContextMenu={e => onContextMenu(e, 'folder', collection)}
+            onDragOver={e => { e.preventDefault(); setIsDragOver(true); }}
+            onDragLeave={() => setIsDragOver(false)}
+            onDrop={e => {
+                e.preventDefault();
+                setIsDragOver(false);
+                const id = e.dataTransfer.getData('text/plain');
+                if (id) onDropStructure(id, collection.id);
+            }}
+            className={`flex flex-col bg-neutral-900/80 border hover:border-neutral-600 rounded-2xl overflow-hidden transition-all duration-200 hover:shadow-xl hover:shadow-black/30 group text-left ${isDragOver ? 'border-blue-500 ring-2 ring-blue-500/50 bg-blue-500/10' : 'border-neutral-800'}`}>
             <div className={`h-1.5 w-full ${DOT[collection.color] ?? 'bg-blue-500'}`} />
             <div className="p-4 flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-neutral-800 group-hover:bg-neutral-700 transition-colors">
@@ -281,10 +301,21 @@ function FolderCard({ collection, count, onOpen }: { collection: Collection, cou
 
 // ── Folder row ───────────────────────────────────────────────────
 
-function FolderRow({ collection, count, onOpen }: { collection: Collection, count: number, onOpen: () => void }) {
+function FolderRow({ collection, count, onOpen, onDropStructure, onContextMenu }: { collection: Collection, count: number, onOpen: () => void, onDropStructure: (structureId: string, folderId: string) => void, onContextMenu: (e: React.MouseEvent, type: 'folder', item: any) => void }) {
+    const [isDragOver, setIsDragOver] = useState(false);
+
     return (
-        <tr className="group border-b border-neutral-800 hover:bg-neutral-800/40 transition-colors cursor-pointer"
-            onClick={onOpen}>
+        <tr className={`group border-b transition-colors cursor-pointer ${isDragOver ? 'bg-blue-500/10 border-blue-500/50' : 'border-neutral-800 hover:bg-neutral-800/40'}`}
+            onClick={onOpen}
+            onContextMenu={e => onContextMenu(e, 'folder', collection)}
+            onDragOver={e => { e.preventDefault(); setIsDragOver(true); }}
+            onDragLeave={() => setIsDragOver(false)}
+            onDrop={e => {
+                e.preventDefault();
+                setIsDragOver(false);
+                const id = e.dataTransfer.getData('text/plain');
+                if (id) onDropStructure(id, collection.id);
+            }}>
             <td className="px-4 py-3 w-8">
                 <div className="w-4 h-4" /> {/* Spacer for checkbox col */}
             </td>
@@ -322,13 +353,15 @@ interface CardProps {
     onOpen: (s: Structure) => void;
     openingId: string | null;
     duplicatingId: string | null;
+    onContextMenu: (e: React.MouseEvent, type: 'structure', item: any) => void;
 }
 
 function StructureCard({
     item, selected, selectMode, onSelect,
     onToggleStar, onDelete, onRename, onNotesChange, onTagsChange,
-    onDuplicate, onMove, onOpen, openingId, duplicatingId
+    onDuplicate, onMove, onOpen, openingId, duplicatingId, onContextMenu
 }: CardProps) {
+    const [showMenu, setShowMenu] = useState(false);
     const [editing, setEditing] = useState(false);
     const [draftName, setDraftName] = useState(item.name);
     const [showNotes, setShowNotes] = useState(false);
@@ -338,6 +371,9 @@ function StructureCard({
     const [hovered, setHovered] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
 
+    // Use a ref for the dropdown container to detect outside clicks
+    const menuRef = useRef<HTMLDivElement>(null);
+
     // Derive RCSB ID from name (4-char PDB format) or metadata
     const rcsbId = item.name.match(/^[1-9][A-Z0-9]{3}$/i)?.[0]?.toUpperCase();
     const hasThumbnail = !!(rcsbId && item.metadata);
@@ -345,12 +381,30 @@ function StructureCard({
     useEffect(() => { setDraftName(item.name); }, [item.name]);
     useEffect(() => { setDraftNotes(item.notes ?? ''); }, [item.notes]);
     useEffect(() => { if (editing) inputRef.current?.select(); }, [editing]);
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+                setShowMenu(false);
+            }
+        };
+        if (showMenu) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [showMenu]);
 
     const commitRename = () => {
         setEditing(false);
         const t = draftName.trim();
         if (t && t !== item.name) onRename(item.id, t);
         else setDraftName(item.name);
+    };
+
+    const handleDragStart = (e: React.DragEvent) => {
+        e.dataTransfer.setData('text/plain', item.id);
+        e.dataTransfer.effectAllowed = 'move';
     };
 
     const handleShare = async () => {
@@ -379,8 +433,11 @@ function StructureCard({
             className={`group rounded-2xl transition-all duration-200 hover:shadow-xl hover:shadow-black/30 flex flex-col relative z-0 hover:z-50
                 ${selected ? 'shadow-blue-500/10 shadow-lg' : ''}`}
             onClick={() => selectMode && onSelect(item.id)}
+            onContextMenu={e => onContextMenu(e, 'structure', item)}
             onMouseEnter={() => !selectMode && setHovered(true)}
             onMouseLeave={() => setHovered(false)}
+            draggable
+            onDragStart={handleDragStart}
         >
             {/* Hover preview popover (escapes bounds) */}
             {hovered && !selectMode && <HoverPreview item={item} />}
@@ -565,8 +622,8 @@ function StructureCard({
 
 // ── List row ──────────────────────────────────────────────────────
 
-function StructureRow({ item, selected, selectMode, onSelect, onToggleStar, onDelete, onRename, onOpen, onMove, openingId }: Pick<CardProps,
-    'item' | 'selected' | 'selectMode' | 'onSelect' | 'onToggleStar' | 'onDelete' | 'onRename' | 'onOpen' | 'onMove' | 'openingId'>) {
+function StructureRow({ item, selected, selectMode, onSelect, onToggleStar, onDelete, onRename, onOpen, onMove, openingId, onContextMenu }: Pick<CardProps,
+    'item' | 'selected' | 'selectMode' | 'onSelect' | 'onToggleStar' | 'onDelete' | 'onRename' | 'onOpen' | 'onMove' | 'openingId' | 'onContextMenu'>) {
 
     const [editing, setEditing] = useState(false);
     const [draftName, setDraftName] = useState(item.name);
@@ -589,10 +646,18 @@ function StructureRow({ item, selected, selectMode, onSelect, onToggleStar, onDe
     };
     const badge = TYPE_BADGE[item.file_type] ?? 'bg-neutral-500/10 border-neutral-500/30 text-neutral-400';
 
+    const handleDragStart = (e: React.DragEvent) => {
+        e.dataTransfer.setData('text/plain', item.id);
+        e.dataTransfer.effectAllowed = 'move';
+    };
+
     return (
         <tr className={`group border-b border-neutral-800 hover:bg-neutral-800/40 transition-colors cursor-pointer
             ${selected ? 'bg-blue-500/5' : ''}`}
-            onClick={() => selectMode && onSelect(item.id)}>
+            onClick={() => selectMode && onSelect(item.id)}
+            onContextMenu={e => onContextMenu(e, 'structure', item)}
+            draggable
+            onDragStart={handleDragStart}>
             <td className="px-4 py-3 w-8">
                 {selectMode && (
                     <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-all ${selected ? 'bg-blue-500 border-blue-500' : 'border-neutral-600 hover:border-blue-400'}`}>
@@ -731,6 +796,12 @@ export const MyStructures = () => {
     const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
     const [activeTag, setActiveTag] = useState<string | null>(null);
 
+    // Context Menu State
+    const [contextMenu, setContextMenu] = useState<ContextMenuPayload | null>(null);
+
+    // Global Dropzone State
+    const [isWindowDragOver, setIsWindowDragOver] = useState(false);
+
     // Bulk select
     const [selectMode, setSelectMode] = useState(false);
     const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -762,11 +833,36 @@ export const MyStructures = () => {
         e.target.value = '';
         setUploading(true);
         try {
-            const s = await uploadStructure(file, user.id);
+            const destId = activeCollection === '__none__' ? null : activeCollection;
+            const s = await uploadStructure(file, user.id, { collection_id: destId });
             setStructures(prev => [s, ...prev]);
+        } catch (ex: any) {
+            setError(ex.message ?? 'Failed to upload');
+        } finally {
+            setUploading(false);
         }
-        catch (ex: any) { setError(ex.message ?? 'Upload failed'); }
-        finally { setUploading(false); }
+    };
+
+    const handleGlobalDrop = async (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsWindowDragOver(false);
+
+        const files = Array.from(e.dataTransfer.files);
+        if (files.length === 0 || !user) return;
+
+        setUploading(true);
+        try {
+            const destId = activeCollection === '__none__' ? null : activeCollection;
+            for (const file of files) {
+                // Check if it's a valid extension, but for now we attempt all dropped files
+                const s = await uploadStructure(file, user.id, { collection_id: destId });
+                setStructures(prev => [s, ...prev]);
+            }
+        } catch (ex: any) {
+            setError(ex.message ?? 'Upload failed');
+        } finally {
+            setUploading(false);
+        }
     };
 
     const handleToggleStar = async (s: Structure) => {
@@ -902,6 +998,37 @@ export const MyStructures = () => {
         }
     };
 
+    const handleDropMove = async (structureId: string, destCollectionId: string) => {
+        // Prevent moving to same folder
+        const struct = structures.find(s => s.id === structureId);
+        if (!struct || struct.collection_id === destCollectionId) return;
+
+        try {
+            const { moveStructure } = await import('../../lib/structuresService');
+            await moveStructure(structureId, destCollectionId);
+            setStructures(prev => prev.map(s => s.id === structureId ? { ...s, collection_id: destCollectionId } : s));
+        } catch (e: any) {
+            setError(e.message || 'Failed to move structure via drag and drop');
+        }
+    };
+
+    const handleContextMenu = (e: React.MouseEvent, type: 'folder' | 'structure', item: any) => {
+        e.preventDefault();
+        setContextMenu({
+            x: e.clientX,
+            y: e.clientY,
+            type,
+            item
+        });
+    };
+
+    // Close context menu on click anywhere
+    useEffect(() => {
+        const handleClick = () => setContextMenu(null);
+        document.addEventListener('click', handleClick);
+        return () => document.removeEventListener('click', handleClick);
+    }, []);
+
     // Filtering + sorting
     let filtered = structures.filter(s => {
         if (showStarred && !s.starred) return false;
@@ -913,11 +1040,37 @@ export const MyStructures = () => {
     if (sortBy === 'name') filtered = [...filtered].sort((a, b) => a.name.localeCompare(b.name));
     else if (sortBy === 'size') filtered = [...filtered].sort((a, b) => (b.file_size ?? 0) - (a.file_size ?? 0));
 
-    const sharedCardProps = { openingId, duplicatingId, onMove: setMovingStructure };
+    const sharedCardProps = { openingId, duplicatingId, onMove: setMovingStructure, onContextMenu: handleContextMenu };
 
     return (
-        <div className="max-w-7xl mx-auto space-y-4 pb-24 px-2">
+        <div
+            className="max-w-7xl mx-auto space-y-4 pb-24 px-2 relative min-h-[calc(100vh-80px)]"
+            onDragOver={e => {
+                // Only show dropzone for actual files, not for dragging internal structure cards
+                if (e.dataTransfer.types.includes('Files')) {
+                    e.preventDefault();
+                    setIsWindowDragOver(true);
+                }
+            }}
+            onDragLeave={() => setIsWindowDragOver(false)}
+            onDrop={handleGlobalDrop}
+        >
             <input ref={fileInputRef} type="file" accept={ACCEPTED_EXTS} className="hidden" onChange={handleFileChange} />
+
+            {/* Global Dropzone Overlay */}
+            {isWindowDragOver && (
+                <div className="absolute inset-x-2 inset-y-0 z-[200] max-h-[80vh] bg-blue-500/10 border-2 border-dashed border-blue-500 rounded-3xl flex flex-col items-center justify-center backdrop-blur-[2px]">
+                    <div className="bg-neutral-900 border border-neutral-700 shadow-2xl rounded-2xl p-8 flex flex-col items-center animate-in zoom-in duration-200">
+                        <Upload className="w-12 h-12 text-blue-400 mb-4 animate-bounce" />
+                        <h2 className="text-xl font-bold text-white mb-1">Drop files to upload</h2>
+                        <p className="text-neutral-400 text-sm">
+                            {activeCollection && activeCollection !== '__none__'
+                                ? `Adding to: ${collections.find(c => c.id === activeCollection)?.name}`
+                                : 'Adding to Library root'}
+                        </p>
+                    </div>
+                </div>
+            )}
 
             {/* Main layout with collections sidebar */}
             <div className="flex gap-2 sm:gap-6 relative">
@@ -943,6 +1096,7 @@ export const MyStructures = () => {
                             onCreated={c => setCollections(prev => [...prev, c])}
                             onRenamed={(id, name) => setCollections(prev => prev.map(c => c.id === id ? { ...c, name } : c))}
                             onDeleted={id => setCollections(prev => prev.filter(c => c.id !== id))}
+                            onDropStructure={handleDropMove}
                         />
                     </div>
                 )}
@@ -1097,7 +1251,7 @@ export const MyStructures = () => {
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                             {/* Render Subfolders */}
                             {activeSubfolders.map((sub: Collection) => (
-                                <FolderCard key={sub.id} collection={sub} count={collectionCounts[sub.id] || 0} onOpen={() => setActiveCollection(sub.id)} />
+                                <FolderCard key={sub.id} collection={sub} count={collectionCounts[sub.id] || 0} onOpen={() => setActiveCollection(sub.id)} onDropStructure={handleDropMove} onContextMenu={handleContextMenu} />
                             ))}
 
                             {/* Render Structures */}
@@ -1141,7 +1295,7 @@ export const MyStructures = () => {
                                 <tbody>
                                     {/* Render Subfolders inline in table */}
                                     {activeSubfolders.map((sub: Collection) => (
-                                        <FolderRow key={sub.id} collection={sub} count={collectionCounts[sub.id] || 0} onOpen={() => setActiveCollection(sub.id)} />
+                                        <FolderRow key={sub.id} collection={sub} count={collectionCounts[sub.id] || 0} onOpen={() => setActiveCollection(sub.id)} onDropStructure={handleDropMove} onContextMenu={handleContextMenu} />
                                     ))}
 
                                     {/* Render Structures */}
@@ -1149,7 +1303,7 @@ export const MyStructures = () => {
                                         <StructureRow key={item.id} item={item}
                                             selected={selected.has(item.id)} selectMode={selectMode} onSelect={toggleSelect}
                                             onToggleStar={handleToggleStar} onDelete={handleDelete}
-                                            onRename={handleRename} onMove={setMovingStructure} onOpen={handleOpen} openingId={openingId} />
+                                            onRename={handleRename} onMove={setMovingStructure} onOpen={handleOpen} openingId={openingId} onContextMenu={handleContextMenu} />
                                     ))}
                                 </tbody>
                             </table>
@@ -1249,6 +1403,90 @@ export const MyStructures = () => {
                             {/* Disabled: The user has to click a row to instantly move, so explicit Move button is purely visual/optional */}
                         </div>
                     </div>
+                </div>
+            )}
+
+            {/* Global Context Menu Render */}
+            {contextMenu && (
+                <div
+                    className="fixed z-[100] w-48 bg-neutral-900 border border-neutral-700/60 rounded-xl shadow-2xl shadow-black overflow-hidden flex flex-col py-1 text-[13px] font-medium animate-in fade-in zoom-in duration-150"
+                    style={{
+                        left: `${Math.min(contextMenu.x, window.innerWidth - 200)}px`,
+                        top: `${Math.min(contextMenu.y, window.innerHeight - 250)}px`
+                    }}
+                >
+                    {contextMenu.type === 'structure' ? (
+                        <>
+                            <button onClick={() => { handleOpen(contextMenu.item); setContextMenu(null); }} className="flex items-center gap-2.5 px-3 py-1.5 text-neutral-300 hover:text-white hover:bg-blue-500/20 text-left">
+                                <ExternalLink className="w-4 h-4 text-blue-400" /> Open in Viewer
+                            </button>
+                            <div className="h-px bg-neutral-800 my-1 mx-2" />
+                            <button onClick={() => { setOpeningId("rename-" + contextMenu.item.id); setContextMenu(null); }} className="flex items-center gap-2.5 px-3 py-1.5 text-neutral-400 hover:text-white hover:bg-neutral-800 text-left">
+                                <Pencil className="w-4 h-4" /> Rename...
+                            </button>
+                            <button onClick={() => { setMovingStructure(contextMenu.item); setContextMenu(null); }} className="flex items-center gap-2.5 px-3 py-1.5 text-neutral-400 hover:text-white hover:bg-neutral-800 text-left">
+                                <FolderInput className="w-4 h-4" /> Move to...
+                            </button>
+                            <button onClick={() => { handleDuplicate(contextMenu.item); setContextMenu(null); }} className="flex items-center gap-2.5 px-3 py-1.5 text-neutral-400 hover:text-white hover:bg-neutral-800 text-left">
+                                <Copy className="w-4 h-4" /> Duplicate
+                            </button>
+                            <div className="h-px bg-neutral-800 my-1 mx-2" />
+                            <button onClick={async () => {
+                                const url = await getDownloadUrl(contextMenu.item.file_path);
+                                const a = document.createElement('a'); a.href = url; a.download = `${contextMenu.item.name}.${contextMenu.item.file_type.toLowerCase()}`; a.click();
+                                setContextMenu(null);
+                            }} className="flex items-center gap-2.5 px-3 py-1.5 text-neutral-400 hover:text-white hover:bg-neutral-800 text-left">
+                                <Download className="w-4 h-4" /> Download File
+                            </button>
+                            <div className="h-px bg-neutral-800 my-1 mx-2" />
+                            <button onClick={() => { handleDelete(contextMenu.item); setContextMenu(null); }} className="flex items-center gap-2.5 px-3 py-1.5 text-red-500 hover:text-red-400 hover:bg-red-500/10 text-left">
+                                <Trash2 className="w-4 h-4" /> Delete
+                            </button>
+                        </>
+                    ) : (
+                        <>
+                            <button onClick={() => { setActiveCollection(contextMenu.item.id); setContextMenu(null); }} className="flex items-center gap-2.5 px-3 py-1.5 text-neutral-300 hover:text-white hover:bg-neutral-800 text-left">
+                                <Folder className="w-4 h-4 text-blue-400" /> Open Folder
+                            </button>
+                            <div className="h-px bg-neutral-800 my-1 mx-2" />
+                            <button onClick={async () => {
+                                try {
+                                    if (!user?.id) return;
+                                    // 1. Get all structures inside this folder
+                                    const { listStructures } = await import('../../lib/structuresService');
+                                    // listStructures takes userId
+                                    const folderStructures = await listStructures(user.id);
+
+                                    // We need to filter them locally since listStructures doesn't take folder ID officially in the current sig
+                                    const filtered = folderStructures.filter(s => s.collection_id === contextMenu.item.id);
+
+                                    if (filtered.length === 0) {
+                                        setError('This folder is empty.');
+                                    } else {
+                                        // 2. Pass them to exportAllAsZip
+                                        await exportAllAsZip(filtered);
+                                    }
+                                } catch (e: any) {
+                                    setError(e.message || 'Failed to download folder');
+                                } finally {
+                                    setContextMenu(null);
+                                }
+                            }} className="flex items-center gap-2.5 px-3 py-1.5 text-neutral-400 hover:text-white hover:bg-neutral-800 text-left">
+                                <Download className="w-4 h-4" /> Download ZIP
+                            </button>
+                            <div className="h-px bg-neutral-800 my-1 mx-2" />
+                            <button onClick={() => {
+                                if (!confirm('This will delete the folder. Its items will become uncategorized. Proceed?')) return;
+                                deleteCollection(contextMenu.item.id).then(() => {
+                                    setCollections(prev => prev.filter(c => c.id !== contextMenu.item.id));
+                                    if (activeCollection === contextMenu.item.id) setActiveCollection(null);
+                                });
+                                setContextMenu(null);
+                            }} className="flex items-center gap-2.5 px-3 py-1.5 text-red-500 hover:text-red-400 hover:bg-red-500/10 text-left">
+                                <Trash2 className="w-4 h-4" /> Delete Folder
+                            </button>
+                        </>
+                    )}
                 </div>
             )}
         </div>
