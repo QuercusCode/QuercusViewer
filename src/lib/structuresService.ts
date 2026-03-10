@@ -18,6 +18,7 @@ export interface Collection {
     name: string;
     color: string;
     parent_id?: string | null;
+    is_public?: boolean;
     created_at: string;
 }
 
@@ -254,6 +255,25 @@ export async function moveCollection(collectionId: string, destParentId: string 
 export async function deleteCollection(id: string): Promise<void> {
     const { error } = await supabase.from('collections').delete().eq('id', id);
     if (error) throw new Error(error.message);
+}
+
+export async function toggleCollectionPublic(collectionId: string, is_public: boolean): Promise<void> {
+    const { error } = await supabase.from('collections').update({ is_public }).eq('id', collectionId);
+    if (error) throw error;
+}
+
+export async function getPublicCollection(collectionId: string): Promise<{ collection: Collection, structures: Structure[] }> {
+    const [colRes, strRes] = await Promise.all([
+        supabase.from('collections').select('*').eq('id', collectionId).single(),
+        supabase.from('structures').select('*').eq('collection_id', collectionId).order('created_at', { ascending: false })
+    ]);
+    if (colRes.error) throw new Error('Collection not found or access denied.');
+    if (strRes.error) throw new Error('Could not fetch structures.');
+
+    // Auto-filter out soft-deleted structures so they are never public
+    const activeStructures = ((strRes.data ?? []) as Structure[]).filter(s => !s.metadata?.is_deleted);
+
+    return { collection: colRes.data as Collection, structures: activeStructures };
 }
 
 // ─── ZIP Export ───────────────────────────────────────────────────

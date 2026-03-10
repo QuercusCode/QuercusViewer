@@ -8,6 +8,7 @@ import { AuthPage } from './components/auth/AuthPage';
 import { AccountSettings } from './components/dashboard/AccountSettings';
 import { ActivityTimeline } from './components/dashboard/ActivityTimeline';
 import { DashboardHome } from './components/dashboard/DashboardHome';
+import { PublicPortfolio } from './components/public/PublicPortfolio';
 
 // Protected Route Wrapper
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -34,6 +35,9 @@ function App() {
 
                     {/* Authentication */}
                     <Route path="/auth" element={<AuthPage />} />
+
+                    {/* Public Shared Portfolios */}
+                    <Route path="/share/:collectionId" element={<PublicPortfolio />} />
 
                     {/* Protected Dashboard Routes */}
                     <Route

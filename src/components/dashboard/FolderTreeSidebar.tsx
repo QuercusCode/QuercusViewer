@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Database, Folder, Plus, Pencil, Trash2, Check, X, Loader2, ChevronRight, ChevronDown, Clock, Pin } from 'lucide-react';
+import { Database, Folder, Plus, Pencil, Trash2, Check, X, Loader2, ChevronRight, ChevronDown, Clock, Pin, Globe } from 'lucide-react';
 import { createCollection, renameCollection, deleteCollection, type Collection, type Structure } from '../../lib/structuresService';
 import { DOT } from './CollectionsSidebar'; // reuse colors
 
@@ -137,6 +137,7 @@ export function FolderTreeSidebar({
 
                                 <span className={`w-2 h-2 rounded-full shrink-0 ${DOT[c.color] ?? 'bg-neutral-400'}`} />
                                 <span className="truncate flex-1 text-[13px]">{c.name}</span>
+                                {c.is_public && <span title="Public" className="flex items-center shrink-0 ml-1 opacity-70"><Globe className="w-3 h-3 text-blue-400" /></span>}
                                 <span className="text-[10px] text-neutral-500 bg-neutral-900 px-1.5 rounded">{counts[c.id] ?? 0}</span>
 
                                 <span className="hidden group-hover:flex items-center gap-0.5 absolute right-2 bg-neutral-800 pl-1">

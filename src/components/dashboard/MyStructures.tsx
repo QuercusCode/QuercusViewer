@@ -12,7 +12,7 @@ import {
     listStructures, uploadStructure, toggleStar, deleteStructure,
     renameStructure, updateNotes, updateTags, importFromRCSB,
     duplicateStructure, getDownloadUrl, exportAllAsZip,
-    listCollections, incrementViewCount, logActivity, deleteCollection,
+    listCollections, incrementViewCount, logActivity, deleteCollection, toggleCollectionPublic,
     type Structure, type Collection,
 } from '../../lib/structuresService';
 // Re-using the constants since I deleted CollectionsSidebar
@@ -418,6 +418,7 @@ function FolderCard({ collection, count, onOpen, onDropStructure, onContextMenu,
             <div className={`h-1.5 w-full ${DOT[collection.color] ?? 'bg-blue-500'}`} />
             <div className="p-4 flex items-center gap-3">
                 <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 bg-neutral-800 group-hover:bg-neutral-700 transition-colors relative isolate">
+                    {collection.is_public && <div title="Public" className="absolute top-1 right-1 z-20 drop-shadow-md flex items-center justify-center"><Globe className="w-3.5 h-3.5 text-blue-400" /></div>}
                     {previews.length > 0 ? (
                         <>
                             <Folder className={`w-6 h-6 absolute opacity-20 ${COLOR_CLASSES[collection.color]?.split(' ')[0] ?? 'text-blue-400'}`} />
@@ -477,6 +478,7 @@ function FolderRow({ collection, count, onOpen, onDropStructure, onContextMenu, 
                 <div className="flex items-center gap-3">
                     <Folder className={`w-4 h-4 ${COLOR_CLASSES[collection.color]?.split(' ')[0] ?? 'text-blue-400'} shrink-0`} />
                     <span className="text-sm font-medium text-neutral-200 group-hover:text-white truncate">{collection.name}</span>
+                    {collection.is_public && <div title="Public Share Link Enabled" className="flex items-center shrink-0 ml-1"><Globe className="w-3.5 h-3.5 text-blue-400" /></div>}
                 </div>
             </td>
             {visibleColumns.type && <td className="px-3 py-3"><span className="text-[10px] font-bold px-2 py-0.5 rounded-md border bg-neutral-800 text-neutral-400 border-neutral-700">Folder</span></td>}
@@ -2091,6 +2093,24 @@ export const MyStructures = () => {
                         <>
                             <button onClick={() => { setActiveCollection(contextMenu.item.id); setContextMenu(null); }} className="flex items-center gap-2.5 px-3 py-1.5 text-neutral-300 hover:text-white hover:bg-neutral-800 text-left">
                                 <Folder className="w-4 h-4 text-blue-400" /> Open Folder
+                            </button>
+                            <button onClick={async () => {
+                                try {
+                                    const isPublic = !contextMenu.item.is_public;
+                                    await toggleCollectionPublic(contextMenu.item.id, isPublic);
+                                    setCollections(prev => prev.map(c => c.id === contextMenu.item.id ? { ...c, is_public: isPublic } : c));
+                                    if (isPublic) {
+                                        const url = `${window.location.origin}/share/${contextMenu.item.id}`;
+                                        await navigator.clipboard.writeText(url);
+                                        alert(`Public link copied to clipboard!\n${url}`);
+                                    }
+                                } catch (e: any) {
+                                    setError(e.message || 'Failed to update visibility');
+                                } finally {
+                                    setContextMenu(null);
+                                }
+                            }} className="flex items-center gap-2.5 px-3 py-1.5 text-blue-400 hover:text-white hover:bg-neutral-800 text-left font-medium">
+                                <Globe className="w-4 h-4" /> {contextMenu.item.is_public ? 'Make Private' : 'Share Public Link'}
                             </button>
                             <button onClick={() => { handleTogglePin(contextMenu.item.id); setContextMenu(null); }} className="flex items-center gap-2.5 px-3 py-1.5 text-neutral-300 hover:text-white hover:bg-neutral-800 text-left">
                                 <Pin className={`w-4 h-4 ${pinnedCollectionIds.includes(contextMenu.item.id) ? 'text-blue-400 rotate-45' : 'text-neutral-500'}`} />
