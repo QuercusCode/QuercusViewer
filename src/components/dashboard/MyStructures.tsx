@@ -1302,6 +1302,27 @@ export const MyStructures = () => {
         catch (ex: any) { setError(ex.message ?? 'Restore failed'); reload(); }
     };
 
+    const handleBulkRestore = async () => {
+        const ids = [...selected];
+        if (!confirm(`Restore ${ids.length} structure${ids.length > 1 ? 's' : ''}?`)) return;
+        const toRestore = structures.filter(s => ids.includes(s.id));
+        setStructures(prev => prev.map(x => {
+            if (!ids.includes(x.id)) return x;
+            const updatedMeta = { ...x.metadata };
+            delete updatedMeta.is_deleted;
+            delete updatedMeta.deleted_at;
+            return { ...x, metadata: updatedMeta as any };
+        }));
+        setSelected(new Set());
+        try {
+            const { restoreFromTrash } = await import('../../lib/structuresService');
+            for (const s of toRestore) {
+                await restoreFromTrash(s.id, s.metadata);
+            }
+        }
+        catch (ex: any) { setError(ex.message ?? 'Bulk restore failed'); reload(); }
+    };
+
     const handleBulkDownload = async () => {
         const toDownload = structures.filter(s => selected.has(s.id));
         for (const s of toDownload) {
@@ -1775,20 +1796,35 @@ export const MyStructures = () => {
                 <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-neutral-800 border border-neutral-600 rounded-2xl px-5 py-3 shadow-2xl shadow-black/50">
                     <span className="text-sm font-medium text-white">{selected.size} selected</span>
                     <div className="w-px h-4 bg-neutral-600" />
-                    {selected.size >= 2 && selected.size <= 4 && (
-                        <button onClick={handleCompareInMultiview}
-                            className="flex items-center gap-2 px-3 py-1.5 text-sm text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 rounded-lg transition-all">
-                            <Layers className="w-4 h-4" />Compare in Viewer
-                        </button>
+                    {activeCollection === '__trash__' ? (
+                        <>
+                            <button onClick={handleBulkRestore}
+                                className="flex items-center gap-2 px-3 py-1.5 text-sm text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 rounded-lg transition-all">
+                                <FolderInput className="w-4 h-4" />Restore all
+                            </button>
+                            <button onClick={handleBulkDelete}
+                                className="flex items-center gap-2 px-3 py-1.5 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-all">
+                                <Trash2 className="w-4 h-4" />Delete permanently
+                            </button>
+                        </>
+                    ) : (
+                        <>
+                            {selected.size >= 2 && selected.size <= 4 && (
+                                <button onClick={handleCompareInMultiview}
+                                    className="flex items-center gap-2 px-3 py-1.5 text-sm text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 rounded-lg transition-all">
+                                    <Layers className="w-4 h-4" />Compare in Viewer
+                                </button>
+                            )}
+                            <button onClick={handleBulkDownload}
+                                className="flex items-center gap-2 px-3 py-1.5 text-sm text-neutral-300 hover:text-white hover:bg-neutral-700 rounded-lg transition-all">
+                                <Download className="w-4 h-4" />Download all
+                            </button>
+                            <button onClick={handleBulkDelete}
+                                className="flex items-center gap-2 px-3 py-1.5 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-all">
+                                <Trash2 className="w-4 h-4" />Move to Trash
+                            </button>
+                        </>
                     )}
-                    <button onClick={handleBulkDownload}
-                        className="flex items-center gap-2 px-3 py-1.5 text-sm text-neutral-300 hover:text-white hover:bg-neutral-700 rounded-lg transition-all">
-                        <Download className="w-4 h-4" />Download all
-                    </button>
-                    <button onClick={handleBulkDelete}
-                        className="flex items-center gap-2 px-3 py-1.5 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-all">
-                        <Trash2 className="w-4 h-4" />Delete all
-                    </button>
                     <button onClick={deselectAll} className="p-1.5 text-neutral-500 hover:text-white transition-colors">
                         <X className="w-4 h-4" />
                     </button>
