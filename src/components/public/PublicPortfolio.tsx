@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { getPublicCollection, getDownloadUrl, type Collection, type Structure } from '../../lib/structuresService';
-import { Loader2, Folder, ExternalLink, Download, Globe, Beaker, Dna, Info } from 'lucide-react';
+import { Loader2, Folder, ExternalLink, Download, Globe, Beaker, Dna } from 'lucide-react';
 
 // Re-use some constants for visual consistency
 const COLOR_CLASSES: Record<string, string> = {
