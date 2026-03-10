@@ -18,12 +18,13 @@ interface Props {
     pinnedCollectionIds?: string[];
     onOpenStructure?: (s: Structure) => void;
     onTogglePin?: (id: string) => void;
+    onClose?: () => void;
 }
 
 export function FolderTreeSidebar({
     userId, collections, activeCollection, counts, uncategorizedCount,
     onSelect, onCreated, onRenamed, onDeleted, onDropStructure,
-    recentStructures, pinnedCollectionIds, onOpenStructure
+    recentStructures, pinnedCollectionIds, onOpenStructure, onClose
 }: Props) {
     // Tree state
     const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
@@ -188,12 +189,19 @@ export function FolderTreeSidebar({
     );
 
     return (
-        <div className="w-64 shrink-0 flex flex-col h-full bg-neutral-950/30 border-r border-neutral-800/50">
+        <div className="w-64 shrink-0 flex flex-col h-full bg-neutral-950/90 sm:bg-neutral-950/30 border-r border-neutral-800/50 backdrop-blur-xl sm:backdrop-blur-none">
             <div className="p-4 flex items-center justify-between">
                 <p className="text-xs font-semibold text-neutral-400 uppercase tracking-widest">Projects</p>
-                <button onClick={() => setCreatingInId('root')} className="p-1 text-neutral-500 hover:text-white rounded-md hover:bg-neutral-800 transition-colors">
-                    <Plus className="w-4 h-4" />
-                </button>
+                <div className="flex items-center gap-1">
+                    <button onClick={() => setCreatingInId('root')} className="p-1 text-neutral-500 hover:text-white rounded-md hover:bg-neutral-800 transition-colors">
+                        <Plus className="w-4 h-4" />
+                    </button>
+                    {onClose && (
+                        <button onClick={onClose} className="p-1 text-neutral-500 hover:text-white rounded-md hover:bg-neutral-800 transition-colors sm:hidden">
+                            <X className="w-4 h-4" />
+                        </button>
+                    )}
+                </div>
             </div>
 
             <div className="flex-1 overflow-y-auto px-2 pb-4 space-y-0.5 custom-scrollbar">

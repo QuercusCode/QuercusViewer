@@ -4,7 +4,7 @@ import {
     Loader2, AlertCircle, Download, Check, Pencil, Share2,
     FileText, Filter, List, LayoutGrid, Database, NotebookPen,
     ChevronDown, ChevronUp, Import, Tag, Copy, X, CheckSquare,
-    Layers, Beaker, Microscope, Globe, Eye, Folder, ChevronRight, FolderInput, Pin, PanelRight, Settings2
+    Layers, Beaker, Microscope, Globe, Eye, Folder, ChevronRight, FolderInput, Pin, PanelRight, Settings2, Menu
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../lib/AuthContext';
@@ -972,6 +972,9 @@ export const MyStructures = () => {
     const [showInspector, setShowInspector] = useState(() => localStorage.getItem('quercus_show_inspector') === 'true');
     useEffect(() => { localStorage.setItem('quercus_show_inspector', showInspector.toString()); }, [showInspector]);
 
+    // Mobile Sidebar
+    const [showMobileSidebar, setShowMobileSidebar] = useState(false);
+
     // Advanced Filters
     const [filters, setFilters] = useState<FilterRule[]>([]);
 
@@ -1509,9 +1512,9 @@ export const MyStructures = () => {
                     </div>
                 )}
 
-                {/* Collections sidebar */}
+                {/* Collections sidebar - Desktop */}
                 {!loading && user && (
-                    <div className="hidden sm:block">
+                    <div className="hidden sm:block relative z-10 w-64 shrink-0">
                         <FolderTreeSidebar
                             userId={user.id}
                             collections={mappedCollections}
@@ -1531,52 +1534,87 @@ export const MyStructures = () => {
                     </div>
                 )}
 
+                {/* Collections sidebar - Mobile Drawer */}
+                {!loading && user && (
+                    <div className={`sm:hidden fixed inset-0 z-[100] transition-opacity duration-300 ${showMobileSidebar ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+                        {/* Backdrop */}
+                        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowMobileSidebar(false)} />
+                        {/* Drawer */}
+                        <div className={`absolute inset-y-0 left-0 w-64 transform transition-transform duration-300 ease-out flex ${showMobileSidebar ? 'translate-x-0' : '-translate-x-full'}`}>
+                            <FolderTreeSidebar
+                                userId={user.id}
+                                collections={mappedCollections}
+                                activeCollection={activeCollection}
+                                counts={collectionCounts}
+                                uncategorizedCount={uncategorizedCount}
+                                onSelect={(id) => { setActiveCollection(id); setShowMobileSidebar(false); }}
+                                onCreated={c => setCollections(prev => [...prev, c])}
+                                onRenamed={(id, name) => setCollections(prev => prev.map(c => c.id === id ? { ...c, name } : c))}
+                                onDeleted={id => setCollections(prev => prev.filter(c => c.id !== id))}
+                                onDropStructure={handleDropMove}
+                                recentStructures={recentStructures}
+                                pinnedCollectionIds={pinnedCollectionIds}
+                                onOpenStructure={handleOpen}
+                                onTogglePin={handleTogglePin}
+                                onClose={() => setShowMobileSidebar(false)}
+                            />
+                        </div>
+                    </div>
+                )}
+
                 {/* Main content */}
                 <div className="flex-1 min-w-0 flex flex-col pt-2">
                     {/* Breadcrumbs Header */}
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 min-h-[32px]">
                         {!loading && (
-                            <div className="flex items-center gap-2 text-[15px] font-medium text-neutral-400 px-1 overflow-x-auto whitespace-nowrap hide-scrollbar py-1">
-                                <button
-                                    onClick={() => setActiveCollection(null)}
-                                    // Root library dropzone
-                                    onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; setDragOverBreadcrumb(null); }}
-                                    onDragLeave={() => setDragOverBreadcrumb(undefined)}
-                                    onDrop={e => {
-                                        e.preventDefault(); setDragOverBreadcrumb(undefined);
-                                        const id = e.dataTransfer.getData('text/plain');
-                                        if (id) {
-                                            if (activeCollection) handleDropMove(id, ''); // move to root
-                                        }
-                                    }}
-                                    className={`transition-colors px-1.5 py-0.5 rounded ${dragOverBreadcrumb === null ? 'bg-blue-500/20 text-blue-400 ring-1 ring-blue-500/50' : 'hover:text-white'}`}>
-                                    Projects
+                            <div className="flex items-center gap-2 text-[15px] font-medium text-neutral-400 px-1 py-1 w-full sm:w-auto">
+                                <button onClick={() => setShowMobileSidebar(true)}
+                                    className="sm:hidden p-1.5 -ml-1 text-neutral-400 hover:text-white rounded-md hover:bg-neutral-800 transition-colors shrink-0">
+                                    <Menu className="w-5 h-5" />
                                 </button>
-                                {activeCollection && activeCollection !== '__none__' ? currentBreadcrumbs.map((crumb: Collection, idx: number) => (
-                                    <React.Fragment key={crumb.id}>
-                                        <span className="text-neutral-600">/</span>
-                                        <button
-                                            onClick={() => setActiveCollection(crumb.id)}
-                                            onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; setDragOverBreadcrumb(crumb.id); }}
-                                            onDragLeave={() => setDragOverBreadcrumb(undefined)}
-                                            onDrop={e => {
-                                                e.preventDefault(); setDragOverBreadcrumb(undefined);
-                                                const id = e.dataTransfer.getData('text/plain');
-                                                if (id && crumb.id !== activeCollection) { // If dropped onto a non-active breadcrumb ancestor
-                                                    handleDropMove(id, crumb.id);
-                                                }
-                                            }}
-                                            className={`transition-colors px-1.5 py-0.5 rounded ${dragOverBreadcrumb === crumb.id ? 'bg-blue-500/20 text-blue-400 ring-1 ring-blue-500/50' : (idx === currentBreadcrumbs.length - 1 ? "text-neutral-200" : "hover:text-white")}`}
-                                        >
-                                            {crumb.name}
-                                        </button>
-                                    </React.Fragment>
-                                )) : activeCollection === '__none__' && (
-                                    <>
-                                        <span className="text-neutral-600">/</span>
-                                        <span className="text-neutral-200">Uncategorized</span>
-                                    </>
-                                )}
+
+                                <div className="flex items-center gap-2 overflow-x-auto whitespace-nowrap hide-scrollbar flex-1">
+                                    <button
+                                        onClick={() => setActiveCollection(null)}
+                                        // Root library dropzone
+                                        onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; setDragOverBreadcrumb(null); }}
+                                        onDragLeave={() => setDragOverBreadcrumb(undefined)}
+                                        onDrop={e => {
+                                            e.preventDefault(); setDragOverBreadcrumb(undefined);
+                                            const id = e.dataTransfer.getData('text/plain');
+                                            if (id) {
+                                                if (activeCollection) handleDropMove(id, ''); // move to root
+                                            }
+                                        }}
+                                        className={`transition-colors px-1.5 py-0.5 rounded ${dragOverBreadcrumb === null ? 'bg-blue-500/20 text-blue-400 ring-1 ring-blue-500/50' : 'hover:text-white'}`}>
+                                        Projects
+                                    </button>
+                                    {activeCollection && activeCollection !== '__none__' ? currentBreadcrumbs.map((crumb: Collection, idx: number) => (
+                                        <React.Fragment key={crumb.id}>
+                                            <span className="text-neutral-600">/</span>
+                                            <button
+                                                onClick={() => setActiveCollection(crumb.id)}
+                                                onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; setDragOverBreadcrumb(crumb.id); }}
+                                                onDragLeave={() => setDragOverBreadcrumb(undefined)}
+                                                onDrop={e => {
+                                                    e.preventDefault(); setDragOverBreadcrumb(undefined);
+                                                    const id = e.dataTransfer.getData('text/plain');
+                                                    if (id && crumb.id !== activeCollection) { // If dropped onto a non-active breadcrumb ancestor
+                                                        handleDropMove(id, crumb.id);
+                                                    }
+                                                }}
+                                                className={`transition-colors px-1.5 py-0.5 rounded ${dragOverBreadcrumb === crumb.id ? 'bg-blue-500/20 text-blue-400 ring-1 ring-blue-500/50' : (idx === currentBreadcrumbs.length - 1 ? "text-neutral-200" : "hover:text-white")}`}
+                                            >
+                                                {crumb.name}
+                                            </button>
+                                        </React.Fragment>
+                                    )) : activeCollection === '__none__' && (
+                                        <>
+                                            <span className="text-neutral-600">/</span>
+                                            <span className="text-neutral-200">Uncategorized</span>
+                                        </>
+                                    )}
+                                </div>
                             </div>
                         )}
 
@@ -1592,7 +1630,7 @@ export const MyStructures = () => {
 
                     {/* Toolbar */}
                     <div className="flex flex-wrap items-center gap-2 mb-4">
-                        <div className="relative flex-1 min-w-[140px] max-w-xs">
+                        <div className="relative flex-1 min-w-[200px] w-full sm:w-auto sm:max-w-xs">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500" />
                             <input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
                                 placeholder="Filter structures…"
@@ -1624,7 +1662,7 @@ export const MyStructures = () => {
                             </div>
                         )}
 
-                        <div className="flex items-center gap-1 bg-neutral-900 border border-neutral-700 rounded-lg p-1 text-xs ml-auto">
+                        <div className="flex flex-wrap items-center gap-1 bg-neutral-900 border border-neutral-700 rounded-lg p-1 text-xs w-full sm:w-auto mt-2 sm:mt-0 sm:ml-auto">
                             <button onClick={() => setFilters(prev => [...prev, { id: Date.now().toString(), field: 'type', operator: '==', value: '' }])}
                                 className="flex items-center gap-1 px-2.5 py-1 text-blue-400 hover:text-blue-300 font-medium transition-colors border-r border-neutral-700 mr-1 pr-3">
                                 <Filter className="w-3.5 h-3.5" />+ Rule
@@ -1637,7 +1675,7 @@ export const MyStructures = () => {
                         </div>
 
                         {/* View toggle */}
-                        <div className="flex items-center gap-0.5 bg-neutral-900 border border-neutral-700 rounded-lg p-1">
+                        <div className="flex items-center gap-0.5 bg-neutral-900 border border-neutral-700 rounded-lg p-1 w-full sm:w-auto justify-center">
                             <button onClick={() => setViewMode('grid')} title="Grid view"
                                 className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-neutral-700 text-white' : 'text-neutral-500 hover:text-neutral-300'}`}>
                                 <LayoutGrid className="w-3.5 h-3.5" />
@@ -1749,7 +1787,7 @@ export const MyStructures = () => {
 
                     {/* Grid */}
                     {!loading && viewMode === 'grid' && (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 lg:gap-4">
                             {/* Render Subfolders */}
                             {activeSubfolders.map((sub: Collection) => (
                                 <FolderCard key={sub.id} collection={sub} count={collectionCounts[sub.id] || 0} onOpen={() => setActiveCollection(sub.id)} onDropStructure={handleDropMove} onContextMenu={handleContextMenu} previews={structures.filter(s => s.collection_id === sub.id).slice(0, 3)} />
@@ -1778,8 +1816,8 @@ export const MyStructures = () => {
 
                     {/* List */}
                     {!loading && structures.length > 0 && viewMode === 'list' && (
-                        <div className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden">
-                            <table className="w-full text-left table-fixed">
+                        <div className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-x-auto custom-scrollbar">
+                            <table className="w-full text-left table-fixed min-w-[800px]">
                                 <thead>
                                     <tr className="border-b border-neutral-800">
                                         <th className="px-4 py-3 w-8" />
@@ -1862,19 +1900,33 @@ export const MyStructures = () => {
 
                 </div> {/* end main content */}
 
-                {/* Inspector Sidebar */}
-                {showInspector && (
-                    <div className="hidden xl:flex w-80 shrink-0 flex-col bg-neutral-900 border border-neutral-800 rounded-2xl overflow-y-auto custom-scrollbar h-[calc(100vh-140px)] sticky top-6">
-                        <InspectorPane
-                            item={selected.size === 1 ? structures.find(s => s.id === Array.from(selected)[0]) || null : null}
-                            selectionCount={selected.size}
-                            onClose={() => setShowInspector(false)}
-                            onNotesChange={handleNotesChange}
-                            onRestore={handleRestore}
-                            onDelete={handleDelete}
-                        />
-                    </div>
-                )}
+                {/* Inspector Pane Container - Responsive overlay on mobile */}
+                <div className={`
+                    fixed xl:relative inset-y-0 right-0 z-[100] xl:z-auto 
+                    bg-neutral-900 border-l border-neutral-800 
+                    transform transition-all duration-300 ease-out flex flex-col pt-14 xl:pt-0
+                    ${showInspector ? 'translate-x-0 w-80 shadow-2xl xl:shadow-none' : 'translate-x-[100%] xl:translate-x-0 w-0 pointer-events-none xl:pointer-events-auto overflow-hidden hidden'}
+                    xl:rounded-2xl h-screen xl:h-[calc(100vh-140px)] xl:top-6 sticky
+                `}>
+                    {showInspector && (
+                        <div className="w-80 h-full overflow-y-auto custom-scrollbar bg-neutral-900 xl:bg-transparent">
+                            <InspectorPane
+                                item={selected.size === 1 ? structures.find(s => s.id === Array.from(selected)[0]) || null : null}
+                                selectionCount={selected.size}
+                                onClose={() => setShowInspector(false)}
+                                onNotesChange={handleNotesChange}
+                                onRestore={handleRestore}
+                                onDelete={handleDelete}
+                            />
+                        </div>
+                    )}
+                </div>
+
+                {/* Mobile Backdrop for Inspector */}
+                <div
+                    className={`xl:hidden fixed inset-0 z-[90] bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${showInspector ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+                    onClick={() => setShowInspector(false)}
+                />
             </div> {/* end flex layout */}
 
             {/* Quick Look Modal */}
