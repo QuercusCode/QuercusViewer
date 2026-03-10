@@ -4,7 +4,7 @@ import {
     Loader2, AlertCircle, Download, Check, Pencil, Share2,
     FileText, Filter, List, LayoutGrid, Database, NotebookPen,
     ChevronDown, ChevronUp, Import, Tag, Copy, X, CheckSquare,
-    Layers, Beaker, Microscope, Globe, Eye, Folder, ChevronRight, FolderInput, Pin, PanelRight
+    Layers, Beaker, Microscope, Globe, Eye, Folder, ChevronRight, FolderInput, Pin, PanelRight, Settings2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../lib/AuthContext';
@@ -442,9 +442,20 @@ function FolderCard({ collection, count, onOpen, onDropStructure, onContextMenu,
     );
 }
 
+const AVAILABLE_COLUMNS = [
+    { id: 'type', label: 'Type' },
+    { id: 'tags', label: 'Tags' },
+    { id: 'size', label: 'Size' },
+    { id: 'uploaded', label: 'Uploaded' },
+    { id: 'resolution', label: 'Resolution' },
+    { id: 'organism', label: 'Organism' },
+    { id: 'method', label: 'Exp. Method' }
+] as const;
+export type ColumnId = typeof AVAILABLE_COLUMNS[number]['id'];
+
 // ── Folder row ───────────────────────────────────────────────────
 
-function FolderRow({ collection, count, onOpen, onDropStructure, onContextMenu }: { collection: Collection, count: number, onOpen: () => void, onDropStructure: (structureId: string, folderId: string) => void, onContextMenu: (e: React.MouseEvent, type: 'folder', item: any) => void }) {
+function FolderRow({ collection, count, onOpen, onDropStructure, onContextMenu, visibleColumns }: { collection: Collection, count: number, onOpen: () => void, onDropStructure: (structureId: string, folderId: string) => void, onContextMenu: (e: React.MouseEvent, type: 'folder', item: any) => void, visibleColumns: Record<ColumnId, boolean> }) {
     const [isDragOver, setIsDragOver] = useState(false);
 
     return (
@@ -468,12 +479,13 @@ function FolderRow({ collection, count, onOpen, onDropStructure, onContextMenu }
                     <span className="text-sm font-medium text-neutral-200 group-hover:text-white truncate">{collection.name}</span>
                 </div>
             </td>
-            <td className="px-3 py-3">
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md border bg-neutral-800 text-neutral-400 border-neutral-700">Folder</span>
-            </td>
-            <td className="px-3 py-3 text-xs text-neutral-500">-</td>
-            <td className="px-3 py-3 text-xs text-neutral-500">{count === 1 ? '1 item' : `${count} items`}</td>
-            <td className="px-3 py-3 text-xs text-neutral-500">-</td>
+            {visibleColumns.type && <td className="px-3 py-3"><span className="text-[10px] font-bold px-2 py-0.5 rounded-md border bg-neutral-800 text-neutral-400 border-neutral-700">Folder</span></td>}
+            {visibleColumns.tags && <td className="px-3 py-3 text-xs text-neutral-500">-</td>}
+            {visibleColumns.size && <td className="px-3 py-3 text-xs text-neutral-500">{count === 1 ? '1 item' : `${count} items`}</td>}
+            {visibleColumns.uploaded && <td className="px-3 py-3 text-xs text-neutral-500">-</td>}
+            {visibleColumns.resolution && <td className="px-3 py-3 text-xs text-neutral-500">-</td>}
+            {visibleColumns.organism && <td className="px-3 py-3 text-xs text-neutral-500">-</td>}
+            {visibleColumns.method && <td className="px-3 py-3 text-xs text-neutral-500">-</td>}
             <td className="px-3 py-3"></td>
         </tr>
     );
@@ -497,6 +509,7 @@ interface CardProps {
     openingId: string | null;
     duplicatingId: string | null;
     onContextMenu: (e: React.MouseEvent, type: 'structure', item: any) => void;
+    visibleColumns?: Record<ColumnId, boolean>;
 }
 
 function StructureCard({
@@ -764,8 +777,8 @@ function StructureCard({
 
 // ── List row ──────────────────────────────────────────────────────
 
-function StructureRow({ item, selected, onSelect, onToggleStar, onDelete, onRename, onOpen, onMove, openingId, onContextMenu, onDoubleClick }: Pick<CardProps,
-    'item' | 'selected' | 'onSelect' | 'onToggleStar' | 'onDelete' | 'onRename' | 'onOpen' | 'onMove' | 'openingId' | 'onContextMenu' | 'onDoubleClick'>) {
+function StructureRow({ item, selected, onSelect, onToggleStar, onDelete, onRename, onOpen, onMove, openingId, onContextMenu, onDoubleClick, visibleColumns }: Pick<CardProps,
+    'item' | 'selected' | 'onSelect' | 'onToggleStar' | 'onDelete' | 'onRename' | 'onOpen' | 'onMove' | 'openingId' | 'onContextMenu' | 'onDoubleClick' | 'visibleColumns'>) {
 
     const [editing, setEditing] = useState(false);
     const [draftName, setDraftName] = useState(item.name);
@@ -824,18 +837,25 @@ function StructureRow({ item, selected, onSelect, onToggleStar, onDelete, onRena
                     )}
                 </div>
             </td>
-            <td className="px-3 py-3">
-                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${badge}`}>{item.file_type}</span>
-            </td>
-            <td className="px-3 py-3">
-                <div className="flex flex-wrap gap-1">
-                    {(item.tags ?? []).map(t => (
-                        <span key={t} className={`text-[9px] font-medium px-1.5 py-0.5 rounded-md border ${tagColor(t)}`}>{t}</span>
-                    ))}
-                </div>
-            </td>
-            <td className="px-3 py-3 text-xs text-neutral-500">{formatBytes(item.file_size)}</td>
-            <td className="px-3 py-3 text-xs text-neutral-500">{timeAgo(item.created_at)}</td>
+            {visibleColumns?.type && (
+                <td className="px-3 py-3">
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${badge}`}>{item.file_type}</span>
+                </td>
+            )}
+            {visibleColumns?.tags && (
+                <td className="px-3 py-3">
+                    <div className="flex flex-wrap gap-1">
+                        {(item.tags ?? []).map(t => (
+                            <span key={t} className={`text-[9px] font-medium px-1.5 py-0.5 rounded-md border ${tagColor(t)}`}>{t}</span>
+                        ))}
+                    </div>
+                </td>
+            )}
+            {visibleColumns?.size && <td className="px-3 py-3 text-xs text-neutral-500">{formatBytes(item.file_size)}</td>}
+            {visibleColumns?.uploaded && <td className="px-3 py-3 text-xs text-neutral-500">{timeAgo(item.created_at)}</td>}
+            {visibleColumns?.resolution && <td className="px-3 py-3 text-xs text-neutral-500">{item.metadata?.resolution ? `${item.metadata.resolution.toFixed(2)} Å` : '-'}</td>}
+            {visibleColumns?.organism && <td className="px-3 py-3 text-xs text-neutral-500 truncate max-w-[120px]" title={item.metadata?.organism || ''}>{item.metadata?.organism || '-'}</td>}
+            {visibleColumns?.method && <td className="px-3 py-3 text-xs text-neutral-500 truncate max-w-[120px]" title={item.metadata?.method || ''}>{item.metadata?.method || '-'}</td>}
             <td className="px-3 py-3">
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
                     <button onClick={e => { e.stopPropagation(); onOpen(item); }} disabled={!!openingId} title="Open"
@@ -955,14 +975,39 @@ export const MyStructures = () => {
     // Advanced Filters
     const [filters, setFilters] = useState<FilterRule[]>([]);
 
-    // Column resizing
+    // Column resizing and visibility
     const [columnWidths, setColumnWidths] = useState<Record<string, number>>({
         name: 300,
         type: 100,
         tags: 150,
         size: 100,
         uploaded: 120,
+        resolution: 120,
+        organism: 150,
+        method: 150
     });
+
+    const [visibleColumns, setVisibleColumns] = useState<Record<ColumnId, boolean>>(() => {
+        const stored = localStorage.getItem('quercus_visible_columns');
+        return stored ? JSON.parse(stored) : {
+            type: true, tags: true, size: true, uploaded: true,
+            resolution: false, organism: false, method: false
+        };
+    });
+    useEffect(() => { localStorage.setItem('quercus_visible_columns', JSON.stringify(visibleColumns)); }, [visibleColumns]);
+
+    const [showColumnDropdown, setShowColumnDropdown] = useState(false);
+    const columnDropdownRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (columnDropdownRef.current && !columnDropdownRef.current.contains(e.target as Node)) {
+                setShowColumnDropdown(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
     const handleResize = (colKey: string, e: React.MouseEvent) => {
         e.preventDefault();
         const startX = e.clientX;
@@ -1602,6 +1647,30 @@ export const MyStructures = () => {
                                 <List className="w-3.5 h-3.5" />
                             </button>
                             <div className="w-px h-4 mx-1.5 bg-neutral-700" />
+                            <div className="relative" ref={columnDropdownRef}>
+                                <button onClick={() => setShowColumnDropdown(p => !p)} title="Columns"
+                                    className={`p-1.5 rounded-md transition-all ${showColumnDropdown ? 'bg-neutral-700 text-white' : 'text-neutral-500 hover:text-neutral-300'}`}>
+                                    <Settings2 className="w-3.5 h-3.5" />
+                                </button>
+                                {showColumnDropdown && (
+                                    <div className="absolute top-full right-0 mt-2 w-52 bg-neutral-900 border border-neutral-700 rounded-xl shadow-xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2">
+                                        <div className="px-3 py-2 border-b border-neutral-800 text-[10px] uppercase tracking-wider font-bold text-neutral-500 bg-neutral-800/50">Visible Columns</div>
+                                        <div className="p-1.5 flex flex-col gap-0.5">
+                                            {AVAILABLE_COLUMNS.map(col => (
+                                                <label key={col.id} className="flex items-center gap-2.5 px-2 py-1.5 hover:bg-neutral-800 rounded-lg cursor-pointer transition-colors group">
+                                                    <div className="relative flex items-center justify-center">
+                                                        <input type="checkbox" className="appearance-none w-4 h-4 rounded border border-neutral-600 bg-neutral-900 checked:bg-blue-500 checked:border-blue-500 focus:bg-white/5 transition-colors cursor-pointer"
+                                                            checked={visibleColumns[col.id]} onChange={e => setVisibleColumns(p => ({ ...p, [col.id]: e.target.checked }))} />
+                                                        {visibleColumns[col.id] && <Check className="absolute w-3 h-3 text-white pointer-events-none" />}
+                                                    </div>
+                                                    <span className="text-sm font-medium text-neutral-300 group-hover:text-white transition-colors">{col.label}</span>
+                                                </label>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                            <div className="w-px h-4 mx-1.5 bg-neutral-700" />
                             <button onClick={() => setShowInspector(prev => !prev)} title="Toggle Inspector"
                                 className={`p-1.5 rounded-md transition-all ${showInspector ? 'bg-neutral-700 text-white' : 'text-neutral-500 hover:text-neutral-300'}`}>
                                 <PanelRight className="w-3.5 h-3.5" />
@@ -1718,29 +1787,55 @@ export const MyStructures = () => {
                                             Name
                                             <div className="absolute right-0 top-0 bottom-0 w-1 flex items-center justify-center cursor-col-resize hover:bg-blue-500 transition-colors z-10" onMouseDown={e => handleResize('name', e)} />
                                         </th>
-                                        <th className="px-3 py-3 text-xs font-medium text-neutral-500 relative group/th" style={{ width: columnWidths.type }}>
-                                            Type
-                                            <div className="absolute right-0 top-0 bottom-0 w-1 flex items-center justify-center cursor-col-resize hover:bg-blue-500 transition-colors z-10" onMouseDown={e => handleResize('type', e)} />
-                                        </th>
-                                        <th className="px-3 py-3 text-xs font-medium text-neutral-500 relative group/th" style={{ width: columnWidths.tags }}>
-                                            Tags
-                                            <div className="absolute right-0 top-0 bottom-0 w-1 flex items-center justify-center cursor-col-resize hover:bg-blue-500 transition-colors z-10" onMouseDown={e => handleResize('tags', e)} />
-                                        </th>
-                                        <th className="px-3 py-3 text-xs font-medium text-neutral-500 relative group/th" style={{ width: columnWidths.size }}>
-                                            Size
-                                            <div className="absolute right-0 top-0 bottom-0 w-1 flex items-center justify-center cursor-col-resize hover:bg-blue-500 transition-colors z-10" onMouseDown={e => handleResize('size', e)} />
-                                        </th>
-                                        <th className="px-3 py-3 text-xs font-medium text-neutral-500 relative group/th" style={{ width: columnWidths.uploaded }}>
-                                            Uploaded
-                                            <div className="absolute right-0 top-0 bottom-0 w-1 flex items-center justify-center cursor-col-resize hover:bg-blue-500 transition-colors z-10" onMouseDown={e => handleResize('uploaded', e)} />
-                                        </th>
+                                        {visibleColumns.type && (
+                                            <th className="px-3 py-3 text-xs font-medium text-neutral-500 relative group/th" style={{ width: columnWidths.type }}>
+                                                Type
+                                                <div className="absolute right-0 top-0 bottom-0 w-1 flex items-center justify-center cursor-col-resize hover:bg-blue-500 transition-colors z-10" onMouseDown={e => handleResize('type', e)} />
+                                            </th>
+                                        )}
+                                        {visibleColumns.tags && (
+                                            <th className="px-3 py-3 text-xs font-medium text-neutral-500 relative group/th" style={{ width: columnWidths.tags }}>
+                                                Tags
+                                                <div className="absolute right-0 top-0 bottom-0 w-1 flex items-center justify-center cursor-col-resize hover:bg-blue-500 transition-colors z-10" onMouseDown={e => handleResize('tags', e)} />
+                                            </th>
+                                        )}
+                                        {visibleColumns.size && (
+                                            <th className="px-3 py-3 text-xs font-medium text-neutral-500 relative group/th" style={{ width: columnWidths.size }}>
+                                                Size
+                                                <div className="absolute right-0 top-0 bottom-0 w-1 flex items-center justify-center cursor-col-resize hover:bg-blue-500 transition-colors z-10" onMouseDown={e => handleResize('size', e)} />
+                                            </th>
+                                        )}
+                                        {visibleColumns.uploaded && (
+                                            <th className="px-3 py-3 text-xs font-medium text-neutral-500 relative group/th" style={{ width: columnWidths.uploaded }}>
+                                                Uploaded
+                                                <div className="absolute right-0 top-0 bottom-0 w-1 flex items-center justify-center cursor-col-resize hover:bg-blue-500 transition-colors z-10" onMouseDown={e => handleResize('uploaded', e)} />
+                                            </th>
+                                        )}
+                                        {visibleColumns.resolution && (
+                                            <th className="px-3 py-3 text-xs font-medium text-neutral-500 relative group/th" style={{ width: columnWidths.resolution }}>
+                                                Resolution
+                                                <div className="absolute right-0 top-0 bottom-0 w-1 flex items-center justify-center cursor-col-resize hover:bg-blue-500 transition-colors z-10" onMouseDown={e => handleResize('resolution', e)} />
+                                            </th>
+                                        )}
+                                        {visibleColumns.organism && (
+                                            <th className="px-3 py-3 text-xs font-medium text-neutral-500 relative group/th" style={{ width: columnWidths.organism }}>
+                                                Organism
+                                                <div className="absolute right-0 top-0 bottom-0 w-1 flex items-center justify-center cursor-col-resize hover:bg-blue-500 transition-colors z-10" onMouseDown={e => handleResize('organism', e)} />
+                                            </th>
+                                        )}
+                                        {visibleColumns.method && (
+                                            <th className="px-3 py-3 text-xs font-medium text-neutral-500 relative group/th" style={{ width: columnWidths.method }}>
+                                                Exp. Method
+                                                <div className="absolute right-0 top-0 bottom-0 w-1 flex items-center justify-center cursor-col-resize hover:bg-blue-500 transition-colors z-10" onMouseDown={e => handleResize('method', e)} />
+                                            </th>
+                                        )}
                                         <th className="px-3 py-3 text-xs font-medium text-neutral-500">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {/* Render Subfolders inline in table */}
                                     {activeSubfolders.map((sub: Collection) => (
-                                        <FolderRow key={sub.id} collection={sub} count={collectionCounts[sub.id] || 0} onOpen={() => setActiveCollection(sub.id)} onDropStructure={handleDropMove} onContextMenu={handleContextMenu} />
+                                        <FolderRow key={sub.id} collection={sub} count={collectionCounts[sub.id] || 0} onOpen={() => setActiveCollection(sub.id)} onDropStructure={handleDropMove} onContextMenu={handleContextMenu} visibleColumns={visibleColumns} />
                                     ))}
 
                                     {/* Render Structures */}
@@ -1748,7 +1843,7 @@ export const MyStructures = () => {
                                         <StructureRow key={item.id} item={item}
                                             selected={selected.has(item.id)} onSelect={toggleSelect}
                                             onToggleStar={handleToggleStar} onDelete={handleDelete}
-                                            onRename={handleRename} onMove={setMovingStructure} onOpen={handleOpen} openingId={openingId} onContextMenu={handleContextMenu} />
+                                            onRename={handleRename} onMove={setMovingStructure} onOpen={handleOpen} openingId={openingId} onContextMenu={handleContextMenu} visibleColumns={visibleColumns} />
                                     ))}
                                 </tbody>
                             </table>
