@@ -9,7 +9,7 @@ import { listStructures, type Structure } from '../../lib/structuresService';
 import { StructureMentionDropdown } from './StructureMentionDropdown';
 import { StructurePreviewCard } from './StructurePreviewCard';
 import { LabReportTemplate } from './LabReportTemplate';
-import jsPDF from 'jspdf';
+import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import { Share } from 'lucide-react';
 
@@ -209,19 +209,25 @@ export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false
         const activeNotebook = notebooks.find(n => n.id === activeId);
         if (!activeNotebook) return;
         setIsExporting(true);
+        console.log('Starting PDF Export for:', activeNotebook.title);
         try {
             // Give time for the hidden template to render
-            await new Promise(r => setTimeout(r, 500));
+            await new Promise(r => setTimeout(r, 800));
             
             if (reportRef.current) {
+                console.log('Capturing canvas...');
                 const canvas = await html2canvas(reportRef.current, {
                     scale: 2, // High resolution
                     useCORS: true,
-                    logging: false,
-                    backgroundColor: '#ffffff'
+                    logging: true, // Enable html2canvas internal logging for debug
+                    backgroundColor: '#ffffff',
+                    windowWidth: 800, // Fixed width for consistent rendering
                 });
+                console.log('Canvas captured. Size:', canvas.width, 'x', canvas.height);
                 
                 const imgData = canvas.toDataURL('image/png');
+                console.log('Image data generated. Creating PDF...');
+                
                 const pdf = new jsPDF({
                     orientation: 'portrait',
                     unit: 'mm',
@@ -230,13 +236,18 @@ export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false
                 
                 const imgWidth = 210; // A4 width in mm
                 const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                console.log('PDF Dimensions - Width:', imgWidth, 'Height:', imgHeight);
                 
                 pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
                 pdf.save(`LabReport_${activeNotebook.title.replace(/\s+/g, '_') || 'Untitled'}.pdf`);
+                console.log('PDF saved successfully.');
+            } else {
+                console.error('Report ref is null!');
+                throw new Error('Report template reference not found');
             }
         } catch (err) {
             console.error('Failed to export PDF:', err);
-            alert('Failed to generate PDF report. Please try again.');
+            alert(`Failed to generate PDF report: ${err instanceof Error ? err.message : 'Unknown error'}`);
         } finally {
             setIsExporting(false);
         }
@@ -499,8 +510,8 @@ export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false
                 {activeNotebook && (
                     <LabReportTemplate
                         ref={reportRef}
-                        title={activeNotebook.title}
-                        content={activeNotebook.content}
+                        title={editTitle}
+                        content={editContent}
                         date={activeNotebook.created_at}
                         author={user?.email || 'Quercus User'}
                         id={activeNotebook.id.slice(0, 8)}

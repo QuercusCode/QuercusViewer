@@ -87,8 +87,8 @@ export const LabReportTemplate = React.forwardRef<HTMLDivElement, LabReportTempl
         </div>
 
         {/* Watermark for internal reports */}
-        <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-[0.03] pointer-events-none -rotate-45 z-0 select-none">
-          <h2 className="text-[120pt] font-black border-4 border-slate-900 px-8 py-2">EXPERIMENTAL</h2>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-[0.03] pointer-events-none -rotate-45 z-0 select-none">
+          <h2 className="text-[100pt] font-black border-4 border-slate-900 px-8 py-2 whitespace-nowrap">EXPERIMENTAL</h2>
         </div>
       </div>
     );
