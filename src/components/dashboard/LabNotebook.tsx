@@ -209,43 +209,72 @@ export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false
         const activeNotebook = notebooks.find(n => n.id === activeId);
         if (!activeNotebook) return;
         setIsExporting(true);
-        console.log('Starting PDF Export for:', activeNotebook.title);
+        console.log('Starting PDF Export with Iframe Isolation:', activeNotebook.title);
+        
+        // Create an iframe to isolate THE rendering from global Tailwind oklch styles
+        const iframe = document.createElement('iframe');
+        iframe.style.position = 'fixed';
+        iframe.style.top = '-10000px';
+        iframe.style.left = '-10000px';
+        iframe.width = '1000px'; // Wide enough for the report
+        iframe.height = '1500px';
+        document.body.appendChild(iframe);
+
         try {
-            // Give time for the hidden template to render
+            // Give time for the hidden template in the main window to render first
             await new Promise(r => setTimeout(r, 800));
             
             if (reportRef.current) {
-                console.log('Capturing canvas...');
-                const canvas = await html2canvas(reportRef.current, {
-                    scale: 2, // High resolution
+                const iframeDoc = iframe.contentWindow?.document;
+                if (!iframeDoc) throw new Error('Could not access iframe document');
+
+                // Clone the report element into the iframe
+                const clone = reportRef.current.cloneNode(true) as HTMLElement;
+                clone.style.margin = '0';
+                clone.style.boxShadow = 'none';
+                
+                iframeDoc.open();
+                iframeDoc.write(`
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <title>Lab Report Export</title>
+                        <style>
+                            body { margin: 0; padding: 0; background-color: white; }
+                            /* Ensure standard fonts are available */
+                            * { font-family: Georgia, serif; box-sizing: border-box; }
+                        </style>
+                    </head>
+                    <body></body>
+                    </html>
+                `);
+                iframeDoc.close();
+                iframeDoc.body.appendChild(clone);
+
+                // Wait for any resources (like fonts or images) to load in the iframe
+                await new Promise(r => setTimeout(r, 500));
+
+                console.log('Capturing canvas from isolated iframe...');
+                const canvas = await html2canvas(iframeDoc.body, {
+                    scale: 2,
                     useCORS: true,
-                    logging: true, // Enable html2canvas internal logging for debug
+                    logging: true,
                     backgroundColor: '#ffffff',
-                    windowWidth: 800, // Fixed width for consistent rendering
-                    onclone: (clonedDoc) => {
-                        const el = clonedDoc.getElementById('lab-report-pdf-template');
-                        if (el) {
-                            // Strictly reset variables that might contain oklch from Tailwind v4
-                            el.style.setProperty('--tw-shadow', '0 0 #0000', 'important');
-                            el.style.setProperty('--tw-ring-color', '#000000', 'important');
-                            el.style.setProperty('--tw-ring-offset-color', '#ffffff', 'important');
-                        }
-                    }
+                    width: 800, // Fixed width
+                    windowWidth: 1000,
                 });
+                
                 console.log('Canvas captured. Size:', canvas.width, 'x', canvas.height);
                 
                 const imgData = canvas.toDataURL('image/png');
-                console.log('Image data generated. Creating PDF...');
-                
                 const pdf = new jsPDF({
                     orientation: 'portrait',
                     unit: 'mm',
                     format: 'a4'
                 });
                 
-                const imgWidth = 210; // A4 width in mm
+                const imgWidth = 210;
                 const imgHeight = (canvas.height * imgWidth) / canvas.width;
-                console.log('PDF Dimensions - Width:', imgWidth, 'Height:', imgHeight);
                 
                 pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
                 pdf.save(`LabReport_${activeNotebook.title.replace(/\s+/g, '_') || 'Untitled'}.pdf`);
@@ -258,6 +287,7 @@ export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false
             console.error('Failed to export PDF:', err);
             alert(`Failed to generate PDF report: ${err instanceof Error ? err.message : 'Unknown error'}`);
         } finally {
+            document.body.removeChild(iframe);
             setIsExporting(false);
         }
     };
