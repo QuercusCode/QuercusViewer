@@ -53,10 +53,27 @@ export const StructurePreviewCard: React.FC<StructurePreviewCardProps> = ({ stru
 
   const rcsbId = structure.name.match(/^[1-9][A-Z0-9]{3}$/i)?.[0]?.toUpperCase();
 
-  const handleOpen = (e: React.MouseEvent) => {
+  const handleOpen = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    navigate(`/view/${structure.id}`);
+    
+    try {
+      setLoading(true);
+      const { getDownloadUrl } = await import('../../lib/structuresService');
+      const url = await getDownloadUrl(structure.file_path);
+      
+      sessionStorage.setItem('pendingStructure', JSON.stringify({ 
+        url, 
+        name: structure.name, 
+        fileType: structure.file_type.toLowerCase() 
+      }));
+      
+      navigate('/');
+    } catch (err) {
+      console.error('Failed to open structure in viewer:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
