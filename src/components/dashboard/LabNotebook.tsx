@@ -5,6 +5,9 @@ import { listNotebooks, createNotebook, updateNotebook, deleteNotebook } from '.
 import type { NotebookEntry } from '../../types';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { listStructures, type Structure } from '../../lib/structuresService';
+import { StructureMentionDropdown } from './StructureMentionDropdown';
+import { StructurePreviewCard } from './StructurePreviewCard';
 
 export const LabNotebook: React.FC = () => {
     const { user } = useAuth();
@@ -22,19 +25,30 @@ export const LabNotebook: React.FC = () => {
     const [lastSaved, setLastSaved] = useState<Date | null>(null);
     const [viewMode, setViewMode] = useState<'write' | 'preview'>('write');
     const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+    // Structure Mentions State
+    const [allStructures, setAllStructures] = useState<Structure[]>([]);
+    const [mentionQuery, setMentionQuery] = useState<string | null>(null);
+    const [mentionPosition, setMentionPosition] = useState({ top: 0, left: 0 });
+    const [mentionStartIndex, setMentionStartIndex] = useState(-1);
 
     useEffect(() => {
         if (!user) return;
         const fetchNotebooks = async () => {
             try {
                 setLoading(true);
-                const data = await listNotebooks(user.id);
-                setNotebooks(data);
-                if (data.length > 0 && !activeId) {
-                    setActiveId(data[0].id);
+                const [notebookData, structureData] = await Promise.all([
+                    listNotebooks(user.id),
+                    listStructures(user.id)
+                ]);
+                setNotebooks(notebookData);
+                setAllStructures(structureData);
+                if (notebookData.length > 0 && !activeId) {
+                    setActiveId(notebookData[0].id);
                 }
             } catch (err: any) {
-                setError(err.message || 'Failed to load notebooks');
+                setError(err.message || 'Failed to load data');
             } finally {
                 setLoading(false);
             }
@@ -86,7 +100,10 @@ export const LabNotebook: React.FC = () => {
     // Auto-save logic
     const handleEditorChange = (field: 'title' | 'content', value: string) => {
         if (field === 'title') setEditTitle(value);
-        if (field === 'content') setEditContent(value);
+        if (field === 'content') {
+            setEditContent(value);
+            handleMentionLogic(value);
+        }
 
         // Optimistically update the list view so the sidebar reflects changes immediately
         setNotebooks(prev => prev.map(n => n.id === activeId ? { ...n, [field]: value, updated_at: new Date().toISOString() } : n));
@@ -105,6 +122,76 @@ export const LabNotebook: React.FC = () => {
                 setIsSaving(false);
             }
         }, 1000); // 1s debounce
+    };
+
+    const handleMentionLogic = (content: string) => {
+        const textarea = textareaRef.current;
+        if (!textarea) return;
+
+        const cursorPosition = textarea.selectionStart;
+        const textBeforeCursor = content.substring(0, cursorPosition);
+        const lastAt = textBeforeCursor.lastIndexOf('@');
+
+        if (lastAt !== -1 && (lastAt === 0 || textBeforeCursor[lastAt - 1] === ' ' || textBeforeCursor[lastAt - 1] === '\n')) {
+            const query = textBeforeCursor.substring(lastAt + 1);
+            if (!query.includes(' ')) {
+                setMentionQuery(query);
+                setMentionStartIndex(lastAt);
+
+                // Calculate coordinates
+                const { top, left } = getCaretCoordinates(textarea, cursorPosition);
+                const rect = textarea.getBoundingClientRect();
+                setMentionPosition({
+                    top: rect.top + top - textarea.scrollTop + 20,
+                    left: rect.left + left - textarea.scrollLeft,
+                });
+                return;
+            }
+        }
+        setMentionQuery(null);
+    };
+
+    const insertStructure = (structure: Structure) => {
+        if (mentionStartIndex === -1) return;
+
+        const before = editContent.substring(0, mentionStartIndex);
+        const after = editContent.substring(textareaRef.current?.selectionStart || mentionStartIndex);
+        const pill = `[[structure:${structure.id}]]`;
+        const newContent = `${before}${pill} ${after}`;
+
+        setEditContent(newContent);
+        setMentionQuery(null);
+        handleEditorChange('content', newContent);
+
+        // refocus
+        setTimeout(() => {
+            if (textareaRef.current) {
+                textareaRef.current.focus();
+                const newPos = mentionStartIndex + pill.length + 1;
+                textareaRef.current.setSelectionRange(newPos, newPos);
+            }
+        }, 0);
+    };
+
+    // Helper for caret coordinates (simpler version for now)
+    const getCaretCoordinates = (element: HTMLTextAreaElement, position: number) => {
+        const div = document.createElement('div');
+        const style = window.getComputedStyle(element);
+        for (const prop of Array.from(style)) {
+            div.style.setProperty(prop, style.getPropertyValue(prop));
+        }
+        div.style.position = 'absolute';
+        div.style.visibility = 'hidden';
+        div.style.whiteSpace = 'pre-wrap';
+        div.style.width = element.clientWidth + 'px';
+        div.textContent = element.value.substring(0, position);
+        const span = document.createElement('span');
+        span.textContent = element.value.substring(position) || '.';
+        div.appendChild(span);
+        document.body.appendChild(div);
+        const { offsetTop: top, offsetLeft: left } = span;
+        document.body.removeChild(div);
+        return { top, left };
     };
 
     const filteredNotebooks = notebooks.filter(n => n.title.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -229,15 +316,71 @@ export const LabNotebook: React.FC = () => {
                             />
 
                             {viewMode === 'write' ? (
-                                <textarea
-                                    value={editContent}
-                                    onChange={(e) => handleEditorChange('content', e.target.value)}
-                                    placeholder="Start writing your lab notes here. Markdown is fully supported (e.g., # Headings, **bold**, *lists*)..."
-                                    className="w-full h-full min-h-[500px] bg-transparent border-none focus:outline-none text-neutral-300 font-mono text-[15px] leading-relaxed resize-none placeholder-neutral-700"
-                                />
+                                <div className="relative h-full">
+                                    <textarea
+                                        ref={textareaRef}
+                                        value={editContent}
+                                        onChange={(e) => handleEditorChange('content', e.target.value)}
+                                        onKeyUp={() => handleMentionLogic(editContent)}
+                                        onClick={() => handleMentionLogic(editContent)}
+                                        placeholder="Start writing your lab notes here. Markdown is fully supported. Type @ to mention a structure..."
+                                        className="w-full h-full min-h-[500px] bg-transparent border-none focus:outline-none text-neutral-300 font-mono text-[15px] leading-relaxed resize-none placeholder-neutral-700"
+                                    />
+                                    {mentionQuery !== null && (
+                                        <StructureMentionDropdown
+                                            structures={allStructures}
+                                            query={mentionQuery}
+                                            onSelect={insertStructure}
+                                            onClose={() => setMentionQuery(null)}
+                                            position={mentionPosition}
+                                        />
+                                    )}
+                                </div>
                             ) : (
                                 <div className="prose prose-invert prose-blue max-w-none prose-pre:bg-neutral-900 prose-pre:border prose-pre:border-neutral-800">
-                                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                    <ReactMarkdown 
+                                        remarkPlugins={[remarkGfm]}
+                                        components={{
+                                            p: ({ children }) => {
+                                                // Handle structure embeds in paragraphs
+                                                if (typeof children === 'string' || (Array.isArray(children) && children.every(c => typeof c === 'string'))) {
+                                                    const content = Array.isArray(children) ? children.join('') : children as string;
+                                                    const parts = content.split(/(\[\[structure:[a-f0-9-]{36}\]\])/g);
+                                                    
+                                                    if (parts.length > 1) {
+                                                        return (
+                                                            <p>
+                                                                {parts.map((part, i) => {
+                                                                    const match = part.match(/\[\[structure:([a-f0-9-]{36})\]\]/);
+                                                                    if (match) {
+                                                                        return <StructurePreviewCard key={i} structureId={match[1]} />;
+                                                                    }
+                                                                    return part;
+                                                                })}
+                                                            </p>
+                                                        );
+                                                    }
+                                                }
+                                                
+                                                // Handle mixed content (React elements + strings)
+                                                const processed = React.Children.map(children, child => {
+                                                    if (typeof child === 'string') {
+                                                        const parts = child.split(/(\[\[structure:[a-f0-9-]{36}\]\])/g);
+                                                        return parts.map((part, i) => {
+                                                            const match = part.match(/\[\[structure:([a-f0-9-]{36})\]\]/);
+                                                            if (match) {
+                                                                return <StructurePreviewCard key={i} structureId={match[1]} />;
+                                                            }
+                                                            return part;
+                                                        });
+                                                    }
+                                                    return child;
+                                                });
+                                                
+                                                return <p>{processed}</p>;
+                                            }
+                                        }}
+                                    >
                                         {editContent || '*Nothing written yet.*'}
                                     </ReactMarkdown>
                                 </div>
