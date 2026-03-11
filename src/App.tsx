@@ -8,6 +8,7 @@ import { AuthPage } from './components/auth/AuthPage';
 import { AccountSettings } from './components/dashboard/AccountSettings';
 import { ActivityTimeline } from './components/dashboard/ActivityTimeline';
 import { DashboardHome } from './components/dashboard/DashboardHome';
+import { LabNotebook } from './components/dashboard/LabNotebook';
 import { PublicPortfolio } from './components/public/PublicPortfolio';
 
 // Protected Route Wrapper
@@ -52,6 +53,7 @@ function App() {
                         <Route index element={<DashboardHome />} />
 
                         <Route path="structures" element={<MyStructures />} />
+                        <Route path="notebook" element={<LabNotebook />} />
                         <Route path="drafts" element={<StudioDrafts />} />
                         <Route path="settings" element={<AccountSettings />} />
                         <Route path="activity" element={<ActivityTimeline />} />

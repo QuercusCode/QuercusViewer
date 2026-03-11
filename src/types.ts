@@ -260,3 +260,12 @@ export interface ProjectState {
     segments: TimelineSegment[];
     sources: Record<string, RecordedSession>; // Map of source sessions by ID
 }
+
+export interface NotebookEntry {
+    id: string;
+    user_id: string;
+    title: string;
+    content: string;
+    created_at: string;
+    updated_at: string;
+}
