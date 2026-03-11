@@ -261,11 +261,14 @@ export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false
                         scale: 2,
                         useCORS: true,
                         backgroundColor: '#ffffff',
-                        width: 794, // 8.27in at 96dpi
-                        height: 1122, // 11.69in at 96dpi
+                        width: 794, 
+                        height: 1122,
                     });
                     const imgData1 = canvas1.toDataURL('image/png');
                     pdf.addImage(imgData1, 'PNG', 0, 0, 210, 297);
+                    
+                    // Add links for Page 1 (usually empty of structure links but good for consistency)
+                    addLinksToPdf(page1, pdf, 0);
                 }
 
                 // Add Page 2: Content
@@ -281,10 +284,13 @@ export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false
                     });
                     const imgData2 = canvas2.toDataURL('image/png');
                     pdf.addImage(imgData2, 'PNG', 0, 0, 210, 297);
+                    
+                    // Add interactive links for Page 2
+                    addLinksToPdf(page2, pdf, 0);
                 }
 
                 pdf.save(`LabReport_${activeNotebook.title.replace(/\s+/g, '_') || 'Untitled'}.pdf`);
-                console.log('Multi-page PDF saved successfully.');
+                console.log('Multi-page PDF with links saved successfully.');
             }
         } catch (err) {
             console.error('Failed to export PDF:', err);
@@ -293,6 +299,27 @@ export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false
             document.body.removeChild(iframe);
             setIsExporting(false);
         }
+    };
+
+    // Helper to add interactive links to the PDF
+    const addLinksToPdf = (pageElement: HTMLElement, pdf: jsPDF, yOffset: number) => {
+        const links = pageElement.querySelectorAll('.pdf-structure-link');
+        const pageRect = pageElement.getBoundingClientRect();
+        
+        // PDF is 210mm x 297mm. Input canvas/element is 794px x 1122px (at 96dpi)
+        // Ratio: 210 / 794 = 0.2645
+        const pxToMm = 210 / 794;
+        
+        links.forEach(link => {
+            const rect = link.getBoundingClientRect();
+            const relX = (rect.left - pageRect.left) * pxToMm;
+            const relY = (rect.top - pageRect.top) * pxToMm + yOffset;
+            const relW = rect.width * pxToMm;
+            const relH = rect.height * pxToMm;
+            
+            const url = (link as HTMLAnchorElement).href;
+            pdf.link(relX, relY, relW, relH, { url });
+        });
     };
 
     if (!user) return null;
@@ -557,6 +584,7 @@ export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false
                         date={activeNotebook.created_at}
                         author={user?.email || 'Quercus User'}
                         id={activeNotebook.id.slice(0, 8)}
+                        allStructures={allStructures}
                     />
                 )}
             </div>

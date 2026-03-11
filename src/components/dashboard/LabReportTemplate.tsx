@@ -2,6 +2,7 @@ import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Microscope } from 'lucide-react';
+import type { Structure } from '../../lib/structuresService';
 
 interface LabReportTemplateProps {
   title: string;
@@ -9,6 +10,7 @@ interface LabReportTemplateProps {
   date: string;
   author: string;
   id: string;
+  allStructures?: Structure[];
 }
 
 /**
@@ -16,7 +18,7 @@ interface LabReportTemplateProps {
  * Separated into Cover Page and Content Page.
  */
 export const LabReportTemplate = React.forwardRef<HTMLDivElement, LabReportTemplateProps>(
-  ({ title, content, date, author, id }, ref) => {
+  ({ title, content, date, author, id, allStructures = [] }, ref) => {
     return (
       <div 
         ref={ref}
@@ -42,7 +44,15 @@ export const LabReportTemplate = React.forwardRef<HTMLDivElement, LabReportTempl
           .pdf-page * {
             box-sizing: border-box !important;
           }
+          .pdf-structure-link {
+            color: #2563eb !important;
+            text-decoration: underline !important;
+            font-weight: 600 !important;
+            cursor: pointer !important;
+          }
         `}} />
+
+        {/* ... (rest of the component) ... */}
 
         {/* PAGE 1: COVER PAGE */}
         <div id="report-page-1" className="pdf-page" style={{ 
@@ -51,6 +61,7 @@ export const LabReportTemplate = React.forwardRef<HTMLDivElement, LabReportTempl
           justifyContent: 'center',
           textAlign: 'center'
         }}>
+          {/* ... (Cover Page content) ... */}
           <div style={{ marginBottom: '4rem', display: 'flex', justifyContent: 'center' }}>
             <div style={{ backgroundColor: '#0f172a', padding: '1.5rem', borderRadius: '1rem', display: 'inline-flex' }}>
               <Microscope size={64} color="#ffffff" />
@@ -114,7 +125,6 @@ export const LabReportTemplate = React.forwardRef<HTMLDivElement, LabReportTempl
 
         {/* PAGE 2: CONTENT PAGE */}
         <div id="report-page-2" className="pdf-page">
-          {/* Header on page 2 */}
           <div style={{ 
             display: 'flex', 
             justifyContent: 'space-between', 
@@ -139,7 +149,36 @@ export const LabReportTemplate = React.forwardRef<HTMLDivElement, LabReportTempl
                 h1: ({node, ...props}) => <h1 style={{fontSize: '1.875rem', fontWeight: 'bold', color: '#0f172a', marginBottom: '1rem', marginTop: '1rem'}} {...props} />,
                 h2: ({node, ...props}) => <h2 style={{fontSize: '1.5rem', fontWeight: 'bold', color: '#0f172a', marginTop: '2rem', marginBottom: '0.75rem'}} {...props} />,
                 h3: ({node, ...props}) => <h3 style={{fontSize: '1.25rem', fontWeight: 'bold', color: '#0f172a', marginTop: '1.5rem', marginBottom: '0.5rem'}} {...props} />,
-                p: ({node, ...props}) => <p style={{marginBottom: '1rem', lineHeight: '1.6'}} {...props} />,
+                p: ({children}) => {
+                  const processed = React.Children.map(children, child => {
+                    if (typeof child === 'string') {
+                      const parts = child.split(/(\[\[structure:[a-f0-9-]{36}\]\])/g);
+                      return parts.map((part, i) => {
+                        const match = part.match(/\[\[structure:([a-f0-9-]{36})\]\]/);
+                        if (match) {
+                          const sid = match[1];
+                          const s = allStructures.find(st => st.id === sid);
+                          const name = s?.name || sid.substring(0, 8);
+                          const url = `${window.location.origin}/?struct=${sid}`;
+                          return (
+                            <a 
+                              key={i} 
+                              href={url}
+                              className="pdf-structure-link"
+                              data-structure-id={sid}
+                              style={{ color: '#2563eb', textDecoration: 'underline', fontWeight: 'bold' }}
+                            >
+                              @{name}
+                            </a>
+                          );
+                        }
+                        return part;
+                      });
+                    }
+                    return child;
+                  });
+                  return <p style={{marginBottom: '1rem', lineHeight: '1.6'}}>{processed}</p>;
+                },
                 ul: ({node, ...props}) => <ul style={{listStyleType: 'disc', paddingLeft: '1.5rem', marginBottom: '1rem'}} {...props} />,
                 ol: ({node, ...props}) => <ol style={{listStyleType: 'decimal', paddingLeft: '1.5rem', marginBottom: '1rem'}} {...props} />,
                 li: ({node, ...props}) => <li style={{marginBottom: '0.5rem'}} {...props} />,
@@ -158,7 +197,6 @@ export const LabReportTemplate = React.forwardRef<HTMLDivElement, LabReportTempl
             </ReactMarkdown>
           </div>
 
-          {/* Footer on page 2 */}
           <div 
             style={{ 
               position: 'absolute',

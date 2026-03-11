@@ -48,6 +48,8 @@ import {
 } from 'lucide-react';
 import { startOnboardingTour } from './components/TourGuide';
 import { ViewportSelector } from './components/ViewportSelector';
+import { supabase } from './lib/supabase';
+import { getDownloadUrl } from './lib/structuresService';
 import { SnapshotModal } from './components/SnapshotModal';
 import { ToastContainer } from './components/Toast';
 import { useToast } from './hooks/useToast';
@@ -229,6 +231,39 @@ function App() {
         url.searchParams.delete('live');
         window.history.replaceState({}, '', url);
       }, 1000);
+    }
+
+    // Direct Structure Load from URL
+    const structId = params.get('struct');
+    if (structId) {
+      const fetchAndLoad = async () => {
+        try {
+          const { data, error } = await supabase
+            .from('structures')
+            .select('*')
+            .eq('id', structId)
+            .single();
+          
+          if (error) throw error;
+          const url = await getDownloadUrl(data.file_path);
+          
+          const res = await fetch(url);
+          if (!res.ok) throw new Error('Failed to fetch structure file');
+          const blob = await res.blob();
+          
+          const file = new File([blob], `${data.name}.${data.file_type.toLowerCase()}`, { type: 'application/octet-stream' });
+          controllers[0].handleUpload(file, data.file_type.toLowerCase() === 'cif' || data.file_type.toLowerCase() === 'mmcif');
+          setShowLanding(false);
+          
+          // Clean URL
+          const newUrl = new URL(window.location.href);
+          newUrl.searchParams.delete('struct');
+          window.history.replaceState({}, '', newUrl);
+        } catch (err) {
+          console.error('Failed to load structure from URL:', err);
+        }
+      };
+      fetchAndLoad();
     }
   }, []);
   
