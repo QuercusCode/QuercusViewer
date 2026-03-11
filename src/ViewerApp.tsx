@@ -39,11 +39,12 @@ import type {
   StructureInfo,
   ChatMessage
 } from './types';
+import { LabNotebook } from './components/dashboard/LabNotebook';
 import {
   Camera, RefreshCw, Upload,
   Settings as SettingsIcon, Zap, Activity, Grid3X3, Palette,
   Share2, Save, FolderOpen, Video, Ruler, Maximize2, Star, Undo2, Redo2, BookOpen,
-  ChevronLeft, ChevronRight, Menu, X
+  ChevronLeft, ChevronRight, Menu, X, NotebookPen
 } from 'lucide-react';
 import { startOnboardingTour } from './components/TourGuide';
 import { ViewportSelector } from './components/ViewportSelector';
@@ -108,6 +109,7 @@ function App() {
   // Feature: Nametags
   const [userName, setUserName] = useState<string | null>(null);
   const [isIdentityModalOpen, setIsIdentityModalOpen] = useState(false);
+  const [isNotebookOpen, setIsNotebookOpen] = useState(false);
 
   // ...
 
@@ -782,7 +784,7 @@ function App() {
     // broadcastCamera likely needs to send index?
     // Current broadcastCamera in usePeerSession sends { orientation, ... }
     // It doesn't seem to support index.
-    // Ideally we should update usePeerSession to send { index, orientation } 
+    // Ideally we should update usePeerSession to send { index, orientation }
     // OR we broadcast orientation inside the main state object (throttled).
     // The previous implementation used a dedicated channel for performance.
 
@@ -1206,7 +1208,7 @@ function App() {
 
   // ... (lines 53-343) ...
 
-  // Actually, we should only clear if not restoring? 
+  // Actually, we should only clear if not restoring?
   // So here we should NOT clear them.
 
   // Removed legacy orientation restore effect
@@ -1264,7 +1266,7 @@ function App() {
 
 
 
-  // ... (fetchTitle logic) ... 
+  // ... (fetchTitle logic) ...
 
   // Undo/Redo Stack (Moved here to access all state variables)
   const visualState: VisualState = useMemo(() => ({
@@ -1878,7 +1880,7 @@ function App() {
                 // Best to use handleUpload to trigger the flow
                 // But handleUpload expects user interaction usually.
                 // Let's manually set file and ID.
-                // If we set ID, ProteinViewer might try to fetch. 
+                // If we set ID, ProteinViewer might try to fetch.
                 // If we set file, we need to ensure ProteinViewer uses it.
                 // ProteinViewer uses `file` prop if provided.
               } else if (vp.pdbId) {
@@ -2151,11 +2153,12 @@ function App() {
         setIsLibraryOpen(false);
         setShowContactMap(false);
         setShowLanding(false); // Close landing if open
+        setIsNotebookOpen(false); // Close notebook if open
         return;
       }
 
       // Only process below shortcuts if no modals are open
-      if (isLibraryOpen || isCommandPaletteOpen || showContactMap) return;
+      if (isLibraryOpen || isCommandPaletteOpen || showContactMap || isNotebookOpen) return;
 
       switch (e.key.toLowerCase()) {
         // General
@@ -2214,7 +2217,7 @@ function App() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isLibraryOpen, isCommandPaletteOpen, showContactMap]);
+  }, [isLibraryOpen, isCommandPaletteOpen, showContactMap, isNotebookOpen]);
 
   const commandActions: CommandAction[] = useMemo(() => [
     // --- FILES & LOADING ---
@@ -2815,9 +2818,16 @@ function App() {
             <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-black to-gray-950 -z-10" />
           )}
 
-          {/* Top Right Navigation (Dashboard / Auth) */}
+          {/* Top Right Navigation (Dashboard / Auth / Notebook) */}
           {!isEmbedMode && !isStudioMode && (
             <div className="absolute top-4 right-4 md:right-8 z-50 flex items-center gap-3">
+              <button
+                onClick={() => setIsNotebookOpen(!isNotebookOpen)}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-all border shadow-sm ${isNotebookOpen ? 'bg-blue-600 border-blue-500 text-white' : isLightMode ? 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50' : 'bg-neutral-800 border-neutral-700 text-white hover:bg-neutral-700'}`}
+              >
+                <NotebookPen className={`w-4 h-4 ${isNotebookOpen ? 'animate-pulse' : ''}`} />
+                <span className="hidden md:inline">Notebook</span>
+              </button>
               {user ? (
                 <Link to="/dashboard" className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-colors border shadow-sm ${isLightMode ? 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50' : 'bg-neutral-800 border-neutral-700 text-white hover:bg-neutral-700'}`}>
                   <img src={user?.user_metadata?.avatar_url || `https://ui-avatars.com/api/?name=${user?.email || 'User'}&background=random`} alt="Profile" className="w-5 h-5 rounded-full" />
@@ -3290,6 +3300,38 @@ function App() {
                 }
               })()}
             </div>
+
+            {/* Notebook Drawer */}
+            {!isEmbedMode && !isStudioMode && isNotebookOpen && (
+              <div className="hidden md:block w-[400px] lg:w-[450px] border-l border-white/10 shrink-0 bg-neutral-950/50 backdrop-blur-sm z-40">
+                <LabNotebook isDrawer />
+              </div>
+            )}
+
+            {/* Mobile Notebook Drawer (Overlay) */}
+            {!isEmbedMode && !isStudioMode && isNotebookOpen && (
+              <div className="md:hidden fixed inset-0 z-[100] bg-black/80 backdrop-blur-md">
+                <div className="absolute inset-y-0 right-0 w-full bg-neutral-950 flex flex-col">
+                  {/* Mobile Header with Close */}
+                  <div className="p-4 border-b border-white/10 flex items-center justify-between">
+                    <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                      <NotebookPen className="w-5 h-5 text-blue-400" />
+                      Lab Notebook
+                    </h2>
+                    <button 
+                      onClick={() => setIsNotebookOpen(false)}
+                      className="p-2 hover:bg-white/10 rounded-full text-white/50 hover:text-white"
+                    >
+                      <X size={24} />
+                    </button>
+                  </div>
+                  <div className="flex-1 overflow-hidden">
+                    <LabNotebook isDrawer />
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Right Sidebar: Sequence Track */}
             {!isCleanMode && visualizerEngine === 'ngl' && (
               <SequenceTrack
