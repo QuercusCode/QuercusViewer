@@ -222,6 +222,15 @@ export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false
                     logging: true, // Enable html2canvas internal logging for debug
                     backgroundColor: '#ffffff',
                     windowWidth: 800, // Fixed width for consistent rendering
+                    onclone: (clonedDoc) => {
+                        const el = clonedDoc.getElementById('lab-report-pdf-template');
+                        if (el) {
+                            // Strictly reset variables that might contain oklch from Tailwind v4
+                            el.style.setProperty('--tw-shadow', '0 0 #0000', 'important');
+                            el.style.setProperty('--tw-ring-color', '#000000', 'important');
+                            el.style.setProperty('--tw-ring-offset-color', '#ffffff', 'important');
+                        }
+                    }
                 });
                 console.log('Canvas captured. Size:', canvas.width, 'x', canvas.height);
                 
