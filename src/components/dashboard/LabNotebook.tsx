@@ -8,6 +8,10 @@ import remarkGfm from 'remark-gfm';
 import { listStructures, type Structure } from '../../lib/structuresService';
 import { StructureMentionDropdown } from './StructureMentionDropdown';
 import { StructurePreviewCard } from './StructurePreviewCard';
+import { LabReportTemplate } from './LabReportTemplate';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
+import { Share } from 'lucide-react';
 
 export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false }) => {
     const { user } = useAuth();
@@ -26,6 +30,9 @@ export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false
     const [viewMode, setViewMode] = useState<'write' | 'preview'>('write');
     const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+    const [isExporting, setIsExporting] = useState(false);
+    const reportRef = useRef<HTMLDivElement>(null);
 
     // Structure Mentions State
     const [allStructures, setAllStructures] = useState<Structure[]>([]);
@@ -198,6 +205,43 @@ export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false
 
     const filteredNotebooks = notebooks.filter(n => n.title.toLowerCase().includes(searchQuery.toLowerCase()));
 
+    const handleExportPDF = async () => {
+        const activeNotebook = notebooks.find(n => n.id === activeId);
+        if (!activeNotebook) return;
+        setIsExporting(true);
+        try {
+            // Give time for the hidden template to render
+            await new Promise(r => setTimeout(r, 500));
+            
+            if (reportRef.current) {
+                const canvas = await html2canvas(reportRef.current, {
+                    scale: 2, // High resolution
+                    useCORS: true,
+                    logging: false,
+                    backgroundColor: '#ffffff'
+                });
+                
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jsPDF({
+                    orientation: 'portrait',
+                    unit: 'mm',
+                    format: 'a4'
+                });
+                
+                const imgWidth = 210; // A4 width in mm
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                
+                pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+                pdf.save(`LabReport_${activeNotebook.title.replace(/\s+/g, '_') || 'Untitled'}.pdf`);
+            }
+        } catch (err) {
+            console.error('Failed to export PDF:', err);
+            alert('Failed to generate PDF report. Please try again.');
+        } finally {
+            setIsExporting(false);
+        }
+    };
+
     if (!user) return null;
 
     return (
@@ -305,19 +349,36 @@ export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false
                                             <Menu className="w-5 h-5" />
                                         </button>
                                     )}
-                                    <div className="flex items-center gap-1 bg-neutral-900 border border-neutral-800 p-1 rounded-lg">
+                                    <div className="flex items-center gap-2">
                                         <button
-                                            onClick={() => setViewMode('write')}
-                                            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-colors ${viewMode === 'write' ? 'bg-neutral-800 text-white shadow-sm' : 'text-neutral-500 hover:text-neutral-300'}`}
+                                            onClick={handleExportPDF}
+                                            disabled={isExporting}
+                                            className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white/5 hover:bg-white/10 text-neutral-400 hover:text-white border border-neutral-800 rounded-lg text-xs font-medium transition-all"
+                                            title="Export as Lab Report (PDF)"
                                         >
-                                            <Code className="w-4 h-4" /> {isDrawer ? '' : 'Write'}
+                                            {isExporting ? (
+                                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                            ) : (
+                                                <div className="flex items-center gap-1.5">
+                                                    <Share className="w-3.5 h-3.5" />
+                                                    <span className="hidden sm:inline">Export PDF</span>
+                                                </div>
+                                            )}
                                         </button>
-                                        <button
-                                            onClick={() => setViewMode('preview')}
-                                            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-colors ${viewMode === 'preview' ? 'bg-neutral-800 text-white shadow-sm' : 'text-neutral-500 hover:text-neutral-300'}`}
-                                        >
-                                            <Eye className="w-4 h-4" /> {isDrawer ? '' : 'Preview'}
-                                        </button>
+                                        <div className="flex items-center gap-1 bg-neutral-900 border border-neutral-800 p-1 rounded-lg">
+                                            <button
+                                                onClick={() => setViewMode('write')}
+                                                className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-colors ${viewMode === 'write' ? 'bg-neutral-800 text-white shadow-sm' : 'text-neutral-500 hover:text-neutral-300'}`}
+                                            >
+                                                <Code className="w-4 h-4" /> {isDrawer ? '' : 'Write'}
+                                            </button>
+                                            <button
+                                                onClick={() => setViewMode('preview')}
+                                                className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-colors ${viewMode === 'preview' ? 'bg-neutral-800 text-white shadow-sm' : 'text-neutral-500 hover:text-neutral-300'}`}
+                                            >
+                                                <Eye className="w-4 h-4" /> {isDrawer ? '' : 'Preview'}
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -433,6 +494,19 @@ export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false
                     )}
                 </div>
             )}
+            {/* Hidden PDF Template Container */}
+            <div className="fixed top-[-10000px] left-[-10000px] pointer-events-none">
+                {activeNotebook && (
+                    <LabReportTemplate
+                        ref={reportRef}
+                        title={activeNotebook.title}
+                        content={activeNotebook.content}
+                        date={activeNotebook.created_at}
+                        author={user?.email || 'Quercus User'}
+                        id={activeNotebook.id.slice(0, 8)}
+                    />
+                )}
+            </div>
         </div>
     );
 };
