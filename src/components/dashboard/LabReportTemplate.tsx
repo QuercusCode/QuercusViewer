@@ -1,7 +1,6 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Microscope } from 'lucide-react';
 import type { Structure } from '../../lib/structuresService';
 
 interface LabReportTemplateProps {
@@ -64,7 +63,11 @@ export const LabReportTemplate = React.forwardRef<HTMLDivElement, LabReportTempl
           {/* ... (Cover Page content) ... */}
           <div style={{ marginBottom: '4rem', display: 'flex', justifyContent: 'center' }}>
             <div style={{ backgroundColor: '#0f172a', padding: '1.5rem', borderRadius: '1rem', display: 'inline-flex' }}>
-              <Microscope size={64} color="#ffffff" />
+              <img 
+                src={`${window.location.origin}/logo/icon-white.png`} 
+                style={{ width: '64px', height: '64px', display: 'block' }} 
+                alt="Quercus Logo" 
+              />
             </div>
           </div>
           
@@ -135,7 +138,11 @@ export const LabReportTemplate = React.forwardRef<HTMLDivElement, LabReportTempl
           }}>
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <div style={{ backgroundColor: '#0f172a', padding: '0.25rem', borderRadius: '0.25rem', marginRight: '0.5rem', display: 'flex' }}>
-                <Microscope size={16} color="#ffffff" />
+                <img 
+                  src={`${window.location.origin}/logo/icon-white.png`} 
+                  style={{ width: '16px', height: '16px', display: 'block' }} 
+                  alt="Logo" 
+                />
               </div>
               <span style={{ fontSize: '10pt', fontWeight: 'bold', color: '#0f172a' }}>QUERCUS</span>
             </div>
