@@ -69,6 +69,9 @@ export const StructurePreviewCard: React.FC<StructurePreviewCardProps> = ({ stru
       }));
       
       navigate('/');
+      
+      // Notify viewer in case it's already mounted (Studio Mode)
+      window.dispatchEvent(new CustomEvent('quercus:load-structure'));
     } catch (err) {
       console.error('Failed to open structure in viewer:', err);
     } finally {

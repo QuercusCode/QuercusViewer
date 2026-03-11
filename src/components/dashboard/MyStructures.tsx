@@ -1423,6 +1423,7 @@ export const MyStructures = () => {
         }));
         sessionStorage.setItem('pendingStructures', JSON.stringify(items));
         navigate('/');
+        window.dispatchEvent(new CustomEvent('quercus:load-structure'));
     };
 
     const handleMoveConfirm = async (destId: string | null) => {

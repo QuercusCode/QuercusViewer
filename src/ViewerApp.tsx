@@ -231,9 +231,20 @@ function App() {
       }, 1000);
     }
   }, []);
+  
+  // Parse Global URL State Once
+  const initialUrlState = useMemo(() => parseURLState(), []);
+
+  // --- State: Multi-View Controllers (array of 4) ---
+  const controllers = [
+    useStructureController(initialUrlState.viewports[0] || {}), // Viewport 0
+    useStructureController(initialUrlState.viewports[1] || {}), // Viewport 1
+    useStructureController(initialUrlState.viewports[2] || {}), // Viewport 2
+    useStructureController(initialUrlState.viewports[3] || {})  // Viewport 3
+  ];
 
   // Dashboard "Open in Viewer" bridge — single structure
-  useEffect(() => {
+  const checkPendingStructure = useCallback(() => {
     const raw = sessionStorage.getItem('pendingStructure');
     if (!raw) return;
     sessionStorage.removeItem('pendingStructure');
@@ -251,11 +262,10 @@ function App() {
         setShowLanding(false);
       })
       .catch(err => console.error('[pendingStructure] load error:', err));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [controllers]);
 
   // Dashboard "Compare in Multi-view" bridge — array of structures
-  useEffect(() => {
+  const checkPendingStructures = useCallback(() => {
     const raw = sessionStorage.getItem('pendingStructures');
     if (!raw) return;
     sessionStorage.removeItem('pendingStructures');
@@ -280,23 +290,23 @@ function App() {
         })
         .catch(err => console.error(`[pendingStructures][${idx}] load error:`, err));
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [controllers]);
+
+  useEffect(() => {
+    checkPendingStructure();
+    checkPendingStructures();
+
+    const handleLoadRequest = () => {
+      checkPendingStructure();
+      checkPendingStructures();
+    };
+
+    window.addEventListener('quercus:load-structure', handleLoadRequest);
+    return () => window.removeEventListener('quercus:load-structure', handleLoadRequest);
+  }, [checkPendingStructure, checkPendingStructures]);
 
 
   // Sync Incoming State
-
-
-  // Parse Global URL State Once
-  const initialUrlState = parseURLState();
-
-  // --- State: Multi-View Controllers (array of 4) ---
-  const controllers = [
-    useStructureController(initialUrlState.viewports[0] || {}), // Viewport 0
-    useStructureController(initialUrlState.viewports[1] || {}), // Viewport 1
-    useStructureController(initialUrlState.viewports[2] || {}), // Viewport 2
-    useStructureController(initialUrlState.viewports[3] || {})  // Viewport 3
-  ];
 
   // --- State: View Mode & Active Management ---
   type ViewMode = 'single' | 'dual' | 'triple' | 'quad';
