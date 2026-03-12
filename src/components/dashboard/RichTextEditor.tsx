@@ -414,21 +414,60 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
           >
             <LinkIcon className="w-4 h-4" />
           </ToolbarButton>
-          <ToolbarButton 
-            onClick={() => editor.chain().focus().toggleHighlight().run()} 
-            isActive={editor.isActive('highlight')}
-            title="Highlight"
+          <Dropdown
+            isOpen={activeMenu === 'highlight'}
+            onClose={() => setActiveMenu(null)}
+            trigger={
+              <button 
+                onClick={() => toggleMenu('highlight')}
+                className={`p-1.5 rounded transition-colors flex items-center justify-center cursor-pointer ${activeMenu === 'highlight' || editor.isActive('highlight') ? 'bg-blue-500/20 text-blue-400' : 'text-[var(--text-muted)] hover:bg-[var(--input-bg)] hover:text-[var(--text-primary)]'}`}
+              >
+                <Highlighter className="w-4 h-4" />
+              </button>
+            }
           >
-            <Highlighter className="w-4 h-4" />
-          </ToolbarButton>
-          
+            <div className="p-3 w-48">
+              <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider mb-2">Highlight Color</p>
+              <div className="grid grid-cols-3 gap-2 mb-3">
+                {[
+                  { color: '#fef08a', name: 'Yellow' },
+                  { color: '#bbf7d0', name: 'Green' },
+                  { color: '#bfdbfe', name: 'Blue' },
+                  { color: '#fbcfe8', name: 'Pink' },
+                  { color: '#ffedd5', name: 'Orange' },
+                  { color: '#e9d5ff', name: 'Purple' },
+                ].map((c) => (
+                  <button
+                    key={c.color}
+                    onClick={() => {
+                      editor.chain().focus().setHighlight({ color: c.color }).run();
+                      setActiveMenu(null);
+                    }}
+                    className="w-full h-8 rounded-md border border-white/10 hover:scale-110 transition-transform shadow-sm"
+                    style={{ backgroundColor: c.color }}
+                    title={c.name}
+                  />
+                ))}
+              </div>
+              <button 
+                onClick={() => {
+                  editor.chain().focus().unsetHighlight().run();
+                  setActiveMenu(null);
+                }}
+                className="w-full flex items-center justify-center gap-2 px-2 py-1.5 text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--input-bg)] rounded transition-colors"
+              >
+                <Eraser className="w-3 h-3" />
+                <span>Clear highlight</span>
+              </button>
+            </div>
+          </Dropdown>
           <Dropdown
             isOpen={activeMenu === 'color'}
             onClose={() => setActiveMenu(null)}
             trigger={
               <button 
                 onClick={() => toggleMenu('color')}
-                className={`px-1.5 py-1 flex items-center rounded transition-colors ${activeMenu === 'color' ? 'bg-[var(--input-bg)] text-blue-400' : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]'}`}
+                className={`px-1.5 py-1 flex items-center rounded transition-colors ${activeMenu === 'color' || editor.isActive('textStyle') ? 'bg-blue-500/20 text-blue-400' : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]'}`}
               >
                 <Type className="w-4 h-4" />
                 <ChevronDown className="w-3 h-3 ml-0.5" />
