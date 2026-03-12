@@ -334,7 +334,7 @@ export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false
             {(!isDrawer || !showDrawerList) && (
                 <div className="flex-1 flex flex-col bg-[var(--bg-main)] overflow-hidden relative">
                     {activeNotebook ? (
-                        <div className={`flex-1 flex flex-col h-full w-full ${isDrawer ? '' : 'max-w-5xl mx-auto'}`}>
+                        <div className={`flex-1 flex flex-col h-full w-full ${isDrawer ? '' : 'max-w-[1440px] mx-auto'}`}>
                             {/* Editor Toolbar */}
                             <div className={`flex items-center justify-between py-4 border-b border-[var(--border-main)]/50 shrink-0 ${isDrawer ? 'px-4' : 'px-8'}`}>
                                 <div className="flex items-center gap-2">
@@ -381,7 +381,7 @@ export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false
                                 </div>
                             </div>
 
-                            <div className={`flex-1 overflow-y-auto ${isDrawer ? 'p-4' : 'p-8'} min-h-0`}>
+                            <div className={`flex-1 overflow-y-auto ${isDrawer ? 'p-4' : 'px-4 sm:px-12 py-8'} min-h-0`}>
                                 <input
                                     type="text"
                                     value={editTitle}

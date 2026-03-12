@@ -222,7 +222,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     },
     editorProps: {
       attributes: {
-        class: `prose ${theme === 'dark' ? 'prose-invert' : ''} prose-sm sm:prose-base focus:outline-none max-w-none min-h-[500px] px-8 py-6 text-[var(--text-primary)]`,
+        class: `prose ${theme === 'dark' ? 'prose-invert' : ''} prose-sm sm:prose-base focus:outline-none max-w-none min-h-[500px] px-4 sm:px-10 py-6 text-[var(--text-primary)]`,
       },
     },
   });
