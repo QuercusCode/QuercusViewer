@@ -49,77 +49,87 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
         </div>
 
         {/* Chart Area */}
-        <div className="h-64 w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            {type === 'bar' ? (
-              <BarChart data={data}>
-                <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
-                <XAxis 
-                  dataKey={xAxis} 
-                  stroke={textColor} 
-                  fontSize={10} 
-                  tickLine={false} 
-                  axisLine={false}
-                  tick={{ fill: textColor }}
-                />
-                <YAxis 
-                  stroke={textColor} 
-                  fontSize={10} 
-                  tickLine={false} 
-                  axisLine={false}
-                  tick={{ fill: textColor }}
-                />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: isDark ? '#171717' : '#ffffff',
-                    border: `1px solid ${gridColor}`,
-                    borderRadius: '8px',
-                    fontSize: '12px',
-                    color: isDark ? '#ffffff' : '#000000'
-                  }}
-                  itemStyle={{ color: '#3b82f6' }}
-                />
-                <Bar dataKey={yAxis} fill="#3b82f6" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            ) : (
-              <LineChart data={data}>
-                <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
-                <XAxis 
-                  dataKey={xAxis} 
-                  stroke={textColor} 
-                  fontSize={10} 
-                  tickLine={false} 
-                  axisLine={false}
-                  tick={{ fill: textColor }}
-                />
-                <YAxis 
-                  stroke={textColor} 
-                  fontSize={10} 
-                  tickLine={false} 
-                  axisLine={false}
-                  tick={{ fill: textColor }}
-                />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: isDark ? '#171717' : '#ffffff',
-                    border: `1px solid ${gridColor}`,
-                    borderRadius: '8px',
-                    fontSize: '12px',
-                    color: isDark ? '#ffffff' : '#000000'
-                  }}
-                  itemStyle={{ color: '#3b82f6' }}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey={yAxis} 
-                  stroke="#3b82f6" 
-                  strokeWidth={3} 
-                  dot={{ r: 4, fill: '#3b82f6', strokeWidth: 2, stroke: isDark ? '#171717' : '#ffffff' }}
-                  activeDot={{ r: 6 }}
-                />
-              </LineChart>
-            )}
-          </ResponsiveContainer>
+        <div className="h-64 w-full flex items-center justify-center">
+          {data && data.length > 0 && data.some((d: any) => typeof d[yAxis] === 'number') ? (
+            <ResponsiveContainer width="100%" height="100%">
+              {type === 'bar' ? (
+                <BarChart data={data}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
+                  <XAxis 
+                    dataKey={xAxis} 
+                    stroke={textColor} 
+                    fontSize={10} 
+                    tickLine={false} 
+                    axisLine={false}
+                    tick={{ fill: textColor }}
+                  />
+                  <YAxis 
+                    stroke={textColor} 
+                    fontSize={10} 
+                    tickLine={false} 
+                    axisLine={false}
+                    tick={{ fill: textColor }}
+                  />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: isDark ? '#171717' : '#ffffff',
+                      border: `1px solid ${gridColor}`,
+                      borderRadius: '8px',
+                      fontSize: '12px',
+                      color: isDark ? '#ffffff' : '#000000'
+                    }}
+                    itemStyle={{ color: '#3b82f6' }}
+                  />
+                  <Bar dataKey={yAxis} fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              ) : (
+                <LineChart data={data}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
+                  <XAxis 
+                    dataKey={xAxis} 
+                    stroke={textColor} 
+                    fontSize={10} 
+                    tickLine={false} 
+                    axisLine={false}
+                    tick={{ fill: textColor }}
+                  />
+                  <YAxis 
+                    stroke={textColor} 
+                    fontSize={10} 
+                    tickLine={false} 
+                    axisLine={false}
+                    tick={{ fill: textColor }}
+                  />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: isDark ? '#171717' : '#ffffff',
+                      border: `1px solid ${gridColor}`,
+                      borderRadius: '8px',
+                      fontSize: '12px',
+                      color: isDark ? '#ffffff' : '#000000'
+                    }}
+                    itemStyle={{ color: '#3b82f6' }}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey={yAxis} 
+                    stroke="#3b82f6" 
+                    strokeWidth={3} 
+                    dot={{ r: 4, fill: '#3b82f6', strokeWidth: 2, stroke: isDark ? '#171717' : '#ffffff' }}
+                    activeDot={{ r: 6 }}
+                  />
+                </LineChart>
+              )}
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex flex-col items-center justify-center text-center p-8 bg-[var(--input-bg)] rounded-xl border border-dashed border-[var(--border-main)]">
+              <BarChart2 className="w-8 h-8 text-[var(--text-muted)] mb-3 opacity-20" />
+              <p className="text-sm font-medium text-[var(--text-secondary)]">No numeric data available</p>
+              <p className="text-[10px] text-[var(--text-muted)] mt-1 max-w-[200px]">
+                Charts require numerical values in the Y-axis. Please check your spreadsheet and ensure the selected column contains numbers.
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </NodeViewWrapper>

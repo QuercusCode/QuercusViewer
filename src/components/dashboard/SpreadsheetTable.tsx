@@ -14,9 +14,36 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode }: any) =>
   const [cellValue, setCellValue] = useState("");
   const [showChartPreview, setShowChartPreview] = useState(false);
   const [chartConfig, setChartConfig] = useState({ type: 'line', xCol: 0, yCol: 1 });
+  const [numericCols, setNumericCols] = useState<number[]>([]);
   
   const rows = node.childCount;
   const cols = node.firstChild ? node.firstChild.childCount : 0;
+  
+  // Analyze columns for numeric content
+  useEffect(() => {
+    const numericIndices: number[] = [];
+    for (let c = 0; c < cols; c++) {
+      let numericCount = 0;
+      let nonBlankCount = 0;
+
+      for (let r = 1; r < node.childCount; r++) {
+        const cell = node.child(r).child(c);
+        const val = cell.textContent.trim();
+        if (val) {
+          nonBlankCount++;
+          if (!isNaN(parseFloat(val))) {
+            numericCount++;
+          }
+        }
+      }
+
+      // If at least 50% of non-blank values are numeric, consider it a numeric column
+      if (nonBlankCount > 0 && numericCount / nonBlankCount > 0.5) {
+        numericIndices.push(c);
+      }
+    }
+    setNumericCols(numericIndices);
+  }, [node, cols]);
   
   const cellWidth = 140;
   const indexWidth = 48;
@@ -281,14 +308,25 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode }: any) =>
                       <select 
                         value={chartConfig.yCol} 
                         onChange={(e) => setChartConfig(prev => ({ ...prev, yCol: parseInt(e.target.value) }))}
-                        className="w-full h-8 bg-neutral-50 border border-neutral-200 rounded px-2 text-[10px] font-bold text-neutral-700 outline-none focus:border-blue-500/50"
+                        className={`w-full h-8 bg-neutral-50 border rounded px-2 text-[10px] font-bold text-neutral-700 outline-none transition-colors ${numericCols.includes(chartConfig.yCol) ? 'border-neutral-200 focus:border-blue-500/50' : 'border-amber-400 bg-amber-50'}`}
                       >
                         {Array.from({ length: cols }).map((_, i) => (
-                          <option key={i} value={i}>Column {letters[i] || i + 1}</option>
+                          <option key={i} value={i}>
+                            {letters[i] || i + 1} {numericCols.includes(i) ? '🔢' : '🔤'}
+                          </option>
                         ))}
                       </select>
                     </div>
                   </div>
+
+                  {!numericCols.includes(chartConfig.yCol) && (
+                    <div className="flex items-start gap-2 p-2 bg-amber-50 border border-amber-200 rounded-lg">
+                      <div className="text-amber-600 mt-0.5">⚠️</div>
+                      <p className="text-[10px] text-amber-700 leading-tight">
+                        Column <strong>{letters[chartConfig.yCol] || chartConfig.yCol + 1}</strong> contains mostly text. Y-Axis should be numeric for best results.
+                      </p>
+                    </div>
+                  )}
 
                   <button 
                     onClick={createChart}
