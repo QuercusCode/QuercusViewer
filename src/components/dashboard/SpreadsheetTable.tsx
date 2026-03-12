@@ -166,6 +166,12 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode }: any) =>
     setShowChartPreview(false);
   };
 
+  const toggleChartPreview = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setShowChartPreview(!showChartPreview);
+  };
+
   return (
     <NodeViewWrapper className="spreadsheet-premium-wrapper my-12 group/spreadsheet relative">
       <div className="bg-white border border-neutral-200 rounded-xl overflow-hidden shadow-2xl transition-all group-hover/spreadsheet:border-neutral-300">
@@ -195,7 +201,7 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode }: any) =>
         </div>
 
         {/* TOOLBAR: Formatting & Alignment */}
-        <div className="flex items-center gap-1 px-3 py-1.5 bg-[#f8f9fa] border-b border-neutral-200 overflow-x-auto no-scrollbar">
+        <div className="flex items-center gap-1 px-3 py-1.5 bg-[#f8f9fa] border-b border-neutral-200 relative z-40">
           <div className="flex items-center gap-0.5 pr-2 border-r border-neutral-200">
             <button onMouseDown={(e) => toolbarAction(e, 'bold')} className="p-1.5 hover:bg-neutral-200 text-neutral-700 rounded transition-colors"><Bold className="w-3.5 h-3.5" /></button>
             <button onMouseDown={(e) => toolbarAction(e, 'italic')} className="p-1.5 hover:bg-neutral-200 text-neutral-700 rounded transition-colors"><Italic className="w-3.5 h-3.5" /></button>
@@ -220,8 +226,8 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode }: any) =>
           {/* Chart Creator Dropdown */}
           <div className="relative">
             <button 
-              onMouseDown={(e) => { e.preventDefault(); setShowChartPreview(!showChartPreview); }}
-              className={`flex items-center gap-1.5 px-3 py-1 ml-1 rounded transition-all text-[10px] font-bold ${showChartPreview ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-600 hover:bg-blue-100'}`}
+              onMouseDown={toggleChartPreview}
+              className={`flex items-center gap-1.5 px-3 py-1.5 ml-1 rounded-lg transition-all text-[10px] font-bold ${showChartPreview ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30' : 'bg-blue-50 text-blue-600 hover:bg-blue-100'}`}
             >
               <BarChart2 className="w-3.5 h-3.5" />
               <span>Visualize</span>
@@ -229,7 +235,10 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode }: any) =>
             </button>
 
             {showChartPreview && (
-              <div className="absolute top-full right-0 mt-2 w-64 bg-white border border-neutral-200 rounded-xl shadow-2xl p-4 z-50 animate-in fade-in slide-in-from-top-2">
+              <div 
+                className="absolute top-full left-0 mt-2 w-72 bg-white border border-neutral-200 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] p-4 z-[9999] animate-in fade-in slide-in-from-top-2"
+                onMouseDown={(e) => e.stopPropagation()}
+              >
                 <div className="flex items-center justify-between mb-4">
                   <h4 className="text-xs font-bold text-neutral-800 uppercase tracking-wider">Chart Settings</h4>
                   <button onClick={() => setShowChartPreview(false)} className="text-neutral-400 hover:text-neutral-600"><X className="w-4 h-4" /></button>
