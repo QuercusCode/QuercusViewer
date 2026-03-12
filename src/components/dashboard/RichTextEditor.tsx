@@ -222,6 +222,15 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       case 'table4x4':
         editor.chain().focus().insertTable({ rows: 4, cols: 4, withHeaderRow: true }).run();
         break;
+      case 'customTable':
+        const rowsStr = window.prompt('Enter number of rows:', '3');
+        const colsStr = window.prompt('Enter number of columns:', '3');
+        const rows = parseInt(rowsStr || '3', 10);
+        const cols = parseInt(colsStr || '3', 10);
+        if (!isNaN(rows) && !isNaN(cols)) {
+          editor.chain().focus().insertTable({ rows, cols, withHeaderRow: true }).run();
+        }
+        break;
       case 'protocol':
         editor.chain().focus().insertContent('**Protocol:**\n\n- ').run();
         break;
@@ -531,6 +540,13 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
                   >
                     <TableIcon className="w-3.5 h-3.5 text-orange-400" />
                     <span>4x4 Table</span>
+                  </button>
+                  <button 
+                    onClick={() => insertTemplate('customTable')}
+                    className="flex items-center gap-2 px-2 py-2 text-xs text-neutral-300 hover:bg-neutral-800 rounded-md transition-colors col-span-2"
+                  >
+                    <TableIcon className="w-3.5 h-3.5 text-orange-400" />
+                    <span>Custom Table...</span>
                   </button>
                 </div>
                 <div className="space-y-0.5">
