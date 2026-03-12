@@ -2,16 +2,21 @@ import { Node, mergeAttributes } from '@tiptap/core'
 import { ReactNodeViewRenderer, NodeViewWrapper } from '@tiptap/react'
 import { 
   LineChart, Line, BarChart, Bar, XAxis, YAxis, 
-  CartesianGrid, Tooltip, ResponsiveContainer 
+  CartesianGrid, Tooltip, Legend, ResponsiveContainer 
 } from 'recharts'
 import { Trash2, BarChart2, TrendingUp } from 'lucide-react'
 
+const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#ef4444', '#06b6d4', '#84cc16'];
+
 const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
-  const { data, type, title, xAxis, yAxis } = node.attrs
+  const { data, type, title, xAxis, yAxes } = node.attrs
 
   const isDark = document.documentElement.classList.contains('dark')
   const textColor = isDark ? '#a3a3a3' : '#525252'
   const gridColor = isDark ? '#262626' : '#e5e5e5'
+
+  // Backwards compatibility for single yAxis
+  const activeYAxes = yAxes && yAxes.length > 0 ? yAxes : (node.attrs.yAxis ? [node.attrs.yAxis] : [])
 
   return (
     <NodeViewWrapper className="inline-chart-wrapper my-8 group relative">
@@ -26,7 +31,7 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
             <div>
               <h3 className="text-sm font-bold text-[var(--text-primary)]">{title || 'Data Visualization'}</h3>
               <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider font-mono">
-                {xAxis} vs {yAxis}
+                {activeYAxes.length > 1 ? `${activeYAxes.length} series vs ${xAxis}` : `${activeYAxes[0]} vs ${xAxis}`}
               </p>
             </div>
           </div>
@@ -49,11 +54,11 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
         </div>
 
         {/* Chart Area */}
-        <div className="h-64 w-full flex items-center justify-center">
-          {data && data.length > 0 && data.some((d: any) => typeof d[yAxis] === 'number') ? (
+        <div className="h-72 w-full flex items-center justify-center">
+          {data && data.length > 0 && activeYAxes.length > 0 && data.some((d: any) => activeYAxes.some((y: string) => typeof d[y] === 'number')) ? (
             <ResponsiveContainer width="100%" height="100%">
               {type === 'bar' ? (
-                <BarChart data={data}>
+                <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
                   <XAxis 
                     dataKey={xAxis} 
@@ -78,12 +83,28 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
                       fontSize: '12px',
                       color: isDark ? '#ffffff' : '#000000'
                     }}
-                    itemStyle={{ color: '#3b82f6' }}
+                    itemStyle={{ fontSize: '11px', fontWeight: 'bold' }}
                   />
-                  <Bar dataKey={yAxis} fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                  {activeYAxes.length > 1 && (
+                    <Legend 
+                      verticalAlign="top" 
+                      align="right" 
+                      iconType="circle"
+                      wrapperStyle={{ fontSize: '10px', paddingTop: '0px', paddingBottom: '20px' }}
+                    />
+                  )}
+                  {activeYAxes.map((y: string, index: number) => (
+                    <Bar 
+                      key={y} 
+                      dataKey={y} 
+                      fill={COLORS[index % COLORS.length]} 
+                      radius={[4, 4, 0, 0]} 
+                      name={y}
+                    />
+                  ))}
                 </BarChart>
               ) : (
-                <LineChart data={data}>
+                <LineChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
                   <XAxis 
                     dataKey={xAxis} 
@@ -108,25 +129,37 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
                       fontSize: '12px',
                       color: isDark ? '#ffffff' : '#000000'
                     }}
-                    itemStyle={{ color: '#3b82f6' }}
+                    itemStyle={{ fontSize: '11px', fontWeight: 'bold' }}
                   />
-                  <Line 
-                    type="monotone" 
-                    dataKey={yAxis} 
-                    stroke="#3b82f6" 
-                    strokeWidth={3} 
-                    dot={{ r: 4, fill: '#3b82f6', strokeWidth: 2, stroke: isDark ? '#171717' : '#ffffff' }}
-                    activeDot={{ r: 6 }}
-                  />
+                  {activeYAxes.length > 1 && (
+                    <Legend 
+                      verticalAlign="top" 
+                      align="right" 
+                      iconType="circle"
+                      wrapperStyle={{ fontSize: '10px', paddingTop: '0px', paddingBottom: '20px' }}
+                    />
+                  )}
+                  {activeYAxes.map((y: string, index: number) => (
+                    <Line 
+                      key={y}
+                      type="monotone" 
+                      dataKey={y} 
+                      stroke={COLORS[index % COLORS.length]} 
+                      strokeWidth={3} 
+                      dot={{ r: 4, fill: COLORS[index % COLORS.length], strokeWidth: 2, stroke: isDark ? '#171717' : '#ffffff' }}
+                      activeDot={{ r: 6 }}
+                      name={y}
+                    />
+                  ))}
                 </LineChart>
               )}
             </ResponsiveContainer>
           ) : (
-            <div className="flex flex-col items-center justify-center text-center p-8 bg-[var(--input-bg)] rounded-xl border border-dashed border-[var(--border-main)]">
+            <div className="flex flex-col items-center justify-center text-center p-8 bg-[var(--input-bg)] rounded-xl border border-dashed border-[var(--border-main)] w-full">
               <BarChart2 className="w-8 h-8 text-[var(--text-muted)] mb-3 opacity-20" />
-              <p className="text-sm font-medium text-[var(--text-secondary)]">No numeric data available</p>
+              <p className="text-sm font-medium text-[var(--text-secondary)]">No plottable data</p>
               <p className="text-[10px] text-[var(--text-muted)] mt-1 max-w-[200px]">
-                Charts require numerical values in the Y-axis. Please check your spreadsheet and ensure the selected column contains numbers.
+                Ensure at least one numeric column is selected as a Y-axis in your chart settings.
               </p>
             </div>
           )}
@@ -157,6 +190,9 @@ export const InlineChart = Node.create({
       },
       yAxis: {
         default: '',
+      },
+      yAxes: {
+        default: [],
       },
     }
   },

@@ -13,7 +13,11 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode }: any) =>
   const [activeCell, setActiveCell] = useState<string | null>(null);
   const [cellValue, setCellValue] = useState("");
   const [showChartPreview, setShowChartPreview] = useState(false);
-  const [chartConfig, setChartConfig] = useState({ type: 'line', xCol: 0, yCol: 1 });
+  const [chartConfig, setChartConfig] = useState<{type: 'line' | 'bar', xCol: number, yCols: number[]}>({ 
+    type: 'line', 
+    xCol: 0, 
+    yCols: [1] 
+  });
   const [numericCols, setNumericCols] = useState<number[]>([]);
   
   const rows = node.childCount;
@@ -170,7 +174,7 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode }: any) =>
     }
 
     const xAxis = headers[chartConfig.xCol] || headers[0];
-    const yAxis = headers[chartConfig.yCol] || headers[1];
+    const yAxes = chartConfig.yCols.map(index => headers[index] || `Col ${index + 1}`);
 
     if (typeof getPos !== 'function') return;
     const pos = getPos();
@@ -183,14 +187,23 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode }: any) =>
         attrs: {
           data: tableData,
           type: chartConfig.type,
-          title: `Chart from ${node.attrs.title || 'Table'}`,
+          title: `Comparison Chart from ${node.attrs.title || 'Table'}`,
           xAxis,
-          yAxis
+          yAxes
         }
       })
       .run();
 
     setShowChartPreview(false);
+  };
+
+  const toggleYCol = (index: number) => {
+    setChartConfig(prev => {
+      const yCols = prev.yCols.includes(index)
+        ? prev.yCols.filter(i => i !== index)
+        : [...prev.yCols, index];
+      return { ...prev, yCols };
+    });
   };
 
   const toggleChartPreview = (e: React.MouseEvent) => {
@@ -304,26 +317,36 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode }: any) =>
                       </select>
                     </div>
                     <div>
-                      <label className="block text-[10px] font-bold text-neutral-500 uppercase mb-2">Y-Axis (Value)</label>
-                      <select 
-                        value={chartConfig.yCol} 
-                        onChange={(e) => setChartConfig(prev => ({ ...prev, yCol: parseInt(e.target.value) }))}
-                        className={`w-full h-8 bg-neutral-50 border rounded px-2 text-[10px] font-bold text-neutral-700 outline-none transition-colors ${numericCols.includes(chartConfig.yCol) ? 'border-neutral-200 focus:border-blue-500/50' : 'border-amber-400 bg-amber-50'}`}
-                      >
+                      <label className="block text-[10px] font-bold text-neutral-500 uppercase mb-2">Y-Axis (Values - Select Multiple)</label>
+                      <div className="max-h-32 overflow-y-auto border border-neutral-200 rounded-lg bg-neutral-50 p-1 space-y-1">
                         {Array.from({ length: cols }).map((_, i) => (
-                          <option key={i} value={i}>
-                            {letters[i] || i + 1} {numericCols.includes(i) ? '🔢' : '🔤'}
-                          </option>
+                          <button
+                            key={i}
+                            onClick={() => toggleYCol(i)}
+                            className={`w-full flex items-center justify-between px-3 py-1.5 rounded text-[10px] font-bold transition-all ${chartConfig.yCols.includes(i) ? 'bg-blue-600 text-white shadow-sm' : 'bg-white text-neutral-600 hover:bg-neutral-100 border border-neutral-100'}`}
+                          >
+                            <span>{letters[i] || i + 1} {numericCols.includes(i) ? '🔢' : '🔤'}</span>
+                            {chartConfig.yCols.includes(i) && <Plus className="w-3 h-3 rotate-45" />}
+                          </button>
                         ))}
-                      </select>
+                      </div>
                     </div>
                   </div>
 
-                  {!numericCols.includes(chartConfig.yCol) && (
+                  {chartConfig.yCols.length === 0 && (
+                    <div className="flex items-start gap-2 p-2 bg-blue-50 border border-blue-200 rounded-lg">
+                      <div className="text-blue-600 mt-0.5">ℹ️</div>
+                      <p className="text-[10px] text-blue-700 leading-tight">
+                        Select one or more columns to plot as series.
+                      </p>
+                    </div>
+                  )}
+
+                  {chartConfig.yCols.some(i => !numericCols.includes(i)) && (
                     <div className="flex items-start gap-2 p-2 bg-amber-50 border border-amber-200 rounded-lg">
                       <div className="text-amber-600 mt-0.5">⚠️</div>
                       <p className="text-[10px] text-amber-700 leading-tight">
-                        Column <strong>{letters[chartConfig.yCol] || chartConfig.yCol + 1}</strong> contains mostly text. Y-Axis should be numeric for best results.
+                        Generic text detected in some selected columns. Only numeric series will be visualized.
                       </p>
                     </div>
                   )}
