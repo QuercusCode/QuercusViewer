@@ -85,7 +85,9 @@ const Dropdown: React.FC<{
 
   return (
     <div className="relative" ref={containerRef}>
-      <div onClick={() => !isOpen && trigger}>{trigger}</div>
+      <div onClick={(e) => {
+        if (!isOpen) { e.stopPropagation(); }
+      }}>{trigger}</div>
       {isOpen && (
         <div className={`absolute top-full mt-1 z-50 min-w-[200px] bg-neutral-900 border border-neutral-800 rounded-lg shadow-xl p-1 animate-in fade-in zoom-in duration-200 ${align === 'right' ? 'right-0' : 'left-0'}`}>
           {children}
@@ -187,9 +189,9 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   };
 
   return (
-    <div className="flex flex-col w-full h-full bg-neutral-950 border border-neutral-800 rounded-xl overflow-hidden focus-within:border-neutral-700 transition-colors">
+    <div className="flex flex-col w-full h-full bg-neutral-950 border border-neutral-800 rounded-xl focus-within:border-neutral-700 transition-colors">
       {/* TOOLBAR */}
-      <div className="flex items-center flex-wrap gap-0.5 p-1 bg-neutral-900 border-b border-neutral-800 sticky top-0 z-10 overflow-x-auto scrollbar-hide">
+      <div className="flex items-center flex-wrap gap-0.5 p-1 bg-neutral-900 border-b border-neutral-800 sticky top-0 z-20 rounded-t-xl">
         {/* History */}
         <div className="flex items-center">
           <ToolbarButton 
@@ -441,7 +443,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       </div>
 
       {/* EDITOR CONTENT */}
-      <div className="flex-1 overflow-y-auto bg-neutral-950">
+      <div className="flex-1 overflow-y-auto bg-neutral-950 rounded-b-xl">
         <EditorContent editor={editor} />
       </div>
     </div>
