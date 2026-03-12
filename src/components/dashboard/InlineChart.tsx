@@ -9,7 +9,7 @@ import { Trash2, BarChart2, TrendingUp } from 'lucide-react'
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#ef4444', '#06b6d4', '#84cc16'];
 
 const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
-  const { data, type, title, xAxis, yAxes } = node.attrs
+  const { data, type, title, xAxis, yAxes, customColors } = node.attrs
 
   const isDark = document.documentElement.classList.contains('dark')
   const textColor = isDark ? '#a3a3a3' : '#525252'
@@ -17,6 +17,10 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
 
   // Backwards compatibility for single yAxis
   const activeYAxes = yAxes && yAxes.length > 0 ? yAxes : (node.attrs.yAxis ? [node.attrs.yAxis] : [])
+  const getSeriesColor = (index: number) => {
+    if (customColors && customColors[index]) return customColors[index];
+    return COLORS[index % COLORS.length];
+  };
 
   return (
     <NodeViewWrapper className="inline-chart-wrapper my-8 group relative">
@@ -97,7 +101,7 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
                     <Bar 
                       key={y} 
                       dataKey={y} 
-                      fill={COLORS[index % COLORS.length]} 
+                      fill={getSeriesColor(index)} 
                       radius={[4, 4, 0, 0]} 
                       name={y}
                     />
@@ -144,9 +148,9 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
                       key={y}
                       type="monotone" 
                       dataKey={y} 
-                      stroke={COLORS[index % COLORS.length]} 
+                      stroke={getSeriesColor(index)} 
                       strokeWidth={3} 
-                      dot={{ r: 4, fill: COLORS[index % COLORS.length], strokeWidth: 2, stroke: isDark ? '#171717' : '#ffffff' }}
+                      dot={{ r: 4, fill: getSeriesColor(index), strokeWidth: 2, stroke: isDark ? '#171717' : '#ffffff' }}
                       activeDot={{ r: 6 }}
                       name={y}
                     />
@@ -192,6 +196,9 @@ export const InlineChart = Node.create({
         default: '',
       },
       yAxes: {
+        default: [],
+      },
+      customColors: {
         default: [],
       },
     }

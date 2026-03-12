@@ -8,15 +8,23 @@ import {
   ChevronDown, Activity, BarChart2, Plus, X
 } from 'lucide-react'
 
+const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#ef4444', '#06b6d4', '#84cc16'];
+
 const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode }: any) => {
   const [rowCount, setRowCount] = useState(1);
   const [activeCell, setActiveCell] = useState<string | null>(null);
   const [cellValue, setCellValue] = useState("");
   const [showChartPreview, setShowChartPreview] = useState(false);
-  const [chartConfig, setChartConfig] = useState<{type: 'line' | 'bar', xCol: number, yCols: number[]}>({ 
+  const [chartConfig, setChartConfig] = useState<{
+    type: 'line' | 'bar', 
+    xCol: number, 
+    yCols: number[],
+    seriesColors: Record<number, string>
+  }>({ 
     type: 'line', 
     xCol: 0, 
-    yCols: [1] 
+    yCols: [1],
+    seriesColors: { 1: '#3b82f6' }
   });
   const [numericCols, setNumericCols] = useState<number[]>([]);
   
@@ -175,6 +183,7 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode }: any) =>
 
     const xAxis = headers[chartConfig.xCol] || headers[0];
     const yAxes = chartConfig.yCols.map(index => headers[index] || `Col ${index + 1}`);
+    const customColors = chartConfig.yCols.map(index => chartConfig.seriesColors[index] || COLORS[0]);
 
     if (typeof getPos !== 'function') return;
     const pos = getPos();
@@ -189,7 +198,8 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode }: any) =>
           type: chartConfig.type,
           title: `Comparison Chart from ${node.attrs.title || 'Table'}`,
           xAxis,
-          yAxes
+          yAxes,
+          customColors
         }
       })
       .run();
@@ -202,8 +212,20 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode }: any) =>
       const yCols = prev.yCols.includes(index)
         ? prev.yCols.filter(i => i !== index)
         : [...prev.yCols, index];
-      return { ...prev, yCols };
+      
+      const seriesColors = { ...prev.seriesColors };
+      if (!seriesColors[index]) {
+        seriesColors[index] = COLORS[Object.keys(seriesColors).length % COLORS.length];
+      }
+      return { ...prev, yCols, seriesColors };
     });
+  };
+
+  const setSeriesColor = (index: number, color: string) => {
+    setChartConfig(prev => ({
+      ...prev,
+      seriesColors: { ...prev.seriesColors, [index]: color }
+    }));
   };
 
   const toggleChartPreview = (e: React.MouseEvent) => {
@@ -320,14 +342,31 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode }: any) =>
                       <label className="block text-[10px] font-bold text-neutral-500 uppercase mb-2">Y-Axis (Values - Select Multiple)</label>
                       <div className="max-h-32 overflow-y-auto border border-neutral-200 rounded-lg bg-neutral-50 p-1 space-y-1">
                         {Array.from({ length: cols }).map((_, i) => (
-                          <button
-                            key={i}
-                            onClick={() => toggleYCol(i)}
-                            className={`w-full flex items-center justify-between px-3 py-1.5 rounded text-[10px] font-bold transition-all ${chartConfig.yCols.includes(i) ? 'bg-blue-600 text-white shadow-sm' : 'bg-white text-neutral-600 hover:bg-neutral-100 border border-neutral-100'}`}
-                          >
-                            <span>{letters[i] || i + 1} {numericCols.includes(i) ? '🔢' : '🔤'}</span>
-                            {chartConfig.yCols.includes(i) && <Plus className="w-3 h-3 rotate-45" />}
-                          </button>
+                          <div key={i} className="flex flex-col gap-1 p-1 bg-white border border-neutral-100 rounded">
+                            <button
+                              onClick={() => toggleYCol(i)}
+                              className={`w-full flex items-center justify-between px-3 py-1.5 rounded text-[10px] font-bold transition-all ${chartConfig.yCols.includes(i) ? 'bg-blue-600 text-white shadow-sm' : 'text-neutral-600 hover:bg-neutral-100'}`}
+                            >
+                              <span>{letters[i] || i + 1} {numericCols.includes(i) ? '🔢' : '🔤'}</span>
+                              {chartConfig.yCols.includes(i) && <Plus className="w-3 h-3 rotate-45" />}
+                            </button>
+                            
+                            {chartConfig.yCols.includes(i) && (
+                              <div className="flex items-center gap-1.5 px-2 py-1 border-t border-neutral-50 mt-0.5">
+                                <div className="text-[9px] text-neutral-400 font-bold uppercase">Color</div>
+                                <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5">
+                                  {COLORS.map(color => (
+                                    <button
+                                      key={color}
+                                      onClick={() => setSeriesColor(i, color)}
+                                      className={`w-4 h-4 rounded-full border-2 transition-transform hover:scale-110 ${chartConfig.seriesColors[i] === color ? 'border-neutral-300 scale-110 shadow-sm' : 'border-transparent'}`}
+                                      style={{ backgroundColor: color }}
+                                    />
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
                         ))}
                       </div>
                     </div>
