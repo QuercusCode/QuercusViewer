@@ -207,19 +207,19 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     let content = '';
     switch (template) {
       case 'protocol':
-        content = '<p><strong>Protocol:</strong></p><ul><li></li></ul>';
+        content = '**Protocol:**\n\n- ';
         break;
       case 'observation':
-        content = '<p><strong>Observation:</strong></p><p></p>';
+        content = '**Observation:**\n\n';
         break;
       case 'result':
-        content = '<p><strong>Result:</strong></p><p></p>';
+        content = '**Result:**\n\n';
         break;
       case 'setup':
-        content = '<p><strong>Experiment Setup:</strong></p><p>Sample ID: </p><p>Buffer: </p><p>Temperature: </p>';
+        content = '**Experiment Setup:**\n\nSample ID: \nBuffer: \nTemperature: ';
         break;
       default:
-        content = `<p><strong>${template}:</strong></p>`;
+        content = `**${template}:**\n\n`;
     }
     editor.chain().focus().insertContent(content).run();
     setActiveMenu(null);
