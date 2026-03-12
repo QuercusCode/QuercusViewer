@@ -243,13 +243,13 @@ export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false
     if (!user) return null;
 
     return (
-        <div className={`flex h-full w-full bg-neutral-950 overflow-hidden text-neutral-300 ${isDrawer ? 'border-l border-neutral-800 shadow-2xl' : ''}`}>
+        <div className={`flex h-full w-full bg-[var(--bg-main)] overflow-hidden text-[var(--text-secondary)] ${isDrawer ? 'border-l border-[var(--border-main)] shadow-2xl' : ''}`}>
             {/* Left Sidebar: List */}
             {(!isDrawer || showDrawerList) && (
-                <div className={`${isDrawer ? 'w-full' : 'w-80'} border-r border-neutral-800 bg-neutral-900/50 flex flex-col shrink-0 transition-all`}>
-                    <div className="p-4 border-b border-neutral-800 space-y-4">
+                <div className={`${isDrawer ? 'w-full' : 'w-80'} border-r border-[var(--border-main)] bg-[var(--bg-sidebar)]/50 flex flex-col shrink-0 transition-all`}>
+                    <div className="p-4 border-b border-[var(--border-main)] space-y-4">
                         <div className="flex items-center justify-between">
-                            <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                            <h2 className="text-lg font-bold text-[var(--text-primary)] flex items-center gap-2">
                                 <NotebookPen className="w-5 h-5 text-blue-400" />
                                 {isDrawer ? 'Notes' : 'Lab Notebook'}
                             </h2>
@@ -264,7 +264,7 @@ export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false
                                 {isDrawer && activeId && (
                                     <button
                                         onClick={() => setShowDrawerList(false)}
-                                        className="p-1.5 hover:bg-neutral-800 text-neutral-400 rounded-lg transition-colors"
+                                        className="p-1.5 hover:bg-[var(--input-bg)] text-[var(--text-muted)] rounded-lg transition-colors"
                                         title="Close List"
                                     >
                                         <X className="w-5 h-5" />
@@ -274,13 +274,13 @@ export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false
                         </div>
 
                         <div className="relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500" />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
                             <input
                                 type="text"
                                 placeholder="Search entries..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-9 pr-3 py-2 bg-neutral-950/50 border border-neutral-800 rounded-lg text-sm text-white focus:outline-none focus:border-neutral-700 transition-colors"
+                                className="w-full pl-9 pr-3 py-2 bg-[var(--input-bg)]/50 border border-[var(--border-main)] rounded-lg text-sm text-[var(--text-primary)] focus:outline-none focus:border-neutral-700 transition-colors"
                             />
                         </div>
                         {error && <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-xs rounded-lg">{error}</div>}
@@ -288,9 +288,9 @@ export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false
 
                     <div className="flex-1 overflow-y-auto overflow-x-hidden p-2 space-y-1">
                         {loading ? (
-                            <div className="p-4 text-center text-sm text-neutral-500">Loading notebooks...</div>
+                            <div className="p-4 text-center text-sm text-[var(--text-muted)]">Loading notebooks...</div>
                         ) : filteredNotebooks.length === 0 ? (
-                            <div className="p-4 text-center text-sm text-neutral-500 border border-dashed border-neutral-800 rounded-xl m-2 bg-neutral-950/20">
+                            <div className="p-4 text-center text-sm text-[var(--text-muted)] border border-dashed border-[var(--border-main)] rounded-xl m-2 bg-[var(--bg-main)]/20">
                                 No notebook entries found.
                             </div>
                         ) : (
@@ -302,8 +302,8 @@ export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false
                                         if (isDrawer) setShowDrawerList(false);
                                     }}
                                     className={`w-full text-left px-3 py-3 rounded-xl transition-all group relative border ${activeId === entry.id
-                                        ? 'bg-blue-500/10 border-blue-500/30 text-white shadow-sm'
-                                        : 'bg-transparent border-transparent hover:bg-neutral-800/50 hover:border-neutral-700/50 text-neutral-400'
+                                        ? 'bg-blue-500/10 border-blue-500/30 text-[var(--text-primary)] shadow-sm'
+                                        : 'bg-transparent border-transparent hover:bg-[var(--input-bg)]/50 hover:border-[var(--border-main)]/50 text-[var(--text-secondary)]'
                                         }`}
                                 >
                                     <div className="flex justify-between items-start mb-1">
@@ -312,7 +312,7 @@ export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false
                                         </h3>
                                         <button
                                             onClick={(e) => handleDelete(e, entry.id)}
-                                            className="absolute right-3 top-3 opacity-0 group-hover:opacity-100 text-neutral-500 hover:text-red-400 transition-all"
+                                            className="absolute right-3 top-3 opacity-0 group-hover:opacity-100 text-[var(--text-muted)] hover:text-red-400 transition-all"
                                         >
                                             <Trash2 className="w-4 h-4" />
                                         </button>
@@ -332,16 +332,16 @@ export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false
 
             {/* Right Pane: Editor Shell */}
             {(!isDrawer || !showDrawerList) && (
-                <div className="flex-1 flex flex-col bg-neutral-950 overflow-hidden relative">
+                <div className="flex-1 flex flex-col bg-[var(--bg-main)] overflow-hidden relative">
                     {activeNotebook ? (
                         <div className={`flex-1 flex flex-col h-full w-full ${isDrawer ? '' : 'max-w-5xl mx-auto'}`}>
                             {/* Editor Toolbar */}
-                            <div className={`flex items-center justify-between py-4 border-b border-neutral-800/50 shrink-0 ${isDrawer ? 'px-4' : 'px-8'}`}>
+                            <div className={`flex items-center justify-between py-4 border-b border-[var(--border-main)]/50 shrink-0 ${isDrawer ? 'px-4' : 'px-8'}`}>
                                 <div className="flex items-center gap-2">
                                     {isDrawer && (
                                         <button
                                             onClick={() => setShowDrawerList(true)}
-                                            className="p-1.5 hover:bg-neutral-800 text-neutral-400 rounded-lg transition-colors mr-2"
+                                            className="p-1.5 hover:bg-[var(--input-bg)] text-[var(--text-muted)] rounded-lg transition-colors mr-2"
                                             title="View All Notes"
                                         >
                                             <Menu className="w-5 h-5" />
@@ -351,7 +351,7 @@ export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false
                                         <button
                                             onClick={handleExportPDF}
                                             disabled={isExporting}
-                                            className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white/5 hover:bg-white/10 text-neutral-400 hover:text-white border border-neutral-800 rounded-lg text-xs font-medium transition-all"
+                                            className="flex items-center gap-1.5 px-2.5 py-1.5 bg-[var(--input-bg)]/50 hover:bg-[var(--input-bg)] text-[var(--text-muted)] hover:text-[var(--text-primary)] border border-[var(--border-main)] rounded-lg text-xs font-medium transition-all"
                                             title="Export as Lab Report (PDF)"
                                         >
                                             {isExporting ? (
@@ -366,7 +366,7 @@ export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false
                                     </div>
                                 </div>
 
-                                <div className="flex items-center gap-2 text-[10px] sm:text-xs text-neutral-500">
+                                <div className="flex items-center gap-2 text-[10px] sm:text-xs text-[var(--text-muted)]">
                                     {isSaving ? (
                                         <>
                                             <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-400" />
@@ -386,7 +386,7 @@ export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false
                                     type="text"
                                     value={editTitle}
                                     onChange={(e) => handleEditorChange('title', e.target.value)}
-                                    className={`bg-transparent border-none font-bold font-serif text-white focus:outline-none w-full mb-4 sm:mb-8 placeholder-neutral-700 ${isDrawer ? 'text-2xl' : 'text-4xl'}`}
+                                    className={`bg-transparent border-none font-bold font-serif text-[var(--text-primary)] focus:outline-none w-full mb-4 sm:mb-8 placeholder-[var(--text-muted)] ${isDrawer ? 'text-2xl' : 'text-4xl'}`}
                                     placeholder="Title..."
                                 />
 
@@ -401,13 +401,13 @@ export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false
                             </div>
                         </div>
                     ) : (
-                        <div className="flex-1 flex flex-col items-center justify-center text-neutral-500 p-4 text-center">
+                        <div className="flex-1 flex flex-col items-center justify-center text-[var(--text-muted)] p-4 text-center">
                             <FileText className="w-12 h-12 sm:w-16 sm:h-16 mb-4 opacity-20" />
                             <p className="text-sm">Select or create a note to start writing.</p>
                             {isDrawer && (
                                 <button
                                     onClick={() => setShowDrawerList(true)}
-                                    className="mt-4 px-4 py-2 bg-neutral-900 border border-neutral-800 rounded-lg text-xs"
+                                    className="mt-4 px-4 py-2 bg-[var(--bg-header)] border border-[var(--border-main)] rounded-lg text-xs"
                                 >
                                     View All Notes
                                 </button>

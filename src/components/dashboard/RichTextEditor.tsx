@@ -20,6 +20,7 @@ import Mention from '@tiptap/extension-mention';
 import { HexColorPicker } from 'react-colorful';
 import { SpreadsheetTable } from './SpreadsheetTable';
 import { createSuggestion } from './suggestion';
+import { useTheme } from '../../lib/ThemeContext';
 import { 
   Bold, Italic, Underline as UnderlineIcon, Strikethrough, 
   Code, List, ListOrdered, CheckSquare, Undo, Redo, 
@@ -57,7 +58,7 @@ const ToolbarButton: React.FC<{
     className={`p-1.5 rounded transition-colors flex items-center justify-center cursor-pointer ${
       isActive 
         ? 'bg-blue-500/20 text-blue-400' 
-        : 'text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200'
+        : 'text-[var(--text-muted)] hover:bg-[var(--input-bg)] hover:text-[var(--text-primary)]'
     } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
   >
     {children}
@@ -65,7 +66,7 @@ const ToolbarButton: React.FC<{
 );
 
 const ToolbarDivider: React.FC<{ className?: string }> = ({ className = '' }) => (
-  <div className={`w-px h-6 bg-neutral-800 mx-1 self-center ${className}`} />
+  <div className={`w-px h-6 bg-[var(--border-main)] mx-1 self-center ${className}`} />
 );
 
 const Dropdown: React.FC<{
@@ -98,7 +99,7 @@ const Dropdown: React.FC<{
         if (!isOpen) { e.stopPropagation(); }
       }}>{trigger}</div>
       {isOpen && (
-        <div className={`absolute top-full mt-1 z-50 min-w-[200px] bg-neutral-900 border border-neutral-800 rounded-lg shadow-xl p-1 animate-in fade-in zoom-in duration-200 ${align === 'right' ? 'right-0' : 'left-0'} ${className}`}>
+        <div className={`absolute top-full mt-1 z-50 min-w-[200px] bg-[var(--bg-sidebar)] border border-[var(--border-main)] rounded-lg shadow-xl p-1 animate-in fade-in zoom-in duration-200 ${align === 'right' ? 'right-0' : 'left-0'} ${className}`}>
           {children}
         </div>
       )}
@@ -113,7 +114,7 @@ const TableGridPicker: React.FC<{
   const max = 8;
 
   return (
-    <div className="p-6 bg-neutral-900 rounded-[24px] shadow-[0_30px_90px_rgba(0,0,0,0.7)] border border-neutral-800 select-none min-w-[280px]">
+    <div className="p-6 bg-[var(--bg-sidebar)] rounded-[24px] shadow-[0_30px_90px_rgba(0,0,0,0.7)] border border-[var(--border-main)] select-none min-w-[280px]">
       <div className="flex flex-col gap-1 mb-6 px-1">
         <span className="text-[10px] uppercase tracking-[0.3em] font-black text-neutral-500">Insert Table</span>
         <div className="flex items-baseline gap-2">
@@ -126,7 +127,7 @@ const TableGridPicker: React.FC<{
           </span>
         </div>
       </div>
-      <div className="grid grid-cols-8 gap-1.5 p-2 bg-neutral-950 rounded-xl border border-neutral-800/50">
+      <div className="grid grid-cols-8 gap-1.5 p-2 bg-[var(--bg-main)] rounded-xl border border-[var(--border-main)]/50">
         {Array.from({ length: max * max }).map((_, i) => {
           const r = Math.floor(i / max) + 1;
           const c = (i % max) + 1;
@@ -139,7 +140,7 @@ const TableGridPicker: React.FC<{
               className={`w-5 h-5 aspect-square rounded-[3px] border transition-all duration-100 cursor-pointer ${
                 isActive 
                   ? 'bg-blue-500 border-blue-300 shadow-[0_0_12px_rgba(59,130,246,0.5)] z-10 scale-105' 
-                  : 'bg-neutral-800/50 hover:bg-neutral-700/80 border-neutral-700/50 hover:border-neutral-500'
+                  : 'bg-[var(--input-bg)]/50 hover:bg-[var(--input-bg)]/80 border-[var(--border-main)]/50 hover:border-neutral-500'
               }`}
             />
           );
@@ -157,6 +158,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   allStructures = []
 }) => {
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
+  const { theme } = useTheme();
 
   const editor = useEditor({
     extensions: [
@@ -220,7 +222,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     },
     editorProps: {
       attributes: {
-        class: 'prose prose-invert prose-sm sm:prose-base focus:outline-none max-w-none min-h-[500px] px-8 py-6',
+        class: `prose ${theme === 'dark' ? 'prose-invert' : ''} prose-sm sm:prose-base focus:outline-none max-w-none min-h-[500px] px-8 py-6 text-[var(--text-primary)]`,
       },
     },
   });
@@ -312,9 +314,9 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   };
 
   return (
-    <div className="flex flex-col w-full h-full bg-neutral-950 border border-neutral-800 rounded-xl focus-within:border-neutral-700 transition-colors">
+    <div className="flex flex-col w-full h-full bg-[var(--bg-main)] border border-[var(--border-main)] rounded-xl focus-within:border-neutral-700 transition-colors">
       {/* TOOLBAR */}
-      <div className="flex items-center flex-wrap gap-0.5 p-1 bg-neutral-900 border-b border-neutral-800 sticky top-0 z-20 rounded-t-xl">
+      <div className="flex items-center flex-wrap gap-0.5 p-1 bg-[var(--bg-header)] border-b border-[var(--border-main)] sticky top-0 z-20 rounded-t-xl">
         {/* History */}
         <div className="flex items-center">
           <ToolbarButton 
@@ -426,7 +428,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
             trigger={
               <button 
                 onClick={() => toggleMenu('color')}
-                className={`px-1.5 py-1 flex items-center rounded transition-colors ${activeMenu === 'color' ? 'bg-neutral-800 text-blue-400' : 'text-neutral-500 hover:text-neutral-300'}`}
+                className={`px-1.5 py-1 flex items-center rounded transition-colors ${activeMenu === 'color' ? 'bg-[var(--input-bg)] text-blue-400' : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]'}`}
               >
                 <Type className="w-4 h-4" />
                 <ChevronDown className="w-3 h-3 ml-0.5" />
@@ -434,14 +436,14 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
             }
           >
             <div className="p-3">
-              <p className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-2">Text Color</p>
+              <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider mb-2">Text Color</p>
               <HexColorPicker 
-                color={editor.getAttributes('textStyle').color || '#ffffff'} 
+                color={editor.getAttributes('textStyle').color || (theme === 'dark' ? '#ffffff' : '#000000')} 
                 onChange={(color) => editor.chain().focus().setColor(color).run()}
               />
               <button 
                 onClick={() => editor.chain().focus().unsetColor().run()}
-                className="w-full mt-3 flex items-center justify-center gap-2 px-2 py-1.5 text-xs text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800 rounded transition-colors"
+                className="w-full mt-3 flex items-center justify-center gap-2 px-2 py-1.5 text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--input-bg)] rounded transition-colors"
               >
                 <Eraser className="w-3 h-3" />
                 <span>Reset to default</span>
@@ -509,7 +511,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
             trigger={
               <div 
                 onClick={() => toggleMenu('scientific')}
-                className={`flex items-center gap-1.5 px-3 py-1 rounded-lg transition-colors cursor-pointer text-xs font-semibold ${activeMenu === 'scientific' ? 'bg-blue-500/30 text-blue-200' : 'bg-neutral-800 hover:bg-neutral-700 text-neutral-300'}`}
+                className={`flex items-center gap-1.5 px-3 py-1 rounded-lg transition-colors cursor-pointer text-xs font-semibold ${activeMenu === 'scientific' ? 'bg-blue-500/30 text-blue-200' : 'bg-[var(--input-bg)] hover:bg-[var(--input-bg)]/80 text-[var(--text-secondary)]'}`}
               >
                 <FlaskConical className="w-3.5 h-3.5" />
                 <span>Insert</span>
@@ -520,7 +522,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
             <div className="p-2 space-y-1.5 min-w-[220px]">
               {/* Table Submenu */}
               <div className="relative group/sub">
-                <button className="w-full flex items-center justify-between px-4 py-4 text-sm text-neutral-300 hover:bg-neutral-800 rounded-xl transition-all group/btn">
+                <button className="w-full flex items-center justify-between px-4 py-4 text-sm text-[var(--text-secondary)] hover:bg-[var(--input-bg)] rounded-xl transition-all group/btn">
                   <div className="flex items-center gap-4">
                     <TableIcon className="w-5 h-5 text-blue-400" />
                     <span className="font-semibold">Table</span>
@@ -540,7 +542,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
               {/* Well Plate Submenu */}
               <div className="relative group/sub">
-                <button className="w-full flex items-center justify-between px-4 py-4 text-sm text-neutral-300 hover:bg-neutral-800 rounded-xl transition-all group/btn">
+                <button className="w-full flex items-center justify-between px-4 py-4 text-sm text-[var(--text-secondary)] hover:bg-[var(--input-bg)] rounded-xl transition-all group/btn">
                   <div className="flex items-center gap-4">
                     <Activity className="w-5 h-5 text-emerald-400" />
                     <span className="font-semibold">Well plate</span>
@@ -552,13 +554,13 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
                     <div className="bg-neutral-900 border border-neutral-800 rounded-[20px] shadow-[0_30px_90px_rgba(0,0,0,0.7)] p-2 space-y-1">
                       <button 
                         onClick={() => insertTemplate('well96')}
-                        className="w-full text-left px-4 py-3 text-sm text-neutral-300 hover:bg-neutral-800 rounded-xl transition-colors"
+                        className="w-full text-left px-4 py-3 text-sm text-[var(--text-secondary)] hover:bg-[var(--input-bg)] rounded-xl transition-colors"
                       >
                         96-well (8x12)
                       </button>
                       <button 
                         onClick={() => insertTemplate('well384')}
-                        className="w-full text-left px-4 py-3 text-sm text-neutral-300 hover:bg-neutral-800 rounded-xl transition-colors"
+                        className="w-full text-left px-4 py-3 text-sm text-[var(--text-secondary)] hover:bg-[var(--input-bg)] rounded-xl transition-colors"
                       >
                         384-well (16x24)
                       </button>
@@ -571,7 +573,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
               <button 
                 onClick={() => insertTemplate('setup')}
-                className="w-full flex items-center gap-4 px-4 py-4 text-sm text-neutral-300 hover:bg-neutral-800 rounded-xl transition-all text-left"
+                className="w-full flex items-center gap-4 px-4 py-4 text-sm text-[var(--text-secondary)] hover:bg-[var(--input-bg)] rounded-xl transition-all text-left"
               >
                 <FileText className="w-5 h-5 text-purple-400" />
                 <span className="font-semibold">Experiment Setup</span>
@@ -579,7 +581,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
               <button 
                 onClick={() => insertTemplate('protocol')}
-                className="w-full flex items-center gap-4 px-4 py-4 text-sm text-neutral-300 hover:bg-neutral-800 rounded-xl transition-all text-left"
+                className="w-full flex items-center gap-4 px-4 py-4 text-sm text-[var(--text-secondary)] hover:bg-[var(--input-bg)] rounded-xl transition-all text-left"
               >
                 <FileText className="w-5 h-5 text-amber-400" />
                 <span className="font-semibold">Quick Protocol</span>
@@ -589,14 +591,14 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
               <button 
                 onClick={insertTimestamp}
-                className="w-full flex items-center gap-4 px-4 py-4 text-sm text-neutral-300 hover:bg-neutral-800 rounded-xl transition-all text-left"
+                className="w-full flex items-center gap-4 px-4 py-4 text-sm text-[var(--text-secondary)] hover:bg-[var(--input-bg)] rounded-xl transition-all text-left"
               >
                 <Clock className="w-5 h-5 text-blue-500" />
                 <span className="font-semibold">Insert Timestamp</span>
               </button>
 
               <div className="relative group/sub">
-                <button className="w-full flex items-center justify-between px-4 py-4 text-sm text-neutral-300 hover:bg-neutral-800 rounded-xl transition-all group/btn">
+                <button className="w-full flex items-center justify-between px-4 py-4 text-sm text-[var(--text-secondary)] hover:bg-[var(--input-bg)] rounded-xl transition-all group/btn">
                   <div className="flex items-center gap-4">
                     <FlaskConical className="w-5 h-5 text-indigo-400" />
                     <span className="font-semibold">Symbols</span>
@@ -605,7 +607,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
                 </button>
                 <div className="absolute right-full top-[-10px] bottom-[-10px] pr-2 -mr-2 hidden group-hover/sub:block z-50 min-w-[240px]">
                   <div className="h-full flex items-start pt-[10px]">
-                    <div className="bg-neutral-900 border border-neutral-800 rounded-[20px] shadow-[0_30px_90px_rgba(0,0,0,0.7)] p-4 h-80 overflow-y-auto custom-scrollbar">
+                    <div className="bg-[var(--bg-sidebar)] border border-[var(--border-main)] rounded-[20px] shadow-[0_30px_90px_rgba(0,0,0,0.7)] p-4 h-80 overflow-y-auto custom-scrollbar">
                       <div className="grid grid-cols-5 gap-2">
                         {[
                           'α', 'β', 'Δ', 'λ', 'μ', 'π', 'σ', 'ω', 'γ', 'θ', 
@@ -615,7 +617,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
                           <button
                             key={s}
                             onClick={() => insertSymbol(s)}
-                            className="w-10 h-10 flex items-center justify-center text-base text-neutral-400 hover:bg-neutral-800 hover:text-white rounded-xl transition-colors"
+                            className="w-10 h-10 flex items-center justify-center text-base text-[var(--text-muted)] hover:bg-[var(--input-bg)] hover:text-[var(--text-primary)] rounded-xl transition-colors"
                           >
                             {s}
                           </button>
@@ -635,7 +637,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
             trigger={
               <button 
                 onClick={() => toggleMenu('more')}
-                className={`p-1.5 rounded transition-colors flex items-center justify-center cursor-pointer ${activeMenu === 'more' ? 'bg-neutral-800 text-neutral-200' : 'text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200'}`}
+                className={`p-1.5 rounded transition-colors flex items-center justify-center cursor-pointer ${activeMenu === 'more' ? 'bg-[var(--input-bg)] text-[var(--text-primary)]' : 'text-[var(--text-muted)] hover:bg-[var(--input-bg)] hover:text-[var(--text-primary)]'}`}
               >
                 <MoreHorizontal className="w-4 h-4" />
               </button>
@@ -644,7 +646,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
             <div className="w-44 p-1">
               <button 
                 onClick={() => editor.chain().focus().unsetAllMarks().run()}
-                className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-neutral-300 hover:bg-neutral-800 rounded-md transition-colors"
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-[var(--text-secondary)] hover:bg-[var(--input-bg)] rounded-md transition-colors"
               >
                 <Eraser className="w-3.5 h-3.5 opacity-50" />
                 <span>Clear formatting</span>
@@ -662,7 +664,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       </div>
 
       {/* EDITOR CONTENT */}
-      <div className="flex-1 overflow-y-auto bg-neutral-950 rounded-b-xl">
+      <div className="flex-1 overflow-y-auto bg-[var(--bg-main)] rounded-b-xl">
         <EditorContent editor={editor} />
       </div>
     </div>
