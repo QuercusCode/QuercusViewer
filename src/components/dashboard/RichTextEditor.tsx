@@ -215,36 +215,34 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   };
 
   const insertTemplate = (template: string) => {
-    let content = '';
     switch (template) {
-      case 'protocol':
-        content = '**Protocol:**\n\n- ';
-        break;
-      case 'observation':
-        content = '**Observation:**\n\n';
-        break;
-      case 'result':
-        content = '**Result:**\n\n';
-        break;
-      case 'setup':
-        content = '**Experiment Setup:**\n\nSample ID: \nBuffer: \nTemperature: \n\n';
-        break;
       case 'table3x3':
-        content = '\n| Header 1 | Header 2 | Header 3 |\n| --- | --- | --- |\n| | | |\n| | | |\n\n';
+        editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
         break;
       case 'table4x4':
-        content = '\n| Header 1 | Header 2 | Header 3 | Header 4 |\n| --- | --- | --- | --- |\n| | | | |\n| | | | |\n| | | | |\n\n';
+        editor.chain().focus().insertTable({ rows: 4, cols: 4, withHeaderRow: true }).run();
+        break;
+      case 'protocol':
+        editor.chain().focus().insertContent('**Protocol:**\n\n- ').run();
+        break;
+      case 'observation':
+        editor.chain().focus().insertContent('**Observation:**\n\n').run();
+        break;
+      case 'result':
+        editor.chain().focus().insertContent('**Result:**\n\n').run();
+        break;
+      case 'setup':
+        editor.chain().focus().insertContent('**Experiment Setup:**\n\nSample ID: \nBuffer: \nTemperature: \n\n').run();
         break;
       case 'safety':
-        content = '**Safety Checklist:**\n\n- [ ] PPE (Gloves, Goggles, Lab Coat)\n- [ ] Fume Hood Operational\n- [ ] Waste Disposal Plan\n- [ ] Emergency Equipment Clear\n\n';
+        editor.chain().focus().insertContent('**Safety Checklist:**\n\n- [ ] PPE (Gloves, Goggles, Lab Coat)\n- [ ] Fume Hood Operational\n- [ ] Waste Disposal Plan\n- [ ] Emergency Equipment Clear\n\n').run();
         break;
       case 'startup':
-        content = '**Equipment Startup:**\n\n- [ ] Power On\n- [ ] Calibration Check\n- [ ] Reagent Levels Verified\n- [ ] Software Connection established\n\n';
+        editor.chain().focus().insertContent('**Equipment Startup:**\n\n- [ ] Power On\n- [ ] Calibration Check\n- [ ] Reagent Levels Verified\n- [ ] Software Connection established\n\n').run();
         break;
       default:
-        content = `**${template}:**\n\n`;
+        editor.chain().focus().insertContent(`**${template}:**\n\n`).run();
     }
-    editor.chain().focus().insertContent(content).run();
     setActiveMenu(null);
   };
 
