@@ -1,22 +1,22 @@
 import { NodeViewContent, NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap/react'
 import { Table } from '@tiptap/extension-table'
-import { useState } from 'react'
-import { Plus } from 'lucide-react'
+import { useState, useMemo } from 'react'
+import { Plus, Trash2 } from 'lucide-react'
 
 const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode }: any) => {
   const [rowCount, setRowCount] = useState(1);
   const rows = node.childCount;
   const cols = node.firstChild ? node.firstChild.childCount : 0;
+  
+  const cellWidth = 120;
+  const indexWidth = 48;
+  const headerHeight = 32;
 
   const addRows = () => {
     if (typeof getPos !== 'function') return;
-    
-    // Find the end of the table to ensure we're adding rows to THIS table
     const tablePos = getPos();
     const tableEnd = tablePos + node.nodeSize;
     
-    // Move selection to the very last cell of the table
-    // tableEnd - 1 is the end of the table node, -2/-3 should be inside the last cell
     editor.chain()
       .focus()
       .setTextSelection(tableEnd - 4) 
@@ -27,152 +27,158 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode }: any) =>
     }
   };
 
-  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+  const letters = useMemo(() => {
+    return 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+  }, []);
 
   return (
-    <NodeViewWrapper className="spreadsheet-table-container my-8 group relative">
-      <div className="bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden shadow-2xl">
-        {/* Header bar with title and actions */}
-        <div className="flex items-center justify-between px-4 py-2 bg-neutral-800/50 border-b border-neutral-800">
-          <span className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Table</span>
-          <div className="flex items-center gap-2">
-            <button 
-              onClick={() => deleteNode()}
-              className="p-1 hover:bg-red-500/10 text-neutral-500 hover:text-red-400 rounded transition-colors"
-              title="Delete Table"
-            >
-              <Plus className="w-3.5 h-3.5 rotate-45" />
-            </button>
+    <NodeViewWrapper className="spreadsheet-table-wrapper my-12 group/spreadsheet relative">
+      <div className="bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden shadow-2xl transition-all group-hover/spreadsheet:border-neutral-700">
+        {/* Superior Header: Actions */}
+        <div className="flex items-center justify-between px-5 py-3 bg-neutral-800/80 border-b border-neutral-800 backdrop-blur-md">
+          <div className="flex items-center gap-3">
+            <div className="p-1.5 bg-blue-500/10 rounded-lg">
+              <Plus className="w-4 h-4 text-blue-400" />
+            </div>
+            <span className="text-xs font-black text-neutral-300 uppercase tracking-[0.2em]">Lab Spreadsheet</span>
           </div>
+          <button 
+            onClick={() => deleteNode()}
+            className="p-2 hover:bg-red-500/15 text-neutral-500 hover:text-red-400 rounded-lg transition-all active:scale-90"
+            title="Remove Spreadsheet"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
         </div>
 
-        <div className="overflow-x-auto custom-scrollbar">
-          <div className="inline-block min-w-full align-middle">
-            <table className="spreadsheet-table relative border-collapse">
-              <thead>
-                <tr>
-                  {Array.from({ length: cols }).map((_, i) => (
-                    <th key={i}>
-                      {letters[i] || `C${i + 1}`}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <NodeViewContent as={('tbody' as any)} className="spreadsheet-tbody" />
+        {/* Scrollable Spreadsheet Area */}
+        <div className="overflow-x-auto custom-scrollbar bg-white">
+          <div 
+            className="relative min-w-full"
+            style={{ 
+              paddingLeft: indexWidth,
+              paddingTop: headerHeight
+            }}
+          >
+            {/* Column Headers (A, B, C...) Overlay */}
+            <div 
+              className="absolute top-0 left-0 right-0 flex border-b border-neutral-200 bg-neutral-50 z-20"
+              style={{ left: indexWidth, height: headerHeight }}
+            >
+              {Array.from({ length: cols }).map((_, i) => (
+                <div 
+                  key={i} 
+                  className="flex-shrink-0 flex items-center justify-center text-[10px] font-bold text-neutral-500 uppercase font-mono border-r border-neutral-200"
+                  style={{ width: cellWidth }}
+                >
+                  {letters[i] || `C${i + 1}`}
+                </div>
+              ))}
+            </div>
+
+            {/* Corner ID Block */}
+            <div 
+              className="absolute top-0 left-0 bg-neutral-100 border-b border-r border-neutral-200 z-30 flex items-center justify-center"
+              style={{ width: indexWidth, height: headerHeight }}
+            >
+              <div className="w-1.5 h-1.5 bg-neutral-300 rounded-full" />
+            </div>
+
+            {/* NATIVE TABLE: Strictly standard table structure for Tiptap compatibility */}
+            <table className="spreadsheet-native-table">
+              <NodeViewContent as="tbody" className="spreadsheet-tbody" />
             </table>
           </div>
         </div>
 
-        {/* Footer with Add Rows utility */}
-        <div className="p-3 bg-neutral-900/50 border-t border-neutral-800 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <input 
-              type="number" 
-              value={rowCount}
-              onChange={(e) => setRowCount(Math.max(1, parseInt(e.target.value) || 1))}
-              className="w-16 h-8 bg-neutral-950 border border-neutral-800 rounded px-2 text-xs text-white focus:outline-none focus:border-blue-500/50 transition-colors"
-            />
-            <button 
-              onClick={addRows}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 rounded-lg text-xs font-semibold transition-all active:scale-95"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Add rows</span>
-            </button>
+        {/* Footer: Row Operations */}
+        <div className="p-4 bg-neutral-900 border-t border-neutral-800 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center bg-neutral-950 border border-neutral-800 rounded-lg overflow-hidden h-9">
+              <input 
+                type="number" 
+                value={rowCount}
+                onChange={(e) => setRowCount(Math.max(1, parseInt(e.target.value) || 1))}
+                className="w-14 bg-transparent px-3 text-sm text-white focus:outline-none placeholder-neutral-700"
+              />
+              <div className="w-px h-4 bg-neutral-800" />
+              <button 
+                onClick={addRows}
+                className="px-4 text-[11px] font-bold text-neutral-300 hover:text-white hover:bg-neutral-800 transition-colors h-full"
+              >
+                ADD ROWS
+              </button>
+            </div>
           </div>
-          <span className="text-[10px] font-bold text-neutral-600 uppercase tracking-wider">
-            {rows} rows
-          </span>
+          <div className="px-3 py-1 bg-neutral-800/50 rounded-full">
+            <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest leading-none">
+              {rows} ACTIVE ROWS
+            </span>
+          </div>
         </div>
       </div>
 
       <style>{`
-        .spreadsheet-table-container {
-          background: #ffffff;
-          border-radius: 8px;
-          border: 1px solid #e5e5e5;
-          margin: 1rem 0;
-          overflow: hidden; /* Controls the outer radius */
-        }
-        .spreadsheet-table-container table {
-          margin: 0 !important;
-          border-spacing: 0;
-          border-collapse: collapse;
-          table-layout: auto; /* Changed to auto to allow min-width to work */
+        .spreadsheet-native-table {
           width: 100%;
-          min-width: 100%;
-          display: table !important;
-        }
-        .spreadsheet-table-container thead {
-          display: table-header-group !important;
-        }
-        .spreadsheet-table-container tbody {
-          display: table-row-group !important;
+          border-collapse: collapse;
+          table-layout: fixed;
           counter-reset: spreadsheet-row;
         }
-        .spreadsheet-table-container tr {
-          display: table-row !important;
-          border-bottom: 1px solid #e5e5e5;
-        }
-        .spreadsheet-table-container th, 
-        .spreadsheet-table-container td {
-          border-right: 1px solid #e5e5e5 !important;
-          padding: 8px 12px !important;
-          min-width: 120px;
-          height: 40px;
+        .spreadsheet-native-table tr {
           position: relative;
-          color: #171717;
-          vertical-align: middle;
-          display: table-cell !important;
+          display: table-row !important;
         }
-        .spreadsheet-table-container th {
-          background: #f8f9fa;
-          font-family: ui-monospace, monospace;
-          font-size: 11px;
-          font-weight: 700;
-          color: #737373;
-          text-align: center;
-          text-transform: uppercase;
-        }
-        /* Row Indication using Table Cell Pseudo */
-        .spreadsheet-table-container tr::before {
+        /* Row Number Overlay: Absolute positioning prevents DOM index interference */
+        .spreadsheet-native-table tr::before {
           content: counter(spreadsheet-row);
           counter-increment: spreadsheet-row;
-          display: table-cell !important;
-          width: 44px;
-          min-width: 44px;
+          position: absolute;
+          left: -${indexWidth}px;
+          top: 0;
+          bottom: 0;
+          width: ${indexWidth}px;
           background: #f8f9fa;
-          border-right: 2px solid #e5e5e5 !important;
-          vertical-align: middle;
-          text-align: center;
+          border-right: 2px solid #e5e5e5;
+          border-bottom: 1px solid #e5e5e5;
+          display: flex;
+          align-items: center;
+          justify-content: center;
           font-family: ui-monospace, monospace;
           font-size: 11px;
           font-weight: 800;
           color: #737373;
-          user-select: none;
           pointer-events: none;
+          user-select: none;
+          z-index: 10;
         }
-        .spreadsheet-table-container thead tr::before {
-          content: "";
-          counter-increment: none;
+        .spreadsheet-native-table td {
+          border: 1px solid #e5e5e5 !important;
+          padding: 10px 14px !important;
+          width: ${cellWidth}px;
+          min-width: ${cellWidth}px;
+          height: 44px;
+          vertical-align: top;
+          background: #ffffff;
+          position: relative;
         }
-        .spreadsheet-table-container td p {
+        .spreadsheet-native-table td p {
           margin: 0 !important;
           font-size: 13px;
-          color: #171717;
-          line-height: 1.5;
+          color: #171717 !important;
+          line-height: 1.6;
+          min-height: 1em;
         }
-        .spreadsheet-table-container .ProseMirror-selectednode table {
-          outline: 2px solid #3b82f6 !important;
-          outline-offset: -2px;
+        /* High-contrast Editor Selection */
+        .selectedCell {
+          background: rgba(59, 130, 246, 0.03) !important;
         }
-        .spreadsheet-table-container .selectedCell:after {
-          background: rgba(59, 130, 246, 0.05) !important;
-          border: 1px solid #3b82f6 !important;
-          z-index: 30;
+        .selectedCell::after {
           content: "";
           position: absolute;
-          inset: 0;
+          inset: -1px;
+          border: 2px solid #3b82f6 !important;
+          z-index: 20;
           pointer-events: none;
         }
       `}</style>
