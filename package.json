@@ -11,8 +11,8 @@
     "download": "node scripts/download_models.js"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.98.0",
     "@floating-ui/dom": "1.7.6",
+    "@supabase/supabase-js": "^2.98.0",
     "@tiptap/extension-color": "^3.20.1",
     "@tiptap/extension-highlight": "^3.20.1",
     "@tiptap/extension-link": "^3.20.1",
@@ -50,6 +50,7 @@
     "react-dom": "^19.2.0",
     "react-markdown": "^10.1.0",
     "react-router-dom": "^6.30.3",
+    "recharts": "^3.8.0",
     "remark-gfm": "^4.0.1",
     "sass": "^1.97.3",
     "tailwind-merge": "^3.4.0",

@@ -19,6 +19,7 @@ import { Markdown } from 'tiptap-markdown';
 import Mention from '@tiptap/extension-mention';
 import { HexColorPicker } from 'react-colorful';
 import { SpreadsheetTable } from './SpreadsheetTable';
+import { InlineChart } from './InlineChart';
 import { createSuggestion } from './suggestion';
 import { useTheme } from '../../lib/ThemeContext';
 import { 
@@ -189,6 +190,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       SpreadsheetTable.configure({
         resizable: true,
       }),
+      InlineChart,
       TableRow,
       TableHeader,
       TableCell,

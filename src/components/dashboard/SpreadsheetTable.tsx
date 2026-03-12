@@ -5,13 +5,15 @@ import {
   Trash2, Download, Maximize2, Settings, 
   Bold, Italic, Underline as UnderlineIcon, Strikethrough, 
   AlignLeft, AlignCenter, AlignRight, Link as LinkIcon, Type,
-  ChevronDown, Activity
+  ChevronDown, Activity, BarChart2, Plus, X
 } from 'lucide-react'
 
 const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode }: any) => {
   const [rowCount, setRowCount] = useState(1);
   const [activeCell, setActiveCell] = useState<string | null>(null);
   const [cellValue, setCellValue] = useState("");
+  const [showChartPreview, setShowChartPreview] = useState(false);
+  const [chartConfig, setChartConfig] = useState({ type: 'line', xCol: 0, yCol: 1 });
   
   const rows = node.childCount;
   const cols = node.firstChild ? node.firstChild.childCount : 0;
@@ -107,6 +109,63 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode }: any) =>
     }
   };
 
+  const createChart = () => {
+    // Extract data from the table
+    const tableData: any[] = [];
+    const headerRow = node.firstChild;
+    if (!headerRow) return;
+
+    // Get column names from the first row
+    const headers: string[] = [];
+    headerRow.forEach((cell: any, _: any, i: number) => {
+      headers.push(cell.textContent.trim() || letters[i] || `Col ${i + 1}`);
+    });
+
+    // Parse data rows
+    for (let r = 1; r < node.childCount; r++) {
+      const row = node.child(r);
+      const rowData: any = {};
+      let hasData = false;
+      
+      row.forEach((cell: any, _: any, i: number) => {
+        const val = cell.textContent.trim();
+        const numVal = parseFloat(val);
+        rowData[headers[i]] = !isNaN(numVal) ? numVal : val;
+        if (val) hasData = true;
+      });
+      
+      if (hasData) tableData.push(rowData);
+    }
+
+    if (tableData.length === 0) {
+      alert("Please add some data to the table first.");
+      return;
+    }
+
+    const xAxis = headers[chartConfig.xCol] || headers[0];
+    const yAxis = headers[chartConfig.yCol] || headers[1];
+
+    if (typeof getPos !== 'function') return;
+    const pos = getPos();
+    const tableEnd = pos + node.nodeSize;
+
+    editor.chain()
+      .focus()
+      .insertContentAt(tableEnd, {
+        type: 'inlineChart',
+        attrs: {
+          data: tableData,
+          type: chartConfig.type,
+          title: `Chart from ${node.attrs.title || 'Table'}`,
+          xAxis,
+          yAxis
+        }
+      })
+      .run();
+
+    setShowChartPreview(false);
+  };
+
   return (
     <NodeViewWrapper className="spreadsheet-premium-wrapper my-12 group/spreadsheet relative">
       <div className="bg-white border border-neutral-200 rounded-xl overflow-hidden shadow-2xl transition-all group-hover/spreadsheet:border-neutral-300">
@@ -156,6 +215,82 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode }: any) =>
             <button onMouseDown={(e) => toolbarAction(e, 'alignLeft')} className="p-1.5 hover:bg-neutral-200 text-neutral-700 rounded transition-colors"><AlignLeft className="w-3.5 h-3.5" /></button>
             <button onMouseDown={(e) => toolbarAction(e, 'alignCenter')} className="p-1.5 hover:bg-neutral-200 text-neutral-700 rounded transition-colors"><AlignCenter className="w-3.5 h-3.5" /></button>
             <button onMouseDown={(e) => toolbarAction(e, 'alignRight')} className="p-1.5 hover:bg-neutral-200 text-neutral-700 rounded transition-colors"><AlignRight className="w-3.5 h-3.5" /></button>
+          </div>
+
+          {/* Chart Creator Dropdown */}
+          <div className="relative">
+            <button 
+              onMouseDown={(e) => { e.preventDefault(); setShowChartPreview(!showChartPreview); }}
+              className={`flex items-center gap-1.5 px-3 py-1 ml-1 rounded transition-all text-[10px] font-bold ${showChartPreview ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-600 hover:bg-blue-100'}`}
+            >
+              <BarChart2 className="w-3.5 h-3.5" />
+              <span>Visualize</span>
+              <ChevronDown className={`w-3 h-3 transition-transform ${showChartPreview ? 'rotate-180' : ''}`} />
+            </button>
+
+            {showChartPreview && (
+              <div className="absolute top-full right-0 mt-2 w-64 bg-white border border-neutral-200 rounded-xl shadow-2xl p-4 z-50 animate-in fade-in slide-in-from-top-2">
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="text-xs font-bold text-neutral-800 uppercase tracking-wider">Chart Settings</h4>
+                  <button onClick={() => setShowChartPreview(false)} className="text-neutral-400 hover:text-neutral-600"><X className="w-4 h-4" /></button>
+                </div>
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-[10px] font-bold text-neutral-500 uppercase mb-2">Type</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button 
+                        onClick={() => setChartConfig(prev => ({ ...prev, type: 'line' }))}
+                        className={`px-3 py-2 rounded-lg border text-[10px] font-bold transition-all ${chartConfig.type === 'line' ? 'bg-blue-50 border-blue-200 text-blue-600' : 'bg-white border-neutral-100 text-neutral-500'}`}
+                      >
+                        Line Chart
+                      </button>
+                      <button 
+                        onClick={() => setChartConfig(prev => ({ ...prev, type: 'bar' }))}
+                        className={`px-3 py-2 rounded-lg border text-[10px] font-bold transition-all ${chartConfig.type === 'bar' ? 'bg-blue-50 border-blue-200 text-blue-600' : 'bg-white border-neutral-100 text-neutral-500'}`}
+                      >
+                        Bar Chart
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] font-bold text-neutral-500 uppercase mb-2">X-Axis (Label)</label>
+                      <select 
+                        value={chartConfig.xCol} 
+                        onChange={(e) => setChartConfig(prev => ({ ...prev, xCol: parseInt(e.target.value) }))}
+                        className="w-full h-8 bg-neutral-50 border border-neutral-200 rounded px-2 text-[10px] font-bold text-neutral-700 outline-none focus:border-blue-500/50"
+                      >
+                        {Array.from({ length: cols }).map((_, i) => (
+                          <option key={i} value={i}>Column {letters[i] || i + 1}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-neutral-500 uppercase mb-2">Y-Axis (Value)</label>
+                      <select 
+                        value={chartConfig.yCol} 
+                        onChange={(e) => setChartConfig(prev => ({ ...prev, yCol: parseInt(e.target.value) }))}
+                        className="w-full h-8 bg-neutral-50 border border-neutral-200 rounded px-2 text-[10px] font-bold text-neutral-700 outline-none focus:border-blue-500/50"
+                      >
+                        {Array.from({ length: cols }).map((_, i) => (
+                          <option key={i} value={i}>Column {letters[i] || i + 1}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <button 
+                    onClick={createChart}
+                    className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    Generate Chart
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           <button onMouseDown={(e) => e.preventDefault()} className="p-1.5 hover:bg-neutral-200 text-neutral-700 rounded transition-colors ml-1"><Settings className="w-3.5 h-3.5" /></button>
