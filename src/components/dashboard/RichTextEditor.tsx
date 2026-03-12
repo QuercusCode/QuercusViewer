@@ -19,9 +19,9 @@ import {
   Bold, Italic, Underline as UnderlineIcon, Strikethrough, 
   Code, List, ListOrdered, CheckSquare, Undo, Redo, 
   Heading1, Heading2, Heading3, Link as LinkIcon, 
-  Type, ChevronDown, Wand2, MoreHorizontal,
+  Type, ChevronDown, MoreHorizontal,
   Subscript as SubscriptIcon, Superscript as SuperscriptIcon,
-  Highlighter, Eraser, Sparkles
+  Highlighter, Eraser, FlaskConical, Clock, Binary
 } from 'lucide-react';
 import type { Structure } from '../../lib/structuresService';
 
@@ -186,6 +186,36 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
   const toggleMenu = (menuId: string) => {
     setActiveMenu(activeMenu === menuId ? null : menuId);
+  };
+
+  const insertSymbol = (symbol: string) => {
+    editor.chain().focus().insertContent(symbol).run();
+    setActiveMenu(null);
+  };
+
+  const insertTimestamp = () => {
+    const now = new Date();
+    const timestamp = now.toLocaleString(undefined, {
+      dateStyle: 'medium',
+      timeStyle: 'short'
+    });
+    editor.chain().focus().insertContent(`[${timestamp}] `).run();
+    setActiveMenu(null);
+  };
+
+  const formatChemicalFormula = () => {
+    const input = window.prompt('Enter chemical formula (e.g., H2O, CO2, C6H12O6):');
+    if (!input) return;
+
+    // Basic logic to wrap numbers in subscript
+    // This is a simple implementation: digits after letters become subscripts
+    const formatted = input.replace(/([A-Z][a-z]?|[\)])(\d+)/g, '$1<sub>$2</sub>');
+    
+    // We need to insert this as HTML since Tiptap doesn't have a direct "chemical" node, 
+    // but the starter kit usually handles basic HTML tags or we can use marks.
+    // Tiptap's Subscript extension handles <sub> tags.
+    editor.chain().focus().insertContent(formatted).run();
+    setActiveMenu(null);
   };
 
   return (
@@ -379,33 +409,57 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         {/* AI & More */}
         <div className="flex items-center pr-2 gap-1">
           <Dropdown
-            isOpen={activeMenu === 'ai'}
+            isOpen={activeMenu === 'scientific'}
             onClose={() => setActiveMenu(null)}
             align="right"
             trigger={
               <div 
-                onClick={() => toggleMenu('ai')}
-                className={`flex items-center gap-1.5 px-3 py-1 rounded-lg transition-colors cursor-pointer text-xs font-semibold ${activeMenu === 'ai' ? 'bg-blue-500/30 text-blue-200' : 'bg-blue-500/10 hover:bg-blue-500/20 text-blue-400'}`}
+                onClick={() => toggleMenu('scientific')}
+                className={`flex items-center gap-1.5 px-3 py-1 rounded-lg transition-colors cursor-pointer text-xs font-semibold ${activeMenu === 'scientific' ? 'bg-blue-500/30 text-blue-200' : 'bg-blue-500/10 hover:bg-blue-500/20 text-blue-400'}`}
               >
-                <Wand2 className="w-3.5 h-3.5" />
-                <span>AI tools</span>
+                <FlaskConical className="w-3.5 h-3.5" />
+                <span>Scientific</span>
                 <ChevronDown className="w-2.5 h-2.5 opacity-50" />
               </div>
             }
           >
-            <div className="w-48 p-1">
-              <button className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-neutral-300 hover:bg-blue-500/10 hover:text-blue-400 rounded-md transition-colors group">
-                <Sparkles className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100" />
-                <span>Analyze structure site</span>
-              </button>
-              <button className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-neutral-300 hover:bg-blue-500/10 hover:text-blue-400 rounded-md transition-colors group">
-                <Sparkles className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100" />
-                <span>Predict binding affinity</span>
-              </button>
-              <button className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-neutral-300 hover:bg-blue-500/10 hover:text-blue-400 rounded-md transition-colors group">
-                <Sparkles className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100" />
-                <span>Suggest mutations</span>
-              </button>
+            <div className="w-56 p-2 space-y-3">
+              <div>
+                <p className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-2 px-1">Common Symbols</p>
+                <div className="grid grid-cols-4 gap-1">
+                  {[
+                    { s: 'α', t: 'Alpha' }, { s: 'β', t: 'Beta' }, { s: 'Δ', t: 'Delta' }, { s: 'λ', t: 'Lambda' },
+                    { s: 'μ', t: 'Mu' }, { s: 'π', t: 'Pi' }, { s: 'σ', t: 'Sigma' }, { s: 'ω', t: 'Omega' },
+                    { s: '×', t: 'Multiply' }, { s: '±', t: 'Plus-Minus' }, { s: 'Å', t: 'Angstrom' }, { s: '∞', t: 'Infinity' }
+                  ].map(({ s, t }) => (
+                    <button
+                      key={s}
+                      onClick={() => insertSymbol(s)}
+                      title={t}
+                      className="p-2 text-sm text-neutral-300 hover:bg-neutral-800 hover:text-white rounded transition-colors"
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="pt-2 border-t border-neutral-800">
+                <button 
+                  onClick={insertTimestamp}
+                  className="w-full flex items-center gap-2.5 px-2 py-2 text-xs text-neutral-300 hover:bg-neutral-800 rounded-md transition-colors"
+                >
+                  <Clock className="w-3.5 h-3.5 text-blue-400" />
+                  <span>Insert Timestamp</span>
+                </button>
+                <button 
+                  onClick={formatChemicalFormula}
+                  className="w-full flex items-center gap-2.5 px-2 py-2 text-xs text-neutral-300 hover:bg-neutral-800 rounded-md transition-colors"
+                >
+                  <Binary className="w-3.5 h-3.5 text-blue-400" />
+                  <span>Chemical Formula</span>
+                </button>
+              </div>
             </div>
           </Dropdown>
 
