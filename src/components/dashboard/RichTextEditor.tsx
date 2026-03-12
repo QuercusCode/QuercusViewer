@@ -314,7 +314,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   };
 
   return (
-    <div className="flex flex-col w-full h-full bg-[var(--bg-main)] border border-[var(--border-main)] rounded-xl focus-within:border-neutral-700 transition-colors">
+    <div className="flex flex-col w-full h-full bg-[var(--bg-main)] rounded-xl focus-within:border-neutral-700 transition-colors">
       {/* TOOLBAR */}
       <div className="flex items-center flex-wrap gap-0.5 p-1 bg-[var(--bg-header)] border-b border-[var(--border-main)] sticky top-0 z-20 rounded-t-xl">
         {/* History */}

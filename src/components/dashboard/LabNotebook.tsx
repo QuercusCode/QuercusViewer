@@ -336,7 +336,7 @@ export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false
                     {activeNotebook ? (
                         <div className={`flex-1 flex flex-col h-full w-full ${isDrawer ? '' : 'max-w-[1440px] mx-auto'}`}>
                             {/* Editor Toolbar */}
-                            <div className={`flex items-center justify-between py-4 border-b border-[var(--border-main)]/50 shrink-0 ${isDrawer ? 'px-4' : 'px-8'}`}>
+                            <div className={`flex items-center justify-between py-4 shrink-0 ${isDrawer ? 'px-4' : 'px-8'}`}>
                                 <div className="flex items-center gap-2">
                                     {isDrawer && (
                                         <button
