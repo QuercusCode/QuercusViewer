@@ -26,7 +26,7 @@ import {
   Type, ChevronDown, MoreHorizontal,
   Subscript as SubscriptIcon, Superscript as SuperscriptIcon,
   Highlighter, Eraser, FlaskConical, Clock, FileText,
-  Table as TableIcon, ShieldCheck, Activity
+  Table as TableIcon, Activity
 } from 'lucide-react';
 import type { Structure } from '../../lib/structuresService';
 
@@ -63,7 +63,9 @@ const ToolbarButton: React.FC<{
   </button>
 );
 
-const ToolbarDivider = () => <div className="w-px h-6 bg-neutral-800 mx-1 self-center" />;
+const ToolbarDivider: React.FC<{ className?: string }> = ({ className = '' }) => (
+  <div className={`w-px h-6 bg-neutral-800 mx-1 self-center ${className}`} />
+);
 
 const Dropdown: React.FC<{
   isOpen: boolean;
@@ -71,7 +73,8 @@ const Dropdown: React.FC<{
   trigger: React.ReactNode;
   children: React.ReactNode;
   align?: 'left' | 'right';
-}> = ({ isOpen, onClose, trigger, children, align = 'left' }) => {
+  className?: string;
+}> = ({ isOpen, onClose, trigger, children, align = 'left', className = '' }) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -94,10 +97,44 @@ const Dropdown: React.FC<{
         if (!isOpen) { e.stopPropagation(); }
       }}>{trigger}</div>
       {isOpen && (
-        <div className={`absolute top-full mt-1 z-50 min-w-[200px] bg-neutral-900 border border-neutral-800 rounded-lg shadow-xl p-1 animate-in fade-in zoom-in duration-200 ${align === 'right' ? 'right-0' : 'left-0'}`}>
+        <div className={`absolute top-full mt-1 z-50 min-w-[200px] bg-neutral-900 border border-neutral-800 rounded-lg shadow-xl p-1 animate-in fade-in zoom-in duration-200 ${align === 'right' ? 'right-0' : 'left-0'} ${className}`}>
           {children}
         </div>
       )}
+    </div>
+  );
+};
+
+const TableGridPicker: React.FC<{
+  onSelect: (rows: number, cols: number) => void;
+}> = ({ onSelect }) => {
+  const [hovered, setHovered] = useState({ r: 0, c: 0 });
+  const max = 8;
+
+  return (
+    <div className="p-3 bg-white rounded-lg shadow-2xl border border-neutral-200">
+      <div className="text-center text-xs font-bold text-blue-600 mb-3">
+        {hovered.r > 0 ? `${hovered.r} x ${hovered.c}` : 'Select Dimensions'}
+      </div>
+      <div className="grid grid-cols-8 gap-1">
+        {Array.from({ length: max * max }).map((_, i) => {
+          const r = Math.floor(i / max) + 1;
+          const c = (i % max) + 1;
+          const isActive = r <= hovered.r && c <= hovered.c;
+          return (
+            <div
+              key={i}
+              onMouseEnter={() => setHovered({ r, c })}
+              onClick={() => onSelect(r, c)}
+              className={`w-4 h-4 rounded-sm border transition-colors cursor-pointer ${
+                isActive 
+                  ? 'bg-blue-500/30 border-blue-500' 
+                  : 'bg-neutral-100 border-neutral-200 hover:border-blue-300'
+              }`}
+            />
+          );
+        })}
+      </div>
     </div>
   );
 };
@@ -230,6 +267,12 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         if (!isNaN(rows) && !isNaN(cols)) {
           editor.chain().focus().insertTable({ rows, cols, withHeaderRow: true }).run();
         }
+        break;
+      case 'well96':
+        editor.chain().focus().insertTable({ rows: 9, cols: 13, withHeaderRow: true }).run();
+        break;
+      case 'well384':
+        editor.chain().focus().insertTable({ rows: 17, cols: 25, withHeaderRow: true }).run();
         break;
       case 'protocol':
         editor.chain().focus().insertContent('**Protocol:**\n\n- ').run();
@@ -443,127 +486,119 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
         <div className="flex-1" />
 
-        {/* AI & More */}
+        {/* Scientific Tools */}
         <div className="flex items-center pr-2 gap-1">
           <Dropdown
             isOpen={activeMenu === 'scientific'}
             onClose={() => setActiveMenu(null)}
             align="right"
+            className="w-64"
             trigger={
               <div 
                 onClick={() => toggleMenu('scientific')}
-                className={`flex items-center gap-1.5 px-3 py-1 rounded-lg transition-colors cursor-pointer text-xs font-semibold ${activeMenu === 'scientific' ? 'bg-blue-500/30 text-blue-200' : 'bg-blue-500/10 hover:bg-blue-500/20 text-blue-400'}`}
+                className={`flex items-center gap-1.5 px-3 py-1 rounded-lg transition-colors cursor-pointer text-xs font-semibold ${activeMenu === 'scientific' ? 'bg-blue-500/30 text-blue-200' : 'bg-neutral-800 hover:bg-neutral-700 text-neutral-300'}`}
               >
                 <FlaskConical className="w-3.5 h-3.5" />
-                <span>Scientific</span>
+                <span>Insert</span>
                 <ChevronDown className="w-2.5 h-2.5 opacity-50" />
               </div>
             }
           >
-            <div className="w-72 p-2 space-y-4 max-h-[400px] overflow-y-auto custom-scrollbar">
-              <div>
-                <p className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-2 px-1">Greek & Notations</p>
-                <div className="grid grid-cols-6 gap-1">
-                  {[
-                    'α', 'β', 'Δ', 'λ', 'μ', 'π',
-                    'σ', 'ω', 'γ', 'θ', 'ρ', 'τ',
-                    'φ', 'χ', 'ψ', 'ζ', 'Å', '∞',
-                    '±', '×', '→', '⇌', '≈', '≠',
-                    '°', '′', '″', '≤', '≥', '∝'
-                  ].map(s => (
-                    <button
-                      key={s}
-                      onClick={() => insertSymbol(s)}
-                      className="p-1.5 text-sm text-neutral-300 hover:bg-neutral-800 hover:text-white rounded transition-colors"
-                    >
-                      {s}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="pt-2 border-t border-neutral-800">
-                <p className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-2 px-1">Lab Units & Constants</p>
-                <div className="flex flex-wrap gap-1">
-                  {['mol/L', 'mM', 'nm', 'μm', '°C', 'K', 'R', 'kB'].map(unit => (
-                    <button
-                      key={unit}
-                      onClick={() => insertSymbol(unit)}
-                      className="px-2 py-1 text-[10px] bg-neutral-800 text-neutral-300 hover:bg-neutral-700 hover:text-white rounded transition-colors"
-                    >
-                      {unit}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="pt-2 border-t border-neutral-800">
-                <p className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-2 px-1">Quick Tools</p>
-                <button 
-                  onClick={insertTimestamp}
-                  className="w-full flex items-center gap-2.5 px-2 py-2 text-xs text-neutral-300 hover:bg-neutral-800 rounded-md transition-colors"
-                >
-                  <Clock className="w-3.5 h-3.5 text-blue-400" />
-                  <span>Insert Timestamp</span>
+            <div className="p-1 space-y-0.5">
+              {/* Table Submenu */}
+              <div className="relative group/sub">
+                <button className="w-full flex items-center justify-between px-3 py-2 text-xs text-neutral-300 hover:bg-neutral-800 rounded-md transition-colors">
+                  <div className="flex items-center gap-2.5">
+                    <TableIcon className="w-3.5 h-3.5" />
+                    <span>Table</span>
+                  </div>
+                  <ChevronDown className="w-3 h-3 -rotate-90 opacity-50" />
                 </button>
-                <div className="mt-1 space-y-0.5">
+                <div className="absolute left-full top-0 ml-1 hidden group-hover/sub:block">
+                  <TableGridPicker onSelect={(r, c) => {
+                    editor.chain().focus().insertTable({ rows: r, cols: c, withHeaderRow: true }).run();
+                    setActiveMenu(null);
+                  }} />
+                </div>
+              </div>
+
+              {/* Well Plate Submenu */}
+              <div className="relative group/sub">
+                <button className="w-full flex items-center justify-between px-3 py-2 text-xs text-neutral-300 hover:bg-neutral-800 rounded-md transition-colors">
+                  <div className="flex items-center gap-2.5">
+                    <Activity className="w-3.5 h-3.5" />
+                    <span>Well plate</span>
+                  </div>
+                  <ChevronDown className="w-3 h-3 -rotate-90 opacity-50" />
+                </button>
+                <div className="absolute left-full top-0 ml-1 hidden group-hover/sub:block min-w-[160px] bg-neutral-900 border border-neutral-800 rounded-lg shadow-xl p-1">
                   <button 
-                    onClick={() => insertTemplate('setup')}
-                    className="w-full flex items-center gap-2.5 px-2 py-2 text-xs text-neutral-300 hover:bg-neutral-800 rounded-md transition-colors"
+                    onClick={() => insertTemplate('well96')}
+                    className="w-full text-left px-3 py-2 text-xs text-neutral-300 hover:bg-neutral-800 rounded-md"
                   >
-                    <FileText className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>Experiment Setup</span>
+                    96-well (8x12)
                   </button>
                   <button 
-                    onClick={() => insertTemplate('protocol')}
-                    className="w-full flex items-center gap-2.5 px-2 py-2 text-xs text-neutral-300 hover:bg-neutral-800 rounded-md transition-colors"
+                    onClick={() => insertTemplate('well384')}
+                    className="w-full text-left px-3 py-2 text-xs text-neutral-300 hover:bg-neutral-800 rounded-md"
                   >
-                    <FileText className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>Quick Protocol</span>
+                    384-well (16x24)
                   </button>
                 </div>
               </div>
 
-              <div className="pt-2 border-t border-neutral-800">
-                <p className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-2 px-1">Data & Organization</p>
-                <div className="grid grid-cols-2 gap-1 mb-2">
-                  <button 
-                    onClick={() => insertTemplate('table3x3')}
-                    className="flex items-center gap-2 px-2 py-2 text-xs text-neutral-300 hover:bg-neutral-800 rounded-md transition-colors"
-                  >
-                    <TableIcon className="w-3.5 h-3.5 text-orange-400" />
-                    <span>3x3 Table</span>
-                  </button>
-                  <button 
-                    onClick={() => insertTemplate('table4x4')}
-                    className="flex items-center gap-2 px-2 py-2 text-xs text-neutral-300 hover:bg-neutral-800 rounded-md transition-colors"
-                  >
-                    <TableIcon className="w-3.5 h-3.5 text-orange-400" />
-                    <span>4x4 Table</span>
-                  </button>
-                  <button 
-                    onClick={() => insertTemplate('customTable')}
-                    className="flex items-center gap-2 px-2 py-2 text-xs text-neutral-300 hover:bg-neutral-800 rounded-md transition-colors col-span-2"
-                  >
-                    <TableIcon className="w-3.5 h-3.5 text-orange-400" />
-                    <span>Custom Table...</span>
-                  </button>
-                </div>
-                <div className="space-y-0.5">
-                  <button 
-                    onClick={() => insertTemplate('safety')}
-                    className="w-full flex items-center gap-2.5 px-2 py-2 text-xs text-neutral-300 hover:bg-neutral-800 rounded-md transition-colors"
-                  >
-                    <ShieldCheck className="w-3.5 h-3.5 text-red-400" />
-                    <span>Safety Checklist</span>
-                  </button>
-                  <button 
-                    onClick={() => insertTemplate('startup')}
-                    className="w-full flex items-center gap-2.5 px-2 py-2 text-xs text-neutral-300 hover:bg-neutral-800 rounded-md transition-colors"
-                  >
-                    <Activity className="w-3.5 h-3.5 text-purple-400" />
-                    <span>Equipment Startup</span>
-                  </button>
+              <ToolbarDivider className="!h-px !w-full !my-1" />
+
+              <button 
+                onClick={() => insertTemplate('setup')}
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-neutral-300 hover:bg-neutral-800 rounded-md"
+              >
+                <FileText className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Experiment Setup</span>
+              </button>
+
+              <button 
+                onClick={() => insertTemplate('protocol')}
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-neutral-300 hover:bg-neutral-800 rounded-md"
+              >
+                <FileText className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Quick Protocol</span>
+              </button>
+
+              <ToolbarDivider className="!h-px !w-full !my-1" />
+
+              <button 
+                onClick={insertTimestamp}
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-neutral-300 hover:bg-neutral-800 rounded-md"
+              >
+                <Clock className="w-3.5 h-3.5 text-blue-400" />
+                <span>Insert Timestamp</span>
+              </button>
+
+              <div className="relative group/sub">
+                <button className="w-full flex items-center justify-between px-3 py-2 text-xs text-neutral-300 hover:bg-neutral-800 rounded-md transition-colors">
+                  <div className="flex items-center gap-2.5">
+                    <FlaskConical className="w-3.5 h-3.5" />
+                    <span>Symbols</span>
+                  </div>
+                  <ChevronDown className="w-3 h-3 -rotate-90 opacity-50" />
+                </button>
+                <div className="absolute left-full top-0 ml-1 hidden group-hover/sub:block min-w-[200px] bg-neutral-900 border border-neutral-800 rounded-lg shadow-xl p-2 h-64 overflow-y-auto custom-scrollbar">
+                  <div className="grid grid-cols-5 gap-1">
+                    {[
+                      'α', 'β', 'Δ', 'λ', 'μ', 'π', 'σ', 'ω', 'γ', 'θ', 
+                      'ρ', 'τ', 'φ', 'χ', 'ψ', 'ζ', 'Å', '∞', '±', '×', 
+                      '→', '⇌', '≈', '≠', '°', '′', '″', '≤', '≥', '∝'
+                    ].map(s => (
+                      <button
+                        key={s}
+                        onClick={() => insertSymbol(s)}
+                        className="p-1.5 text-sm text-neutral-300 hover:bg-neutral-800 hover:text-white rounded transition-colors"
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
