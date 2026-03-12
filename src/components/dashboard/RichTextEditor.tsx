@@ -112,14 +112,20 @@ const TableGridPicker: React.FC<{
   const max = 8;
 
   return (
-    <div className="p-3 bg-neutral-900 rounded-lg shadow-2xl border border-neutral-800 select-none">
-      <div className="flex items-center justify-between gap-4 mb-3 px-0.5">
-        <span className="text-[9px] uppercase tracking-tighter font-black text-neutral-500 whitespace-nowrap">Table Size</span>
-        <span className="text-xs font-mono font-bold text-blue-400 bg-blue-500/10 px-1.5 rounded">
-          {hovered.r > 0 ? `${hovered.r} x ${hovered.c}` : '0 x 0'}
-        </span>
+    <div className="p-6 bg-neutral-900 rounded-[24px] shadow-[0_30px_90px_rgba(0,0,0,0.7)] border border-neutral-800 select-none min-w-[280px]">
+      <div className="flex flex-col gap-1 mb-6 px-1">
+        <span className="text-[10px] uppercase tracking-[0.3em] font-black text-neutral-500">Insert Table</span>
+        <div className="flex items-baseline gap-2">
+          <span className="text-3xl font-mono font-black text-white leading-none">
+            {hovered.r > 0 ? hovered.r : '0'}
+          </span>
+          <span className="text-xl font-mono font-bold text-neutral-600">×</span>
+          <span className="text-3xl font-mono font-black text-blue-500 leading-none">
+            {hovered.c > 0 ? hovered.c : '0'}
+          </span>
+        </div>
       </div>
-      <div className="grid grid-cols-8 gap-1 p-1 bg-neutral-950 rounded border border-neutral-800/30">
+      <div className="grid grid-cols-8 gap-1.5 p-2 bg-neutral-950 rounded-xl border border-neutral-800/50">
         {Array.from({ length: max * max }).map((_, i) => {
           const r = Math.floor(i / max) + 1;
           const c = (i % max) + 1;
@@ -129,10 +135,10 @@ const TableGridPicker: React.FC<{
               key={i}
               onMouseEnter={() => setHovered({ r, c })}
               onClick={() => onSelect(r, c)}
-              className={`w-3.5 h-3.5 rounded-sm border transition-all duration-75 cursor-pointer ${
+              className={`w-5 h-5 aspect-square rounded-[3px] border transition-all duration-100 cursor-pointer ${
                 isActive 
-                  ? 'bg-blue-500 border-blue-400 z-10' 
-                  : 'bg-neutral-800/30 border-neutral-700/50 hover:border-neutral-500'
+                  ? 'bg-blue-500 border-blue-300 shadow-[0_0_12px_rgba(59,130,246,0.5)] z-10 scale-105' 
+                  : 'bg-neutral-800/50 hover:bg-neutral-700/80 border-neutral-700/50 hover:border-neutral-500'
               }`}
             />
           );
@@ -507,18 +513,19 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
               </div>
             }
           >
-            <div className="p-1 space-y-0.5">
+            <div className="p-2 space-y-1.5 min-w-[220px]">
               {/* Table Submenu */}
               <div className="relative group/sub">
-                <button className="w-full flex items-center justify-between px-3 py-2 text-xs text-neutral-300 hover:bg-neutral-800 rounded-md transition-colors">
-                  <div className="flex items-center gap-2.5">
-                    <TableIcon className="w-3.5 h-3.5" />
-                    <span>Table</span>
+                <button className="w-full flex items-center justify-between px-4 py-4 text-sm text-neutral-300 hover:bg-neutral-800 rounded-xl transition-all group/btn">
+                  <div className="flex items-center gap-4">
+                    <TableIcon className="w-5 h-5 text-blue-400" />
+                    <span className="font-semibold">Table</span>
                   </div>
-                  <ChevronDown className="w-3 h-3 -rotate-90 opacity-50" />
+                  <ChevronDown className="w-4 h-4 -rotate-90 opacity-30 group-hover/btn:opacity-100 transition-all" />
                 </button>
-                <div className="absolute right-full top-0 pr-1 hidden group-hover/sub:block">
-                  <div className="pr-1 pt-1 -mt-1"> {/* Subtle bridge to prevent mouse-leave */}
+                {/* Massive Interaction Safe-Zone: Ensures mouse never leaves 'active' area */}
+                <div className="absolute right-[100%] top-[-20px] bottom-[-20px] pr-12 -mr-3 hidden group-hover/sub:block z-50">
+                  <div className="h-full flex items-start pt-[20px]">
                     <TableGridPicker onSelect={(r, c) => {
                       editor.chain().focus().insertTable({ rows: r, cols: c, withHeaderRow: true }).run();
                       setActiveMenu(null);
@@ -529,83 +536,87 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
               {/* Well Plate Submenu */}
               <div className="relative group/sub">
-                <button className="w-full flex items-center justify-between px-3 py-2 text-xs text-neutral-300 hover:bg-neutral-800 rounded-md transition-colors text-left">
-                  <div className="flex items-center gap-2.5">
-                    <Activity className="w-3.5 h-3.5" />
-                    <span>Well plate</span>
+                <button className="w-full flex items-center justify-between px-4 py-4 text-sm text-neutral-300 hover:bg-neutral-800 rounded-xl transition-all group/btn">
+                  <div className="flex items-center gap-4">
+                    <Activity className="w-5 h-5 text-emerald-400" />
+                    <span className="font-semibold">Well plate</span>
                   </div>
-                  <ChevronDown className="w-3 h-3 rotate-90 opacity-50" />
+                  <ChevronDown className="w-4 h-4 -rotate-90 opacity-30 group-hover/btn:opacity-100 transition-all" />
                 </button>
-                <div className="absolute right-full top-0 pr-1 hidden group-hover/sub:block min-w-[160px]">
-                  <div className="pr-1 pt-1 -mt-1 bg-neutral-900 border border-neutral-800 rounded-lg shadow-xl p-1">
-                    <button 
-                      onClick={() => insertTemplate('well96')}
-                      className="w-full text-left px-3 py-2 text-xs text-neutral-300 hover:bg-neutral-800 rounded-md"
-                    >
-                      96-well (8x12)
-                    </button>
-                    <button 
-                      onClick={() => insertTemplate('well384')}
-                      className="w-full text-left px-3 py-2 text-xs text-neutral-300 hover:bg-neutral-800 rounded-md"
-                    >
-                      384-well (16x24)
-                    </button>
+                <div className="absolute right-[100%] top-[-20px] bottom-[-20px] pr-12 -mr-3 hidden group-hover/sub:block z-50 min-w-[200px]">
+                  <div className="h-full flex items-start pt-[20px]">
+                    <div className="bg-neutral-900 border border-neutral-800 rounded-[20px] shadow-[0_30px_90px_rgba(0,0,0,0.7)] p-2 space-y-1">
+                      <button 
+                        onClick={() => insertTemplate('well96')}
+                        className="w-full text-left px-4 py-3 text-sm text-neutral-300 hover:bg-neutral-800 rounded-xl transition-colors"
+                      >
+                        96-well (8x12)
+                      </button>
+                      <button 
+                        onClick={() => insertTemplate('well384')}
+                        className="w-full text-left px-4 py-3 text-sm text-neutral-300 hover:bg-neutral-800 rounded-xl transition-colors"
+                      >
+                        384-well (16x24)
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <ToolbarDivider className="!h-px !w-full !my-1" />
+              <ToolbarDivider className="!h-px !w-full !my-2 opacity-20" />
 
               <button 
                 onClick={() => insertTemplate('setup')}
-                className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-neutral-300 hover:bg-neutral-800 rounded-md"
+                className="w-full flex items-center gap-4 px-4 py-4 text-sm text-neutral-300 hover:bg-neutral-800 rounded-xl transition-all text-left"
               >
-                <FileText className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Experiment Setup</span>
+                <FileText className="w-5 h-5 text-purple-400" />
+                <span className="font-semibold">Experiment Setup</span>
               </button>
 
               <button 
                 onClick={() => insertTemplate('protocol')}
-                className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-neutral-300 hover:bg-neutral-800 rounded-md"
+                className="w-full flex items-center gap-4 px-4 py-4 text-sm text-neutral-300 hover:bg-neutral-800 rounded-xl transition-all text-left"
               >
-                <FileText className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Quick Protocol</span>
+                <FileText className="w-5 h-5 text-amber-400" />
+                <span className="font-semibold">Quick Protocol</span>
               </button>
 
-              <ToolbarDivider className="!h-px !w-full !my-1" />
+              <ToolbarDivider className="!h-px !w-full !my-2 opacity-20" />
 
               <button 
                 onClick={insertTimestamp}
-                className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-neutral-300 hover:bg-neutral-800 rounded-md"
+                className="w-full flex items-center gap-4 px-4 py-4 text-sm text-neutral-300 hover:bg-neutral-800 rounded-xl transition-all text-left"
               >
-                <Clock className="w-3.5 h-3.5 text-blue-400" />
-                <span>Insert Timestamp</span>
+                <Clock className="w-5 h-5 text-blue-500" />
+                <span className="font-semibold">Insert Timestamp</span>
               </button>
 
               <div className="relative group/sub">
-                <button className="w-full flex items-center justify-between px-3 py-2 text-xs text-neutral-300 hover:bg-neutral-800 rounded-md transition-colors text-left">
-                  <div className="flex items-center gap-2.5">
-                    <FlaskConical className="w-3.5 h-3.5" />
-                    <span>Symbols</span>
+                <button className="w-full flex items-center justify-between px-4 py-4 text-sm text-neutral-300 hover:bg-neutral-800 rounded-xl transition-all group/btn">
+                  <div className="flex items-center gap-4">
+                    <FlaskConical className="w-5 h-5 text-indigo-400" />
+                    <span className="font-semibold">Symbols</span>
                   </div>
-                  <ChevronDown className="w-3 h-3 rotate-90 opacity-50" />
+                  <ChevronDown className="w-4 h-4 -rotate-90 opacity-30 group-hover/btn:opacity-100 transition-all" />
                 </button>
-                <div className="absolute right-full top-0 pr-1 hidden group-hover/sub:block min-w-[200px]">
-                  <div className="pr-1 pt-1 -mt-1 bg-neutral-900 border border-neutral-800 rounded-lg shadow-xl p-2 h-64 overflow-y-auto custom-scrollbar">
-                    <div className="grid grid-cols-5 gap-1">
-                    {[
-                      'α', 'β', 'Δ', 'λ', 'μ', 'π', 'σ', 'ω', 'γ', 'θ', 
-                      'ρ', 'τ', 'φ', 'χ', 'ψ', 'ζ', 'Å', '∞', '±', '×', 
-                      '→', '⇌', '≈', '≠', '°', '′', '″', '≤', '≥', '∝'
-                    ].map(s => (
-                      <button
-                        key={s}
-                        onClick={() => insertSymbol(s)}
-                        className="p-1.5 text-sm text-neutral-300 hover:bg-neutral-800 hover:text-white rounded transition-colors"
-                      >
-                        {s}
-                      </button>
-                    ))}
+                <div className="absolute right-[100%] top-[-20px] bottom-[-20px] pr-12 -mr-3 hidden group-hover/sub:block z-50 min-w-[240px]">
+                  <div className="h-full flex items-start pt-[20px]">
+                    <div className="bg-neutral-900 border border-neutral-800 rounded-[20px] shadow-[0_30px_90px_rgba(0,0,0,0.7)] p-4 h-80 overflow-y-auto custom-scrollbar">
+                      <div className="grid grid-cols-5 gap-2">
+                        {[
+                          'α', 'β', 'Δ', 'λ', 'μ', 'π', 'σ', 'ω', 'γ', 'θ', 
+                          'ρ', 'τ', 'φ', 'χ', 'ψ', 'ζ', 'Å', '∞', '±', '×', 
+                          '→', '⇌', '≈', '≠', '°', '′', '″', '≤', '≥', '∝'
+                        ].map(s => (
+                          <button
+                            key={s}
+                            onClick={() => insertSymbol(s)}
+                            className="w-10 h-10 flex items-center justify-center text-base text-neutral-400 hover:bg-neutral-800 hover:text-white rounded-xl transition-colors"
+                          >
+                            {s}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
