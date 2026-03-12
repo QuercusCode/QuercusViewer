@@ -86,7 +86,7 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode }: any) =>
 
             {/* NATIVE TABLE: Strictly standard table structure for Tiptap compatibility */}
             <table className="spreadsheet-native-table">
-              <NodeViewContent as="tbody" className="spreadsheet-tbody" />
+              <NodeViewContent as={('tbody' as any)} className="spreadsheet-tbody" />
             </table>
           </div>
         </div>
