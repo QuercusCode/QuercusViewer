@@ -21,7 +21,8 @@ import {
   Heading1, Heading2, Heading3, Link as LinkIcon, 
   Type, ChevronDown, MoreHorizontal,
   Subscript as SubscriptIcon, Superscript as SuperscriptIcon,
-  Highlighter, Eraser, FlaskConical, Clock, FileText
+  Highlighter, Eraser, FlaskConical, Clock, FileText,
+  Table, ShieldCheck, Activity
 } from 'lucide-react';
 import type { Structure } from '../../lib/structuresService';
 
@@ -216,7 +217,19 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         content = '**Result:**\n\n';
         break;
       case 'setup':
-        content = '**Experiment Setup:**\n\nSample ID: \nBuffer: \nTemperature: ';
+        content = '**Experiment Setup:**\n\nSample ID: \nBuffer: \nTemperature: \n\n';
+        break;
+      case 'table3x3':
+        content = '\n| Header 1 | Header 2 | Header 3 |\n| --- | --- | --- |\n| | | |\n| | | |\n\n';
+        break;
+      case 'table4x4':
+        content = '\n| Header 1 | Header 2 | Header 3 | Header 4 |\n| --- | --- | --- | --- |\n| | | | |\n| | | | |\n| | | | |\n\n';
+        break;
+      case 'safety':
+        content = '**Safety Checklist:**\n\n- [ ] PPE (Gloves, Goggles, Lab Coat)\n- [ ] Fume Hood Operational\n- [ ] Waste Disposal Plan\n- [ ] Emergency Equipment Clear\n\n';
+        break;
+      case 'startup':
+        content = '**Equipment Startup:**\n\n- [ ] Power On\n- [ ] Calibration Check\n- [ ] Reagent Levels Verified\n- [ ] Software Connection established\n\n';
         break;
       default:
         content = `**${template}:**\n\n`;
@@ -490,6 +503,42 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
                   >
                     <FileText className="w-3.5 h-3.5 text-emerald-400" />
                     <span>Quick Protocol</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="pt-2 border-t border-neutral-800">
+                <p className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-2 px-1">Data & Organization</p>
+                <div className="grid grid-cols-2 gap-1 mb-2">
+                  <button 
+                    onClick={() => insertTemplate('table3x3')}
+                    className="flex items-center gap-2 px-2 py-2 text-xs text-neutral-300 hover:bg-neutral-800 rounded-md transition-colors"
+                  >
+                    <Table className="w-3.5 h-3.5 text-orange-400" />
+                    <span>3x3 Table</span>
+                  </button>
+                  <button 
+                    onClick={() => insertTemplate('table4x4')}
+                    className="flex items-center gap-2 px-2 py-2 text-xs text-neutral-300 hover:bg-neutral-800 rounded-md transition-colors"
+                  >
+                    <Table className="w-3.5 h-3.5 text-orange-400" />
+                    <span>4x4 Table</span>
+                  </button>
+                </div>
+                <div className="space-y-0.5">
+                  <button 
+                    onClick={() => insertTemplate('safety')}
+                    className="w-full flex items-center gap-2.5 px-2 py-2 text-xs text-neutral-300 hover:bg-neutral-800 rounded-md transition-colors"
+                  >
+                    <ShieldCheck className="w-3.5 h-3.5 text-red-400" />
+                    <span>Safety Checklist</span>
+                  </button>
+                  <button 
+                    onClick={() => insertTemplate('startup')}
+                    className="w-full flex items-center gap-2.5 px-2 py-2 text-xs text-neutral-300 hover:bg-neutral-800 rounded-md transition-colors"
+                  >
+                    <Activity className="w-3.5 h-3.5 text-purple-400" />
+                    <span>Equipment Startup</span>
                   </button>
                 </div>
               </div>
