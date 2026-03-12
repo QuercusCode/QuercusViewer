@@ -77,7 +77,8 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode }: any) =>
     return () => editor.off('selectionUpdate', handleSelectionUpdate);
   }, [editor, getPos, node, letters]);
 
-  const addRows = () => {
+  const addRows = (e: React.MouseEvent) => {
+    e.preventDefault();
     if (typeof getPos !== 'function') return;
     const tablePos = getPos();
     const tableEnd = tablePos + node.nodeSize;
@@ -92,7 +93,8 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode }: any) =>
     }
   };
 
-  const toolbarAction = (action: string) => {
+  const toolbarAction = (e: React.MouseEvent, action: string) => {
+    e.preventDefault();
     const chain = editor.chain().focus();
     switch(action) {
       case 'bold': chain.toggleBold().run(); break;
@@ -119,12 +121,12 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode }: any) =>
             />
           </div>
           <div className="flex items-center gap-1">
-            <button className="p-1.5 hover:bg-neutral-100 text-neutral-500 rounded transition-colors" title="Download CSV"><Download className="w-3.5 h-3.5" /></button>
-            <button className="p-1.5 hover:bg-neutral-100 text-neutral-500 rounded transition-colors" title="Export PDF"><Activity className="w-3.5 h-3.5" /></button>
-            <button className="p-1.5 hover:bg-neutral-100 text-neutral-500 rounded transition-colors" title="Expand"><Maximize2 className="w-3.5 h-3.5" /></button>
+            <button onMouseDown={(e) => e.preventDefault()} className="p-1.5 hover:bg-neutral-100 text-neutral-500 rounded transition-colors" title="Download CSV"><Download className="w-3.5 h-3.5" /></button>
+            <button onMouseDown={(e) => e.preventDefault()} className="p-1.5 hover:bg-neutral-100 text-neutral-500 rounded transition-colors" title="Export PDF"><Activity className="w-3.5 h-3.5" /></button>
+            <button onMouseDown={(e) => e.preventDefault()} className="p-1.5 hover:bg-neutral-100 text-neutral-500 rounded transition-colors" title="Expand"><Maximize2 className="w-3.5 h-3.5" /></button>
             <ToolbarDivider />
             <button 
-              onClick={() => deleteNode()}
+              onClick={(e) => { e.preventDefault(); deleteNode(); }}
               className="p-1.5 hover:bg-red-50 text-neutral-400 hover:text-red-500 rounded transition-colors" 
               title="Remove Spreadsheet"
             >
@@ -136,27 +138,27 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode }: any) =>
         {/* TOOLBAR: Formatting & Alignment */}
         <div className="flex items-center gap-1 px-3 py-1.5 bg-[#f8f9fa] border-b border-neutral-200 overflow-x-auto no-scrollbar">
           <div className="flex items-center gap-0.5 pr-2 border-r border-neutral-200">
-            <button onClick={() => toolbarAction('bold')} className="p-1.5 hover:bg-neutral-200 text-neutral-700 rounded transition-colors"><Bold className="w-3.5 h-3.5" /></button>
-            <button onClick={() => toolbarAction('italic')} className="p-1.5 hover:bg-neutral-200 text-neutral-700 rounded transition-colors"><Italic className="w-3.5 h-3.5" /></button>
-            <button onClick={() => toolbarAction('underline')} className="p-1.5 hover:bg-neutral-200 text-neutral-700 rounded transition-colors"><UnderlineIcon className="w-3.5 h-3.5" /></button>
-            <button onClick={() => toolbarAction('strike')} className="p-1.5 hover:bg-neutral-200 text-neutral-700 rounded transition-colors"><Strikethrough className="w-3.5 h-3.5" /></button>
-            <button className="p-1.5 hover:bg-neutral-200 text-neutral-700 rounded transition-colors"><LinkIcon className="w-3.5 h-3.5" /></button>
+            <button onMouseDown={(e) => toolbarAction(e, 'bold')} className="p-1.5 hover:bg-neutral-200 text-neutral-700 rounded transition-colors"><Bold className="w-3.5 h-3.5" /></button>
+            <button onMouseDown={(e) => toolbarAction(e, 'italic')} className="p-1.5 hover:bg-neutral-200 text-neutral-700 rounded transition-colors"><Italic className="w-3.5 h-3.5" /></button>
+            <button onMouseDown={(e) => toolbarAction(e, 'underline')} className="p-1.5 hover:bg-neutral-200 text-neutral-700 rounded transition-colors"><UnderlineIcon className="w-3.5 h-3.5" /></button>
+            <button onMouseDown={(e) => toolbarAction(e, 'strike')} className="p-1.5 hover:bg-neutral-200 text-neutral-700 rounded transition-colors"><Strikethrough className="w-3.5 h-3.5" /></button>
+            <button onMouseDown={(e) => e.preventDefault()} className="p-1.5 hover:bg-neutral-200 text-neutral-700 rounded transition-colors"><LinkIcon className="w-3.5 h-3.5" /></button>
           </div>
 
           <div className="flex items-center gap-0.5 px-2 border-r border-neutral-200">
-            <button className="flex items-center gap-1 pl-1.5 pr-1 py-1 hover:bg-neutral-200 text-neutral-700 rounded transition-colors">
+            <button onMouseDown={(e) => e.preventDefault()} className="flex items-center gap-1 pl-1.5 pr-1 py-1 hover:bg-neutral-200 text-neutral-700 rounded transition-colors">
               <Type className="w-3.5 h-3.5" />
               <ChevronDown className="w-2.5 h-2.5 opacity-50" />
             </button>
           </div>
 
           <div className="flex items-center gap-0.5 px-2 border-r border-neutral-200">
-            <button onClick={() => toolbarAction('alignLeft')} className="p-1.5 hover:bg-neutral-200 text-neutral-700 rounded transition-colors"><AlignLeft className="w-3.5 h-3.5" /></button>
-            <button onClick={() => toolbarAction('alignCenter')} className="p-1.5 hover:bg-neutral-200 text-neutral-700 rounded transition-colors"><AlignCenter className="w-3.5 h-3.5" /></button>
-            <button onClick={() => toolbarAction('alignRight')} className="p-1.5 hover:bg-neutral-200 text-neutral-700 rounded transition-colors"><AlignRight className="w-3.5 h-3.5" /></button>
+            <button onMouseDown={(e) => toolbarAction(e, 'alignLeft')} className="p-1.5 hover:bg-neutral-200 text-neutral-700 rounded transition-colors"><AlignLeft className="w-3.5 h-3.5" /></button>
+            <button onMouseDown={(e) => toolbarAction(e, 'alignCenter')} className="p-1.5 hover:bg-neutral-200 text-neutral-700 rounded transition-colors"><AlignCenter className="w-3.5 h-3.5" /></button>
+            <button onMouseDown={(e) => toolbarAction(e, 'alignRight')} className="p-1.5 hover:bg-neutral-200 text-neutral-700 rounded transition-colors"><AlignRight className="w-3.5 h-3.5" /></button>
           </div>
 
-          <button className="p-1.5 hover:bg-neutral-200 text-neutral-700 rounded transition-colors ml-1"><Settings className="w-3.5 h-3.5" /></button>
+          <button onMouseDown={(e) => e.preventDefault()} className="p-1.5 hover:bg-neutral-200 text-neutral-700 rounded transition-colors ml-1"><Settings className="w-3.5 h-3.5" /></button>
         </div>
 
         {/* FORMULA BAR */}
@@ -227,7 +229,7 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode }: any) =>
               className="w-12 h-7 bg-white border border-neutral-200 rounded px-2 text-xs text-neutral-800 focus:outline-none focus:border-blue-500/50"
             />
             <button 
-              onClick={addRows}
+              onClick={(e) => addRows(e)}
               className="px-3 py-1 bg-neutral-200 hover:bg-neutral-300 text-neutral-700 rounded text-[10px] font-bold transition-colors"
             >
               Add rows
