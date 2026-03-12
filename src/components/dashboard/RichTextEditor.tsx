@@ -112,11 +112,14 @@ const TableGridPicker: React.FC<{
   const max = 8;
 
   return (
-    <div className="p-3 bg-white rounded-lg shadow-2xl border border-neutral-200">
-      <div className="text-center text-xs font-bold text-blue-600 mb-3">
-        {hovered.r > 0 ? `${hovered.r} x ${hovered.c}` : 'Select Dimensions'}
+    <div className="p-3 bg-neutral-900 rounded-lg shadow-2xl border border-neutral-800">
+      <div className="flex items-center justify-between mb-3 px-1">
+        <span className="text-[10px] uppercase tracking-wider font-bold text-neutral-500">Table Size</span>
+        <span className="text-xs font-bold text-blue-400">
+          {hovered.r > 0 ? `${hovered.r} x ${hovered.c}` : 'Select'}
+        </span>
       </div>
-      <div className="grid grid-cols-8 gap-1">
+      <div className="grid grid-cols-8 gap-1.5 p-1 bg-neutral-950 rounded border border-neutral-800/50">
         {Array.from({ length: max * max }).map((_, i) => {
           const r = Math.floor(i / max) + 1;
           const c = (i % max) + 1;
@@ -126,10 +129,10 @@ const TableGridPicker: React.FC<{
               key={i}
               onMouseEnter={() => setHovered({ r, c })}
               onClick={() => onSelect(r, c)}
-              className={`w-4 h-4 rounded-sm border transition-colors cursor-pointer ${
+              className={`w-4 h-4 rounded-sm border transition-all duration-150 cursor-pointer ${
                 isActive 
-                  ? 'bg-blue-500/30 border-blue-500' 
-                  : 'bg-neutral-100 border-neutral-200 hover:border-blue-300'
+                  ? 'bg-blue-500/40 border-blue-400 scale-110 z-10' 
+                  : 'bg-neutral-800/50 border-neutral-700/50 hover:border-neutral-500'
               }`}
             />
           );
@@ -514,7 +517,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
                   </div>
                   <ChevronDown className="w-3 h-3 -rotate-90 opacity-50" />
                 </button>
-                <div className="absolute left-full top-0 ml-1 hidden group-hover/sub:block">
+                <div className="absolute right-full top-0 mr-1 hidden group-hover/sub:block">
                   <TableGridPicker onSelect={(r, c) => {
                     editor.chain().focus().insertTable({ rows: r, cols: c, withHeaderRow: true }).run();
                     setActiveMenu(null);
@@ -524,14 +527,14 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
               {/* Well Plate Submenu */}
               <div className="relative group/sub">
-                <button className="w-full flex items-center justify-between px-3 py-2 text-xs text-neutral-300 hover:bg-neutral-800 rounded-md transition-colors">
+                <button className="w-full flex items-center justify-between px-3 py-2 text-xs text-neutral-300 hover:bg-neutral-800 rounded-md transition-colors text-left">
                   <div className="flex items-center gap-2.5">
                     <Activity className="w-3.5 h-3.5" />
                     <span>Well plate</span>
                   </div>
-                  <ChevronDown className="w-3 h-3 -rotate-90 opacity-50" />
+                  <ChevronDown className="w-3 h-3 rotate-90 opacity-50" />
                 </button>
-                <div className="absolute left-full top-0 ml-1 hidden group-hover/sub:block min-w-[160px] bg-neutral-900 border border-neutral-800 rounded-lg shadow-xl p-1">
+                <div className="absolute right-full top-0 mr-1 hidden group-hover/sub:block min-w-[160px] bg-neutral-900 border border-neutral-800 rounded-lg shadow-xl p-1">
                   <button 
                     onClick={() => insertTemplate('well96')}
                     className="w-full text-left px-3 py-2 text-xs text-neutral-300 hover:bg-neutral-800 rounded-md"
@@ -576,14 +579,14 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
               </button>
 
               <div className="relative group/sub">
-                <button className="w-full flex items-center justify-between px-3 py-2 text-xs text-neutral-300 hover:bg-neutral-800 rounded-md transition-colors">
+                <button className="w-full flex items-center justify-between px-3 py-2 text-xs text-neutral-300 hover:bg-neutral-800 rounded-md transition-colors text-left">
                   <div className="flex items-center gap-2.5">
                     <FlaskConical className="w-3.5 h-3.5" />
                     <span>Symbols</span>
                   </div>
-                  <ChevronDown className="w-3 h-3 -rotate-90 opacity-50" />
+                  <ChevronDown className="w-3 h-3 rotate-90 opacity-50" />
                 </button>
-                <div className="absolute left-full top-0 ml-1 hidden group-hover/sub:block min-w-[200px] bg-neutral-900 border border-neutral-800 rounded-lg shadow-xl p-2 h-64 overflow-y-auto custom-scrollbar">
+                <div className="absolute right-full top-0 mr-1 hidden group-hover/sub:block min-w-[200px] bg-neutral-900 border border-neutral-800 rounded-lg shadow-xl p-2 h-64 overflow-y-auto custom-scrollbar">
                   <div className="grid grid-cols-5 gap-1">
                     {[
                       'α', 'β', 'Δ', 'λ', 'μ', 'π', 'σ', 'ω', 'γ', 'θ', 
