@@ -21,7 +21,7 @@ import {
   Heading1, Heading2, Heading3, Link as LinkIcon, 
   Type, ChevronDown, MoreHorizontal,
   Subscript as SubscriptIcon, Superscript as SuperscriptIcon,
-  Highlighter, Eraser, FlaskConical, Clock, Binary
+  Highlighter, Eraser, FlaskConical, Clock, FileText
 } from 'lucide-react';
 import type { Structure } from '../../lib/structuresService';
 
@@ -203,18 +203,25 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     setActiveMenu(null);
   };
 
-  const formatChemicalFormula = () => {
-    const input = window.prompt('Enter chemical formula (e.g., H2O, CO2, C6H12O6):');
-    if (!input) return;
-
-    // Basic logic to wrap numbers in subscript
-    // This is a simple implementation: digits after letters become subscripts
-    const formatted = input.replace(/([A-Z][a-z]?|[\)])(\d+)/g, '$1<sub>$2</sub>');
-    
-    // We need to insert this as HTML since Tiptap doesn't have a direct "chemical" node, 
-    // but the starter kit usually handles basic HTML tags or we can use marks.
-    // Tiptap's Subscript extension handles <sub> tags.
-    editor.chain().focus().insertContent(formatted).run();
+  const insertTemplate = (template: string) => {
+    let content = '';
+    switch (template) {
+      case 'protocol':
+        content = '<p><strong>Protocol:</strong></p><ul><li></li></ul>';
+        break;
+      case 'observation':
+        content = '<p><strong>Observation:</strong></p><p></p>';
+        break;
+      case 'result':
+        content = '<p><strong>Result:</strong></p><p></p>';
+        break;
+      case 'setup':
+        content = '<p><strong>Experiment Setup:</strong></p><p>Sample ID: </p><p>Buffer: </p><p>Temperature: </p>';
+        break;
+      default:
+        content = `<p><strong>${template}:</strong></p>`;
+    }
+    editor.chain().focus().insertContent(content).run();
     setActiveMenu(null);
   };
 
@@ -423,20 +430,21 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
               </div>
             }
           >
-            <div className="w-56 p-2 space-y-3">
+            <div className="w-72 p-2 space-y-4 max-h-[400px] overflow-y-auto custom-scrollbar">
               <div>
-                <p className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-2 px-1">Common Symbols</p>
-                <div className="grid grid-cols-4 gap-1">
+                <p className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-2 px-1">Greek & Notations</p>
+                <div className="grid grid-cols-6 gap-1">
                   {[
-                    { s: 'α', t: 'Alpha' }, { s: 'β', t: 'Beta' }, { s: 'Δ', t: 'Delta' }, { s: 'λ', t: 'Lambda' },
-                    { s: 'μ', t: 'Mu' }, { s: 'π', t: 'Pi' }, { s: 'σ', t: 'Sigma' }, { s: 'ω', t: 'Omega' },
-                    { s: '×', t: 'Multiply' }, { s: '±', t: 'Plus-Minus' }, { s: 'Å', t: 'Angstrom' }, { s: '∞', t: 'Infinity' }
-                  ].map(({ s, t }) => (
+                    'α', 'β', 'Δ', 'λ', 'μ', 'π',
+                    'σ', 'ω', 'γ', 'θ', 'ρ', 'τ',
+                    'φ', 'χ', 'ψ', 'ζ', 'Å', '∞',
+                    '±', '×', '→', '⇌', '≈', '≠',
+                    '°', '′', '″', '≤', '≥', '∝'
+                  ].map(s => (
                     <button
                       key={s}
                       onClick={() => insertSymbol(s)}
-                      title={t}
-                      className="p-2 text-sm text-neutral-300 hover:bg-neutral-800 hover:text-white rounded transition-colors"
+                      className="p-1.5 text-sm text-neutral-300 hover:bg-neutral-800 hover:text-white rounded transition-colors"
                     >
                       {s}
                     </button>
@@ -445,6 +453,22 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
               </div>
 
               <div className="pt-2 border-t border-neutral-800">
+                <p className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-2 px-1">Lab Units & Constants</p>
+                <div className="flex flex-wrap gap-1">
+                  {['mol/L', 'mM', 'nm', 'μm', '°C', 'K', 'R', 'kB'].map(unit => (
+                    <button
+                      key={unit}
+                      onClick={() => insertSymbol(unit)}
+                      className="px-2 py-1 text-[10px] bg-neutral-800 text-neutral-300 hover:bg-neutral-700 hover:text-white rounded transition-colors"
+                    >
+                      {unit}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="pt-2 border-t border-neutral-800">
+                <p className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-2 px-1">Quick Tools</p>
                 <button 
                   onClick={insertTimestamp}
                   className="w-full flex items-center gap-2.5 px-2 py-2 text-xs text-neutral-300 hover:bg-neutral-800 rounded-md transition-colors"
@@ -452,13 +476,22 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
                   <Clock className="w-3.5 h-3.5 text-blue-400" />
                   <span>Insert Timestamp</span>
                 </button>
-                <button 
-                  onClick={formatChemicalFormula}
-                  className="w-full flex items-center gap-2.5 px-2 py-2 text-xs text-neutral-300 hover:bg-neutral-800 rounded-md transition-colors"
-                >
-                  <Binary className="w-3.5 h-3.5 text-blue-400" />
-                  <span>Chemical Formula</span>
-                </button>
+                <div className="mt-1 space-y-0.5">
+                  <button 
+                    onClick={() => insertTemplate('setup')}
+                    className="w-full flex items-center gap-2.5 px-2 py-2 text-xs text-neutral-300 hover:bg-neutral-800 rounded-md transition-colors"
+                  >
+                    <FileText className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Experiment Setup</span>
+                  </button>
+                  <button 
+                    onClick={() => insertTemplate('protocol')}
+                    className="w-full flex items-center gap-2.5 px-2 py-2 text-xs text-neutral-300 hover:bg-neutral-800 rounded-md transition-colors"
+                  >
+                    <FileText className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Quick Protocol</span>
+                  </button>
+                </div>
               </div>
             </div>
           </Dropdown>
