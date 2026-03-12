@@ -88,82 +88,79 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode }: any) =>
 
       <style>{`
         .spreadsheet-table-container {
-          overflow-x: auto;
           background: #ffffff;
           border-radius: 8px;
           border: 1px solid #e5e5e5;
           margin: 1rem 0;
+          overflow: hidden; /* Controls the outer radius */
         }
         .spreadsheet-table-container table {
           margin: 0 !important;
           border-spacing: 0;
           border-collapse: collapse;
-          display: block;
-          width: fit-content;
-          min-width: 100%;
-        }
-        .spreadsheet-table-container thead,
-        .spreadsheet-table-container tbody {
-          display: block;
+          table-layout: auto; /* Changed to auto to allow min-width to work */
           width: 100%;
+          min-width: 100%;
+          display: table !important;
+        }
+        .spreadsheet-table-container thead {
+          display: table-header-group !important;
+        }
+        .spreadsheet-table-container tbody {
+          display: table-row-group !important;
+          counter-reset: spreadsheet-row;
         }
         .spreadsheet-table-container tr {
-          display: flex !important;
+          display: table-row !important;
           border-bottom: 1px solid #e5e5e5;
-          min-width: 100%;
         }
         .spreadsheet-table-container th, 
         .spreadsheet-table-container td {
           border-right: 1px solid #e5e5e5 !important;
-          padding: 10px 14px !important;
-          min-width: 120px; /* Strong minimum width */
-          flex: 1 0 120px;
-          min-height: 44px;
+          padding: 8px 12px !important;
+          min-width: 120px;
+          height: 40px;
           position: relative;
           color: #171717;
-          display: flex;
-          align-items: center;
+          vertical-align: middle;
+          display: table-cell !important;
         }
         .spreadsheet-table-container th {
           background: #f8f9fa;
-          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+          font-family: ui-monospace, monospace;
           font-size: 11px;
           font-weight: 700;
           color: #737373;
-          justify-content: center;
+          text-align: center;
           text-transform: uppercase;
         }
-        /* Row Indication using Flex Item */
+        /* Row Indication using Table Cell Pseudo */
         .spreadsheet-table-container tr::before {
           content: counter(spreadsheet-row);
           counter-increment: spreadsheet-row;
-          width: 48px;
-          min-width: 48px;
+          display: table-cell !important;
+          width: 44px;
+          min-width: 44px;
           background: #f8f9fa;
-          border-right: 2px solid #e5e5e5;
-          display: flex;
-          align-items: center;
-          justify-content: center;
+          border-right: 2px solid #e5e5e5 !important;
+          vertical-align: middle;
+          text-align: center;
           font-family: ui-monospace, monospace;
           font-size: 11px;
           font-weight: 800;
           color: #737373;
-          flex-shrink: 0;
-          z-index: 5;
+          user-select: none;
+          pointer-events: none;
         }
         .spreadsheet-table-container thead tr::before {
           content: "";
           counter-increment: none;
-        }
-        .spreadsheet-tbody {
-          counter-reset: spreadsheet-row;
         }
         .spreadsheet-table-container td p {
           margin: 0 !important;
           font-size: 13px;
           color: #171717;
           line-height: 1.5;
-          width: 100%;
         }
         .spreadsheet-table-container .ProseMirror-selectednode table {
           outline: 2px solid #3b82f6 !important;
@@ -171,7 +168,7 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode }: any) =>
         }
         .spreadsheet-table-container .selectedCell:after {
           background: rgba(59, 130, 246, 0.05) !important;
-          border: 2px solid #3b82f6 !important;
+          border: 1px solid #3b82f6 !important;
           z-index: 30;
           content: "";
           position: absolute;
