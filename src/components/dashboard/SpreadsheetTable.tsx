@@ -2,7 +2,7 @@ import { NodeViewContent, NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap
 import { Table } from '@tiptap/extension-table'
 import { useState, useMemo, useEffect } from 'react'
 import { 
-  Plus, Trash2, Download, Maximize2, Settings, 
+  Trash2, Download, Maximize2, Settings, 
   Bold, Italic, Underline as UnderlineIcon, Strikethrough, 
   AlignLeft, AlignCenter, AlignRight, Link as LinkIcon, Type,
   ChevronDown, Activity
