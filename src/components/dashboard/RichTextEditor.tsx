@@ -11,13 +11,13 @@ import Highlight from '@tiptap/extension-highlight';
 import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
 import Placeholder from '@tiptap/extension-placeholder';
-import { Table } from '@tiptap/extension-table';
 import { TableRow } from '@tiptap/extension-table-row';
 import { TableHeader } from '@tiptap/extension-table-header';
 import { TableCell } from '@tiptap/extension-table-cell';
 import { Markdown } from 'tiptap-markdown';
 import Mention from '@tiptap/extension-mention';
 import { HexColorPicker } from 'react-colorful';
+import { SpreadsheetTable } from './SpreadsheetTable';
 import { createSuggestion } from './suggestion';
 import { 
   Bold, Italic, Underline as UnderlineIcon, Strikethrough, 
@@ -180,7 +180,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       Placeholder.configure({
         placeholder,
       }),
-      Table.configure({
+      SpreadsheetTable.configure({
         resizable: true,
       }),
       TableRow,
@@ -195,10 +195,10 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
           class: 'mention',
         },
         suggestion: createSuggestion(allStructures),
-        renderText({ node }) {
+        renderText({ node }: { node: any }) {
           return `[[structure:${node.attrs.id}]]`;
         },
-        renderHTML({ node }) {
+        renderHTML({ node }: { node: any }) {
           return [
             'span',
             { 'data-type': 'mention', 'data-id': node.attrs.id, class: 'mention' },
