@@ -51,9 +51,8 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode }: any) =>
             <table className="spreadsheet-table relative border-collapse">
               <thead>
                 <tr>
-                  <th className="bg-neutral-800/30 border border-neutral-800 w-10 min-w-[40px] h-10"></th>
                   {Array.from({ length: cols }).map((_, i) => (
-                    <th key={i} className="bg-neutral-800/30 border border-neutral-800 min-w-[100px] h-10 text-[10px] font-bold text-neutral-500 uppercase font-mono">
+                    <th key={i}>
                       {letters[i] || `C${i + 1}`}
                     </th>
                   ))}
@@ -88,23 +87,42 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode }: any) =>
       </div>
 
       <style>{`
+        .spreadsheet-table-container {
+          overflow-x: auto;
+          background: #ffffff;
+          border-radius: 8px;
+          border: 1px solid #e5e5e5;
+          margin: 1rem 0;
+        }
         .spreadsheet-table-container table {
           margin: 0 !important;
-          width: 100% !important;
-          background: #ffffff;
           border-spacing: 0;
-          border-collapse: separate;
+          border-collapse: collapse;
+          display: block;
+          width: fit-content;
+          min-width: 100%;
+        }
+        .spreadsheet-table-container thead,
+        .spreadsheet-table-container tbody {
+          display: block;
+          width: 100%;
         }
         .spreadsheet-table-container tr {
-          display: table-row;
+          display: flex !important;
+          border-bottom: 1px solid #e5e5e5;
+          min-width: 100%;
         }
         .spreadsheet-table-container th, 
         .spreadsheet-table-container td {
-          border: 1px solid #e5e5e5 !important;
-          padding: 8px 12px !important;
-          min-width: 100px;
-          min-height: 40px;
+          border-right: 1px solid #e5e5e5 !important;
+          padding: 10px 14px !important;
+          min-width: 120px; /* Strong minimum width */
+          flex: 1 0 120px;
+          min-height: 44px;
           position: relative;
+          color: #171717;
+          display: flex;
+          align-items: center;
         }
         .spreadsheet-table-container th {
           background: #f8f9fa;
@@ -112,50 +130,53 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode }: any) =>
           font-size: 11px;
           font-weight: 700;
           color: #737373;
-          text-align: center;
+          justify-content: center;
           text-transform: uppercase;
         }
-        /* Row Indication Column */
-        .spreadsheet-table-container td:first-child, 
-        .spreadsheet-table-container th:first-child {
-          width: 40px;
-          min-width: 40px;
-          max-width: 40px;
+        /* Row Indication using Flex Item */
+        .spreadsheet-table-container tr::before {
+          content: counter(spreadsheet-row);
+          counter-increment: spreadsheet-row;
+          width: 48px;
+          min-width: 48px;
           background: #f8f9fa;
-          border-right: 2px solid #e5e5e5 !important;
-          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+          border-right: 2px solid #e5e5e5;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-family: ui-monospace, monospace;
           font-size: 11px;
-          font-weight: 700;
+          font-weight: 800;
           color: #737373;
-          text-align: center;
-          pointer-events: none;
-          user-select: none;
+          flex-shrink: 0;
+          z-index: 5;
+        }
+        .spreadsheet-table-container thead tr::before {
+          content: "";
+          counter-increment: none;
+        }
+        .spreadsheet-tbody {
+          counter-reset: spreadsheet-row;
         }
         .spreadsheet-table-container td p {
           margin: 0 !important;
           font-size: 13px;
           color: #171717;
           line-height: 1.5;
+          width: 100%;
         }
         .spreadsheet-table-container .ProseMirror-selectednode table {
           outline: 2px solid #3b82f6 !important;
           outline-offset: -2px;
         }
         .spreadsheet-table-container .selectedCell:after {
-          background: rgba(59, 130, 246, 0.1) !important;
+          background: rgba(59, 130, 246, 0.05) !important;
           border: 2px solid #3b82f6 !important;
           z-index: 30;
-        }
-        .spreadsheet-tbody {
-          counter-reset: spreadsheet-row;
-        }
-        /* Automagically insert row numbers in the first column of each row (handles both td and th) */
-        .spreadsheet-table-container tbody tr td:first-child::before,
-        .spreadsheet-table-container tbody tr th:first-child::before {
-          counter-increment: spreadsheet-row;
-          content: counter(spreadsheet-row);
-          display: block;
-          text-align: center;
+          content: "";
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
         }
       `}</style>
     </NodeViewWrapper>
