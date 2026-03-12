@@ -3,12 +3,31 @@
 
 @layer base {
   :root {
-    color-scheme: dark;
+    --bg-main: theme('colors.neutral.950');
+    --bg-header: theme('colors.neutral.900');
+    --bg-sidebar: theme('colors.neutral.900');
+    --border-main: theme('colors.neutral.800');
+    --text-primary: theme('colors.neutral.100');
+    --text-secondary: theme('colors.neutral.400');
+    --text-muted: theme('colors.neutral.500');
+    --input-bg: theme('colors.neutral.800');
+  }
+
+  .light {
+    --bg-main: theme('colors.neutral.50');
+    --bg-header: theme('colors.white');
+    --bg-sidebar: theme('colors.white');
+    --border-main: theme('colors.neutral.200');
+    --text-primary: theme('colors.neutral.900');
+    --text-secondary: theme('colors.neutral.600');
+    --text-muted: theme('colors.neutral.400');
+    --input-bg: theme('colors.neutral.100');
   }
 
   body {
-    @apply text-neutral-100 m-0 overflow-hidden w-screen h-screen fixed inset-0;
-    background-color: var(--body-bg, theme('colors.neutral.900'));
+    @apply m-0 overflow-hidden w-screen h-screen fixed inset-0 transition-colors duration-300;
+    color: var(--text-primary);
+    background-color: var(--bg-main);
     font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   }
 

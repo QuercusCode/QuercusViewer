@@ -17,7 +17,7 @@ export const DashboardLayout = () => {
     }, [pathname]);
 
     return (
-        <div className="absolute inset-0 w-full h-full flex bg-neutral-950 flex-col md:flex-row font-sans overflow-hidden">
+        <div className="absolute inset-0 w-full h-full flex bg-[var(--bg-main)] flex-col md:flex-row font-sans overflow-hidden transition-colors duration-300">
             <DashboardSidebar 
                 isCollapsed={isSidebarCollapsed} 
                 onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)} 
