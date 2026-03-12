@@ -10,7 +10,7 @@ import {
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#ef4444', '#06b6d4', '#84cc16'];
 
-const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode }: any) => {
+const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode, updateAttributes }: any) => {
   const [rowCount, setRowCount] = useState(1);
   const [activeCell, setActiveCell] = useState<string | null>(null);
   const [cellValue, setCellValue] = useState("");
@@ -27,6 +27,59 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode }: any) =>
     seriesColors: { 1: '#3b82f6' }
   });
   const [numericCols, setNumericCols] = useState<number[]>([]);
+
+  // Generate unique ID for table if not present for linking with charts
+  useEffect(() => {
+    if (!node.attrs.id && updateAttributes) {
+      updateAttributes({ id: crypto.randomUUID() });
+    }
+  }, [node.attrs.id, updateAttributes]);
+
+  // Sync linked charts whenever table data changes
+  useEffect(() => {
+    if (!node.attrs.id || !editor) return;
+
+    const timer = setTimeout(() => {
+      const tableData: any[] = [];
+      const headerRow = node.firstChild;
+      if (!headerRow) return;
+
+      const lettersArr = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+      const headers: string[] = [];
+      headerRow.forEach((cell: any, _: any, i: number) => {
+        headers.push(cell.textContent.trim() || lettersArr[i] || `Col ${i + 1}`);
+      });
+
+      for (let r = 1; r < node.childCount; r++) {
+        const row = node.child(r);
+        const rowData: any = {};
+        let hasData = false;
+        row.forEach((cell: any, _: any, i: number) => {
+          const val = cell.textContent.trim();
+          const numVal = parseFloat(val);
+          rowData[headers[i]] = !isNaN(numVal) ? numVal : val;
+          if (val) hasData = true;
+        });
+        if (hasData) tableData.push(rowData);
+      }
+
+      // Find and update charts linked to this table
+      editor.state.doc.descendants((n: any, pos: number) => {
+        if (n.type.name === 'inlineChart' && n.attrs.tableId === node.attrs.id) {
+          // Avoid unnecessary updates if data hasn't actually changed
+          if (JSON.stringify(n.attrs.data) !== JSON.stringify(tableData)) {
+            editor.commands.setNodeMarkup(pos, undefined, {
+              ...n.attrs,
+              data: tableData
+            });
+          }
+        }
+        return true;
+      });
+    }, 1000); // 1s throttle to prevent excessive updates during typing
+
+    return () => clearTimeout(timer);
+  }, [node, editor]);
   
   const rows = node.childCount;
   const cols = node.firstChild ? node.firstChild.childCount : 0;
@@ -199,7 +252,8 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode }: any) =>
           title: `Comparison Chart from ${node.attrs.title || 'Table'}`,
           xAxis,
           yAxes,
-          customColors
+          customColors,
+          tableId: node.attrs.id
         }
       })
       .run();
@@ -568,6 +622,21 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode }: any) =>
 const ToolbarDivider = () => <div className="w-px h-4 bg-neutral-200 mx-1" />
 
 export const SpreadsheetTable = Table.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      id: {
+        default: null,
+        parseHTML: element => element.getAttribute('data-id'),
+        renderHTML: attributes => {
+          return {
+            'data-id': attributes.id,
+          }
+        },
+      },
+    }
+  },
+
   addNodeView() {
     return ReactNodeViewRenderer(SpreadsheetTableComponent)
   },

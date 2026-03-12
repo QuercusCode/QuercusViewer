@@ -201,6 +201,9 @@ export const InlineChart = Node.create({
       customColors: {
         default: [],
       },
+      tableId: {
+        default: '',
+      },
     }
   },
 
