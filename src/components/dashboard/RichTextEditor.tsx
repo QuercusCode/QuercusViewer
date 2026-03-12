@@ -112,14 +112,14 @@ const TableGridPicker: React.FC<{
   const max = 8;
 
   return (
-    <div className="p-3 bg-neutral-900 rounded-lg shadow-2xl border border-neutral-800">
-      <div className="flex items-center justify-between mb-3 px-1">
-        <span className="text-[10px] uppercase tracking-wider font-bold text-neutral-500">Table Size</span>
-        <span className="text-xs font-bold text-blue-400">
-          {hovered.r > 0 ? `${hovered.r} x ${hovered.c}` : 'Select'}
+    <div className="p-3 bg-neutral-900 rounded-lg shadow-2xl border border-neutral-800 select-none">
+      <div className="flex items-center justify-between gap-4 mb-3 px-0.5">
+        <span className="text-[9px] uppercase tracking-tighter font-black text-neutral-500 whitespace-nowrap">Table Size</span>
+        <span className="text-xs font-mono font-bold text-blue-400 bg-blue-500/10 px-1.5 rounded">
+          {hovered.r > 0 ? `${hovered.r} x ${hovered.c}` : '0 x 0'}
         </span>
       </div>
-      <div className="grid grid-cols-8 gap-1.5 p-1 bg-neutral-950 rounded border border-neutral-800/50">
+      <div className="grid grid-cols-8 gap-1 p-1 bg-neutral-950 rounded border border-neutral-800/30">
         {Array.from({ length: max * max }).map((_, i) => {
           const r = Math.floor(i / max) + 1;
           const c = (i % max) + 1;
@@ -129,10 +129,10 @@ const TableGridPicker: React.FC<{
               key={i}
               onMouseEnter={() => setHovered({ r, c })}
               onClick={() => onSelect(r, c)}
-              className={`w-4 h-4 rounded-sm border transition-all duration-150 cursor-pointer ${
+              className={`w-3.5 h-3.5 rounded-sm border transition-all duration-75 cursor-pointer ${
                 isActive 
-                  ? 'bg-blue-500/40 border-blue-400 scale-110 z-10' 
-                  : 'bg-neutral-800/50 border-neutral-700/50 hover:border-neutral-500'
+                  ? 'bg-blue-500 border-blue-400 z-10' 
+                  : 'bg-neutral-800/30 border-neutral-700/50 hover:border-neutral-500'
               }`}
             />
           );
@@ -517,11 +517,13 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
                   </div>
                   <ChevronDown className="w-3 h-3 -rotate-90 opacity-50" />
                 </button>
-                <div className="absolute right-full top-0 mr-1 hidden group-hover/sub:block">
-                  <TableGridPicker onSelect={(r, c) => {
-                    editor.chain().focus().insertTable({ rows: r, cols: c, withHeaderRow: true }).run();
-                    setActiveMenu(null);
-                  }} />
+                <div className="absolute right-full top-0 pr-1 hidden group-hover/sub:block">
+                  <div className="pr-1 pt-1 -mt-1"> {/* Subtle bridge to prevent mouse-leave */}
+                    <TableGridPicker onSelect={(r, c) => {
+                      editor.chain().focus().insertTable({ rows: r, cols: c, withHeaderRow: true }).run();
+                      setActiveMenu(null);
+                    }} />
+                  </div>
                 </div>
               </div>
 
@@ -534,19 +536,21 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
                   </div>
                   <ChevronDown className="w-3 h-3 rotate-90 opacity-50" />
                 </button>
-                <div className="absolute right-full top-0 mr-1 hidden group-hover/sub:block min-w-[160px] bg-neutral-900 border border-neutral-800 rounded-lg shadow-xl p-1">
-                  <button 
-                    onClick={() => insertTemplate('well96')}
-                    className="w-full text-left px-3 py-2 text-xs text-neutral-300 hover:bg-neutral-800 rounded-md"
-                  >
-                    96-well (8x12)
-                  </button>
-                  <button 
-                    onClick={() => insertTemplate('well384')}
-                    className="w-full text-left px-3 py-2 text-xs text-neutral-300 hover:bg-neutral-800 rounded-md"
-                  >
-                    384-well (16x24)
-                  </button>
+                <div className="absolute right-full top-0 pr-1 hidden group-hover/sub:block min-w-[160px]">
+                  <div className="pr-1 pt-1 -mt-1 bg-neutral-900 border border-neutral-800 rounded-lg shadow-xl p-1">
+                    <button 
+                      onClick={() => insertTemplate('well96')}
+                      className="w-full text-left px-3 py-2 text-xs text-neutral-300 hover:bg-neutral-800 rounded-md"
+                    >
+                      96-well (8x12)
+                    </button>
+                    <button 
+                      onClick={() => insertTemplate('well384')}
+                      className="w-full text-left px-3 py-2 text-xs text-neutral-300 hover:bg-neutral-800 rounded-md"
+                    >
+                      384-well (16x24)
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -586,8 +590,9 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
                   </div>
                   <ChevronDown className="w-3 h-3 rotate-90 opacity-50" />
                 </button>
-                <div className="absolute right-full top-0 mr-1 hidden group-hover/sub:block min-w-[200px] bg-neutral-900 border border-neutral-800 rounded-lg shadow-xl p-2 h-64 overflow-y-auto custom-scrollbar">
-                  <div className="grid grid-cols-5 gap-1">
+                <div className="absolute right-full top-0 pr-1 hidden group-hover/sub:block min-w-[200px]">
+                  <div className="pr-1 pt-1 -mt-1 bg-neutral-900 border border-neutral-800 rounded-lg shadow-xl p-2 h-64 overflow-y-auto custom-scrollbar">
+                    <div className="grid grid-cols-5 gap-1">
                     {[
                       'α', 'β', 'Δ', 'λ', 'μ', 'π', 'σ', 'ω', 'γ', 'θ', 
                       'ρ', 'τ', 'φ', 'χ', 'ψ', 'ζ', 'Å', '∞', '±', '×', 
@@ -601,6 +606,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
                         {s}
                       </button>
                     ))}
+                    </div>
                   </div>
                 </div>
               </div>
