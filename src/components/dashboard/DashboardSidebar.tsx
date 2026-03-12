@@ -30,7 +30,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isCollapsed,
     ];
 
     return (
-        <aside className={`${isCollapsed ? 'w-20' : 'w-64'} bg-[var(--bg-sidebar)] border-r border-[var(--border-main)] hidden md:flex flex-col h-screen shrink-0 sticky top-0 transition-all duration-300 ease-in-out z-10`}>
+        <aside className={`${isCollapsed ? 'w-20' : 'w-64'} bg-[var(--bg-sidebar)] border-r border-[var(--border-main)] hidden md:flex flex-col h-screen shrink-0 sticky top-0 transition-all duration-300 ease-in-out z-50`}>
             {/* Logo / App Name */}
             <div className={`h-16 flex items-center px-5 border-b border-[var(--border-main)] justify-between gap-3 ${isCollapsed ? 'px-0 justify-center' : ''}`}>
                 <div className="flex items-center gap-3 overflow-hidden">

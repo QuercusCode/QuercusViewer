@@ -18,7 +18,7 @@ export const DashboardHeader = () => {
     const { title, subtitle } = page?.[1] ?? { title: 'Dashboard', subtitle: '' };
 
     return (
-        <header className="h-16 bg-[var(--bg-header)] border-b border-[var(--border-main)] px-6 md:px-8 flex items-center justify-between shrink-0 sticky top-0 z-10 transition-colors duration-300">
+        <header className="h-16 bg-[var(--bg-header)] border-b border-[var(--border-main)] px-6 md:px-8 flex items-center justify-between shrink-0 sticky top-0 z-50 transition-colors duration-300">
             {/* Page Title */}
             <div className="flex flex-col justify-center">
                 <h1 className="text-base font-semibold text-[var(--text-primary)] leading-tight">{title}</h1>

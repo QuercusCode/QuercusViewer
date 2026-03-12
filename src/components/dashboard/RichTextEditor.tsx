@@ -314,7 +314,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   };
 
   return (
-    <div className="flex flex-col w-full h-full bg-[var(--bg-main)] rounded-xl focus-within:border-neutral-700 transition-colors">
+    <div className="flex flex-col w-full h-full bg-[var(--bg-main)] rounded-xl focus-within:border-neutral-700 transition-colors overflow-hidden">
       {/* TOOLBAR */}
       <div className="flex items-center flex-wrap gap-0.5 p-1 bg-[var(--bg-header)] border-b border-[var(--border-main)] sticky top-0 z-20 rounded-t-xl">
         {/* History */}
@@ -607,7 +607,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
                 </button>
                 <div className="absolute right-full top-[-10px] bottom-[-10px] pr-2 -mr-2 hidden group-hover/sub:block z-50 min-w-[240px]">
                   <div className="h-full flex items-start pt-[10px]">
-                    <div className="bg-[var(--bg-sidebar)] border border-[var(--border-main)] rounded-[20px] shadow-[0_30px_90px_rgba(0,0,0,0.7)] p-4 h-80 overflow-y-auto custom-scrollbar">
+                    <div className="bg-[var(--bg-sidebar)] border border-[var(--border-main)] rounded-[20px] shadow-[0_30px_90px_rgba(0,0,0,0.7)] p-4 h-80 overflow-y-auto custom-scrollbar z-50">
                       <div className="grid grid-cols-5 gap-2">
                         {[
                           'α', 'β', 'Δ', 'λ', 'μ', 'π', 'σ', 'ω', 'γ', 'θ', 
