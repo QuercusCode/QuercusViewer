@@ -31,7 +31,9 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode, updateAtt
   // Generate unique ID for table if not present for linking with charts
   useEffect(() => {
     if (!node.attrs.id && updateAttributes) {
-      updateAttributes({ id: crypto.randomUUID() });
+      // Use a more reliable ID generation or fallback
+      const newId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `table-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      updateAttributes({ id: newId });
     }
   }, [node.attrs.id, updateAttributes]);
 
@@ -50,7 +52,8 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode, updateAtt
         if (typeof currentPos !== 'number') return;
 
         const latestNode = editor.state.doc.nodeAt(currentPos);
-        if (!latestNode || latestNode.type.name !== 'spreadsheetTable' || latestNode.attrs.id !== node.attrs.id) return;
+        // Important: check both potential names ('table' or 'spreadsheetTable')
+        if (!latestNode || (latestNode.type.name !== 'spreadsheetTable' && latestNode.type.name !== 'table') || latestNode.attrs.id !== node.attrs.id) return;
 
         const tableData: any[] = [];
         const headerRow = latestNode.firstChild;
@@ -78,16 +81,45 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode, updateAtt
         // Find and update charts linked to this table
         editor.state.doc.descendants((n: any, pos: number) => {
           if (n.type.name === 'inlineChart' && n.attrs.tableId === latestNode.attrs.id) {
+            const chartUpdates: any = {};
+            let hasChanges = false;
+
+            // 1. Update Data
             if (JSON.stringify(n.attrs.data) !== JSON.stringify(tableData)) {
+              chartUpdates.data = tableData;
+              hasChanges = true;
+            }
+
+            // 2. Handle Header Changes
+            // Find current column names in the spreadsheet
+            const spreadsheetHeaders: string[] = [];
+            const hRow = latestNode.firstChild;
+            if (hRow) {
+              const lArr = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+              hRow.forEach((cell: any, _: any, i: number) => {
+                spreadsheetHeaders.push(cell.textContent.trim() || lArr[i] || `Col ${i + 1}`);
+              });
+            }
+
+            // If we have a reference to the source column indices, we could be more precise.
+            // For now, we'll try to find if the old axis name exists. If not, we might need to assume it shifted or changed.
+            // But actually, we already have tableData with NEW headers.
+            // If the chart's xAxis or yAxes don't exist in the NEW spreadsheetHeaders, 
+            // it means they were likely renamed.
+            
+            // This is complex without index tracking. For now, let's at least ensure data is synced.
+            // If the user changed a value, headers[i] is still headers[i].
+
+            if (hasChanges) {
               editor.commands.setNodeMarkup(pos, undefined, {
                 ...n.attrs,
-                data: tableData
+                ...chartUpdates
               });
             }
           }
           return true;
         });
-      }, 800); // Slightly faster throttle for better real-time feel
+      }, 500); // Faster response
     };
 
     editor.on('update', handleUpdate);
@@ -638,15 +670,17 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode, updateAtt
 const ToolbarDivider = () => <div className="w-px h-4 bg-neutral-200 mx-1" />
 
 export const SpreadsheetTable = Table.extend({
+  name: 'spreadsheetTable',
   addAttributes() {
     return {
       ...this.parent?.(),
       id: {
         default: null,
-        parseHTML: element => element.getAttribute('data-id'),
+        parseHTML: element => element.getAttribute('data-table-id'),
         renderHTML: attributes => {
+          if (!attributes.id) return {}
           return {
-            'data-id': attributes.id,
+            'data-table-id': attributes.id,
           }
         },
       },

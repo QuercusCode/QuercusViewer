@@ -232,27 +232,68 @@ export const InlineChart = Node.create({
     return {
       data: {
         default: [],
+        parseHTML: element => {
+          const raw = element.getAttribute('data-chart-data')
+          try { return raw ? JSON.parse(raw) : [] } catch { return [] }
+        },
+        renderHTML: attributes => ({
+          'data-chart-data': JSON.stringify(attributes.data),
+        }),
       },
       type: {
         default: 'line', // 'line' | 'bar'
+        parseHTML: element => element.getAttribute('data-chart-type') || 'line',
+        renderHTML: attributes => ({
+          'data-chart-type': attributes.type,
+        }),
       },
       title: {
         default: '',
+        parseHTML: element => element.getAttribute('data-chart-title') || '',
+        renderHTML: attributes => ({
+          'data-chart-title': attributes.title,
+        }),
       },
       xAxis: {
         default: '',
+        parseHTML: element => element.getAttribute('data-chart-xaxis') || '',
+        renderHTML: attributes => ({
+          'data-chart-xaxis': attributes.xAxis,
+        }),
       },
       yAxis: {
         default: '',
+        parseHTML: element => element.getAttribute('data-chart-yaxis') || '',
+        renderHTML: attributes => ({
+          'data-chart-yaxis': attributes.yAxis,
+        }),
       },
       yAxes: {
         default: [],
+        parseHTML: element => {
+          const raw = element.getAttribute('data-chart-yaxes')
+          try { return raw ? JSON.parse(raw) : [] } catch { return [] }
+        },
+        renderHTML: attributes => ({
+          'data-chart-yaxes': JSON.stringify(attributes.yAxes),
+        }),
       },
       customColors: {
         default: [],
+        parseHTML: element => {
+          const raw = element.getAttribute('data-chart-colors')
+          try { return raw ? JSON.parse(raw) : [] } catch { return [] }
+        },
+        renderHTML: attributes => ({
+          'data-chart-colors': JSON.stringify(attributes.customColors),
+        }),
       },
       tableId: {
         default: '',
+        parseHTML: element => element.getAttribute('data-table-id') || '',
+        renderHTML: attributes => ({
+          'data-table-id': attributes.tableId,
+        }),
       },
     }
   },
