@@ -120,3 +120,32 @@ ul[data-type="taskList"] li > div {
 ul[data-type="taskList"] input[type="checkbox"] {
   @apply w-4 h-4 rounded border-neutral-700 bg-neutral-900 text-blue-500 focus:ring-blue-500 focus:ring-offset-neutral-950 cursor-pointer;
 }
+
+/* Tiptap Table Styles */
+.tiptap table {
+  border-collapse: collapse;
+  margin: 1rem 0;
+  overflow: hidden;
+  table-layout: fixed;
+  width: 100%;
+}
+
+.tiptap table td,
+.tiptap table th {
+  border: 1px solid #404040;
+  box-sizing: border-box;
+  min-width: 1em;
+  padding: 6px 8px;
+  position: relative;
+  vertical-align: top;
+}
+
+.tiptap table th {
+  background-color: #1a1a1a;
+  font-weight: bold;
+  text-align: left;
+}
+
+.tiptap table p {
+  margin: 0;
+}

@@ -11,6 +11,10 @@ import Highlight from '@tiptap/extension-highlight';
 import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
 import Placeholder from '@tiptap/extension-placeholder';
+import { Table } from '@tiptap/extension-table';
+import { TableRow } from '@tiptap/extension-table-row';
+import { TableHeader } from '@tiptap/extension-table-header';
+import { TableCell } from '@tiptap/extension-table-cell';
 import { Markdown } from 'tiptap-markdown';
 import Mention from '@tiptap/extension-mention';
 import { HexColorPicker } from 'react-colorful';
@@ -22,7 +26,7 @@ import {
   Type, ChevronDown, MoreHorizontal,
   Subscript as SubscriptIcon, Superscript as SuperscriptIcon,
   Highlighter, Eraser, FlaskConical, Clock, FileText,
-  Table, ShieldCheck, Activity
+  Table as TableIcon, ShieldCheck, Activity
 } from 'lucide-react';
 import type { Structure } from '../../lib/structuresService';
 
@@ -130,6 +134,12 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       Placeholder.configure({
         placeholder,
       }),
+      Table.configure({
+        resizable: true,
+      }),
+      TableRow,
+      TableHeader,
+      TableCell,
       Markdown.configure({
         html: false,
         tightLists: true,
@@ -514,14 +524,14 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
                     onClick={() => insertTemplate('table3x3')}
                     className="flex items-center gap-2 px-2 py-2 text-xs text-neutral-300 hover:bg-neutral-800 rounded-md transition-colors"
                   >
-                    <Table className="w-3.5 h-3.5 text-orange-400" />
+                    <TableIcon className="w-3.5 h-3.5 text-orange-400" />
                     <span>3x3 Table</span>
                   </button>
                   <button 
                     onClick={() => insertTemplate('table4x4')}
                     className="flex items-center gap-2 px-2 py-2 text-xs text-neutral-300 hover:bg-neutral-800 rounded-md transition-colors"
                   >
-                    <Table className="w-3.5 h-3.5 text-orange-400" />
+                    <TableIcon className="w-3.5 h-3.5 text-orange-400" />
                     <span>4x4 Table</span>
                   </button>
                 </div>
