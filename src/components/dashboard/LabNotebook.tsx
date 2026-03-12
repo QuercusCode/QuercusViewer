@@ -1,13 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../lib/AuthContext';
-import { NotebookPen, Plus, Trash2, Save, FileText, Search, Code, Eye, Loader2, X, Menu } from 'lucide-react';
+import { NotebookPen, Plus, Trash2, Save, FileText, Search, Loader2, X, Menu } from 'lucide-react';
 import { listNotebooks, createNotebook, updateNotebook, deleteNotebook } from '../../lib/notebookService';
 import type { NotebookEntry } from '../../types';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 import { listStructures, type Structure } from '../../lib/structuresService';
-import { StructureMentionDropdown } from './StructureMentionDropdown';
-import { StructurePreviewCard } from './StructurePreviewCard';
+import { RichTextEditor } from './RichTextEditor';
 import { LabReportTemplate } from './LabReportTemplate';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -27,18 +24,12 @@ export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false
     const [editContent, setEditContent] = useState('');
     const [isSaving, setIsSaving] = useState(false);
     const [lastSaved, setLastSaved] = useState<Date | null>(null);
-    const [viewMode, setViewMode] = useState<'write' | 'preview'>('write');
     const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-    const textareaRef = useRef<HTMLTextAreaElement>(null);
-
     const [isExporting, setIsExporting] = useState(false);
     const reportRef = useRef<HTMLDivElement>(null);
 
     // Structure Mentions State
     const [allStructures, setAllStructures] = useState<Structure[]>([]);
-    const [mentionQuery, setMentionQuery] = useState<string | null>(null);
-    const [mentionPosition, setMentionPosition] = useState({ top: 0, left: 0 });
-    const [mentionStartIndex, setMentionStartIndex] = useState(-1);
 
     const [showDrawerList, setShowDrawerList] = useState(isDrawer);
 
@@ -109,10 +100,7 @@ export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false
     // Auto-save logic
     const handleEditorChange = (field: 'title' | 'content', value: string) => {
         if (field === 'title') setEditTitle(value);
-        if (field === 'content') {
-            setEditContent(value);
-            handleMentionLogic(value);
-        }
+        if (field === 'content') setEditContent(value);
 
         // Optimistically update the list view so the sidebar reflects changes immediately
         setNotebooks(prev => prev.map(n => n.id === activeId ? { ...n, [field]: value, updated_at: new Date().toISOString() } : n));
@@ -131,76 +119,6 @@ export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false
                 setIsSaving(false);
             }
         }, 1000); // 1s debounce
-    };
-
-    const handleMentionLogic = (content: string) => {
-        const textarea = textareaRef.current;
-        if (!textarea) return;
-
-        const cursorPosition = textarea.selectionStart;
-        const textBeforeCursor = content.substring(0, cursorPosition);
-        const lastAt = textBeforeCursor.lastIndexOf('@');
-
-        if (lastAt !== -1 && (lastAt === 0 || textBeforeCursor[lastAt - 1] === ' ' || textBeforeCursor[lastAt - 1] === '\n')) {
-            const query = textBeforeCursor.substring(lastAt + 1);
-            if (!query.includes(' ')) {
-                setMentionQuery(query);
-                setMentionStartIndex(lastAt);
-
-                // Calculate coordinates
-                const { top, left } = getCaretCoordinates(textarea, cursorPosition);
-                const rect = textarea.getBoundingClientRect();
-                setMentionPosition({
-                    top: rect.top + top - textarea.scrollTop + 20,
-                    left: rect.left + left - textarea.scrollLeft,
-                });
-                return;
-            }
-        }
-        setMentionQuery(null);
-    };
-
-    const insertStructure = (structure: Structure) => {
-        if (mentionStartIndex === -1) return;
-
-        const before = editContent.substring(0, mentionStartIndex);
-        const after = editContent.substring(textareaRef.current?.selectionStart || mentionStartIndex);
-        const pill = `[[structure:${structure.id}]]`;
-        const newContent = `${before}${pill} ${after}`;
-
-        setEditContent(newContent);
-        setMentionQuery(null);
-        handleEditorChange('content', newContent);
-
-        // refocus
-        setTimeout(() => {
-            if (textareaRef.current) {
-                textareaRef.current.focus();
-                const newPos = mentionStartIndex + pill.length + 1;
-                textareaRef.current.setSelectionRange(newPos, newPos);
-            }
-        }, 0);
-    };
-
-    // Helper for caret coordinates (simpler version for now)
-    const getCaretCoordinates = (element: HTMLTextAreaElement, position: number) => {
-        const div = document.createElement('div');
-        const style = window.getComputedStyle(element);
-        for (const prop of Array.from(style)) {
-            div.style.setProperty(prop, style.getPropertyValue(prop));
-        }
-        div.style.position = 'absolute';
-        div.style.visibility = 'hidden';
-        div.style.whiteSpace = 'pre-wrap';
-        div.style.width = element.clientWidth + 'px';
-        div.textContent = element.value.substring(0, position);
-        const span = document.createElement('span');
-        span.textContent = element.value.substring(position) || '.';
-        div.appendChild(span);
-        document.body.appendChild(div);
-        const { offsetTop: top, offsetLeft: left } = span;
-        document.body.removeChild(div);
-        return { top, left };
     };
 
     const filteredNotebooks = notebooks.filter(n => n.title.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -445,20 +363,6 @@ export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false
                                                 </div>
                                             )}
                                         </button>
-                                        <div className="flex items-center gap-1 bg-neutral-900 border border-neutral-800 p-1 rounded-lg">
-                                            <button
-                                                onClick={() => setViewMode('write')}
-                                                className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-colors ${viewMode === 'write' ? 'bg-neutral-800 text-white shadow-sm' : 'text-neutral-500 hover:text-neutral-300'}`}
-                                            >
-                                                <Code className="w-4 h-4" /> {isDrawer ? '' : 'Write'}
-                                            </button>
-                                            <button
-                                                onClick={() => setViewMode('preview')}
-                                                className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-colors ${viewMode === 'preview' ? 'bg-neutral-800 text-white shadow-sm' : 'text-neutral-500 hover:text-neutral-300'}`}
-                                            >
-                                                <Eye className="w-4 h-4" /> {isDrawer ? '' : 'Preview'}
-                                            </button>
-                                        </div>
                                     </div>
                                 </div>
 
@@ -477,7 +381,7 @@ export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false
                                 </div>
                             </div>
 
-                            <div className={`flex-1 overflow-y-auto ${isDrawer ? 'p-4' : 'p-8'}`}>
+                            <div className={`flex-1 overflow-y-auto ${isDrawer ? 'p-4' : 'p-8'} min-h-0`}>
                                 <input
                                     type="text"
                                     value={editTitle}
@@ -486,76 +390,14 @@ export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false
                                     placeholder="Title..."
                                 />
 
-                                {viewMode === 'write' ? (
-                                    <div className="relative h-full">
-                                        <textarea
-                                            ref={textareaRef}
-                                            value={editContent}
-                                            onChange={(e) => handleEditorChange('content', e.target.value)}
-                                            onKeyUp={() => handleMentionLogic(editContent)}
-                                            onClick={() => handleMentionLogic(editContent)}
-                                            placeholder="Write notes... Type @ to mention a structure..."
-                                            className="w-full h-full min-h-[500px] bg-transparent border-none focus:outline-none text-neutral-300 font-mono text-[14px] sm:text-[15px] leading-relaxed resize-none placeholder-neutral-700"
-                                        />
-                                        {mentionQuery !== null && (
-                                            <StructureMentionDropdown
-                                                structures={allStructures}
-                                                query={mentionQuery}
-                                                onSelect={insertStructure}
-                                                onClose={() => setMentionQuery(null)}
-                                                position={mentionPosition}
-                                            />
-                                        )}
-                                    </div>
-                                ) : (
-                                    <div className="prose prose-invert prose-blue max-w-none prose-pre:bg-neutral-900 prose-pre:border prose-pre:border-neutral-800 text-sm sm:text-base">
-                                        <ReactMarkdown 
-                                            remarkPlugins={[remarkGfm]}
-                                            components={{
-                                                p: ({ children }) => {
-                                                    // Handle structure embeds in paragraphs
-                                                    if (typeof children === 'string' || (Array.isArray(children) && children.every(c => typeof c === 'string'))) {
-                                                        const content = Array.isArray(children) ? children.join('') : children as string;
-                                                        const parts = content.split(/(\[\[structure:[a-f0-9-]{36}\]\])/g);
-                                                        
-                                                        if (parts.length > 1) {
-                                                            return (
-                                                                <p>
-                                                                    {parts.map((part, i) => {
-                                                                        const match = part.match(/\[\[structure:([a-f0-9-]{36})\]\]/);
-                                                                        if (match) {
-                                                                            return <StructurePreviewCard key={i} structureId={match[1]} />;
-                                                                        }
-                                                                        return part;
-                                                                    })}
-                                                                </p>
-                                                            );
-                                                        }
-                                                    }
-                                                    
-                                                    // Handle mixed content (React elements + strings)
-                                                    const processed = React.Children.map(children, child => {
-                                                        if (typeof child === 'string') {
-                                                            const parts = child.split(/(\[\[structure:[a-f0-9-]{36}\]\])/g);
-                                                            return parts.map((part, i) => {
-                                                                const match = part.match(/\[\[structure:([a-f0-9-]{36})\]\]/);
-                                                                if (match) {
-                                                                    return <StructurePreviewCard key={i} structureId={match[1]} />;
-                                                                }
-                                                                return part;
-                                                            });
-                                                        }
-                                                        return child;
-                                                    });
-                                                    
-                                                    return <p>{processed}</p>;
-                                                }
-                                            }}
-                                        >
-                                            {editContent || '*Nothing written yet.*'}
-                                        </ReactMarkdown>
-                                    </div>
-                                )}
+                                <div className="h-full min-h-[500px] mb-20">
+                                    <RichTextEditor 
+                                        content={editContent}
+                                        onChange={(markdown) => handleEditorChange('content', markdown)}
+                                        allStructures={allStructures}
+                                        placeholder="Write notes... Type @ to mention a structure..."
+                                    />
+                                </div>
                             </div>
                         </div>
                     ) : (

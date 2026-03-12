@@ -85,3 +85,38 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #555;
 }
+
+/* Tiptap Editor Styles */
+.prose .mention {
+  @apply inline-flex items-center px-1.5 py-0.5 rounded-md bg-blue-500/20 text-blue-400 font-medium border border-blue-500/30 transition-all cursor-default mx-0.5;
+}
+
+.prose .mention:hover {
+  @apply bg-blue-500/30 border-blue-500/50;
+}
+
+.tiptap p.is-editor-empty:first-child::before {
+  @apply text-neutral-700 float-left h-0 pointer-events-none;
+  content: attr(data-placeholder);
+}
+
+ul[data-type="taskList"] {
+  list-style: none;
+  padding: 0;
+}
+
+ul[data-type="taskList"] li {
+  @apply flex items-start gap-3 mb-1;
+}
+
+ul[data-type="taskList"] li > label {
+  @apply flex-shrink-0 mt-1;
+}
+
+ul[data-type="taskList"] li > div {
+  @apply flex-1;
+}
+
+ul[data-type="taskList"] input[type="checkbox"] {
+  @apply w-4 h-4 rounded border-neutral-700 bg-neutral-900 text-blue-500 focus:ring-blue-500 focus:ring-offset-neutral-950 cursor-pointer;
+}
