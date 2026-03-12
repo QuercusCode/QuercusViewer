@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
@@ -13,6 +13,7 @@ import TaskItem from '@tiptap/extension-task-item';
 import Placeholder from '@tiptap/extension-placeholder';
 import { Markdown } from 'tiptap-markdown';
 import Mention from '@tiptap/extension-mention';
+import { HexColorPicker } from 'react-colorful';
 import { createSuggestion } from './suggestion';
 import { 
   Bold, Italic, Underline as UnderlineIcon, Strikethrough, 
@@ -20,7 +21,7 @@ import {
   Heading1, Heading2, Heading3, Link as LinkIcon, 
   Type, ChevronDown, Wand2, MoreHorizontal,
   Subscript as SubscriptIcon, Superscript as SuperscriptIcon,
-  Highlighter
+  Highlighter, Eraser, Sparkles
 } from 'lucide-react';
 import type { Structure } from '../../lib/structuresService';
 
@@ -59,6 +60,41 @@ const ToolbarButton: React.FC<{
 
 const ToolbarDivider = () => <div className="w-px h-6 bg-neutral-800 mx-1 self-center" />;
 
+const Dropdown: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  trigger: React.ReactNode;
+  children: React.ReactNode;
+  align?: 'left' | 'right';
+}> = ({ isOpen, onClose, trigger, children, align = 'left' }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        onClose();
+      }
+    };
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen, onClose]);
+
+  return (
+    <div className="relative" ref={containerRef}>
+      <div onClick={() => !isOpen && trigger}>{trigger}</div>
+      {isOpen && (
+        <div className={`absolute top-full mt-1 z-50 min-w-[200px] bg-neutral-900 border border-neutral-800 rounded-lg shadow-xl p-1 animate-in fade-in zoom-in duration-200 ${align === 'right' ? 'right-0' : 'left-0'}`}>
+          {children}
+        </div>
+      )}
+    </div>
+  );
+};
+
 export const RichTextEditor: React.FC<RichTextEditorProps> = ({ 
   content, 
   onChange, 
@@ -66,6 +102,8 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   placeholder = 'Start writing...',
   allStructures = []
 }) => {
+  const [activeMenu, setActiveMenu] = useState<string | null>(null);
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -142,6 +180,10 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     }
 
     editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+  };
+
+  const toggleMenu = (menuId: string) => {
+    setActiveMenu(activeMenu === menuId ? null : menuId);
   };
 
   return (
@@ -252,10 +294,35 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
           >
             <Highlighter className="w-4 h-4" />
           </ToolbarButton>
-          <div className="px-1.5 flex items-center text-neutral-500 hover:text-neutral-300 transition-colors">
-            <Type className="w-4 h-4" />
-            <ChevronDown className="w-3 h-3 ml-0.5" />
-          </div>
+          
+          <Dropdown
+            isOpen={activeMenu === 'color'}
+            onClose={() => setActiveMenu(null)}
+            trigger={
+              <button 
+                onClick={() => toggleMenu('color')}
+                className={`px-1.5 py-1 flex items-center rounded transition-colors ${activeMenu === 'color' ? 'bg-neutral-800 text-blue-400' : 'text-neutral-500 hover:text-neutral-300'}`}
+              >
+                <Type className="w-4 h-4" />
+                <ChevronDown className="w-3 h-3 ml-0.5" />
+              </button>
+            }
+          >
+            <div className="p-3">
+              <p className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-2">Text Color</p>
+              <HexColorPicker 
+                color={editor.getAttributes('textStyle').color || '#ffffff'} 
+                onChange={(color) => editor.chain().focus().setColor(color).run()}
+              />
+              <button 
+                onClick={() => editor.chain().focus().unsetColor().run()}
+                className="w-full mt-3 flex items-center justify-center gap-2 px-2 py-1.5 text-xs text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800 rounded transition-colors"
+              >
+                <Eraser className="w-3 h-3" />
+                <span>Reset to default</span>
+              </button>
+            </div>
+          </Dropdown>
         </div>
 
         <ToolbarDivider />
@@ -308,15 +375,68 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         <div className="flex-1" />
 
         {/* AI & More */}
-        <div className="flex items-center pr-2">
-          <div className="flex items-center gap-1.5 px-3 py-1 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 rounded-lg transition-colors cursor-pointer text-xs font-semibold">
-            <Wand2 className="w-3.5 h-3.5" />
-            <span>AI tools</span>
-            <ChevronDown className="w-2.5 h-2.5 opacity-50" />
-          </div>
-          <ToolbarButton onClick={() => {}} title="More">
-            <MoreHorizontal className="w-4 h-4" />
-          </ToolbarButton>
+        <div className="flex items-center pr-2 gap-1">
+          <Dropdown
+            isOpen={activeMenu === 'ai'}
+            onClose={() => setActiveMenu(null)}
+            align="right"
+            trigger={
+              <div 
+                onClick={() => toggleMenu('ai')}
+                className={`flex items-center gap-1.5 px-3 py-1 rounded-lg transition-colors cursor-pointer text-xs font-semibold ${activeMenu === 'ai' ? 'bg-blue-500/30 text-blue-200' : 'bg-blue-500/10 hover:bg-blue-500/20 text-blue-400'}`}
+              >
+                <Wand2 className="w-3.5 h-3.5" />
+                <span>AI tools</span>
+                <ChevronDown className="w-2.5 h-2.5 opacity-50" />
+              </div>
+            }
+          >
+            <div className="w-48 p-1">
+              <button className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-neutral-300 hover:bg-blue-500/10 hover:text-blue-400 rounded-md transition-colors group">
+                <Sparkles className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100" />
+                <span>Analyze structure site</span>
+              </button>
+              <button className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-neutral-300 hover:bg-blue-500/10 hover:text-blue-400 rounded-md transition-colors group">
+                <Sparkles className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100" />
+                <span>Predict binding affinity</span>
+              </button>
+              <button className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-neutral-300 hover:bg-blue-500/10 hover:text-blue-400 rounded-md transition-colors group">
+                <Sparkles className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100" />
+                <span>Suggest mutations</span>
+              </button>
+            </div>
+          </Dropdown>
+
+          <Dropdown
+            isOpen={activeMenu === 'more'}
+            onClose={() => setActiveMenu(null)}
+            align="right"
+            trigger={
+              <button 
+                onClick={() => toggleMenu('more')}
+                className={`p-1.5 rounded transition-colors flex items-center justify-center cursor-pointer ${activeMenu === 'more' ? 'bg-neutral-800 text-neutral-200' : 'text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200'}`}
+              >
+                <MoreHorizontal className="w-4 h-4" />
+              </button>
+            }
+          >
+            <div className="w-44 p-1">
+              <button 
+                onClick={() => editor.chain().focus().unsetAllMarks().run()}
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-neutral-300 hover:bg-neutral-800 rounded-md transition-colors"
+              >
+                <Eraser className="w-3.5 h-3.5 opacity-50" />
+                <span>Clear formatting</span>
+              </button>
+              <button 
+                onClick={() => editor.chain().focus().clearContent().run()}
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-red-400/70 hover:bg-red-500/10 hover:text-red-400 rounded-md transition-colors"
+              >
+                <Eraser className="w-3.5 h-3.5 opacity-50" />
+                <span>Clear all content</span>
+              </button>
+            </div>
+          </Dropdown>
         </div>
       </div>
 
