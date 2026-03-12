@@ -31,9 +31,12 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode, updateAtt
   // Generate unique ID for table if not present for linking with charts
   useEffect(() => {
     if (!node.attrs.id && updateAttributes) {
-      // Use a more reliable ID generation or fallback
-      const newId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `table-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      updateAttributes({ id: newId });
+      // Use data-id or data-table-id fallback
+      const existingId = node.attrs.id;
+      if (!existingId) {
+        const newId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `table-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        updateAttributes({ id: newId });
+      }
     }
   }, [node.attrs.id, updateAttributes]);
 
@@ -44,16 +47,20 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode, updateAtt
     let syncTimer: any = null;
 
     const handleUpdate = () => {
-      // Clear previous timer to throttle
       if (syncTimer) clearTimeout(syncTimer);
 
       syncTimer = setTimeout(() => {
+        if (!editor || !editor.state || typeof getPos !== 'function') return;
+        
         const currentPos = getPos();
         if (typeof currentPos !== 'number') return;
 
         const latestNode = editor.state.doc.nodeAt(currentPos);
-        // Important: check both potential names ('table' or 'spreadsheetTable')
-        if (!latestNode || (latestNode.type.name !== 'spreadsheetTable' && latestNode.type.name !== 'table') || latestNode.attrs.id !== node.attrs.id) return;
+        if (!latestNode || (latestNode.type.name !== 'spreadsheetTable' && latestNode.type.name !== 'table')) return;
+
+        // Use a consistent ID check
+        const tableId = latestNode.attrs.id;
+        if (!tableId) return;
 
         const tableData: any[] = [];
         const headerRow = latestNode.firstChild;
@@ -78,56 +85,81 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode, updateAtt
           if (hasData) tableData.push(rowData);
         }
 
-        // Find and update charts linked to this table
+        // Batch updates into a single transaction
+        const { tr } = editor.state;
+        let modified = false;
+
         editor.state.doc.descendants((n: any, pos: number) => {
-          if (n.type.name === 'inlineChart' && n.attrs.tableId === latestNode.attrs.id) {
-            const chartUpdates: any = {};
-            let hasChanges = false;
-
-            // 1. Update Data
+          if (n.type.name === 'inlineChart' && n.attrs.tableId === tableId) {
+            // Check if data actually changed to avoid cycles
             if (JSON.stringify(n.attrs.data) !== JSON.stringify(tableData)) {
-              chartUpdates.data = tableData;
-              hasChanges = true;
-            }
-
-            // 2. Handle Header Changes
-            // Find current column names in the spreadsheet
-            const spreadsheetHeaders: string[] = [];
-            const hRow = latestNode.firstChild;
-            if (hRow) {
-              const lArr = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-              hRow.forEach((cell: any, _: any, i: number) => {
-                spreadsheetHeaders.push(cell.textContent.trim() || lArr[i] || `Col ${i + 1}`);
-              });
-            }
-
-            // If we have a reference to the source column indices, we could be more precise.
-            // For now, we'll try to find if the old axis name exists. If not, we might need to assume it shifted or changed.
-            // But actually, we already have tableData with NEW headers.
-            // If the chart's xAxis or yAxes don't exist in the NEW spreadsheetHeaders, 
-            // it means they were likely renamed.
-            
-            // This is complex without index tracking. For now, let's at least ensure data is synced.
-            // If the user changed a value, headers[i] is still headers[i].
-
-            if (hasChanges) {
-              editor.commands.setNodeMarkup(pos, undefined, {
+              tr.setNodeMarkup(pos, undefined, {
                 ...n.attrs,
-                ...chartUpdates
+                data: tableData
               });
+              modified = true;
             }
           }
           return true;
         });
-      }, 500); // Faster response
+
+        if (modified) {
+          editor.view.dispatch(tr);
+        }
+      }, 400); // 400ms throttle
     };
 
     editor.on('update', handleUpdate);
+    // Also sync on mount/activeId change to be safe
+    handleUpdate();
+
     return () => {
       editor.off('update', handleUpdate);
       if (syncTimer) clearTimeout(syncTimer);
     };
   }, [node.attrs.id, editor, getPos]);
+
+  const forceSync = () => {
+    if (!editor || !editor.state || typeof getPos !== 'function') return;
+    const currentPos = getPos();
+    if (typeof currentPos !== 'number') return;
+    const latestNode = editor.state.doc.nodeAt(currentPos);
+    if (!latestNode) return;
+
+    const tableData: any[] = [];
+    const headerRow = latestNode.firstChild;
+    if (!headerRow) return;
+
+    const lettersArr = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+    const headers: string[] = [];
+    headerRow.forEach((cell: any, _: any, i: number) => {
+      headers.push(cell.textContent.trim() || lettersArr[i] || `Col ${i + 1}`);
+    });
+
+    for (let r = 1; r < latestNode.childCount; r++) {
+      const row = latestNode.child(r);
+      const rowData: any = {};
+      let hasData = false;
+      row.forEach((cell: any, _: any, i: number) => {
+        const val = cell.textContent.trim();
+        const numVal = parseFloat(val);
+        rowData[headers[i]] = !isNaN(numVal) ? numVal : val;
+        if (val) hasData = true;
+      });
+      if (hasData) tableData.push(rowData);
+    }
+
+    const { tr } = editor.state;
+    let modified = false;
+    editor.state.doc.descendants((n: any, pos: number) => {
+      if (n.type.name === 'inlineChart' && n.attrs.tableId === latestNode.attrs.id) {
+        tr.setNodeMarkup(pos, undefined, { ...n.attrs, data: tableData });
+        modified = true;
+      }
+      return true;
+    });
+    if (modified) editor.view.dispatch(tr);
+  };
   
   const rows = node.childCount;
   const cols = node.firstChild ? node.firstChild.childCount : 0;
@@ -492,13 +524,21 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode, updateAtt
                     </div>
                   )}
 
-                  <button 
-                    onClick={createChart}
-                    className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    Generate Chart
-                  </button>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={forceSync}
+                      className="flex-1 py-2.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-600 rounded-lg text-[10px] font-bold transition-all flex items-center justify-center gap-2 border border-neutral-200"
+                    >
+                      Refresh
+                    </button>
+                    <button 
+                      onClick={createChart}
+                      className="flex-[2] py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      Generate Chart
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
@@ -676,11 +716,12 @@ export const SpreadsheetTable = Table.extend({
       ...this.parent?.(),
       id: {
         default: null,
-        parseHTML: element => element.getAttribute('data-table-id'),
+        parseHTML: element => element.getAttribute('data-table-id') || element.getAttribute('data-id'),
         renderHTML: attributes => {
           if (!attributes.id) return {}
           return {
             'data-table-id': attributes.id,
+            'data-id': attributes.id, // Keep both for safety
           }
         },
       },
