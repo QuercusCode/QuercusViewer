@@ -37,49 +37,65 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode, updateAtt
 
   // Sync linked charts whenever table data changes
   useEffect(() => {
-    if (!node.attrs.id || !editor) return;
+    if (!node.attrs.id || !editor || typeof getPos !== 'function') return;
 
-    const timer = setTimeout(() => {
-      const tableData: any[] = [];
-      const headerRow = node.firstChild;
-      if (!headerRow) return;
+    let syncTimer: any = null;
 
-      const lettersArr = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-      const headers: string[] = [];
-      headerRow.forEach((cell: any, _: any, i: number) => {
-        headers.push(cell.textContent.trim() || lettersArr[i] || `Col ${i + 1}`);
-      });
+    const handleUpdate = () => {
+      // Clear previous timer to throttle
+      if (syncTimer) clearTimeout(syncTimer);
 
-      for (let r = 1; r < node.childCount; r++) {
-        const row = node.child(r);
-        const rowData: any = {};
-        let hasData = false;
-        row.forEach((cell: any, _: any, i: number) => {
-          const val = cell.textContent.trim();
-          const numVal = parseFloat(val);
-          rowData[headers[i]] = !isNaN(numVal) ? numVal : val;
-          if (val) hasData = true;
+      syncTimer = setTimeout(() => {
+        const currentPos = getPos();
+        if (typeof currentPos !== 'number') return;
+
+        const latestNode = editor.state.doc.nodeAt(currentPos);
+        if (!latestNode || latestNode.type.name !== 'spreadsheetTable' || latestNode.attrs.id !== node.attrs.id) return;
+
+        const tableData: any[] = [];
+        const headerRow = latestNode.firstChild;
+        if (!headerRow) return;
+
+        const lettersArr = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+        const headers: string[] = [];
+        headerRow.forEach((cell: any, _: any, i: number) => {
+          headers.push(cell.textContent.trim() || lettersArr[i] || `Col ${i + 1}`);
         });
-        if (hasData) tableData.push(rowData);
-      }
 
-      // Find and update charts linked to this table
-      editor.state.doc.descendants((n: any, pos: number) => {
-        if (n.type.name === 'inlineChart' && n.attrs.tableId === node.attrs.id) {
-          // Avoid unnecessary updates if data hasn't actually changed
-          if (JSON.stringify(n.attrs.data) !== JSON.stringify(tableData)) {
-            editor.commands.setNodeMarkup(pos, undefined, {
-              ...n.attrs,
-              data: tableData
-            });
-          }
+        for (let r = 1; r < latestNode.childCount; r++) {
+          const row = latestNode.child(r);
+          const rowData: any = {};
+          let hasData = false;
+          row.forEach((cell: any, _: any, i: number) => {
+            const val = cell.textContent.trim();
+            const numVal = parseFloat(val);
+            rowData[headers[i]] = !isNaN(numVal) ? numVal : val;
+            if (val) hasData = true;
+          });
+          if (hasData) tableData.push(rowData);
         }
-        return true;
-      });
-    }, 1000); // 1s throttle to prevent excessive updates during typing
 
-    return () => clearTimeout(timer);
-  }, [node, editor]);
+        // Find and update charts linked to this table
+        editor.state.doc.descendants((n: any, pos: number) => {
+          if (n.type.name === 'inlineChart' && n.attrs.tableId === latestNode.attrs.id) {
+            if (JSON.stringify(n.attrs.data) !== JSON.stringify(tableData)) {
+              editor.commands.setNodeMarkup(pos, undefined, {
+                ...n.attrs,
+                data: tableData
+              });
+            }
+          }
+          return true;
+        });
+      }, 800); // Slightly faster throttle for better real-time feel
+    };
+
+    editor.on('update', handleUpdate);
+    return () => {
+      editor.off('update', handleUpdate);
+      if (syncTimer) clearTimeout(syncTimer);
+    };
+  }, [node.attrs.id, editor, getPos]);
   
   const rows = node.childCount;
   const cols = node.firstChild ? node.firstChild.childCount : 0;
