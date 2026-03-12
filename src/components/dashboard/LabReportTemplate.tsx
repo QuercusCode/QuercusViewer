@@ -127,7 +127,7 @@ export const LabReportTemplate = React.forwardRef<HTMLDivElement, LabReportTempl
         </div>
 
         {/* PAGE 2: CONTENT PAGE */}
-        <div id="report-page-2" className="pdf-page">
+        <div id="report-page-2" className="pdf-page" style={{ padding: '0.75in' }}>
           <div style={{ 
             display: 'flex', 
             justifyContent: 'space-between', 
@@ -207,9 +207,9 @@ export const LabReportTemplate = React.forwardRef<HTMLDivElement, LabReportTempl
           <div 
             style={{ 
               position: 'absolute',
-              bottom: '1.5in',
-              left: '1.5in',
-              right: '1.5in',
+              bottom: '0.75in',
+              left: '0.75in',
+              right: '0.75in',
               paddingTop: '1rem',
               borderTop: '1px solid #f1f5f9',
               color: '#94a3b8',
