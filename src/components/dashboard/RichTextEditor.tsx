@@ -523,9 +523,9 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
                   </div>
                   <ChevronDown className="w-4 h-4 -rotate-90 opacity-30 group-hover/btn:opacity-100 transition-all" />
                 </button>
-                {/* Massive Interaction Safe-Zone: Ensures mouse never leaves 'active' area */}
-                <div className="absolute right-[100%] top-[-20px] bottom-[-20px] pr-12 -mr-3 hidden group-hover/sub:block z-50">
-                  <div className="h-full flex items-start pt-[20px]">
+                {/* Interaction Bridge: Precise overlap to eliminate gaps while maintaining stability */}
+                <div className="absolute right-full top-[-10px] bottom-[-10px] pr-2 -mr-2 hidden group-hover/sub:block z-50">
+                  <div className="h-full flex items-start pt-[10px]">
                     <TableGridPicker onSelect={(r, c) => {
                       editor.chain().focus().insertTable({ rows: r, cols: c, withHeaderRow: true }).run();
                       setActiveMenu(null);
@@ -543,8 +543,8 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
                   </div>
                   <ChevronDown className="w-4 h-4 -rotate-90 opacity-30 group-hover/btn:opacity-100 transition-all" />
                 </button>
-                <div className="absolute right-[100%] top-[-20px] bottom-[-20px] pr-12 -mr-3 hidden group-hover/sub:block z-50 min-w-[200px]">
-                  <div className="h-full flex items-start pt-[20px]">
+                <div className="absolute right-full top-[-10px] bottom-[-10px] pr-2 -mr-2 hidden group-hover/sub:block z-50 min-w-[200px]">
+                  <div className="h-full flex items-start pt-[10px]">
                     <div className="bg-neutral-900 border border-neutral-800 rounded-[20px] shadow-[0_30px_90px_rgba(0,0,0,0.7)] p-2 space-y-1">
                       <button 
                         onClick={() => insertTemplate('well96')}
@@ -599,8 +599,8 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
                   </div>
                   <ChevronDown className="w-4 h-4 -rotate-90 opacity-30 group-hover/btn:opacity-100 transition-all" />
                 </button>
-                <div className="absolute right-[100%] top-[-20px] bottom-[-20px] pr-12 -mr-3 hidden group-hover/sub:block z-50 min-w-[240px]">
-                  <div className="h-full flex items-start pt-[20px]">
+                <div className="absolute right-full top-[-10px] bottom-[-10px] pr-2 -mr-2 hidden group-hover/sub:block z-50 min-w-[240px]">
+                  <div className="h-full flex items-start pt-[10px]">
                     <div className="bg-neutral-900 border border-neutral-800 rounded-[20px] shadow-[0_30px_90px_rgba(0,0,0,0.7)] p-4 h-80 overflow-y-auto custom-scrollbar">
                       <div className="grid grid-cols-5 gap-2">
                         {[
