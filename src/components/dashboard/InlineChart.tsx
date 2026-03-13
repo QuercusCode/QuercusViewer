@@ -347,7 +347,7 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
                     tickLine={false} 
                     axisLine={false} 
                     tick={{ fill: textColor }} 
-                    domain={isXNumeric ? ['auto', 'auto'] : [0, (xAxisDomain?.length || 1) - 1]} 
+                    domain={isXNumeric ? ['auto', 'auto'] : [-0.5, (xAxisDomain?.length || 1) - 0.5]} 
                     tickFormatter={(val) => isXNumeric ? val : (xAxisDomain?.[val] || '')}
                   />
                   <YAxis type="number" stroke={textColor} fontSize={14} tickLine={false} axisLine={false} tick={{ fill: textColor }} domain={['auto', 'auto']} />
@@ -419,7 +419,7 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
             ) : (
               <ResponsiveContainer width="100%" height="100%">
                 {type === 'bar' ? (
-                  <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <BarChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
                     <XAxis 
                       dataKey={xAxis} 
@@ -465,7 +465,7 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
                     ))}
                   </BarChart>
                 ) : type === 'scatter' ? (
-                  <ScatterChart margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <ScatterChart margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
                     <XAxis 
                       type="number"
@@ -476,7 +476,7 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
                       tickLine={false} 
                       axisLine={false}
                       tick={{ fill: textColor }}
-                      domain={isXNumeric ? ['auto', 'auto'] : [0, (xAxisDomain?.length || 1) - 1]}
+                      domain={isXNumeric ? ['auto', 'auto'] : [-0.5, (xAxisDomain?.length || 1) - 0.5]}
                       tickFormatter={(val) => isXNumeric ? val : (xAxisDomain?.[val] || '')}
                     />
                     <YAxis 
@@ -532,7 +532,7 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
                     ))}
                   </ScatterChart>
                 ) : (
-                  <LineChart data={augmentedData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <LineChart data={augmentedData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
                     <XAxis 
                       dataKey={xAxis} 
