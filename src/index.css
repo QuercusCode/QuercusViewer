@@ -3,25 +3,25 @@
 
 @layer base {
   :root {
-    --bg-main: theme('colors.neutral.950');
-    --bg-header: theme('colors.neutral.900');
-    --bg-sidebar: theme('colors.neutral.900');
-    --border-main: theme('colors.neutral.800');
-    --text-primary: theme('colors.neutral.100');
-    --text-secondary: theme('colors.neutral.400');
-    --text-muted: theme('colors.neutral.500');
-    --input-bg: theme('colors.neutral.800');
+    --bg-main: #0a0a0a;
+    --bg-header: #171717;
+    --bg-sidebar: #171717;
+    --border-main: #262626;
+    --text-primary: #f5f5f5;
+    --text-secondary: #a3a3a3;
+    --text-muted: #737373;
+    --input-bg: #262626;
   }
 
   .light {
-    --bg-main: theme('colors.neutral.50');
-    --bg-header: theme('colors.white');
-    --bg-sidebar: theme('colors.white');
-    --border-main: theme('colors.neutral.200');
-    --text-primary: theme('colors.neutral.900');
-    --text-secondary: theme('colors.neutral.600');
-    --text-muted: theme('colors.neutral.400');
-    --input-bg: theme('colors.neutral.100');
+    --bg-main: #fafafa;
+    --bg-header: #ffffff;
+    --bg-sidebar: #ffffff;
+    --border-main: #e5e5e5;
+    --text-primary: #171717;
+    --text-secondary: #525252;
+    --text-muted: #a3a3a3;
+    --input-bg: #f5f5f5;
   }
 
   body {

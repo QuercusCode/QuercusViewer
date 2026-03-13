@@ -183,56 +183,39 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
                 await new Promise(resolve => setTimeout(resolve, 500));
 
                 const canvas = await html2canvas(chartRef.current, {
-                  scale: 2, // 2x is usually enough and more stable than 3x
+                  scale: 2, 
                   backgroundColor: isDark ? '#171717' : '#ffffff',
                   useCORS: true,
-                  logging: true,
+                  logging: false,
                   onclone: (clonedDoc) => {
-                    // Critical: Find the chart area in the cloned document and force dimensions
-                    // html2canvas sometimes renders 100% width elements as 0px in its internal frame
-                    const element = clonedDoc.querySelector('[ref="chartRef"]') || clonedDoc.querySelector('.h-72');
+                    // --- THE FIX: Sanitizing CSS for html2canvas ---
+                    // html2canvas fails to parse Tailwind 4's oklch() colors in stylesheets.
+                    // We remove all document styles and inject only what the Chart needs.
+                    const styleTags = clonedDoc.querySelectorAll('style, link[rel="stylesheet"]');
+                    styleTags.forEach(tag => tag.remove());
+                    
+                    const safeStyles = clonedDoc.createElement('style');
+                    safeStyles.innerHTML = `
+                      .inline-chart-wrapper { font-family: sans-serif; }
+                      .h-72 { width: 800px !important; height: 400px !important; }
+                      .recharts-responsive-container { width: 100% !important; height: 100% !important; }
+                      svg { display: block; width: 100% !important; height: 100% !important; }
+                      .recharts-cartesian-grid-line { stroke: ${isDark ? '#262626' : '#e5e5e5'}; }
+                      .recharts-text { fill: ${isDark ? '#a3a3a3' : '#525252'}; font-size: 10px; }
+                      .recharts-legend-item-text { fill: ${isDark ? '#a3a3a3' : '#525252'}; }
+                      .recharts-tooltip-wrapper { display: none !important; }
+                    `;
+                    clonedDoc.head.appendChild(safeStyles);
+                    // -----------------------------------------------
+
+                    const element = clonedDoc.querySelector('[ref="chartRef"]') || clonedDoc.querySelector('.h-72') || clonedDoc.querySelector('.inline-chart-wrapper');
                     if (element instanceof HTMLElement) {
                       element.style.width = '800px'; 
-                      element.style.height = '400px';
-                      element.style.padding = '20px';
-                      // Force background/border to safe colors to avoid oklch issues
+                      element.style.height = '480px';
+                      element.style.padding = '24px';
                       element.style.backgroundColor = isDark ? '#171717' : '#ffffff';
-                      element.style.borderColor = isDark ? '#262626' : '#e5e5e5';
+                      element.style.color = isDark ? '#f5f5f5' : '#171717';
                     }
-
-                    // --- Fix for html2canvas oklch crash ---
-                    // Modern CSS like Tailwind 4 uses oklch which html2canvas cannot parse.
-                    // We scan all elements and replace any computed oklch values with HEX fallbacks.
-                    const allElements = clonedDoc.querySelectorAll('*');
-                    allElements.forEach((el) => {
-                      if (!(el instanceof HTMLElement)) return;
-                      const style = window.getComputedStyle(el);
-                      
-                      // Check most common properties that might cause crashes
-                      ['color', 'backgroundColor', 'borderColor', 'fill', 'stroke'].forEach(prop => {
-                        const val = (style as any)[prop];
-                        if (val && typeof val === 'string' && val.includes('oklch')) {
-                          // If it's a oklch color, replace it with a standard HEX/RGB fallback
-                          // Since we can't easily convert oklch in JS without a library,
-                          // we use the theme's default textColor/gridColor as safe fallbacks.
-                          if (prop === 'color' || prop === 'fill') {
-                            el.style.setProperty(prop, textColor, 'important');
-                          } else if (prop === 'backgroundColor') {
-                            el.style.setProperty(prop, isDark ? '#171717' : '#ffffff', 'important');
-                          } else {
-                            el.style.setProperty(prop, gridColor, 'important');
-                          }
-                        }
-                      });
-                    });
-                    // ----------------------------------------
-                    
-                    // Recharts specific: Ensure SVGs have proper dimensions
-                    const svgs = clonedDoc.querySelectorAll('svg');
-                    svgs.forEach(svg => {
-                      svg.setAttribute('width', '800');
-                      svg.setAttribute('height', '400');
-                    });
                   }
                 });
 
