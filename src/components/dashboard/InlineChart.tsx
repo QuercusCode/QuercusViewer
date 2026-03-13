@@ -40,42 +40,6 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
 
   // --- Scientific Calculations ---
   
-  // Linear Regression: y = mx + b
-  const getRegressionLine = (seriesName: string) => {
-    // For scatter plots, X is the actual numeric value from the xAxis column
-    // For line/bar charts, X is just the index in the array
-    const points = data
-      .map((d: any, i: number) => ({ 
-        x: type === 'scatter' ? Number(d[xAxis]) : i, 
-        y: Number(d[seriesName]) 
-      }))
-      .filter((p: any) => !isNaN(p.x) && !isNaN(p.y));
-    
-    if (points.length < 2) return null;
-
-    const n = points.length;
-    let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
-    for (const p of points) {
-      sumX += p.x;
-      sumY += p.y;
-      sumXY += p.x * p.y;
-      sumX2 += p.x * p.x;
-    }
-
-    const denom = n * sumX2 - sumX * sumX;
-    if (Math.abs(denom) < 0.0000001) return null; // Avoid division by zero for vertical lines
-
-    const slope = (n * sumXY - sumX * sumY) / denom;
-    const intercept = (sumY - slope * sumX) / n;
-
-    // Generate points for the trend line
-    return data.map((d: any, i: number) => {
-      const xVal = type === 'scatter' ? Number(d[xAxis]) : i;
-      return {
-        [`${seriesName}_trend`]: isNaN(xVal) ? null : slope * xVal + intercept
-      };
-    });
-  };
 
   // Statistics: Mean & Stdev
   const getSeriesStats = (seriesName: string) => {
@@ -104,7 +68,7 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
     return Array.from(new Set(labels)) as any[];
   }, [data, xAxis, isXNumeric]);
 
-  // Unified augmented data (Sanitization + Trend Lines)
+  // Unified augmented data (Sanitization + Trend Lines + Index Mapping)
   const augmentedData = useMemo(() => {
     if (!data) return [];
     
@@ -114,27 +78,51 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
       activeYAxes.forEach((y: string) => {
         sanitized[y] = parseFloat(d[y]);
       });
-      if (isXNumeric) {
-        sanitized[xAxis] = parseFloat(d[xAxis]);
+
+      if (type === 'scatter') {
+        if (isXNumeric) {
+          sanitized[xAxis] = parseFloat(d[xAxis]);
+        } else if (xAxisDomain) {
+          // V12: Map text label to its numeric index for perfect alignment
+          const label = String(d[xAxis]);
+          sanitized[xAxis] = xAxisDomain.indexOf(label);
+        }
       }
       return sanitized;
     });
 
-    // 2. Add Trend Lines if needed
+    // 2. Add Trend Lines if needed (using the already sanitized/mapped result)
     if (showTrendLine) {
       activeYAxes.forEach((y: string) => {
-        const trend = getRegressionLine(y);
-        if (trend) {
-          result = result.map((d: any, i: number) => ({
-            ...d,
-            ...trend[i]
-          }));
+        // Linear Regression: y = mx + b
+        const points = result
+          .map((d: any) => ({ x: Number(d[xAxis]), y: Number(d[y]) }))
+          .filter((p: any) => !isNaN(p.x) && !isNaN(p.y));
+        
+        if (points.length >= 2) {
+          const n = points.length;
+          let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+          for (const p of points) {
+            sumX += p.x;
+            sumY += p.y;
+            sumXY += p.x * p.y;
+            sumX2 += p.x * p.x;
+          }
+          const denom = n * sumX2 - sumX * sumX;
+          if (Math.abs(denom) >= 0.0000001) {
+            const slope = (n * sumXY - sumX * sumY) / denom;
+            const intercept = (sumY - slope * sumX) / n;
+            result = result.map((d: any) => ({
+              ...d,
+              [`${y}_trend`]: slope * Number(d[xAxis]) + intercept
+            }));
+          }
         }
       });
     }
 
     return result;
-  }, [data, activeYAxes, showTrendLine, type, xAxis, isXNumeric]);
+  }, [data, activeYAxes, showTrendLine, type, xAxis, isXNumeric, xAxisDomain]);
 
   return (
     <NodeViewWrapper ref={chartRef} className="inline-chart-wrapper my-8 group relative">
@@ -351,7 +339,7 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
                 <ScatterChart width={1000} height={400} margin={{ top: 20, right: 40, left: 10, bottom: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
                   <XAxis 
-                    type={isXNumeric ? "number" : "category"} 
+                    type="number"
                     dataKey={xAxis} 
                     name={xAxis} 
                     stroke={textColor} 
@@ -359,7 +347,8 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
                     tickLine={false} 
                     axisLine={false} 
                     tick={{ fill: textColor }} 
-                    domain={isXNumeric ? ['auto', 'auto'] : xAxisDomain} 
+                    domain={isXNumeric ? ['auto', 'auto'] : [0, (xAxisDomain?.length || 1) - 1]} 
+                    tickFormatter={(val) => isXNumeric ? val : (xAxisDomain?.[val] || '')}
                   />
                   <YAxis type="number" stroke={textColor} fontSize={14} tickLine={false} axisLine={false} tick={{ fill: textColor }} domain={['auto', 'auto']} />
                   <ZAxis type="number" range={[64, 64]} />
@@ -479,7 +468,7 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
                   <ScatterChart margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
                     <XAxis 
-                      type={isXNumeric ? "number" : "category"}
+                      type="number"
                       dataKey={xAxis} 
                       name={xAxis}
                       stroke={textColor} 
@@ -487,7 +476,8 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
                       tickLine={false} 
                       axisLine={false}
                       tick={{ fill: textColor }}
-                      domain={isXNumeric ? ['auto', 'auto'] : xAxisDomain}
+                      domain={isXNumeric ? ['auto', 'auto'] : [0, (xAxisDomain?.length || 1) - 1]}
+                      tickFormatter={(val) => isXNumeric ? val : (xAxisDomain?.[val] || '')}
                     />
                     <YAxis 
                       type="number"
