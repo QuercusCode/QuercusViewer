@@ -97,6 +97,13 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
     return samples.every((v: any) => !isNaN(parseFloat(v)) && isFinite(v));
   }, [data, xAxis]);
 
+  // Unique X-axis domain (for categorical alignment)
+  const xAxisDomain = useMemo(() => {
+    if (!data || isXNumeric) return undefined;
+    const labels = data.map((d: any) => String(d[xAxis]));
+    return Array.from(new Set(labels)) as any[];
+  }, [data, xAxis, isXNumeric]);
+
   // Unified augmented data (Sanitization + Trend Lines)
   const augmentedData = useMemo(() => {
     if (!data) return [];
@@ -352,7 +359,7 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
                     tickLine={false} 
                     axisLine={false} 
                     tick={{ fill: textColor }} 
-                    domain={isXNumeric ? ['auto', 'auto'] : undefined} 
+                    domain={isXNumeric ? ['auto', 'auto'] : xAxisDomain} 
                   />
                   <YAxis type="number" stroke={textColor} fontSize={14} tickLine={false} axisLine={false} tick={{ fill: textColor }} domain={['auto', 'auto']} />
                   <ZAxis type="number" range={[64, 64]} />
@@ -480,7 +487,7 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
                       tickLine={false} 
                       axisLine={false}
                       tick={{ fill: textColor }}
-                      domain={isXNumeric ? ['auto', 'auto'] : undefined}
+                      domain={isXNumeric ? ['auto', 'auto'] : xAxisDomain}
                     />
                     <YAxis 
                       type="number"
