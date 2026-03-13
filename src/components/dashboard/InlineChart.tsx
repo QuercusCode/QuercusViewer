@@ -180,29 +180,48 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
               setIsExporting(true);
               try {
                 // Wait a tiny moment for any pending Recharts animations
-                await new Promise(resolve => setTimeout(resolve, 300));
+                await new Promise(resolve => setTimeout(resolve, 500));
 
                 const canvas = await html2canvas(chartRef.current, {
-                  scale: 3, // High resolution
+                  scale: 2, // 2x is usually enough and more stable than 3x
                   backgroundColor: isDark ? '#171717' : '#ffffff',
                   useCORS: true,
-                  logging: false,
-                  allowTaint: true,
-                  // Improve SVG rendering by ensuring foreignObject is used correctly if needed
-                  foreignObjectRendering: false, 
-                  ignoreElements: (element) => element.classList.contains('download-button-skip')
+                  logging: true,
+                  onclone: (clonedDoc) => {
+                    // Critical: Find the chart area in the cloned document and force dimensions
+                    // html2canvas sometimes renders 100% width elements as 0px in its internal frame
+                    const element = clonedDoc.querySelector('[ref="chartRef"]') || clonedDoc.querySelector('.h-72');
+                    if (element instanceof HTMLElement) {
+                      element.style.width = '800px'; 
+                      element.style.height = '400px';
+                      element.style.padding = '20px';
+                    }
+                    
+                    // Recharts specific: Ensure SVGs have proper dimensions
+                    const svgs = clonedDoc.querySelectorAll('svg');
+                    svgs.forEach(svg => {
+                      svg.setAttribute('width', '800');
+                      svg.setAttribute('height', '400');
+                    });
+                  }
                 });
+
+                if (!canvas) throw new Error('Canvas generation returned null');
+
+                const dataUrl = canvas.toDataURL('image/png', 1.0);
+                if (!dataUrl || dataUrl === 'data:,') throw new Error('Invalid data URL generated');
 
                 const link = document.createElement('a');
                 const safeTitle = (title || 'Chart').replace(/[^a-z0-9]/gi, '_').toLowerCase();
                 link.download = `${safeTitle}_export.png`;
-                link.href = canvas.toDataURL('image/png', 1.0);
+                link.href = dataUrl;
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
-              } catch (err) {
-                console.error('Failed to export chart:', err);
-                alert('Export failed. Please try again or check console for details.');
+              } catch (err: any) {
+                console.error('High-Res Export Error:', err);
+                const errorMsg = err?.message || 'Unknown error';
+                alert(`Export failed: ${errorMsg}\n\nTip: Make sure the chart is fully visible on screen.`);
               } finally {
                 setIsExporting(false);
               }
