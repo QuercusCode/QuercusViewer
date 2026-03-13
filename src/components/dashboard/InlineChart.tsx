@@ -96,19 +96,21 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
   }, [data, activeYAxes, showTrendLine]);
 
   return (
-    <NodeViewWrapper ref={chartRef} className="inline-chart-wrapper my-8 group relative">
-      <div className="bg-[var(--bg-sidebar)] border border-[var(--border-main)] rounded-2xl overflow-hidden shadow-xl p-8 transition-all group-hover:border-blue-500/30">
+    <NodeViewWrapper className="inline-chart-wrapper my-8 group relative">
+      <div ref={chartRef} className="bg-[var(--bg-sidebar)] border border-[var(--border-main)] rounded-2xl overflow-hidden shadow-xl p-8 transition-all group-hover:border-blue-500/30">
         
         {/* Header Section */}
-        <div className="flex items-start justify-between mb-6 capture-hide">
+        <div className="flex items-start justify-between mb-6">
           <div className="flex items-center gap-3">
-            <div className={`p-2 rounded-lg ${type === 'bar' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-blue-500/10 text-blue-400'}`}>
+            <div className={`p-2 rounded-lg capture-hide ${type === 'bar' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-blue-500/10 text-blue-400'}`}>
               {type === 'bar' ? <BarChart2 className="w-4 h-4" /> : <TrendingUp className="w-4 h-4" />}
             </div>
             <div>
-              <h3 className="text-sm font-bold text-[var(--text-primary)]">{title || 'Data Visualization'}</h3>
-              <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider font-mono">
-                {activeYAxes.length > 1 ? `${activeYAxes.length} series vs ${xAxis}` : `${activeYAxes[0]} vs ${xAxis}`}
+              <h3 className="text-xl font-bold text-[var(--text-primary)] tracking-tight">
+                {title || 'Comparison Chart'}
+              </h3>
+              <p className="text-xs text-[var(--text-muted)] font-medium uppercase tracking-wider mt-1">
+                {xAxis} vs {activeYAxes.join(' & ')}
               </p>
             </div>
           </div>
@@ -197,39 +199,37 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
                     const safeStyles = clonedDoc.createElement('style');
                     safeStyles.innerHTML = `
                       * { box-sizing: border-box; }
-                      .inline-chart-wrapper { font-family: sans-serif; display: block !important; background: ${isDark ? '#171717' : '#ffffff'}; }
-                      .bg-\\[var\\(--bg-sidebar\\)\\] { background: ${isDark ? '#171717' : '#ffffff'} !important; }
+                      body { background: transparent !important; }
+                      .inline-chart-wrapper { font-family: sans-serif; display: block !important; padding: 40px !important; background: ${isDark ? '#0a0a0a' : '#ffffff'} !important; width: 900px !important; }
+                      .bg-\\[var\\(--bg-sidebar\\)\\] { background: ${isDark ? '#171717' : '#ffffff'} !important; border-radius: 24px !important; padding: 40px !important; border: 1px solid ${isDark ? '#262626' : '#e5e5e5'} !important; box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1) !important; }
                       .text-\\[var\\(--text-primary\\)\\] { color: ${isDark ? '#f5f5f5' : '#171717'} !important; }
-                      .text-\\[var\\(--text-muted\\)\\] { color: ${isDark ? '#a3a3a3' : '#525252'} !important; }
-                      .border-\\[var\\(--border-main\\)\\] { border-color: ${isDark ? '#262626' : '#e5e5e5'} !important; }
-                      .h-72 { width: 100% !important; height: 320px !important; margin-top: 20px; }
+                      .text-\\[var\\(--text-muted\\)\\] { color: ${isDark ? '#a3a3a3' : '#737373'} !important; }
+                      .h-72 { width: 100% !important; height: 380px !important; margin-top: 20px; }
                       .flex { display: flex !important; }
                       .items-start { align-items: flex-start !important; }
+                      .items-center { align-items: center !important; }
                       .justify-between { justify-content: space-between !important; }
                       .mb-6 { margin-bottom: 24px !important; }
-                      .mb-4 { margin-bottom: 16px !important; }
                       .gap-3 { gap: 12px !important; }
-                      .text-xl { font-size: 20px !important; font-weight: bold !important; }
-                      .text-xs { font-size: 12px !important; }
+                      .text-xl { font-size: 24px !important; font-weight: 800 !important; letter-spacing: -0.025em !important; }
+                      .text-xs { font-size: 13px !important; }
                       .uppercase { text-transform: uppercase !important; }
-                      .tracking-tight { letter-spacing: -0.025em !important; }
+                      .tracking-wider { letter-spacing: 0.05em !important; }
                       .recharts-responsive-container { width: 100% !important; height: 100% !important; }
                       svg { display: block; width: 100% !important; height: 100% !important; }
                       .recharts-cartesian-grid-line { stroke: ${isDark ? '#262626' : '#e5e5e5'}; }
-                      .recharts-text { fill: ${isDark ? '#a3a3a3' : '#525252'}; font-size: 10px; }
-                      .recharts-legend-item-text { fill: ${isDark ? '#a3a3a3' : '#525252'}; }
-                      .capture-hide { display: none !important; }
+                      .recharts-text { fill: ${isDark ? '#a3a3a3' : '#737373'}; font-size: 11px; }
+                      .recharts-legend-item-text { fill: ${isDark ? '#a3a3a3' : '#737373'}; }
+                      .capture-hide { display: none !important; visibility: hidden !important; height: 0 !important; width: 0 !important; margin: 0 !important; padding: 0 !important; }
                     `;
                     clonedDoc.head.appendChild(safeStyles);
                     // -----------------------------------------------
 
                     const element = clonedDoc.querySelector('.bg-\\[var\\(--bg-sidebar\\)\\]');
                     if (element instanceof HTMLElement) {
-                      element.style.width = '900px'; 
+                      element.style.width = '820px'; 
                       element.style.height = 'auto';
-                      element.style.minHeight = '500px';
-                      element.style.padding = '40px';
-                      element.style.borderRadius = '0px'; // Clean edges for papers
+                      element.style.margin = '0 auto';
                     }
                   }
                 });
