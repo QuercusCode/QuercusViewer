@@ -180,87 +180,77 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
               if (!chartRef.current) return;
               
               setIsExporting(true);
+              const originalStyle = chartRef.current.getAttribute('style') || '';
+              
               try {
+                // 1. LIVE RESIZE: Force the chart to 1000px off-screen in the actual DOM
+                // This allows Recharts to recalculate the ResponsiveContainer BEFORE capture
+                chartRef.current.style.position = 'fixed';
+                chartRef.current.style.left = '-5000px';
+                chartRef.current.style.top = '0';
+                chartRef.current.style.width = '1000px';
+                chartRef.current.style.zIndex = '-9999';
+                chartRef.current.style.visibility = 'visible';
+                chartRef.current.style.opacity = '1';
+
+                // 2. WAIT FOR LAYOUT: Give Recharts 800ms to re-render SVG at 1000px
+                await new Promise(resolve => setTimeout(resolve, 800));
+
                 const elementToCapture = chartRef.current;
                 
-                // Use html2canvas with Clean-Room Reparenting strategy
+                // 3. CAPTURE WITH ONCLONE ISOLATION
                 const canvas = await html2canvas(elementToCapture, {
                   scale: 2,
                   backgroundColor: isDark ? '#171717' : '#ffffff',
                   useCORS: true,
                   logging: false,
                   onclone: (clonedDoc) => {
-                    // 1. CLEAN-ROOM REPARENTING: Find our target chart in the clone
-                    // We need to find the specific element that matches our chartRef
-                    const chartInClone = clonedDoc.querySelector('.inline-chart-wrapper');
-                    if (!chartInClone) return;
-
-                    // 2. NUCLEAR STRIP: Remove EVERYTHING from the cloned body
-                    clonedDoc.body.innerHTML = '';
-                    
-                    // 3. REPARENT: Put the chart directly into the body
-                    clonedDoc.body.appendChild(chartInClone);
-
-                    // 4. STYLE ISOLATION: Remove all project-wide styles and inject safe ones
+                    // NUCLEAR STRIP: Remove modern color crashes
                     const styles = clonedDoc.querySelectorAll('style, link[rel="stylesheet"]');
                     styles.forEach(s => s.remove());
 
                     const safeStyles = clonedDoc.createElement('style');
                     safeStyles.innerHTML = `
-                      * { box-sizing: border-box; -webkit-print-color-adjust: exact; }
-                      body { 
-                        background: ${isDark ? '#0a0a0a' : '#ffffff'} !important; 
-                        width: 1100px !important; 
-                        height: auto !important; 
-                        margin: 0 !important; 
-                        padding: 60px !important;
-                        display: flex !important;
-                        justify-content: center !important;
-                        align-items: flex-start !important;
-                        overflow: visible !important;
-                        font-family: -apple-system, system-ui, sans-serif !important;
-                      }
+                      * { box-sizing: border-box; }
                       .inline-chart-wrapper { 
                         width: 1000px !important; 
-                        display: block !important; 
-                        background: transparent !important;
-                        opacity: 1 !important;
-                        visibility: visible !important;
-                        transform: none !important;
+                        padding: 40px !important;
+                        background: ${isDark ? '#171717' : '#ffffff'} !important;
+                        display: block !important;
+                        font-family: -apple-system, sans-serif !important;
                       }
                       .bg-\\[var\\(--bg-sidebar\\)\\] { 
-                        background: ${isDark ? '#171717' : '#ffffff'} !important; 
-                        border-radius: 24px !important; 
-                        padding: 56px !important; 
-                        border: 1px solid ${isDark ? '#262626' : '#e5e5e5'} !important; 
-                        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+                        background: ${isDark ? '#171717' : '#ffffff'} !important;
+                        border-radius: 24px !important;
+                        padding: 48px !important;
+                        border: 1px solid ${isDark ? '#262626' : '#e5e5e5'} !important;
                         width: 100% !important;
                       }
                       .text-\\[var\\(--text-primary\\)\\] { color: ${isDark ? '#f5f5f5' : '#171717'} !important; }
                       .text-\\[var\\(--text-muted\\)\\] { color: #888888 !important; }
-                      .h-72 { width: 100% !important; height: 450px !important; margin-top: 32px !important; }
-                      .text-xl { font-size: 36px !important; font-weight: 800 !important; margin: 0 !important; color: ${isDark ? '#f5f5f5' : '#171717'} !important; }
-                      .text-xs { font-size: 16px !important; margin-top: 8px !important; color: #888888 !important; }
+                      .h-72 { width: 100% !important; height: 400px !important; margin-top: 32px !important; }
+                      .text-xl { font-size: 32px !important; font-weight: 800 !important; margin: 0 !important; }
+                      .text-xs { font-size: 14px !important; margin-top: 6px !important; }
                       .flex { display: flex !important; }
                       .items-center { align-items: center !important; }
                       .items-start { align-items: flex-start !important; }
                       .justify-between { justify-content: space-between !important; }
-                      .mb-6 { margin-bottom: 32px !important; }
-                      .gap-3 { gap: 16px !important; }
-                      .capture-hide { display: none !important; visibility: hidden !important; }
+                      .mb-6 { margin-bottom: 24px !important; }
+                      .gap-3 { gap: 12px !important; }
+                      .capture-hide { display: none !important; }
                       .recharts-responsive-container { width: 100% !important; height: 100% !important; }
                       svg { width: 100% !important; height: 100% !important; display: block; }
-                      .recharts-text { fill: #888888 !important; font-size: 13px !important; font-weight: 600 !important; }
+                      .recharts-text { fill: #888888 !important; font-size: 12px !important; font-weight: 600 !important; }
                       .recharts-legend-item-text { fill: #888888 !important; font-weight: 600 !important; }
                       .recharts-cartesian-grid-line { stroke: ${isDark ? '#262626' : '#e5e5e5'} !important; }
                     `;
                     clonedDoc.head.appendChild(safeStyles);
 
-                    // 5. SCRUB INLINE OKLAB COLORS
+                    // SCRUB INLINE OKLAB COLORS
                     clonedDoc.querySelectorAll('*').forEach(el => {
                       if (el instanceof HTMLElement) {
-                        const inlineStyle = el.getAttribute('style') || '';
-                        if (inlineStyle.includes('okl')) {
+                        const s = el.getAttribute('style') || '';
+                        if (s.includes('okl')) {
                           el.style.color = '';
                           el.style.backgroundColor = '';
                           el.style.borderColor = '';
@@ -276,8 +266,12 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
                 link.click();
               } catch (err: any) {
                 console.error('Export Error:', err);
-                alert(`Export error: ${err.message || 'Unknown failure'}`);
+                alert(`Export failed: ${err.message || 'Unknown failure'}`);
               } finally {
+                // 4. RESTORE ORIGINAL STATE
+                if (chartRef.current) {
+                  chartRef.current.setAttribute('style', originalStyle);
+                }
                 setIsExporting(false);
               }
             }}
