@@ -44,6 +44,8 @@ export const ChemicalSketcher = Node.create({
 
 // --- Component & Modal ---
 
+const JS_CDN = "https://jsme-editor.github.io/dist/jsme/jsme.nocache.js";
+
 const ChemicalSketcherComponent = ({ node, updateAttributes, deleteNode }: any) => {
   const { molfile, svg } = node.attrs;
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -51,22 +53,26 @@ const ChemicalSketcherComponent = ({ node, updateAttributes, deleteNode }: any) 
   const jsmeAppletRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const JS_CDN = "https://jsme-editor.github.io/dist/jsme/jsme.nocache.js";
-
   // Load JSME library
   useEffect(() => {
-    if (isModalOpen && !window.hasOwnProperty('jsmeOnLoad')) {
-      const script = document.createElement('script');
-      script.src = JS_CDN;
-      script.async = true;
-      document.body.appendChild(script);
-
-      // JSME requires this global callback
-      (window as any).jsmeOnLoad = () => {
+    if (isModalOpen) {
+      if ((window as any).JSME) {
         setJsmeReady(true);
-      };
-    } else if (isModalOpen && (window as any).JSME) {
-       setJsmeReady(true);
+        return;
+      }
+
+      if (!document.getElementById('jsme-script')) {
+        // JSME requires this global callback BEFORE the script loads
+        (window as any).jsmeOnLoad = () => {
+          setJsmeReady(true);
+        };
+
+        const script = document.createElement('script');
+        script.id = 'jsme-script';
+        script.src = JS_CDN;
+        script.async = true;
+        document.body.appendChild(script);
+      }
     }
   }, [isModalOpen]);
 
@@ -75,20 +81,28 @@ const ChemicalSketcherComponent = ({ node, updateAttributes, deleteNode }: any) 
     if (isModalOpen && jsmeReady && containerRef.current) {
       const jsmeContainerId = "jsme_container";
       
-      setTimeout(() => {
+      // Small delay to ensure the container is mounted and ready
+      const timer = setTimeout(() => {
         if (!jsmeAppletRef.current && (window as any).JSME) {
-          jsmeAppletRef.current = new (window as any).JSME.JSME(
-            jsmeContainerId, 
-            "100%", "400px", {
-              "options": "query,perspective"
+          try {
+            // THE CORRECT CONSTRUCTOR is "new JSME(...)"
+            jsmeAppletRef.current = new (window as any).JSME(
+              jsmeContainerId, 
+              "100%", "450px", {
+                "options": "query,perspective,zoom"
+              }
+            );
+            
+            if (molfile) {
+              jsmeAppletRef.current.readMolFile(molfile);
             }
-          );
-          
-          if (molfile) {
-            jsmeAppletRef.current.readMolFile(molfile);
+          } catch (error) {
+            console.error("JSME Initialization failed:", error);
           }
         }
-      }, 100);
+      }, 150);
+
+      return () => clearTimeout(timer);
     }
   }, [isModalOpen, jsmeReady, molfile]);
 
