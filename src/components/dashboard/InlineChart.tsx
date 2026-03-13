@@ -1,16 +1,17 @@
-import { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { Node, mergeAttributes } from '@tiptap/core'
 import { ReactNodeViewRenderer, NodeViewWrapper } from '@tiptap/react'
 import { 
   LineChart, Line, BarChart, Bar, XAxis, YAxis, 
-  CartesianGrid, Tooltip, Legend, ResponsiveContainer 
+  CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+  ReferenceLine
 } from 'recharts'
 import { Trash2, BarChart2, TrendingUp, Palette, X } from 'lucide-react'
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#ef4444', '#06b6d4', '#84cc16'];
 
 const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
-  const { data, type, title, xAxis, yAxes, customColors } = node.attrs
+  const { data, type, title, xAxis, yAxes, customColors, showTrendLine, showStatistics } = node.attrs
   const [showColorEditor, setShowColorEditor] = useState(false)
 
   const isDark = document.documentElement.classList.contains('dark')
@@ -33,6 +34,63 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
     newColors[index] = color;
     updateAttributes({ customColors: newColors });
   };
+
+  // --- Scientific Calculations ---
+  
+  // Linear Regression: y = mx + b
+  const getRegressionLine = (seriesName: string) => {
+    const points = data
+      .map((d: any, i: number) => ({ x: i, y: d[seriesName] }))
+      .filter((p: any) => typeof p.y === 'number');
+    
+    if (points.length < 2) return null;
+
+    const n = points.length;
+    let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+    for (const p of points) {
+      sumX += p.x;
+      sumY += p.y;
+      sumXY += p.x * p.y;
+      sumX2 += p.x * p.x;
+    }
+
+    const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+    const intercept = (sumY - slope * sumX) / n;
+
+    // Generate points for the trend line
+    return data.map((_: any, i: number) => ({
+      [`${seriesName}_trend`]: slope * i + intercept
+    }));
+  };
+
+  // Statistics: Mean & Stdev
+  const getSeriesStats = (seriesName: string) => {
+    const vals = data
+      .map((d: any) => d[seriesName])
+      .filter((v: any) => typeof v === 'number');
+    
+    if (vals.length === 0) return null;
+
+    const mean = vals.reduce((a: number, b: number) => a + b, 0) / vals.length;
+    return { mean };
+  };
+
+  // Augment data with trend lines if needed
+  const augmentedData = useMemo(() => {
+    if (!showTrendLine || !data) return data;
+    
+    let result = [...data];
+    activeYAxes.forEach((y: string) => {
+      const trend = getRegressionLine(y);
+      if (trend) {
+        result = result.map((d: any, i: number) => ({
+          ...d,
+          ...trend[i]
+        }));
+      }
+    });
+    return result;
+  }, [data, activeYAxes, showTrendLine]);
 
   return (
     <NodeViewWrapper className="inline-chart-wrapper my-8 group relative">
@@ -158,7 +216,7 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
                   ))}
                 </BarChart>
               ) : (
-                <LineChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <LineChart data={augmentedData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
                   <XAxis 
                     dataKey={xAxis} 
@@ -194,16 +252,42 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
                     />
                   )}
                   {activeYAxes.map((y: string, index: number) => (
-                    <Line 
-                      key={y}
-                      type="monotone" 
-                      dataKey={y} 
-                      stroke={getSeriesColor(index)} 
-                      strokeWidth={3} 
-                      dot={{ r: 4, fill: getSeriesColor(index), strokeWidth: 2, stroke: isDark ? '#171717' : '#ffffff' }}
-                      activeDot={{ r: 6 }}
-                      name={y}
-                    />
+                    <React.Fragment key={y}>
+                      <Line 
+                        type="monotone" 
+                        dataKey={y} 
+                        stroke={getSeriesColor(index)} 
+                        strokeWidth={3} 
+                        dot={{ r: 4, fill: getSeriesColor(index), strokeWidth: 2, stroke: isDark ? '#171717' : '#ffffff' }}
+                        activeDot={{ r: 6 }}
+                        name={y}
+                      />
+                      {showTrendLine && (
+                        <Line
+                          type="monotone"
+                          dataKey={`${y}_trend`}
+                          stroke={getSeriesColor(index)}
+                          strokeWidth={2}
+                          strokeDasharray="5 5"
+                          dot={false}
+                          activeDot={false}
+                          name={`${y} Trend`}
+                        />
+                      )}
+                      {showStatistics && getSeriesStats(y) && (
+                        <ReferenceLine 
+                          y={getSeriesStats(y)!.mean} 
+                          stroke={getSeriesColor(index)} 
+                          strokeDasharray="3 3"
+                          label={{ 
+                            value: `Avg`, 
+                            fill: getSeriesColor(index), 
+                            fontSize: 8,
+                            position: 'insideBottomRight'
+                          }}
+                        />
+                      )}
+                    </React.Fragment>
                   ))}
                 </LineChart>
               )}
@@ -293,6 +377,20 @@ export const InlineChart = Node.create({
         parseHTML: element => element.getAttribute('data-table-id') || '',
         renderHTML: attributes => ({
           'data-table-id': attributes.tableId,
+        }),
+      },
+      showTrendLine: {
+        default: false,
+        parseHTML: element => element.getAttribute('data-show-trendline') === 'true',
+        renderHTML: attributes => ({
+          'data-show-trendline': attributes.showTrendLine ? 'true' : 'false',
+        }),
+      },
+      showStatistics: {
+        default: false,
+        parseHTML: element => element.getAttribute('data-show-statistics') === 'true',
+        renderHTML: attributes => ({
+          'data-show-statistics': attributes.showStatistics ? 'true' : 'false',
         }),
       },
     }

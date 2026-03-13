@@ -5,7 +5,7 @@ import {
   Trash2, Download, Maximize2, Settings, 
   Bold, Italic, Underline as UnderlineIcon, Strikethrough, 
   AlignLeft, AlignCenter, AlignRight, Link as LinkIcon, Type,
-  ChevronDown, Activity, BarChart2, Plus, X
+  ChevronDown, Activity, BarChart2, Plus, X, TrendingUp
 } from 'lucide-react'
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#ef4444', '#06b6d4', '#84cc16'];
@@ -19,12 +19,16 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode, updateAtt
     type: 'line' | 'bar', 
     xCol: number, 
     yCols: number[],
-    seriesColors: Record<number, string>
+    seriesColors: Record<number, string>,
+    showTrendLine: boolean,
+    showStatistics: boolean
   }>({ 
     type: 'line', 
     xCol: 0, 
     yCols: [1],
-    seriesColors: { 1: '#3b82f6' }
+    seriesColors: { 1: '#3b82f6' },
+    showTrendLine: false,
+    showStatistics: false
   });
   const [numericCols, setNumericCols] = useState<number[]>([]);
 
@@ -333,6 +337,8 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode, updateAtt
           xAxis,
           yAxes,
           customColors,
+          showTrendLine: chartConfig.showTrendLine,
+          showStatistics: chartConfig.showStatistics,
           tableId: node.attrs.id
         }
       })
@@ -503,6 +509,33 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode, updateAtt
                           </div>
                         ))}
                       </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 border-t border-neutral-100 pt-3">
+                    <label className="block text-[10px] font-bold text-neutral-500 uppercase mb-2">Scientific Insights</label>
+                    <div className="space-y-2">
+                      <button 
+                        onClick={() => setChartConfig(prev => ({ ...prev, showTrendLine: !prev.showTrendLine }))}
+                        className={`w-full flex items-center justify-between px-3 py-2 rounded-lg border text-[10px] font-bold transition-all ${chartConfig.showTrendLine ? 'bg-blue-50 border-blue-200 text-blue-600' : 'bg-white border-neutral-100 text-neutral-500'}`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <TrendingUp className="w-3.5 h-3.5" />
+                          <span>Show Trend Line (Regression)</span>
+                        </div>
+                        <div className={`w-3 h-3 rounded-full ${chartConfig.showTrendLine ? 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]' : 'bg-neutral-200'}`} />
+                      </button>
+
+                      <button 
+                        onClick={() => setChartConfig(prev => ({ ...prev, showStatistics: !prev.showStatistics }))}
+                        className={`w-full flex items-center justify-between px-3 py-2 rounded-lg border text-[10px] font-bold transition-all ${chartConfig.showStatistics ? 'bg-blue-50 border-blue-200 text-blue-600' : 'bg-white border-neutral-100 text-neutral-500'}`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <Activity className="w-3.5 h-3.5" />
+                          <span>Show Statistics (Avg/Stdev)</span>
+                        </div>
+                        <div className={`w-3 h-3 rounded-full ${chartConfig.showStatistics ? 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]' : 'bg-neutral-200'}`} />
+                      </button>
                     </div>
                   </div>
 
