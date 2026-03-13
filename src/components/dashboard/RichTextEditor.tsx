@@ -20,6 +20,7 @@ import Mention from '@tiptap/extension-mention';
 import { HexColorPicker } from 'react-colorful';
 import { SpreadsheetTable } from './SpreadsheetTable';
 import { InlineChart } from './InlineChart';
+import { ChemicalSketcher } from './ChemicalSketcher';
 import { createSuggestion } from './suggestion';
 import { useTheme } from '../../lib/ThemeContext';
 import { 
@@ -29,7 +30,7 @@ import {
   Type, ChevronDown, MoreHorizontal,
   Subscript as SubscriptIcon, Superscript as SuperscriptIcon,
   Highlighter, Eraser, FlaskConical, Clock, FileText,
-  Table as TableIcon, Activity
+  Table as TableIcon, Activity, Beaker
 } from 'lucide-react';
 import type { Structure } from '../../lib/structuresService';
 
@@ -191,6 +192,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         resizable: true,
       }),
       InlineChart,
+      ChemicalSketcher,
       TableRow,
       TableHeader,
       TableCell,
@@ -290,6 +292,9 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         break;
       case 'well384':
         editor.chain().focus().insertTable({ rows: 17, cols: 25, withHeaderRow: true }).run();
+        break;
+      case 'molecule':
+        editor.chain().focus().insertContent({ type: 'chemicalSketcher' }).run();
         break;
       case 'protocol':
         editor.chain().focus().insertContent('**Protocol:**\n\n- ').run();
@@ -599,7 +604,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
                       >
                         96-well (8x12)
                       </button>
-                      <button 
+                      <button
                         onClick={() => insertTemplate('well384')}
                         className="w-full text-left px-4 py-3 text-sm text-[var(--text-secondary)] hover:bg-[var(--input-bg)] rounded-xl transition-colors"
                       >
@@ -612,7 +617,15 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
               <ToolbarDivider className="!h-px !w-full !my-2 opacity-20" />
 
-              <button 
+              <button
+                onClick={() => insertTemplate('molecule')}
+                className="w-full flex items-center gap-4 px-4 py-4 text-sm text-[var(--text-secondary)] hover:bg-[var(--input-bg)] rounded-xl transition-all text-left"
+              >
+                <Beaker className="w-5 h-5 text-indigo-400" />
+                <span className="font-semibold">Molecular Structure</span>
+              </button>
+
+              <button
                 onClick={() => insertTemplate('setup')}
                 className="w-full flex items-center gap-4 px-4 py-4 text-sm text-[var(--text-secondary)] hover:bg-[var(--input-bg)] rounded-xl transition-all text-left"
               >
