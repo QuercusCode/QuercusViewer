@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useRef } from 'react'
+import html2canvas from 'html2canvas'
 import { Node, mergeAttributes } from '@tiptap/core'
 import { ReactNodeViewRenderer, NodeViewWrapper } from '@tiptap/react'
 import { 
@@ -13,6 +14,8 @@ const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#ef4444'
 const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
   const { data, type, title, xAxis, yAxes, customColors, showTrendLine, showStatistics } = node.attrs
   const [showColorEditor, setShowColorEditor] = useState(false)
+  const [isExporting, setIsExporting] = useState(false)
+  const chartRef = useRef<HTMLDivElement>(null)
 
   const isDark = document.documentElement.classList.contains('dark')
   const textColor = isDark ? '#a3a3a3' : '#525252'
@@ -165,8 +168,40 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
           </div>
         </div>
 
+        {/* Global Scientific Controls Overlay */}
+        <div className="flex items-center gap-3 mb-4 px-2">
+          <button
+            onClick={async () => {
+              if (chartRef.current) {
+                setIsExporting(true);
+                try {
+                  const canvas = await html2canvas(chartRef.current, {
+                    scale: 3, // High resolution for publication
+                    backgroundColor: isDark ? '#171717' : '#ffffff',
+                    useCORS: true,
+                    logging: false
+                  });
+                  const link = document.createElement('a');
+                  link.download = `Chart_${title.replace(/\s+/g, '_') || 'Export'}.png`;
+                  link.href = canvas.toDataURL('image/png', 1.0);
+                  link.click();
+                } catch (err) {
+                  console.error('Failed to export chart:', err);
+                } finally {
+                  setIsExporting(false);
+                }
+              }
+            }}
+            disabled={isExporting}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500 hover:text-white text-blue-400 text-[10px] font-bold rounded-lg border border-blue-500/20 transition-all disabled:opacity-50"
+          >
+            {isExporting ? <span className="animate-spin text-xs">⌛</span> : <TrendingUp className="w-3 h-3" />}
+            {isExporting ? 'Capturing...' : 'Download PNG (High-Res)'}
+          </button>
+        </div>
+
         {/* Chart Area */}
-        <div className="h-72 w-full flex items-center justify-center">
+        <div ref={chartRef} className="h-72 w-full flex items-center justify-center p-2 bg-transparent">
           {data && data.length > 0 && activeYAxes.length > 0 && data.some((d: any) => activeYAxes.some((y: string) => typeof d[y] === 'number')) ? (
             <ResponsiveContainer width="100%" height="100%">
               {type === 'bar' ? (
