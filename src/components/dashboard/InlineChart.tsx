@@ -89,38 +89,45 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
     return { mean };
   };
 
-  // Sanitized numeric data specifically for Scatter plots
-  const sanitizedScatterData = useMemo(() => {
-    if (type !== 'scatter' || !data) return data;
-    return data.map((d: any) => {
-      const sanitized: any = { ...d };
-      // Force X axis to number
-      sanitized[xAxis] = Number(d[xAxis]);
-      // Force all active Y axes to numbers
-      activeYAxes.forEach((y: string) => {
-        sanitized[y] = Number(d[y]);
-      });
-      return sanitized;
-    }).filter((d: any) => !isNaN(d[xAxis]));
-  }, [data, type, xAxis, activeYAxes]);
+  // Detect if X-axis column is primarily numeric
+  const isXNumeric = useMemo(() => {
+    if (!data || data.length === 0) return false;
+    // Sample a few values to see if they are numbers
+    const samples = data.slice(0, 5).map((d: any) => d[xAxis]);
+    return samples.every((v: any) => !isNaN(parseFloat(v)) && isFinite(v));
+  }, [data, xAxis]);
 
-  // Augmented data with trend lines
+  // Unified augmented data (Sanitization + Trend Lines)
   const augmentedData = useMemo(() => {
-    const sourceData = type === 'scatter' ? sanitizedScatterData : data;
-    if (!showTrendLine || !sourceData) return sourceData;
+    if (!data) return [];
     
-    let result = [...sourceData];
-    activeYAxes.forEach((y: string) => {
-      const trend = getRegressionLine(y);
-      if (trend) {
-        result = result.map((d: any, i: number) => ({
-          ...d,
-          ...trend[i]
-        }));
+    // 1. Initial sanitization: ensure numeric Y values and potentially numeric X values
+    let result = data.map((d: any) => {
+      const sanitized: any = { ...d };
+      activeYAxes.forEach((y: string) => {
+        sanitized[y] = parseFloat(d[y]);
+      });
+      if (isXNumeric) {
+        sanitized[xAxis] = parseFloat(d[xAxis]);
       }
+      return sanitized;
     });
+
+    // 2. Add Trend Lines if needed
+    if (showTrendLine) {
+      activeYAxes.forEach((y: string) => {
+        const trend = getRegressionLine(y);
+        if (trend) {
+          result = result.map((d: any, i: number) => ({
+            ...d,
+            ...trend[i]
+          }));
+        }
+      });
+    }
+
     return result;
-  }, [data, sanitizedScatterData, activeYAxes, showTrendLine, type]);
+  }, [data, activeYAxes, showTrendLine, type, xAxis, isXNumeric]);
 
   return (
     <NodeViewWrapper ref={chartRef} className="inline-chart-wrapper my-8 group relative">
@@ -336,7 +343,17 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
               ) : type === 'scatter' ? (
                 <ScatterChart width={1000} height={400} margin={{ top: 20, right: 40, left: 10, bottom: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
-                  <XAxis type="number" dataKey={xAxis} name={xAxis} stroke={textColor} fontSize={14} tickLine={false} axisLine={false} tick={{ fill: textColor }} domain={['auto', 'auto']} />
+                  <XAxis 
+                    type={isXNumeric ? "number" : "category"} 
+                    dataKey={xAxis} 
+                    name={xAxis} 
+                    stroke={textColor} 
+                    fontSize={14} 
+                    tickLine={false} 
+                    axisLine={false} 
+                    tick={{ fill: textColor }} 
+                    domain={isXNumeric ? ['auto', 'auto'] : undefined} 
+                  />
                   <YAxis type="number" stroke={textColor} fontSize={14} tickLine={false} axisLine={false} tick={{ fill: textColor }} domain={['auto', 'auto']} />
                   <ZAxis type="number" range={[64, 64]} />
                   {activeYAxes.length > 1 && (
@@ -347,8 +364,8 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
                       <Scatter 
                         key={y} 
                         name={y} 
-                        data={augmentedData.map((p: any) => ({ ...p, [xAxis]: Number(p[xAxis]) }))} // Ensure X is numeric for scatter
-                        dataKey={y} // EXPLICIT Y KEY
+                        data={augmentedData} 
+                        dataKey={y}
                         fill={getSeriesColor(index)} 
                         isAnimationActive={false} 
                       />
@@ -356,8 +373,8 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
                         <Scatter
                           key={`${y}_trend`}
                           name={`${y} Trend`}
-                          data={augmentedData.map((p: any) => ({ ...p, [xAxis]: Number(p[xAxis]) }))}
-                          dataKey={`${y}_trend`} // USE CALCULATED TREND KEY
+                          data={augmentedData}
+                          dataKey={`${y}_trend`}
                           fill={getSeriesColor(index)}
                           isAnimationActive={false}
                           line={{ stroke: getSeriesColor(index), strokeWidth: 2, strokeDasharray: '5 5' }}
@@ -455,7 +472,7 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
                   <ScatterChart margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
                     <XAxis 
-                      type="number"
+                      type={isXNumeric ? "number" : "category"}
                       dataKey={xAxis} 
                       name={xAxis}
                       stroke={textColor} 
@@ -463,6 +480,7 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
                       tickLine={false} 
                       axisLine={false}
                       tick={{ fill: textColor }}
+                      domain={isXNumeric ? ['auto', 'auto'] : undefined}
                     />
                     <YAxis 
                       type="number"
@@ -471,6 +489,7 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
                       tickLine={false} 
                       axisLine={false}
                       tick={{ fill: textColor }}
+                      domain={['auto', 'auto']}
                     />
                     <ZAxis type="number" range={[40, 40]} />
                     <Tooltip 
@@ -498,7 +517,7 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
                           key={y} 
                           name={y} 
                           data={augmentedData}
-                          dataKey={y} // EXPLICIT Y KEY
+                          dataKey={y}
                           fill={getSeriesColor(index)} 
                         />
                         {showTrendLine && (
@@ -506,7 +525,7 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
                             key={`${y}_trend`}
                             name={`${y} Trend`}
                             data={augmentedData}
-                            dataKey={`${y}_trend`} // USE CALCULATED TREND KEY
+                            dataKey={`${y}_trend`}
                             fill={getSeriesColor(index)}
                             line={{ stroke: getSeriesColor(index), strokeWidth: 2, strokeDasharray: '5 5' }}
                             shape={() => null}
