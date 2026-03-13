@@ -96,8 +96,8 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
   }, [data, activeYAxes, showTrendLine]);
 
   return (
-    <NodeViewWrapper className="inline-chart-wrapper my-8 group relative">
-      <div ref={chartRef} className="bg-[var(--bg-sidebar)] border border-[var(--border-main)] rounded-2xl overflow-hidden shadow-xl p-8 transition-all group-hover:border-blue-500/30">
+    <NodeViewWrapper ref={chartRef} className="inline-chart-wrapper my-8 group relative">
+      <div className="bg-[var(--bg-sidebar)] border border-[var(--border-main)] rounded-2xl overflow-hidden shadow-xl p-8 transition-all group-hover:border-blue-500/30">
         
         {/* Header Section */}
         <div className="flex items-start justify-between mb-6">
@@ -162,7 +162,7 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
               {type === 'bar' ? 'Line' : 'Bar'}
             </button>
             <button 
-              onClick={deleteNode}
+              onClick={() => deleteNode()}
               className="p-1.5 bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white rounded-lg transition-all"
               title="Delete Chart"
             >
@@ -181,60 +181,86 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
               
               setIsExporting(true);
               try {
-                // html2canvas provides an isolated cloneDoc in its options
-                const canvas = await html2canvas(chartRef.current, {
+                const elementToCapture = chartRef.current;
+                
+                // Use html2canvas with Clean-Room Reparenting strategy
+                const canvas = await html2canvas(elementToCapture, {
                   scale: 2,
                   backgroundColor: isDark ? '#171717' : '#ffffff',
                   useCORS: true,
                   logging: false,
                   onclone: (clonedDoc) => {
-                    // 1. NUCLEAR STYLE ISOLATION: Prevent oklab/oklch crashes
+                    // 1. CLEAN-ROOM REPARENTING: Find our target chart in the clone
+                    // We need to find the specific element that matches our chartRef
+                    const chartInClone = clonedDoc.querySelector('.inline-chart-wrapper');
+                    if (!chartInClone) return;
+
+                    // 2. NUCLEAR STRIP: Remove EVERYTHING from the cloned body
+                    clonedDoc.body.innerHTML = '';
+                    
+                    // 3. REPARENT: Put the chart directly into the body
+                    clonedDoc.body.appendChild(chartInClone);
+
+                    // 4. STYLE ISOLATION: Remove all project-wide styles and inject safe ones
                     const styles = clonedDoc.querySelectorAll('style, link[rel="stylesheet"]');
                     styles.forEach(s => s.remove());
 
-                    // 2. INJECT PURE HEX ENGINE: Fixed 1000px layout
                     const safeStyles = clonedDoc.createElement('style');
                     safeStyles.innerHTML = `
-                      * { box-sizing: border-box; }
+                      * { box-sizing: border-box; -webkit-print-color-adjust: exact; }
+                      body { 
+                        background: ${isDark ? '#0a0a0a' : '#ffffff'} !important; 
+                        width: 1100px !important; 
+                        height: auto !important; 
+                        margin: 0 !important; 
+                        padding: 60px !important;
+                        display: flex !important;
+                        justify-content: center !important;
+                        align-items: flex-start !important;
+                        overflow: visible !important;
+                        font-family: -apple-system, system-ui, sans-serif !important;
+                      }
                       .inline-chart-wrapper { 
                         width: 1000px !important; 
-                        padding: 40px !important;
-                        background: ${isDark ? '#171717' : '#ffffff'} !important;
-                        display: block !important;
-                        font-family: system-ui, -apple-system, sans-serif !important;
+                        display: block !important; 
+                        background: transparent !important;
+                        opacity: 1 !important;
+                        visibility: visible !important;
+                        transform: none !important;
                       }
                       .bg-\\[var\\(--bg-sidebar\\)\\] { 
-                        background: ${isDark ? '#171717' : '#ffffff'} !important;
-                        border-radius: 24px !important;
-                        padding: 48px !important;
-                        border: 1px solid ${isDark ? '#262626' : '#e5e5e5'} !important;
+                        background: ${isDark ? '#171717' : '#ffffff'} !important; 
+                        border-radius: 24px !important; 
+                        padding: 56px !important; 
+                        border: 1px solid ${isDark ? '#262626' : '#e5e5e5'} !important; 
+                        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
                         width: 100% !important;
                       }
                       .text-\\[var\\(--text-primary\\)\\] { color: ${isDark ? '#f5f5f5' : '#171717'} !important; }
                       .text-\\[var\\(--text-muted\\)\\] { color: #888888 !important; }
-                      .h-72 { width: 100% !important; height: 400px !important; margin-top: 32px !important; }
-                      .text-xl { font-size: 32px !important; font-weight: 800 !important; margin: 0 !important; }
-                      .text-xs { font-size: 14px !important; margin-top: 6px !important; }
+                      .h-72 { width: 100% !important; height: 450px !important; margin-top: 32px !important; }
+                      .text-xl { font-size: 36px !important; font-weight: 800 !important; margin: 0 !important; color: ${isDark ? '#f5f5f5' : '#171717'} !important; }
+                      .text-xs { font-size: 16px !important; margin-top: 8px !important; color: #888888 !important; }
                       .flex { display: flex !important; }
                       .items-center { align-items: center !important; }
                       .items-start { align-items: flex-start !important; }
                       .justify-between { justify-content: space-between !important; }
-                      .mb-6 { margin-bottom: 24px !important; }
-                      .gap-3 { gap: 12px !important; }
-                      .capture-hide { display: none !important; }
+                      .mb-6 { margin-bottom: 32px !important; }
+                      .gap-3 { gap: 16px !important; }
+                      .capture-hide { display: none !important; visibility: hidden !important; }
                       .recharts-responsive-container { width: 100% !important; height: 100% !important; }
                       svg { width: 100% !important; height: 100% !important; display: block; }
-                      .recharts-text { fill: #888888 !important; font-size: 12px !important; }
-                      .recharts-legend-item-text { fill: #888888 !important; }
+                      .recharts-text { fill: #888888 !important; font-size: 13px !important; font-weight: 600 !important; }
+                      .recharts-legend-item-text { fill: #888888 !important; font-weight: 600 !important; }
                       .recharts-cartesian-grid-line { stroke: ${isDark ? '#262626' : '#e5e5e5'} !important; }
                     `;
                     clonedDoc.head.appendChild(safeStyles);
 
-                    // 3. SANITIZE INLINE COLORS
+                    // 5. SCRUB INLINE OKLAB COLORS
                     clonedDoc.querySelectorAll('*').forEach(el => {
                       if (el instanceof HTMLElement) {
-                        const s = el.getAttribute('style') || '';
-                        if (s.includes('okl')) {
+                        const inlineStyle = el.getAttribute('style') || '';
+                        if (inlineStyle.includes('okl')) {
                           el.style.color = '';
                           el.style.backgroundColor = '';
                           el.style.borderColor = '';
