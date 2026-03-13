@@ -42,9 +42,14 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
   
   // Linear Regression: y = mx + b
   const getRegressionLine = (seriesName: string) => {
+    // For scatter plots, X is the actual numeric value from the xAxis column
+    // For line/bar charts, X is just the index in the array
     const points = data
-      .map((d: any, i: number) => ({ x: i, y: d[seriesName] }))
-      .filter((p: any) => typeof p.y === 'number');
+      .map((d: any, i: number) => ({ 
+        x: type === 'scatter' ? Number(d[xAxis]) : i, 
+        y: Number(d[seriesName]) 
+      }))
+      .filter((p: any) => !isNaN(p.x) && !isNaN(p.y));
     
     if (points.length < 2) return null;
 
@@ -57,13 +62,20 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
       sumX2 += p.x * p.x;
     }
 
-    const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+    const denom = n * sumX2 - sumX * sumX;
+    if (Math.abs(denom) < 0.0000001) return null; // Avoid division by zero for vertical lines
+
+    const slope = (n * sumXY - sumX * sumY) / denom;
     const intercept = (sumY - slope * sumX) / n;
 
     // Generate points for the trend line
-    return data.map((_: any, i: number) => ({
-      [`${seriesName}_trend`]: slope * i + intercept
-    }));
+    // For scatter plots, the trend line is also plotted as scatter points on the same numeric X-axis
+    return data.map((d: any, i: number) => {
+      const xVal = type === 'scatter' ? Number(d[xAxis]) : i;
+      return {
+        [`${seriesName}_trend`]: isNaN(xVal) ? null : slope * xVal + intercept
+      };
+    });
   };
 
   // Statistics: Mean & Stdev
@@ -93,7 +105,40 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
       }
     });
     return result;
-  }, [data, activeYAxes, showTrendLine]);
+  }, [data, activeYAxes, showTrendLine, type]); // Added type dependency
+
+  // Sanitized numeric data specifically for Scatter plots
+  const sanitizedScatterData = useMemo(() => {
+    if (type !== 'scatter' || !data) return data;
+    return data.map((d: any) => {
+      const sanitized: any = { ...d };
+      // Force X axis to number
+      sanitized[xAxis] = Number(d[xAxis]);
+      // Force all active Y axes to numbers
+      activeYAxes.forEach((y: string) => {
+        sanitized[y] = Number(d[y]);
+      });
+      return sanitized;
+    }).filter((d: any) => !isNaN(d[xAxis]));
+  }, [data, type, xAxis, activeYAxes]);
+
+  // Augmented sanitized data for scatter regression
+  const augmentedScatterData = useMemo(() => {
+    if (type !== 'scatter' || !sanitizedScatterData) return sanitizedScatterData;
+    if (!showTrendLine) return sanitizedScatterData;
+
+    let result = [...sanitizedScatterData];
+    activeYAxes.forEach((y: string) => {
+      const trend = getRegressionLine(y);
+      if (trend) {
+        result = result.map((d: any, i: number) => ({
+          ...d,
+          ...trend[i]
+        }));
+      }
+    });
+    return result;
+  }, [sanitizedScatterData, activeYAxes, showTrendLine, type]);
 
   return (
     <NodeViewWrapper ref={chartRef} className="inline-chart-wrapper my-8 group relative">
@@ -316,7 +361,27 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
                     <Legend verticalAlign="top" align="right" iconType="circle" wrapperStyle={{ fontSize: '14px', paddingBottom: '30px' }} />
                   )}
                   {activeYAxes.map((y: string, index: number) => (
-                    <Scatter key={y} name={y} data={data} fill={getSeriesColor(index)} isAnimationActive={false} />
+                    <React.Fragment key={y}>
+                      <Scatter 
+                        key={y} 
+                        name={y} 
+                        data={augmentedScatterData} 
+                        fill={getSeriesColor(index)} 
+                        isAnimationActive={false} 
+                      />
+                      {showTrendLine && (
+                        <Scatter
+                          key={`${y}_trend`}
+                          name={`${y} Trend`}
+                          data={augmentedScatterData}
+                          dataKey={`${y}_trend`}
+                          fill={getSeriesColor(index)}
+                          isAnimationActive={false}
+                          line={{ stroke: getSeriesColor(index), strokeWidth: 2, strokeDasharray: '5 5' }}
+                          shape={() => null} // Hide dots for the trend line in scatter mode
+                        />
+                      )}
+                    </React.Fragment>
                   ))}
                 </ScatterChart>
               ) : (
@@ -445,12 +510,25 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
                       />
                     )}
                     {activeYAxes.map((y: string, index: number) => (
-                      <Scatter 
-                        key={y} 
-                        name={y} 
-                        data={data} 
-                        fill={getSeriesColor(index)} 
-                      />
+                      <React.Fragment key={y}>
+                        <Scatter 
+                          key={y} 
+                          name={y} 
+                          data={augmentedScatterData} 
+                          fill={getSeriesColor(index)} 
+                        />
+                        {showTrendLine && (
+                          <Scatter
+                            key={`${y}_trend`}
+                            name={`${y} Trend`}
+                            data={augmentedScatterData}
+                            dataKey={`${y}_trend`}
+                            fill={getSeriesColor(index)}
+                            line={{ stroke: getSeriesColor(index), strokeWidth: 2, strokeDasharray: '5 5' }}
+                            shape={() => null} // Hide dots for the trend line
+                          />
+                        )}
+                      </React.Fragment>
                     ))}
                   </ScatterChart>
                 ) : (
