@@ -51,18 +51,22 @@ const ChemicalSketcherComponent = ({ node, updateAttributes, deleteNode }: any) 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [jsmeReady, setJsmeReady] = useState(false);
   const jsmeAppletRef = useRef<any>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerId] = useState(() => `jsme_container_${Math.random().toString(36).substr(2, 9)}`);
+  const [initError, setInitError] = useState<string | null>(null);
 
   // Load JSME library
   useEffect(() => {
     if (isModalOpen) {
-      if ((window as any).JSME) {
+      const checkJSME = () => {
+        return (window as any).JSMe || (window as any).JSME || (window as any).jsme;
+      };
+
+      if (checkJSME()) {
         setJsmeReady(true);
         return;
       }
 
       if (!document.getElementById('jsme-script')) {
-        // Define global callback before appending script
         (window as any).jsmeOnLoad = () => {
           setJsmeReady(true);
         };
@@ -72,11 +76,9 @@ const ChemicalSketcherComponent = ({ node, updateAttributes, deleteNode }: any) 
         script.src = JS_CDN;
         script.async = true;
         document.body.appendChild(script);
-      } else if (document.getElementById('jsme-script')) {
-        // Script exists but maybe not loaded yet, or LOADED but ready is false
-        // Check periodically if JSME becomes available
+      } else {
         const checkInterval = setInterval(() => {
-          if ((window as any).JSME) {
+          if (checkJSME()) {
             setJsmeReady(true);
             clearInterval(checkInterval);
           }
@@ -86,43 +88,42 @@ const ChemicalSketcherComponent = ({ node, updateAttributes, deleteNode }: any) 
     }
   }, [isModalOpen]);
 
-  // Initialize JSME Applet when modal opens and script is ready
-  useEffect(() => {
-    if (isModalOpen && jsmeReady && containerRef.current) {
-      const jsmeContainerId = "jsme_container";
-      
-      // Ensure we start fresh
-      if (jsmeAppletRef.current) {
+  // Initialize JSME Applet
+  const initSketcher = () => {
+    setInitError(null);
+    const JSMEConstructor = (window as any).JSMe || (window as any).JSME || (window as any).jsme;
+    
+    if (JSMEConstructor && isModalOpen && jsmeReady) {
+      try {
+        // Clear previous if any
         jsmeAppletRef.current = null;
-      }
-
-      const timer = setTimeout(() => {
-        const container = document.getElementById(jsmeContainerId);
-        if (container && !jsmeAppletRef.current && (window as any).JSME) {
-          try {
-            // THE CORRECT CONSTRUCTOR for the standalone version
-            jsmeAppletRef.current = new (window as any).JSME(
-              jsmeContainerId, 
-              "100%", "450px", {
-                "options": "query,perspective,zoom"
-              }
-            );
-            
-            if (molfile) {
-              jsmeAppletRef.current.readMolFile(molfile);
-            }
-          } catch (error) {
-            console.error("JSME Initialization failed:", error);
+        
+        jsmeAppletRef.current = new JSMEConstructor(
+          containerId, 
+          "100%", "450px", {
+            "options": "query,perspective,zoom"
           }
+        );
+        
+        if (molfile) {
+          jsmeAppletRef.current.readMolFile(molfile);
         }
-      }, 300); // Increased timeout for stability
+      } catch (error: any) {
+        console.error("JSME Initialization failed:", error);
+        setInitError(error.message || "Failed to initialize editor");
+      }
+    }
+  };
 
+  useEffect(() => {
+    if (isModalOpen && jsmeReady) {
+      const timer = setTimeout(initSketcher, 400);
       return () => {
         clearTimeout(timer);
         jsmeAppletRef.current = null;
       };
     }
-  }, [isModalOpen, jsmeReady, molfile]);
+  }, [isModalOpen, jsmeReady, containerId]);
 
   const handleSave = () => {
     if (jsmeAppletRef.current) {
@@ -222,14 +223,34 @@ const ChemicalSketcherComponent = ({ node, updateAttributes, deleteNode }: any) 
 
             {/* Editor Body */}
             <div className="flex-1 p-8 bg-[var(--bg-main)]">
-              {!jsmeReady ? (
+              {!jsmeReady || initError ? (
                 <div className="flex flex-col items-center justify-center h-[400px] text-[var(--text-muted)]">
-                  <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4" />
-                  <p className="text-sm font-medium">Initializing JSME Sketcher...</p>
+                  {initError ? (
+                    <>
+                      <div className="p-3 bg-red-500/10 text-red-400 rounded-full mb-4">
+                        <X className="w-6 h-6" />
+                      </div>
+                      <p className="text-sm font-bold text-[var(--text-primary)] mb-2">Initialization Failed</p>
+                      <p className="text-xs text-[var(--text-muted)] mb-6 text-center max-w-[240px] leading-relaxed">
+                        {initError}
+                      </p>
+                      <button 
+                        onClick={initSketcher}
+                        className="px-6 py-2 rounded-xl bg-[var(--input-bg)] hover:bg-[var(--border-main)] text-[var(--text-primary)] text-xs font-bold transition-all"
+                      >
+                        Try Again
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4" />
+                      <p className="text-sm font-medium">Initializing JSME Sketcher...</p>
+                    </>
+                  )}
                 </div>
               ) : (
                 <div className="rounded-2xl border border-[var(--border-main)] overflow-hidden shadow-inner bg-white">
-                  <div id="jsme_container" ref={containerRef} style={{ minHeight: '450px', width: '100%' }}></div>
+                  <div id={containerId} style={{ minHeight: '450px', width: '100%' }}></div>
                 </div>
               )}
             </div>
@@ -248,7 +269,7 @@ const ChemicalSketcherComponent = ({ node, updateAttributes, deleteNode }: any) 
                 </button>
                 <button 
                   onClick={handleSave}
-                  disabled={!jsmeReady}
+                  disabled={!jsmeReady || !!initError}
                   className="px-8 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold shadow-lg shadow-indigo-500/20 transition-all disabled:opacity-50 cursor-pointer"
                 >
                   Save to Notes
