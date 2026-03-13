@@ -190,46 +190,40 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
                   useCORS: true,
                   logging: false,
                   onclone: (clonedDoc) => {
-                    // --- THE FIX: Sanitizing CSS for html2canvas ---
-                    // html2canvas fails to parse Tailwind 4's oklch() colors in stylesheets.
-                    // We remove all document styles and inject only what the Chart needs.
-                    const styleTags = clonedDoc.querySelectorAll('style, link[rel="stylesheet"]');
-                    styleTags.forEach(tag => tag.remove());
-                    
-                    const safeStyles = clonedDoc.createElement('style');
-                    safeStyles.innerHTML = `
-                      * { box-sizing: border-box; }
-                      body { background: transparent !important; }
-                      .inline-chart-wrapper { font-family: sans-serif; display: block !important; padding: 40px !important; background: ${isDark ? '#0a0a0a' : '#ffffff'} !important; width: 900px !important; }
-                      .bg-\\[var\\(--bg-sidebar\\)\\] { background: ${isDark ? '#171717' : '#ffffff'} !important; border-radius: 24px !important; padding: 40px !important; border: 1px solid ${isDark ? '#262626' : '#e5e5e5'} !important; box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1) !important; }
-                      .text-\\[var\\(--text-primary\\)\\] { color: ${isDark ? '#f5f5f5' : '#171717'} !important; }
-                      .text-\\[var\\(--text-muted\\)\\] { color: ${isDark ? '#a3a3a3' : '#737373'} !important; }
-                      .h-72 { width: 100% !important; height: 380px !important; margin-top: 20px; }
-                      .flex { display: flex !important; }
-                      .items-start { align-items: flex-start !important; }
-                      .items-center { align-items: center !important; }
-                      .justify-between { justify-content: space-between !important; }
-                      .mb-6 { margin-bottom: 24px !important; }
-                      .gap-3 { gap: 12px !important; }
-                      .text-xl { font-size: 24px !important; font-weight: 800 !important; letter-spacing: -0.025em !important; }
-                      .text-xs { font-size: 13px !important; }
-                      .uppercase { text-transform: uppercase !important; }
-                      .tracking-wider { letter-spacing: 0.05em !important; }
-                      .recharts-responsive-container { width: 100% !important; height: 100% !important; }
-                      svg { display: block; width: 100% !important; height: 100% !important; }
-                      .recharts-cartesian-grid-line { stroke: ${isDark ? '#262626' : '#e5e5e5'}; }
-                      .recharts-text { fill: ${isDark ? '#a3a3a3' : '#737373'}; font-size: 11px; }
-                      .recharts-legend-item-text { fill: ${isDark ? '#a3a3a3' : '#737373'}; }
-                      .capture-hide { display: none !important; visibility: hidden !important; height: 0 !important; width: 0 !important; margin: 0 !important; padding: 0 !important; }
-                    `;
-                    clonedDoc.head.appendChild(safeStyles);
-                    // -----------------------------------------------
+                    // --- THE SURGICAL FIX: Sanitizing oklch for html2canvas ---
+                    // html2canvas fails to parse Tailwind 4's oklch() colors.
+                    // Instead of removing styles, we surgically find and replace oklch definitions.
+                    const styleTags = clonedDoc.querySelectorAll('style');
+                    styleTags.forEach(tag => {
+                      if (tag.innerHTML.includes('oklch')) {
+                        // Replace oklch(...) with a safe HEX fallback (neutral-500 equivalent)
+                        // This regex targets oklch(L C H / alpha) or oklch(L C H)
+                        tag.innerHTML = tag.innerHTML.replace(/oklch\([^)]+\)/g, '#737373');
+                      }
+                    });
 
-                    const element = clonedDoc.querySelector('.bg-\\[var\\(--bg-sidebar\\)\\]');
-                    if (element instanceof HTMLElement) {
-                      element.style.width = '820px'; 
+                    // Force high-res dimensions on the clone's body to avoid clipping
+                    const body = clonedDoc.body;
+                    body.style.width = '1000px';
+                    body.style.height = 'auto';
+                    body.style.padding = '0';
+                    body.style.margin = '0';
+                    body.style.background = 'transparent';
+
+                    // Target our specific chart wrapper in the clone
+                    const element = clonedDoc.querySelector('.bg-\\[var\\(--bg-sidebar\\)\\]') as HTMLElement;
+                    if (element) {
+                      element.style.width = '900px'; 
                       element.style.height = 'auto';
-                      element.style.margin = '0 auto';
+                      element.style.minHeight = '450px';
+                      element.style.margin = '20px auto';
+                      element.style.display = 'block';
+                      element.style.visibility = 'visible';
+                      element.style.opacity = '1';
+                      element.style.position = 'relative';
+                      element.style.left = '0';
+                      element.style.right = '0';
+                      element.style.transform = 'none';
                     }
                   }
                 });
