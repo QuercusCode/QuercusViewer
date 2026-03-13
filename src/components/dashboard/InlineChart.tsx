@@ -7,7 +7,7 @@ import {
   CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   ReferenceLine
 } from 'recharts'
-import { Trash2, BarChart2, TrendingUp, Palette, X } from 'lucide-react'
+import { Trash2, BarChart2, TrendingUp, Palette, X, Download } from 'lucide-react'
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#ef4444', '#06b6d4', '#84cc16'];
 
@@ -172,31 +172,46 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
         <div className="flex items-center gap-3 mb-4 px-2">
           <button
             onClick={async () => {
-              if (chartRef.current) {
-                setIsExporting(true);
-                try {
-                  const canvas = await html2canvas(chartRef.current, {
-                    scale: 3, // High resolution for publication
-                    backgroundColor: isDark ? '#171717' : '#ffffff',
-                    useCORS: true,
-                    logging: false
-                  });
-                  const link = document.createElement('a');
-                  link.download = `Chart_${title.replace(/\s+/g, '_') || 'Export'}.png`;
-                  link.href = canvas.toDataURL('image/png', 1.0);
-                  link.click();
-                } catch (err) {
-                  console.error('Failed to export chart:', err);
-                } finally {
-                  setIsExporting(false);
-                }
+              if (!chartRef.current) {
+                console.error('Chart reference not found');
+                return;
+              }
+              
+              setIsExporting(true);
+              try {
+                // Wait a tiny moment for any pending Recharts animations
+                await new Promise(resolve => setTimeout(resolve, 300));
+
+                const canvas = await html2canvas(chartRef.current, {
+                  scale: 3, // High resolution
+                  backgroundColor: isDark ? '#171717' : '#ffffff',
+                  useCORS: true,
+                  logging: false,
+                  allowTaint: true,
+                  // Improve SVG rendering by ensuring foreignObject is used correctly if needed
+                  foreignObjectRendering: false, 
+                  ignoreElements: (element) => element.classList.contains('download-button-skip')
+                });
+
+                const link = document.createElement('a');
+                const safeTitle = (title || 'Chart').replace(/[^a-z0-9]/gi, '_').toLowerCase();
+                link.download = `${safeTitle}_export.png`;
+                link.href = canvas.toDataURL('image/png', 1.0);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+              } catch (err) {
+                console.error('Failed to export chart:', err);
+                alert('Export failed. Please try again or check console for details.');
+              } finally {
+                setIsExporting(false);
               }
             }}
             disabled={isExporting}
             className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500 hover:text-white text-blue-400 text-[10px] font-bold rounded-lg border border-blue-500/20 transition-all disabled:opacity-50"
           >
-            {isExporting ? <span className="animate-spin text-xs">⌛</span> : <TrendingUp className="w-3 h-3" />}
-            {isExporting ? 'Capturing...' : 'Download PNG (High-Res)'}
+            {isExporting ? <span className="animate-spin text-xs">⌛</span> : <Download className="w-3.5 h-3.5" />}
+            {isExporting ? 'Capturing High-Res...' : 'Download PNG (Publication Ready)'}
           </button>
         </div>
 
