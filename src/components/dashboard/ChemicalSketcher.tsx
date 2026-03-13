@@ -62,7 +62,7 @@ const ChemicalSketcherComponent = ({ node, updateAttributes, deleteNode }: any) 
       }
 
       if (!document.getElementById('jsme-script')) {
-        // JSME requires this global callback BEFORE the script loads
+        // Define global callback before appending script
         (window as any).jsmeOnLoad = () => {
           setJsmeReady(true);
         };
@@ -72,6 +72,16 @@ const ChemicalSketcherComponent = ({ node, updateAttributes, deleteNode }: any) 
         script.src = JS_CDN;
         script.async = true;
         document.body.appendChild(script);
+      } else if (document.getElementById('jsme-script')) {
+        // Script exists but maybe not loaded yet, or LOADED but ready is false
+        // Check periodically if JSME becomes available
+        const checkInterval = setInterval(() => {
+          if ((window as any).JSME) {
+            setJsmeReady(true);
+            clearInterval(checkInterval);
+          }
+        }, 100);
+        return () => clearInterval(checkInterval);
       }
     }
   }, [isModalOpen]);
@@ -81,11 +91,16 @@ const ChemicalSketcherComponent = ({ node, updateAttributes, deleteNode }: any) 
     if (isModalOpen && jsmeReady && containerRef.current) {
       const jsmeContainerId = "jsme_container";
       
-      // Small delay to ensure the container is mounted and ready
+      // Ensure we start fresh
+      if (jsmeAppletRef.current) {
+        jsmeAppletRef.current = null;
+      }
+
       const timer = setTimeout(() => {
-        if (!jsmeAppletRef.current && (window as any).JSME) {
+        const container = document.getElementById(jsmeContainerId);
+        if (container && !jsmeAppletRef.current && (window as any).JSME) {
           try {
-            // THE CORRECT CONSTRUCTOR is "new JSME(...)"
+            // THE CORRECT CONSTRUCTOR for the standalone version
             jsmeAppletRef.current = new (window as any).JSME(
               jsmeContainerId, 
               "100%", "450px", {
@@ -100,24 +115,30 @@ const ChemicalSketcherComponent = ({ node, updateAttributes, deleteNode }: any) 
             console.error("JSME Initialization failed:", error);
           }
         }
-      }, 150);
+      }, 300); // Increased timeout for stability
 
-      return () => clearTimeout(timer);
+      return () => {
+        clearTimeout(timer);
+        jsmeAppletRef.current = null;
+      };
     }
   }, [isModalOpen, jsmeReady, molfile]);
 
   const handleSave = () => {
     if (jsmeAppletRef.current) {
-      const newMolfile = jsmeAppletRef.current.molFile();
-      // JSME asSVG() returns the SVG source code
-      const newSvg = jsmeAppletRef.current.asSVG();
+      try {
+        const newMolfile = jsmeAppletRef.current.molFile();
+        const newSvg = jsmeAppletRef.current.asSVG();
 
-      updateAttributes({ 
-        molfile: newMolfile,
-        svg: newSvg
-      });
-      setIsModalOpen(false);
-      jsmeAppletRef.current = null;
+        updateAttributes({ 
+          molfile: newMolfile,
+          svg: newSvg
+        });
+        setIsModalOpen(false);
+        jsmeAppletRef.current = null;
+      } catch (e) {
+        console.error("Error saving molecule:", e);
+      }
     }
   };
 
@@ -208,7 +229,7 @@ const ChemicalSketcherComponent = ({ node, updateAttributes, deleteNode }: any) 
                 </div>
               ) : (
                 <div className="rounded-2xl border border-[var(--border-main)] overflow-hidden shadow-inner bg-white">
-                  <div id="jsme_container" ref={containerRef}></div>
+                  <div id="jsme_container" ref={containerRef} style={{ minHeight: '450px', width: '100%' }}></div>
                 </div>
               )}
             </div>
