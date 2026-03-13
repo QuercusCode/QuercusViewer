@@ -50,6 +50,48 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode, updateAtt
 
     let syncTimer: any = null;
 
+    const getTableData = (tableNode: any) => {
+      const headerRow = tableNode.firstChild;
+      if (!headerRow) return [];
+
+      const lettersArr = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+      
+      // Determine if Row 0 is a header or data
+      // Rule: It's data if it contains numbers OR if it starts with common data prefixes like 'gg' or 'Sample'
+      let isDataRow = true;
+      let headers: string[] = [];
+      
+      headerRow.forEach((cell: any, _: any, i: number) => {
+        const text = cell.textContent.trim();
+        headers.push(text || lettersArr[i] || `Col ${i + 1}`);
+        // If it's a numeric value, it's definitely data
+        if (text && !isNaN(parseFloat(text))) isDataRow = true;
+        // Specific user pattern: ggME or Sample
+        if (text.toLowerCase().startsWith('gg') || text.toLowerCase().startsWith('sample')) isDataRow = true;
+      });
+
+      // If we have more than 1 row and headers are purely text, maybe it IS a header row
+      const hasStrictHeaderRow = tableNode.childCount > 1 && !isDataRow;
+
+      const dataSet: any[] = [];
+      const effectiveHeaders = hasStrictHeaderRow ? headers : lettersArr.map((l, i) => headers[i] || l);
+      
+      const startRow = hasStrictHeaderRow ? 1 : 0;
+      for (let r = startRow; r < tableNode.childCount; r++) {
+        const row = tableNode.child(r);
+        const rowData: any = {};
+        let hasContent = false;
+        row.forEach((cell: any, _: any, i: number) => {
+          const val = cell.textContent.trim();
+          const numVal = parseFloat(val);
+          rowData[effectiveHeaders[i]] = !isNaN(numVal) ? numVal : val;
+          if (val) hasContent = true;
+        });
+        if (hasContent) dataSet.push(rowData);
+      }
+      return dataSet;
+    };
+
     const handleUpdate = () => {
       if (syncTimer) clearTimeout(syncTimer);
 
@@ -62,32 +104,10 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode, updateAtt
         const latestNode = editor.state.doc.nodeAt(currentPos);
         if (!latestNode || (latestNode.type.name !== 'spreadsheetTable' && latestNode.type.name !== 'table')) return;
 
-        // Use a consistent ID check
         const tableId = latestNode.attrs.id;
         if (!tableId) return;
 
-        const tableData: any[] = [];
-        const headerRow = latestNode.firstChild;
-        if (!headerRow) return;
-
-        const lettersArr = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-        const headers: string[] = [];
-        headerRow.forEach((cell: any, _: any, i: number) => {
-          headers.push(cell.textContent.trim() || lettersArr[i] || `Col ${i + 1}`);
-        });
-
-        for (let r = 1; r < latestNode.childCount; r++) {
-          const row = latestNode.child(r);
-          const rowData: any = {};
-          let hasData = false;
-          row.forEach((cell: any, _: any, i: number) => {
-            const val = cell.textContent.trim();
-            const numVal = parseFloat(val);
-            rowData[headers[i]] = !isNaN(numVal) ? numVal : val;
-            if (val) hasData = true;
-          });
-          if (hasData) tableData.push(rowData);
-        }
+        const tableData = getTableData(latestNode);
 
         // Batch updates into a single transaction
         const { tr } = editor.state;
@@ -287,30 +307,40 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode, updateAtt
 
   const createChart = () => {
     // Extract data from the table
-    const tableData: any[] = [];
     const headerRow = node.firstChild;
     if (!headerRow) return;
 
-    // Get column names from the first row
-    const headers: string[] = [];
+    // Use common logic
+    const lettersArr = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+    let isDataRow = true;
+    let headers: string[] = [];
+    
     headerRow.forEach((cell: any, _: any, i: number) => {
-      headers.push(cell.textContent.trim() || letters[i] || `Col ${i + 1}`);
+      const text = cell.textContent.trim();
+      headers.push(text || lettersArr[i] || `Col ${i + 1}`);
+      if (text && !isNaN(parseFloat(text))) isDataRow = true;
+      if (text.toLowerCase().startsWith('gg') || text.toLowerCase().startsWith('sample')) isDataRow = true;
     });
 
-    // Parse data rows
-    for (let r = 1; r < node.childCount; r++) {
+    const hasStrictHeaderRow = node.childCount > 1 && !isDataRow;
+    const effectiveHeaders = hasStrictHeaderRow ? headers : lettersArr.map((l, i) => headers[i] || l);
+
+    const tableData: any[] = [];
+    const startRow = hasStrictHeaderRow ? 1 : 0;
+    
+    for (let r = startRow; r < node.childCount; r++) {
       const row = node.child(r);
       const rowData: any = {};
-      let hasData = false;
+      let hasContent = false;
       
       row.forEach((cell: any, _: any, i: number) => {
         const val = cell.textContent.trim();
         const numVal = parseFloat(val);
-        rowData[headers[i]] = !isNaN(numVal) ? numVal : val;
-        if (val) hasData = true;
+        rowData[effectiveHeaders[i]] = !isNaN(numVal) ? numVal : val;
+        if (val) hasContent = true;
       });
       
-      if (hasData) tableData.push(rowData);
+      if (hasContent) tableData.push(rowData);
     }
 
     if (tableData.length === 0) {
@@ -318,8 +348,8 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode, updateAtt
       return;
     }
 
-    const xAxis = headers[chartConfig.xCol] || headers[0];
-    const yAxes = chartConfig.yCols.map(index => headers[index] || `Col ${index + 1}`);
+    const xAxis = effectiveHeaders[chartConfig.xCol] || headers[0];
+    const yAxes = chartConfig.yCols.map(index => effectiveHeaders[index] || `Col ${index + 1}`);
     const customColors = chartConfig.yCols.map(index => chartConfig.seriesColors[index] || COLORS[0]);
 
     if (typeof getPos !== 'function') return;
