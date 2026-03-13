@@ -96,11 +96,11 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
   }, [data, activeYAxes, showTrendLine]);
 
   return (
-    <NodeViewWrapper className="inline-chart-wrapper my-8 group relative">
-      <div className="bg-[var(--bg-sidebar)] border border-[var(--border-main)] rounded-2xl overflow-hidden shadow-xl p-6 transition-all group-hover:border-blue-500/30">
+    <NodeViewWrapper ref={chartRef} className="inline-chart-wrapper my-8 group relative">
+      <div className="bg-[var(--bg-sidebar)] border border-[var(--border-main)] rounded-2xl overflow-hidden shadow-xl p-8 transition-all group-hover:border-blue-500/30">
         
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6 relative z-50">
+        {/* Header Section */}
+        <div className="flex items-start justify-between mb-6 capture-hide">
           <div className="flex items-center gap-3">
             <div className={`p-2 rounded-lg ${type === 'bar' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-blue-500/10 text-blue-400'}`}>
               {type === 'bar' ? <BarChart2 className="w-4 h-4" /> : <TrendingUp className="w-4 h-4" />}
@@ -113,7 +113,8 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
             </div>
           </div>
           
-          <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          {/* Right: View Toggles & Actions */}
+          <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity capture-hide">
             <div className="relative">
               <button 
                 onClick={() => setShowColorEditor(!showColorEditor)}
@@ -169,13 +170,12 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
         </div>
 
         {/* Global Scientific Controls Overlay */}
-        <div className="flex items-center gap-3 mb-4 px-2">
+        <div className="flex items-center gap-3 mb-6 px-2 capture-hide">
           <button
-            onClick={async () => {
-              if (!chartRef.current) {
-                console.error('Chart reference not found');
-                return;
-              }
+            onClick={async (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (!chartRef.current) return;
               
               setIsExporting(true);
               try {
@@ -196,25 +196,40 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
                     
                     const safeStyles = clonedDoc.createElement('style');
                     safeStyles.innerHTML = `
-                      .inline-chart-wrapper { font-family: sans-serif; }
-                      .h-72 { width: 800px !important; height: 400px !important; }
+                      * { box-sizing: border-box; }
+                      .inline-chart-wrapper { font-family: sans-serif; display: block !important; background: ${isDark ? '#171717' : '#ffffff'}; }
+                      .bg-\\[var\\(--bg-sidebar\\)\\] { background: ${isDark ? '#171717' : '#ffffff'} !important; }
+                      .text-\\[var\\(--text-primary\\)\\] { color: ${isDark ? '#f5f5f5' : '#171717'} !important; }
+                      .text-\\[var\\(--text-muted\\)\\] { color: ${isDark ? '#a3a3a3' : '#525252'} !important; }
+                      .border-\\[var\\(--border-main\\)\\] { border-color: ${isDark ? '#262626' : '#e5e5e5'} !important; }
+                      .h-72 { width: 100% !important; height: 320px !important; margin-top: 20px; }
+                      .flex { display: flex !important; }
+                      .items-start { align-items: flex-start !important; }
+                      .justify-between { justify-content: space-between !important; }
+                      .mb-6 { margin-bottom: 24px !important; }
+                      .mb-4 { margin-bottom: 16px !important; }
+                      .gap-3 { gap: 12px !important; }
+                      .text-xl { font-size: 20px !important; font-weight: bold !important; }
+                      .text-xs { font-size: 12px !important; }
+                      .uppercase { text-transform: uppercase !important; }
+                      .tracking-tight { letter-spacing: -0.025em !important; }
                       .recharts-responsive-container { width: 100% !important; height: 100% !important; }
                       svg { display: block; width: 100% !important; height: 100% !important; }
                       .recharts-cartesian-grid-line { stroke: ${isDark ? '#262626' : '#e5e5e5'}; }
                       .recharts-text { fill: ${isDark ? '#a3a3a3' : '#525252'}; font-size: 10px; }
                       .recharts-legend-item-text { fill: ${isDark ? '#a3a3a3' : '#525252'}; }
-                      .recharts-tooltip-wrapper { display: none !important; }
+                      .capture-hide { display: none !important; }
                     `;
                     clonedDoc.head.appendChild(safeStyles);
                     // -----------------------------------------------
 
-                    const element = clonedDoc.querySelector('[ref="chartRef"]') || clonedDoc.querySelector('.h-72') || clonedDoc.querySelector('.inline-chart-wrapper');
+                    const element = clonedDoc.querySelector('.bg-\\[var\\(--bg-sidebar\\)\\]');
                     if (element instanceof HTMLElement) {
-                      element.style.width = '800px'; 
-                      element.style.height = '480px';
-                      element.style.padding = '24px';
-                      element.style.backgroundColor = isDark ? '#171717' : '#ffffff';
-                      element.style.color = isDark ? '#f5f5f5' : '#171717';
+                      element.style.width = '900px'; 
+                      element.style.height = 'auto';
+                      element.style.minHeight = '500px';
+                      element.style.padding = '40px';
+                      element.style.borderRadius = '0px'; // Clean edges for papers
                     }
                   }
                 });
@@ -248,7 +263,7 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
         </div>
 
         {/* Chart Area */}
-        <div ref={chartRef} className="h-72 w-full flex items-center justify-center p-2 bg-transparent">
+        <div className="h-72 w-full flex items-center justify-center p-2 bg-transparent">
           {data && data.length > 0 && activeYAxes.length > 0 && data.some((d: any) => activeYAxes.some((y: string) => typeof d[y] === 'number')) ? (
             <ResponsiveContainer width="100%" height="100%">
               {type === 'bar' ? (
