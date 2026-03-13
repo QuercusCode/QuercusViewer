@@ -438,7 +438,7 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode, updateAtt
 
             {showChartPreview && (
               <div 
-                className="absolute top-full left-0 mt-2 w-72 bg-white border border-neutral-200 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] p-4 z-[9999] animate-in fade-in slide-in-from-top-2"
+                className="absolute top-full left-0 mt-2 w-80 max-h-[500px] overflow-y-auto bg-white border border-neutral-200 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] p-4 z-[9999] animate-in fade-in slide-in-from-top-2 custom-scrollbar"
                 onMouseDown={(e) => e.stopPropagation()}
               >
                 <div className="flex items-center justify-between mb-4">
