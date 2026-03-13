@@ -190,25 +190,28 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
                   useCORS: true,
                   logging: false,
                   onclone: (clonedDoc) => {
-                    // --- THE SURGICAL FIX: Sanitizing oklch for html2canvas ---
-                    // html2canvas fails to parse Tailwind 4's oklch() colors.
-                    // Instead of removing styles, we surgically find and replace oklch definitions.
+                    // --- THE SURGICAL FIX: Sanitizing modern CSS colors for html2canvas ---
+                    // html2canvas fails to parse Tailwind 4's modern color functions.
+                    // Instead of removing styles, we surgically find and replace ALL modern definitions.
                     const styleTags = clonedDoc.querySelectorAll('style');
                     styleTags.forEach(tag => {
-                      if (tag.innerHTML.includes('oklch')) {
-                        // Replace oklch(...) with a safe HEX fallback (neutral-500 equivalent)
-                        // This regex targets oklch(L C H / alpha) or oklch(L C H)
-                        tag.innerHTML = tag.innerHTML.replace(/oklch\([^)]+\)/g, '#737373');
+                      // Target oklch, oklab, lch, lab and other potential newer functions
+                      const modernColorRegex = /(oklch|oklab|lch|lab|hwb|color\(display-p3[^\)]+\))\([^)]+\)/g;
+                      if (modernColorRegex.test(tag.innerHTML)) {
+                        // Replace with a neutral HEX fallback
+                        tag.innerHTML = tag.innerHTML.replace(modernColorRegex, '#737373');
                       }
                     });
 
-                    // Force high-res dimensions on the clone's body to avoid clipping
+                    // Force high-res dimensions on the clone's body to avoid any boundary clipping
                     const body = clonedDoc.body;
-                    body.style.width = '1000px';
-                    body.style.height = 'auto';
+                    body.style.width = '1200px'; // Generous width
+                    body.style.height = '1200px'; // Generous height to avoid vertical clipping
                     body.style.padding = '0';
                     body.style.margin = '0';
-                    body.style.background = 'transparent';
+                    body.style.background = isDark ? '#0f0f0f' : '#ffffff';
+                    body.style.overflow = 'visible';
+                    body.style.position = 'relative';
 
                     // Target our specific chart wrapper in the clone
                     const element = clonedDoc.querySelector('.bg-\\[var\\(--bg-sidebar\\)\\]') as HTMLElement;
