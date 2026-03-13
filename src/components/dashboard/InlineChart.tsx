@@ -180,98 +180,109 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
               if (!chartRef.current) return;
               
               setIsExporting(true);
+              let mirror: HTMLDivElement | null = null;
+              
               try {
-                // Wait a tiny moment for any pending Recharts animations
-                await new Promise(resolve => setTimeout(resolve, 500));
+                // --- THE ULTIMATE FIX: Isolated Mirror Technique ---
+                // 1. Create a hidden mirror container far off-screen
+                mirror = document.createElement('div');
+                mirror.style.position = 'fixed';
+                mirror.style.top = '0';
+                mirror.style.left = '-9999px';
+                mirror.style.width = '1200px';
+                mirror.style.height = 'auto';
+                mirror.style.zIndex = '-1000';
+                mirror.style.visibility = 'hidden';
+                mirror.className = 'export-mirror';
+                document.body.appendChild(mirror);
 
-                const canvas = await html2canvas(chartRef.current, {
-                  scale: 2, 
-                  backgroundColor: isDark ? '#171717' : '#ffffff',
-                  useCORS: true,
-                  logging: false,
-                  onclone: (clonedDoc) => {
-                    // --- THE NUCLEAR FIX: Isolating Chart from Project CSS ---
-                    // html2canvas crashes on Tailwind 4's modern color spaces (oklch, oklab).
-                    // We completely strip all document styles and replace them with a "Pure HEX" engine.
-                    const allStyles = clonedDoc.querySelectorAll('style, link[rel="stylesheet"]');
-                    allStyles.forEach(s => s.remove());
+                // 2. Clone the entire chart component into the mirror
+                const clone = chartRef.current.cloneNode(true) as HTMLElement;
+                mirror.appendChild(clone);
 
-                    const safeStyles = clonedDoc.createElement('style');
-                    safeStyles.innerHTML = `
-                      * { box-sizing: border-box; -webkit-print-color-adjust: exact; }
-                      body { 
-                        background: ${isDark ? '#0a0a0a' : '#ffffff'} !important; 
-                        width: 1200px !important; 
-                        height: 1200px !important; 
-                        margin: 0 !important; 
-                        padding: 40px !important;
-                        display: flex !important;
-                        justify-content: center !important;
-                        align-items: flex-start !important;
-                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-                      }
-                      .inline-chart-wrapper { 
-                        width: 900px !important; 
-                        display: block !important; 
-                      }
-                      .bg-\\[var\\(--bg-sidebar\\)\\] { 
-                        background: ${isDark ? '#171717' : '#ffffff'} !important; 
-                        border-radius: 24px !important; 
-                        padding: 40px !important; 
-                        border: 1px solid ${isDark ? '#262626' : '#e5e5e5'} !important; 
-                        box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1) !important;
-                        width: 100% !important;
-                      }
-                      .text-\\[var\\(--text-primary\\)\\] { color: ${isDark ? '#f5f5f5' : '#171717'} !important; }
-                      .text-\\[var\\(--text-muted\\)\\] { color: ${isDark ? '#a3a3a3' : '#737373'} !important; }
-                      .h-72 { width: 100% !important; height: 400px !important; margin-top: 24px !important; }
-                      .flex { display: flex !important; }
-                      .items-start { align-items: flex-start !important; }
-                      .items-center { align-items: center !important; }
-                      .justify-between { justify-content: space-between !important; }
-                      .mb-6 { margin-bottom: 24px !important; }
-                      .gap-3 { gap: 12px !important; }
-                      .text-xl { font-size: 28px !important; font-weight: 800 !important; letter-spacing: -0.025em !important; margin: 0 !important; }
-                      .text-xs { font-size: 14px !important; margin-top: 4px !important; }
-                      .uppercase { text-transform: uppercase !important; }
-                      .tracking-wider { letter-spacing: 0.05em !important; }
-                      .recharts-responsive-container { width: 100% !important; height: 100% !important; }
-                      svg { display: block; width: 100% !important; height: 100% !important; }
-                      .recharts-cartesian-grid-line { stroke: ${isDark ? '#262626' : '#e5e5e5'}; }
-                      .recharts-text { fill: ${isDark ? '#a3a3a3' : '#737373'}; font-size: 11px; font-weight: 600; }
-                      .recharts-legend-item-text { fill: ${isDark ? '#a3a3a3' : '#737373'}; font-weight: 600; }
-                      .capture-hide { display: none !important; visibility: hidden !important; }
-                    `;
-                    clonedDoc.head.appendChild(safeStyles);
-                    
-                    // Sanitize any remaining inline oklab/oklch in style attributes
-                    clonedDoc.querySelectorAll('*').forEach(el => {
-                      if (el instanceof HTMLElement && el.getAttribute('style')?.includes('okl')) {
-                        el.style.color = '';
-                        el.style.backgroundColor = '';
-                        el.style.borderColor = '';
-                      }
-                    });
+                // 3. NUCLEAR CLEANUP: Remove all project-wide styles and inject safe ones
+                // We use a dedicated style block to ensure the mirror stays exactly 1200px
+                const safeStyle = document.createElement('style');
+                safeStyle.innerHTML = `
+                  .export-mirror { 
+                    background: ${isDark ? '#0a0a0a' : '#ffffff'} !important; 
+                    padding: 60px !important;
+                    font-family: system-ui, -apple-system, sans-serif !important;
+                  }
+                  .export-mirror * { box-sizing: border-box; }
+                  .bg-\\[var\\(--bg-sidebar\\)\\] { 
+                    background: ${isDark ? '#171717' : '#ffffff'} !important;
+                    border-radius: 24px !important;
+                    padding: 48px !important;
+                    border: 1px solid ${isDark ? '#262626' : '#e5e5e5'} !important;
+                    width: 1000px !important;
+                    margin: 0 auto !important;
+                    display: block !important;
+                  }
+                  .text-\\[var\\(--text-primary\\)\\] { color: ${isDark ? '#f5f5f5' : '#171717'} !important; }
+                  .text-\\[var\\(--text-muted\\)\\] { color: ${isDark ? '#a3a3a3' : '#737373'} !important; }
+                  .h-72 { width: 100% !important; height: 420px !important; margin-top: 32px !important; }
+                  .text-xl { font-size: 32px !important; font-weight: 800 !important; letter-spacing: -0.025em !important; margin: 0 !important; }
+                  .text-xs { font-size: 14px !important; margin-top: 6px !important; font-weight: 600 !important; color: #737373 !important; }
+                  .flex { display: flex !important; }
+                  .items-center { align-items: center !important; }
+                  .items-start { align-items: flex-start !important; }
+                  .justify-between { justify-content: space-between !important; }
+                  .mb-6 { margin-bottom: 24px !important; }
+                  .gap-3 { gap: 12px !important; }
+                  .capture-hide { display: none !important; }
+                  .recharts-responsive-container { width: 100% !important; height: 100% !important; }
+                  svg { width: 100% !important; height: 100% !important; }
+                  .recharts-text { fill: #737373 !important; font-size: 12px !important; font-weight: 600 !important; }
+                  .recharts-legend-item-text { fill: #737373 !important; font-weight: 600 !important; }
+                  .recharts-cartesian-grid-line { stroke: ${isDark ? '#262626' : '#e5e5e5'} !important; }
+                `;
+                mirror.appendChild(safeStyle);
+
+                // 4. SURGICAL SCRUBBING: Remove any modern color functions from the mirror
+                // html2canvas fails on oklch, oklab, etc.
+                const mirrorElements = mirror.querySelectorAll('*');
+                mirrorElements.forEach(el => {
+                  if (el instanceof HTMLElement) {
+                    const style = el.getAttribute('style') || '';
+                    if (style.includes('okl')) {
+                      // Strip problematic inline styles
+                      el.style.color = '';
+                      el.style.backgroundColor = '';
+                      el.style.borderColor = '';
+                    }
                   }
                 });
 
-                if (!canvas) throw new Error('Canvas generation returned null');
+                // Small delay to ensure Recharts re-renders in the new 1000px container
+                await new Promise(resolve => setTimeout(resolve, 800));
 
-                const dataUrl = canvas.toDataURL('image/png', 1.0);
-                if (!dataUrl || dataUrl === 'data:,') throw new Error('Invalid data URL generated');
+                // 5. CAPTURE THE MIRROR
+                const canvas = await html2canvas(mirror, {
+                  scale: 2,
+                  backgroundColor: isDark ? '#0a0a0a' : '#ffffff',
+                  useCORS: true,
+                  logging: false,
+                  width: 1120, // Specific width for the output PNG
+                });
 
                 const link = document.createElement('a');
-                const safeTitle = (title || 'Chart').replace(/[^a-z0-9]/gi, '_').toLowerCase();
-                link.download = `${safeTitle}_export.png`;
-                link.href = dataUrl;
-                document.body.appendChild(link);
+                link.download = `${title.replace(/\s+/g, '_') || 'chart'}_export.png`;
+                link.href = canvas.toDataURL('image/png', 1.0);
                 link.click();
-                document.body.removeChild(link);
               } catch (err: any) {
-                console.error('High-Res Export Error:', err);
-                const errorMsg = err?.message || 'Unknown error';
-                alert(`Export failed: ${errorMsg}\n\nTip: Make sure the chart is fully visible on screen.`);
+                console.error('Export Error:', err);
+                const msg = err.message || '';
+                if (msg.includes('oklch') || msg.includes('oklab')) {
+                  alert('Export failed: Attempting to parse an unsupported color function. The system is working on a fix.');
+                } else {
+                  alert(`Export error: ${msg || 'Unknown failure'}`);
+                }
               } finally {
+                // 6. CLEANUP
+                if (mirror && mirror.parentNode) {
+                  mirror.parentNode.removeChild(mirror);
+                }
                 setIsExporting(false);
               }
             }}
