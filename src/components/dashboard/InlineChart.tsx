@@ -190,44 +190,68 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
                   useCORS: true,
                   logging: false,
                   onclone: (clonedDoc) => {
-                    // --- THE SURGICAL FIX: Sanitizing modern CSS colors for html2canvas ---
-                    // html2canvas fails to parse Tailwind 4's modern color functions.
-                    // Instead of removing styles, we surgically find and replace ALL modern definitions.
-                    const styleTags = clonedDoc.querySelectorAll('style');
-                    styleTags.forEach(tag => {
-                      // Target oklch, oklab, lch, lab and other potential newer functions
-                      const modernColorRegex = /(oklch|oklab|lch|lab|hwb|color\(display-p3[^\)]+\))\([^)]+\)/g;
-                      if (modernColorRegex.test(tag.innerHTML)) {
-                        // Replace with a neutral HEX fallback
-                        tag.innerHTML = tag.innerHTML.replace(modernColorRegex, '#737373');
+                    // --- THE NUCLEAR FIX: Isolating Chart from Project CSS ---
+                    // html2canvas crashes on Tailwind 4's modern color spaces (oklch, oklab).
+                    // We completely strip all document styles and replace them with a "Pure HEX" engine.
+                    const allStyles = clonedDoc.querySelectorAll('style, link[rel="stylesheet"]');
+                    allStyles.forEach(s => s.remove());
+
+                    const safeStyles = clonedDoc.createElement('style');
+                    safeStyles.innerHTML = `
+                      * { box-sizing: border-box; -webkit-print-color-adjust: exact; }
+                      body { 
+                        background: ${isDark ? '#0a0a0a' : '#ffffff'} !important; 
+                        width: 1200px !important; 
+                        height: 1200px !important; 
+                        margin: 0 !important; 
+                        padding: 40px !important;
+                        display: flex !important;
+                        justify-content: center !important;
+                        align-items: flex-start !important;
+                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+                      }
+                      .inline-chart-wrapper { 
+                        width: 900px !important; 
+                        display: block !important; 
+                      }
+                      .bg-\\[var\\(--bg-sidebar\\)\\] { 
+                        background: ${isDark ? '#171717' : '#ffffff'} !important; 
+                        border-radius: 24px !important; 
+                        padding: 40px !important; 
+                        border: 1px solid ${isDark ? '#262626' : '#e5e5e5'} !important; 
+                        box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1) !important;
+                        width: 100% !important;
+                      }
+                      .text-\\[var\\(--text-primary\\)\\] { color: ${isDark ? '#f5f5f5' : '#171717'} !important; }
+                      .text-\\[var\\(--text-muted\\)\\] { color: ${isDark ? '#a3a3a3' : '#737373'} !important; }
+                      .h-72 { width: 100% !important; height: 400px !important; margin-top: 24px !important; }
+                      .flex { display: flex !important; }
+                      .items-start { align-items: flex-start !important; }
+                      .items-center { align-items: center !important; }
+                      .justify-between { justify-content: space-between !important; }
+                      .mb-6 { margin-bottom: 24px !important; }
+                      .gap-3 { gap: 12px !important; }
+                      .text-xl { font-size: 28px !important; font-weight: 800 !important; letter-spacing: -0.025em !important; margin: 0 !important; }
+                      .text-xs { font-size: 14px !important; margin-top: 4px !important; }
+                      .uppercase { text-transform: uppercase !important; }
+                      .tracking-wider { letter-spacing: 0.05em !important; }
+                      .recharts-responsive-container { width: 100% !important; height: 100% !important; }
+                      svg { display: block; width: 100% !important; height: 100% !important; }
+                      .recharts-cartesian-grid-line { stroke: ${isDark ? '#262626' : '#e5e5e5'}; }
+                      .recharts-text { fill: ${isDark ? '#a3a3a3' : '#737373'}; font-size: 11px; font-weight: 600; }
+                      .recharts-legend-item-text { fill: ${isDark ? '#a3a3a3' : '#737373'}; font-weight: 600; }
+                      .capture-hide { display: none !important; visibility: hidden !important; }
+                    `;
+                    clonedDoc.head.appendChild(safeStyles);
+                    
+                    // Sanitize any remaining inline oklab/oklch in style attributes
+                    clonedDoc.querySelectorAll('*').forEach(el => {
+                      if (el instanceof HTMLElement && el.getAttribute('style')?.includes('okl')) {
+                        el.style.color = '';
+                        el.style.backgroundColor = '';
+                        el.style.borderColor = '';
                       }
                     });
-
-                    // Force high-res dimensions on the clone's body to avoid any boundary clipping
-                    const body = clonedDoc.body;
-                    body.style.width = '1200px'; // Generous width
-                    body.style.height = '1200px'; // Generous height to avoid vertical clipping
-                    body.style.padding = '0';
-                    body.style.margin = '0';
-                    body.style.background = isDark ? '#0f0f0f' : '#ffffff';
-                    body.style.overflow = 'visible';
-                    body.style.position = 'relative';
-
-                    // Target our specific chart wrapper in the clone
-                    const element = clonedDoc.querySelector('.bg-\\[var\\(--bg-sidebar\\)\\]') as HTMLElement;
-                    if (element) {
-                      element.style.width = '900px'; 
-                      element.style.height = 'auto';
-                      element.style.minHeight = '450px';
-                      element.style.margin = '20px auto';
-                      element.style.display = 'block';
-                      element.style.visibility = 'visible';
-                      element.style.opacity = '1';
-                      element.style.position = 'relative';
-                      element.style.left = '0';
-                      element.style.right = '0';
-                      element.style.transform = 'none';
-                    }
                   }
                 });
 
