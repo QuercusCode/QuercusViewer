@@ -324,9 +324,9 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
               // During export, we bypass ResponsiveContainer and force 1000px width.
               // This ensures Recharts calculates all SVG paths at the target resolution instantly.
               type === 'bar' ? (
-                <BarChart width={1000} height={400} data={data} margin={{ top: 20, right: 40, left: 10, bottom: 20 }}>
+                <BarChart width={1000} height={400} data={data} margin={{ top: 20, right: 30, left: 40, bottom: 40 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
-                  <XAxis dataKey={xAxis} stroke={textColor} fontSize={14} tickLine={false} axisLine={false} tick={{ fill: textColor }} />
+                  <XAxis dataKey={xAxis} stroke={textColor} fontSize={14} tickLine={false} axisLine={false} tick={{ fill: textColor }} interval={0} />
                   <YAxis stroke={textColor} fontSize={14} tickLine={false} axisLine={false} tick={{ fill: textColor }} />
                   {activeYAxes.length > 1 && (
                     <Legend verticalAlign="top" align="right" iconType="circle" wrapperStyle={{ fontSize: '14px', paddingBottom: '30px' }} />
@@ -336,7 +336,7 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
                   ))}
                 </BarChart>
               ) : type === 'scatter' ? (
-                <ScatterChart width={1000} height={400} margin={{ top: 20, right: 40, left: 10, bottom: 20 }}>
+                <ScatterChart width={1000} height={400} margin={{ top: 20, right: 30, left: 40, bottom: 40 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
                   <XAxis 
                     type="number"
@@ -348,7 +348,9 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
                     axisLine={false} 
                     tick={{ fill: textColor }} 
                     domain={isXNumeric ? ['auto', 'auto'] : [-0.5, (xAxisDomain?.length || 1) - 0.5]} 
-                    tickFormatter={(val) => isXNumeric ? val : (xAxisDomain?.[val] || '')}
+                    ticks={isXNumeric ? undefined : xAxisDomain?.map((_, i) => i)}
+                    interval={0}
+                    tickFormatter={(val) => isXNumeric ? val : (xAxisDomain?.[Math.round(val)] || '')}
                   />
                   <YAxis type="number" stroke={textColor} fontSize={14} tickLine={false} axisLine={false} tick={{ fill: textColor }} domain={['auto', 'auto']} />
                   <ZAxis type="number" range={[64, 64]} />
@@ -381,9 +383,9 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
                   ))}
                 </ScatterChart>
               ) : (
-                <LineChart width={1000} height={400} data={augmentedData} margin={{ top: 20, right: 40, left: 10, bottom: 20 }}>
+                <LineChart width={1000} height={400} data={augmentedData} margin={{ top: 20, right: 30, left: 40, bottom: 40 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
-                  <XAxis dataKey={xAxis} stroke={textColor} fontSize={14} tickLine={false} axisLine={false} tick={{ fill: textColor }} />
+                  <XAxis dataKey={xAxis} stroke={textColor} fontSize={14} tickLine={false} axisLine={false} tick={{ fill: textColor }} interval={0} />
                   <YAxis stroke={textColor} fontSize={14} tickLine={false} axisLine={false} tick={{ fill: textColor }} />
                   {activeYAxes.length > 1 && (
                     <Legend verticalAlign="top" align="right" iconType="circle" wrapperStyle={{ fontSize: '14px', paddingBottom: '30px' }} />
@@ -419,7 +421,7 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
             ) : (
               <ResponsiveContainer width="100%" height="100%">
                 {type === 'bar' ? (
-                  <BarChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                  <BarChart data={data} margin={{ top: 10, right: 10, left: 10, bottom: 20 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
                     <XAxis 
                       dataKey={xAxis} 
@@ -428,6 +430,7 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
                       tickLine={false} 
                       axisLine={false}
                       tick={{ fill: textColor }}
+                      interval={0}
                     />
                     <YAxis 
                       stroke={textColor} 
@@ -465,7 +468,7 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
                     ))}
                   </BarChart>
                 ) : type === 'scatter' ? (
-                  <ScatterChart margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                  <ScatterChart margin={{ top: 10, right: 10, left: 10, bottom: 20 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
                     <XAxis 
                       type="number"
@@ -477,7 +480,9 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
                       axisLine={false}
                       tick={{ fill: textColor }}
                       domain={isXNumeric ? ['auto', 'auto'] : [-0.5, (xAxisDomain?.length || 1) - 0.5]}
-                      tickFormatter={(val) => isXNumeric ? val : (xAxisDomain?.[val] || '')}
+                      ticks={isXNumeric ? undefined : xAxisDomain?.map((_, i) => i)}
+                      interval={0}
+                      tickFormatter={(val) => isXNumeric ? val : (xAxisDomain?.[Math.round(val)] || '')}
                     />
                     <YAxis 
                       type="number"
@@ -532,7 +537,7 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
                     ))}
                   </ScatterChart>
                 ) : (
-                  <LineChart data={augmentedData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                  <LineChart data={augmentedData} margin={{ top: 10, right: 10, left: 10, bottom: 20 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
                     <XAxis 
                       dataKey={xAxis} 
@@ -541,6 +546,7 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
                       tickLine={false} 
                       axisLine={false}
                       tick={{ fill: textColor }}
+                      interval={0}
                     />
                     <YAxis 
                       stroke={textColor} 
