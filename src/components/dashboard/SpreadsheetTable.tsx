@@ -375,11 +375,11 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode, updateAtt
   };
 
   return (
-    <NodeViewWrapper className="spreadsheet-premium-wrapper my-12 group/spreadsheet relative">
-      <div className="bg-white border border-neutral-200 rounded-xl overflow-hidden shadow-2xl transition-all group-hover/spreadsheet:border-neutral-300">
+    <NodeViewWrapper className="spreadsheet-premium-wrapper my-12 group/spreadsheet relative z-30">
+      <div className="bg-white border border-neutral-200 rounded-xl shadow-2xl transition-all group-hover/spreadsheet:border-neutral-300 relative">
         
         {/* TOP HEADER: Title & Global Actions */}
-        <div className="flex items-center justify-between px-4 py-2 bg-[#fdfdfd] border-b border-neutral-200">
+        <div className="flex items-center justify-between px-4 py-2 bg-[#fdfdfd] border-b border-neutral-200 rounded-t-xl">
           <div className="flex items-center gap-3">
             <input 
               type="text" 
@@ -438,7 +438,7 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode, updateAtt
 
             {showChartPreview && (
               <div 
-                className="absolute top-full left-0 mt-2 w-80 max-h-[500px] overflow-y-auto bg-white border border-neutral-200 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] p-4 z-[9999] animate-in fade-in slide-in-from-top-2 custom-scrollbar"
+                className="absolute top-full left-0 mt-3 w-80 max-h-[520px] overflow-y-auto bg-white/90 backdrop-blur-xl border border-neutral-200 rounded-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.3)] p-5 z-[10000] animate-in fade-in zoom-in-95 slide-in-from-top-4 duration-200 custom-scrollbar"
                 onMouseDown={(e) => e.stopPropagation()}
               >
                 <div className="flex items-center justify-between mb-4">
@@ -599,7 +599,7 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode, updateAtt
         </div>
 
         {/* Spreadsheet Area */}
-        <div className="overflow-x-auto custom-scrollbar">
+        <div className="overflow-x-auto custom-scrollbar rounded-b-xl">
           <div 
             className="relative min-w-full"
             style={{ 
