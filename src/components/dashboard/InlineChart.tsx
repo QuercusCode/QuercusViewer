@@ -180,90 +180,68 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
               if (!chartRef.current) return;
               
               setIsExporting(true);
-              let mirror: HTMLDivElement | null = null;
-              
               try {
-                // --- THE ULTIMATE FIX: Isolated Mirror Technique ---
-                // 1. Create a hidden mirror container far off-screen
-                mirror = document.createElement('div');
-                mirror.style.position = 'fixed';
-                mirror.style.top = '0';
-                mirror.style.left = '-9999px';
-                mirror.style.width = '1200px';
-                mirror.style.height = 'auto';
-                mirror.style.zIndex = '-1000';
-                mirror.style.visibility = 'hidden';
-                mirror.className = 'export-mirror';
-                document.body.appendChild(mirror);
-
-                // 2. Clone the entire chart component into the mirror
-                const clone = chartRef.current.cloneNode(true) as HTMLElement;
-                mirror.appendChild(clone);
-
-                // 3. NUCLEAR CLEANUP: Remove all project-wide styles and inject safe ones
-                // We use a dedicated style block to ensure the mirror stays exactly 1200px
-                const safeStyle = document.createElement('style');
-                safeStyle.innerHTML = `
-                  .export-mirror { 
-                    background: ${isDark ? '#0a0a0a' : '#ffffff'} !important; 
-                    padding: 60px !important;
-                    font-family: system-ui, -apple-system, sans-serif !important;
-                  }
-                  .export-mirror * { box-sizing: border-box; }
-                  .bg-\\[var\\(--bg-sidebar\\)\\] { 
-                    background: ${isDark ? '#171717' : '#ffffff'} !important;
-                    border-radius: 24px !important;
-                    padding: 48px !important;
-                    border: 1px solid ${isDark ? '#262626' : '#e5e5e5'} !important;
-                    width: 1000px !important;
-                    margin: 0 auto !important;
-                    display: block !important;
-                  }
-                  .text-\\[var\\(--text-primary\\)\\] { color: ${isDark ? '#f5f5f5' : '#171717'} !important; }
-                  .text-\\[var\\(--text-muted\\)\\] { color: ${isDark ? '#a3a3a3' : '#737373'} !important; }
-                  .h-72 { width: 100% !important; height: 420px !important; margin-top: 32px !important; }
-                  .text-xl { font-size: 32px !important; font-weight: 800 !important; letter-spacing: -0.025em !important; margin: 0 !important; }
-                  .text-xs { font-size: 14px !important; margin-top: 6px !important; font-weight: 600 !important; color: #737373 !important; }
-                  .flex { display: flex !important; }
-                  .items-center { align-items: center !important; }
-                  .items-start { align-items: flex-start !important; }
-                  .justify-between { justify-content: space-between !important; }
-                  .mb-6 { margin-bottom: 24px !important; }
-                  .gap-3 { gap: 12px !important; }
-                  .capture-hide { display: none !important; }
-                  .recharts-responsive-container { width: 100% !important; height: 100% !important; }
-                  svg { width: 100% !important; height: 100% !important; }
-                  .recharts-text { fill: #737373 !important; font-size: 12px !important; font-weight: 600 !important; }
-                  .recharts-legend-item-text { fill: #737373 !important; font-weight: 600 !important; }
-                  .recharts-cartesian-grid-line { stroke: ${isDark ? '#262626' : '#e5e5e5'} !important; }
-                `;
-                mirror.appendChild(safeStyle);
-
-                // 4. SURGICAL SCRUBBING: Remove any modern color functions from the mirror
-                // html2canvas fails on oklch, oklab, etc.
-                const mirrorElements = mirror.querySelectorAll('*');
-                mirrorElements.forEach(el => {
-                  if (el instanceof HTMLElement) {
-                    const style = el.getAttribute('style') || '';
-                    if (style.includes('okl')) {
-                      // Strip problematic inline styles
-                      el.style.color = '';
-                      el.style.backgroundColor = '';
-                      el.style.borderColor = '';
-                    }
-                  }
-                });
-
-                // Small delay to ensure Recharts re-renders in the new 1000px container
-                await new Promise(resolve => setTimeout(resolve, 800));
-
-                // 5. CAPTURE THE MIRROR
-                const canvas = await html2canvas(mirror, {
+                // html2canvas provides an isolated cloneDoc in its options
+                const canvas = await html2canvas(chartRef.current, {
                   scale: 2,
-                  backgroundColor: isDark ? '#0a0a0a' : '#ffffff',
+                  backgroundColor: isDark ? '#171717' : '#ffffff',
                   useCORS: true,
                   logging: false,
-                  width: 1120, // Specific width for the output PNG
+                  onclone: (clonedDoc) => {
+                    // 1. NUCLEAR STYLE ISOLATION: Prevent oklab/oklch crashes
+                    const styles = clonedDoc.querySelectorAll('style, link[rel="stylesheet"]');
+                    styles.forEach(s => s.remove());
+
+                    // 2. INJECT PURE HEX ENGINE: Fixed 1000px layout
+                    const safeStyles = clonedDoc.createElement('style');
+                    safeStyles.innerHTML = `
+                      * { box-sizing: border-box; }
+                      .inline-chart-wrapper { 
+                        width: 1000px !important; 
+                        padding: 40px !important;
+                        background: ${isDark ? '#171717' : '#ffffff'} !important;
+                        display: block !important;
+                        font-family: system-ui, -apple-system, sans-serif !important;
+                      }
+                      .bg-\\[var\\(--bg-sidebar\\)\\] { 
+                        background: ${isDark ? '#171717' : '#ffffff'} !important;
+                        border-radius: 24px !important;
+                        padding: 48px !important;
+                        border: 1px solid ${isDark ? '#262626' : '#e5e5e5'} !important;
+                        width: 100% !important;
+                      }
+                      .text-\\[var\\(--text-primary\\)\\] { color: ${isDark ? '#f5f5f5' : '#171717'} !important; }
+                      .text-\\[var\\(--text-muted\\)\\] { color: #888888 !important; }
+                      .h-72 { width: 100% !important; height: 400px !important; margin-top: 32px !important; }
+                      .text-xl { font-size: 32px !important; font-weight: 800 !important; margin: 0 !important; }
+                      .text-xs { font-size: 14px !important; margin-top: 6px !important; }
+                      .flex { display: flex !important; }
+                      .items-center { align-items: center !important; }
+                      .items-start { align-items: flex-start !important; }
+                      .justify-between { justify-content: space-between !important; }
+                      .mb-6 { margin-bottom: 24px !important; }
+                      .gap-3 { gap: 12px !important; }
+                      .capture-hide { display: none !important; }
+                      .recharts-responsive-container { width: 100% !important; height: 100% !important; }
+                      svg { width: 100% !important; height: 100% !important; display: block; }
+                      .recharts-text { fill: #888888 !important; font-size: 12px !important; }
+                      .recharts-legend-item-text { fill: #888888 !important; }
+                      .recharts-cartesian-grid-line { stroke: ${isDark ? '#262626' : '#e5e5e5'} !important; }
+                    `;
+                    clonedDoc.head.appendChild(safeStyles);
+
+                    // 3. SANITIZE INLINE COLORS
+                    clonedDoc.querySelectorAll('*').forEach(el => {
+                      if (el instanceof HTMLElement) {
+                        const s = el.getAttribute('style') || '';
+                        if (s.includes('okl')) {
+                          el.style.color = '';
+                          el.style.backgroundColor = '';
+                          el.style.borderColor = '';
+                        }
+                      }
+                    });
+                  }
                 });
 
                 const link = document.createElement('a');
@@ -272,17 +250,8 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
                 link.click();
               } catch (err: any) {
                 console.error('Export Error:', err);
-                const msg = err.message || '';
-                if (msg.includes('oklch') || msg.includes('oklab')) {
-                  alert('Export failed: Attempting to parse an unsupported color function. The system is working on a fix.');
-                } else {
-                  alert(`Export error: ${msg || 'Unknown failure'}`);
-                }
+                alert(`Export error: ${err.message || 'Unknown failure'}`);
               } finally {
-                // 6. CLEANUP
-                if (mirror && mirror.parentNode) {
-                  mirror.parentNode.removeChild(mirror);
-                }
                 setIsExporting(false);
               }
             }}
