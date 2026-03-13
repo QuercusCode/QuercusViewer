@@ -5,9 +5,9 @@ import { ReactNodeViewRenderer, NodeViewWrapper } from '@tiptap/react'
 import { 
   LineChart, Line, BarChart, Bar, XAxis, YAxis, 
   CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-  ReferenceLine
+  ReferenceLine, ScatterChart, Scatter, ZAxis
 } from 'recharts'
-import { Trash2, BarChart2, TrendingUp, Palette, X, Download } from 'lucide-react'
+import { Trash2, BarChart2, TrendingUp, Palette, X, Download, Zap } from 'lucide-react'
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#ef4444', '#06b6d4', '#84cc16'];
 
@@ -102,12 +102,12 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
         {/* Header Section */}
         <div className="flex items-start justify-between mb-6">
           <div className="flex items-center gap-3">
-            <div className={`p-2 rounded-lg capture-hide ${type === 'bar' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-blue-500/10 text-blue-400'}`}>
-              {type === 'bar' ? <BarChart2 className="w-4 h-4" /> : <TrendingUp className="w-4 h-4" />}
+            <div className={`p-2 rounded-lg capture-hide ${type === 'bar' ? 'bg-emerald-500/10 text-emerald-400' : type === 'scatter' ? 'bg-amber-500/10 text-amber-400' : 'bg-blue-500/10 text-blue-400'}`}>
+              {type === 'bar' ? <BarChart2 className="w-4 h-4" /> : type === 'scatter' ? <Zap className="w-4 h-4" /> : <TrendingUp className="w-4 h-4" />}
             </div>
             <div>
               <h3 className="text-xl font-bold text-[var(--text-primary)] tracking-tight">
-                {title || 'Comparison Chart'}
+                {title || (type === 'scatter' ? 'Correlation Analysis' : 'Comparison Chart')}
               </h3>
               <p className="text-xs text-[var(--text-muted)] font-medium uppercase tracking-wider mt-1">
                 {xAxis} vs {activeYAxes.join(' & ')}
@@ -156,10 +156,14 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
             </div>
 
             <button 
-              onClick={() => updateAttributes({ type: type === 'bar' ? 'line' : 'bar' })}
+              onClick={() => {
+                const types = ['bar', 'line', 'scatter'];
+                const nextType = types[(types.indexOf(type) + 1) % types.length];
+                updateAttributes({ type: nextType });
+              }}
               className="px-2 py-1 bg-[var(--input-bg)] text-[var(--text-muted)] hover:text-[var(--text-primary)] text-[10px] font-bold rounded border border-[var(--border-main)] transition-colors h-7"
             >
-              {type === 'bar' ? 'Line' : 'Bar'}
+              {type === 'bar' ? 'Line' : type === 'line' ? 'Scatter' : 'Bar'}
             </button>
             <button 
               onClick={() => deleteNode()}
@@ -302,6 +306,19 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
                     <Bar key={y} dataKey={y} fill={getSeriesColor(index)} radius={[6, 6, 0, 0]} name={y} isAnimationActive={false} />
                   ))}
                 </BarChart>
+              ) : type === 'scatter' ? (
+                <ScatterChart width={1000} height={400} margin={{ top: 20, right: 40, left: 10, bottom: 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
+                  <XAxis type="number" dataKey={xAxis} name={xAxis} stroke={textColor} fontSize={14} tickLine={false} axisLine={false} tick={{ fill: textColor }} />
+                  <YAxis type="number" stroke={textColor} fontSize={14} tickLine={false} axisLine={false} tick={{ fill: textColor }} />
+                  <ZAxis type="number" range={[64, 64]} />
+                  {activeYAxes.length > 1 && (
+                    <Legend verticalAlign="top" align="right" iconType="circle" wrapperStyle={{ fontSize: '14px', paddingBottom: '30px' }} />
+                  )}
+                  {activeYAxes.map((y: string, index: number) => (
+                    <Scatter key={y} name={y} data={data} fill={getSeriesColor(index)} isAnimationActive={false} />
+                  ))}
+                </ScatterChart>
               ) : (
                 <LineChart width={1000} height={400} data={augmentedData} margin={{ top: 20, right: 40, left: 10, bottom: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
@@ -386,6 +403,56 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
                       />
                     ))}
                   </BarChart>
+                ) : type === 'scatter' ? (
+                  <ScatterChart margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
+                    <XAxis 
+                      type="number"
+                      dataKey={xAxis} 
+                      name={xAxis}
+                      stroke={textColor} 
+                      fontSize={10} 
+                      tickLine={false} 
+                      axisLine={false}
+                      tick={{ fill: textColor }}
+                    />
+                    <YAxis 
+                      type="number"
+                      stroke={textColor} 
+                      fontSize={10} 
+                      tickLine={false} 
+                      axisLine={false}
+                      tick={{ fill: textColor }}
+                    />
+                    <ZAxis type="number" range={[40, 40]} />
+                    <Tooltip 
+                      cursor={{ strokeDasharray: '3 3' }}
+                      contentStyle={{ 
+                        backgroundColor: isDark ? '#171717' : '#ffffff',
+                        border: `1px solid ${gridColor}`,
+                        borderRadius: '8px',
+                        fontSize: '12px',
+                        color: isDark ? '#ffffff' : '#000000'
+                      }}
+                      itemStyle={{ fontSize: '11px', fontWeight: 'bold' }}
+                    />
+                    {activeYAxes.length > 1 && (
+                      <Legend 
+                        verticalAlign="top" 
+                        align="right" 
+                        iconType="circle"
+                        wrapperStyle={{ fontSize: '10px', paddingTop: '0px', paddingBottom: '20px' }}
+                      />
+                    )}
+                    {activeYAxes.map((y: string, index: number) => (
+                      <Scatter 
+                        key={y} 
+                        name={y} 
+                        data={data} 
+                        fill={getSeriesColor(index)} 
+                      />
+                    ))}
+                  </ScatterChart>
                 ) : (
                   <LineChart data={augmentedData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
