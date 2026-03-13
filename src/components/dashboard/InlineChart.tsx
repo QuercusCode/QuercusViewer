@@ -286,88 +286,29 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
         {/* Chart Area */}
         <div className="h-72 w-full flex items-center justify-center p-2 bg-transparent">
           {data && data.length > 0 && activeYAxes.length > 0 && data.some((d: any) => activeYAxes.some((y: string) => typeof d[y] === 'number')) ? (
-            <ResponsiveContainer width="100%" height="100%">
-              {type === 'bar' ? (
-                <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+            isExporting ? (
+              // --- V7 DEFINITIVE FIX: Fixed Pixel Render Bypass ---
+              // During export, we bypass ResponsiveContainer and force 1000px width.
+              // This ensures Recharts calculates all SVG paths at the target resolution instantly.
+              type === 'bar' ? (
+                <BarChart width={1000} height={400} data={data} margin={{ top: 20, right: 40, left: 10, bottom: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
-                  <XAxis 
-                    dataKey={xAxis} 
-                    stroke={textColor} 
-                    fontSize={10} 
-                    tickLine={false} 
-                    axisLine={false}
-                    tick={{ fill: textColor }}
-                  />
-                  <YAxis 
-                    stroke={textColor} 
-                    fontSize={10} 
-                    tickLine={false} 
-                    axisLine={false}
-                    tick={{ fill: textColor }}
-                  />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: isDark ? '#171717' : '#ffffff',
-                      border: `1px solid ${gridColor}`,
-                      borderRadius: '8px',
-                      fontSize: '12px',
-                      color: isDark ? '#ffffff' : '#000000'
-                    }}
-                    itemStyle={{ fontSize: '11px', fontWeight: 'bold' }}
-                  />
+                  <XAxis dataKey={xAxis} stroke={textColor} fontSize={14} tickLine={false} axisLine={false} tick={{ fill: textColor }} />
+                  <YAxis stroke={textColor} fontSize={14} tickLine={false} axisLine={false} tick={{ fill: textColor }} />
                   {activeYAxes.length > 1 && (
-                    <Legend 
-                      verticalAlign="top" 
-                      align="right" 
-                      iconType="circle"
-                      wrapperStyle={{ fontSize: '10px', paddingTop: '0px', paddingBottom: '20px' }}
-                    />
+                    <Legend verticalAlign="top" align="right" iconType="circle" wrapperStyle={{ fontSize: '14px', paddingBottom: '30px' }} />
                   )}
                   {activeYAxes.map((y: string, index: number) => (
-                    <Bar 
-                      key={y} 
-                      dataKey={y} 
-                      fill={getSeriesColor(index)} 
-                      radius={[4, 4, 0, 0]} 
-                      name={y}
-                    />
+                    <Bar key={y} dataKey={y} fill={getSeriesColor(index)} radius={[6, 6, 0, 0]} name={y} />
                   ))}
                 </BarChart>
               ) : (
-                <LineChart data={augmentedData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <LineChart width={1000} height={400} data={augmentedData} margin={{ top: 20, right: 40, left: 10, bottom: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
-                  <XAxis 
-                    dataKey={xAxis} 
-                    stroke={textColor} 
-                    fontSize={10} 
-                    tickLine={false} 
-                    axisLine={false}
-                    tick={{ fill: textColor }}
-                  />
-                  <YAxis 
-                    stroke={textColor} 
-                    fontSize={10} 
-                    tickLine={false} 
-                    axisLine={false}
-                    tick={{ fill: textColor }}
-                  />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: isDark ? '#171717' : '#ffffff',
-                      border: `1px solid ${gridColor}`,
-                      borderRadius: '8px',
-                      fontSize: '12px',
-                      color: isDark ? '#ffffff' : '#000000'
-                    }}
-                    itemStyle={{ fontSize: '11px', fontWeight: 'bold' }}
-                  />
+                  <XAxis dataKey={xAxis} stroke={textColor} fontSize={14} tickLine={false} axisLine={false} tick={{ fill: textColor }} />
+                  <YAxis stroke={textColor} fontSize={14} tickLine={false} axisLine={false} tick={{ fill: textColor }} />
                   {activeYAxes.length > 1 && (
-                    <Legend 
-                      verticalAlign="top" 
-                      align="right" 
-                      iconType="circle"
-                      wrapperStyle={{ fontSize: '10px', paddingTop: '0px', paddingBottom: '20px' }}
-                    />
+                    <Legend verticalAlign="top" align="right" iconType="circle" wrapperStyle={{ fontSize: '14px', paddingBottom: '30px' }} />
                   )}
                   {activeYAxes.map((y: string, index: number) => (
                     <React.Fragment key={y}>
@@ -375,41 +316,143 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
                         type="monotone" 
                         dataKey={y} 
                         stroke={getSeriesColor(index)} 
-                        strokeWidth={3} 
-                        dot={{ r: 4, fill: getSeriesColor(index), strokeWidth: 2, stroke: isDark ? '#171717' : '#ffffff' }}
-                        activeDot={{ r: 6 }}
-                        name={y}
+                        strokeWidth={4} 
+                        dot={{ r: 6, fill: getSeriesColor(index), strokeWidth: 3, stroke: isDark ? '#171717' : '#ffffff' }}
+                        name={y} 
                       />
                       {showTrendLine && (
-                        <Line
-                          type="monotone"
-                          dataKey={`${y}_trend`}
-                          stroke={getSeriesColor(index)}
-                          strokeWidth={2}
-                          strokeDasharray="5 5"
-                          dot={false}
-                          activeDot={false}
-                          name={`${y} Trend`}
-                        />
-                      )}
-                      {showStatistics && getSeriesStats(y) && (
-                        <ReferenceLine 
-                          y={getSeriesStats(y)!.mean} 
-                          stroke={getSeriesColor(index)} 
-                          strokeDasharray="3 3"
-                          label={{ 
-                            value: `Avg`, 
-                            fill: getSeriesColor(index), 
-                            fontSize: 8,
-                            position: 'insideBottomRight'
-                          }}
-                        />
+                        <Line type="monotone" dataKey={`${y}_trend`} stroke={getSeriesColor(index)} strokeWidth={3} strokeDasharray="6 6" dot={false} activeDot={false} name={`${y} Trend`} />
                       )}
                     </React.Fragment>
                   ))}
                 </LineChart>
-              )}
-            </ResponsiveContainer>
+              )
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                {type === 'bar' ? (
+                  <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
+                    <XAxis 
+                      dataKey={xAxis} 
+                      stroke={textColor} 
+                      fontSize={10} 
+                      tickLine={false} 
+                      axisLine={false}
+                      tick={{ fill: textColor }}
+                    />
+                    <YAxis 
+                      stroke={textColor} 
+                      fontSize={10} 
+                      tickLine={false} 
+                      axisLine={false}
+                      tick={{ fill: textColor }}
+                    />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: isDark ? '#171717' : '#ffffff',
+                        border: `1px solid ${gridColor}`,
+                        borderRadius: '8px',
+                        fontSize: '12px',
+                        color: isDark ? '#ffffff' : '#000000'
+                      }}
+                      itemStyle={{ fontSize: '11px', fontWeight: 'bold' }}
+                    />
+                    {activeYAxes.length > 1 && (
+                      <Legend 
+                        verticalAlign="top" 
+                        align="right" 
+                        iconType="circle"
+                        wrapperStyle={{ fontSize: '10px', paddingTop: '0px', paddingBottom: '20px' }}
+                      />
+                    )}
+                    {activeYAxes.map((y: string, index: number) => (
+                      <Bar 
+                        key={y} 
+                        dataKey={y} 
+                        fill={getSeriesColor(index)} 
+                        radius={[4, 4, 0, 0]} 
+                        name={y}
+                      />
+                    ))}
+                  </BarChart>
+                ) : (
+                  <LineChart data={augmentedData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
+                    <XAxis 
+                      dataKey={xAxis} 
+                      stroke={textColor} 
+                      fontSize={10} 
+                      tickLine={false} 
+                      axisLine={false}
+                      tick={{ fill: textColor }}
+                    />
+                    <YAxis 
+                      stroke={textColor} 
+                      fontSize={10} 
+                      tickLine={false} 
+                      axisLine={false}
+                      tick={{ fill: textColor }}
+                    />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: isDark ? '#171717' : '#ffffff',
+                        border: `1px solid ${gridColor}`,
+                        borderRadius: '8px',
+                        fontSize: '12px',
+                        color: isDark ? '#ffffff' : '#000000'
+                      }}
+                      itemStyle={{ fontSize: '11px', fontWeight: 'bold' }}
+                    />
+                    {activeYAxes.length > 1 && (
+                      <Legend 
+                        verticalAlign="top" 
+                        align="right" 
+                        iconType="circle"
+                        wrapperStyle={{ fontSize: '10px', paddingTop: '0px', paddingBottom: '20px' }}
+                      />
+                    )}
+                    {activeYAxes.map((y: string, index: number) => (
+                      <React.Fragment key={y}>
+                        <Line 
+                          type="monotone" 
+                          dataKey={y} 
+                          stroke={getSeriesColor(index)} 
+                          strokeWidth={3} 
+                          dot={{ r: 4, fill: getSeriesColor(index), strokeWidth: 2, stroke: isDark ? '#171717' : '#ffffff' }}
+                          activeDot={{ r: 6 }}
+                          name={y}
+                        />
+                        {showTrendLine && (
+                          <Line
+                            type="monotone"
+                            dataKey={`${y}_trend`}
+                            stroke={getSeriesColor(index)}
+                            strokeWidth={2}
+                            strokeDasharray="5 5"
+                            dot={false}
+                            activeDot={false}
+                            name={`${y} Trend`}
+                          />
+                        )}
+                        {showStatistics && getSeriesStats(y) && (
+                          <ReferenceLine 
+                            y={getSeriesStats(y)!.mean} 
+                            stroke={getSeriesColor(index)} 
+                            strokeDasharray="3 3"
+                            label={{ 
+                              value: `Avg`, 
+                              fill: getSeriesColor(index), 
+                              fontSize: 8,
+                              position: 'insideBottomRight'
+                            }}
+                          />
+                        )}
+                      </React.Fragment>
+                    ))}
+                  </LineChart>
+                )}
+              </ResponsiveContainer>
+            )
           ) : (
             <div className="flex flex-col items-center justify-center text-center p-8 bg-[var(--input-bg)] rounded-xl border border-dashed border-[var(--border-main)] w-full">
               <BarChart2 className="w-8 h-8 text-[var(--text-muted)] mb-3 opacity-20" />
