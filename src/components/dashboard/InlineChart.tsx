@@ -299,7 +299,7 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
                     <Legend verticalAlign="top" align="right" iconType="circle" wrapperStyle={{ fontSize: '14px', paddingBottom: '30px' }} />
                   )}
                   {activeYAxes.map((y: string, index: number) => (
-                    <Bar key={y} dataKey={y} fill={getSeriesColor(index)} radius={[6, 6, 0, 0]} name={y} />
+                    <Bar key={y} dataKey={y} fill={getSeriesColor(index)} radius={[6, 6, 0, 0]} name={y} isAnimationActive={false} />
                   ))}
                 </BarChart>
               ) : (
@@ -319,9 +319,20 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
                         strokeWidth={4} 
                         dot={{ r: 6, fill: getSeriesColor(index), strokeWidth: 3, stroke: isDark ? '#171717' : '#ffffff' }}
                         name={y} 
+                        isAnimationActive={false}
                       />
                       {showTrendLine && (
-                        <Line type="monotone" dataKey={`${y}_trend`} stroke={getSeriesColor(index)} strokeWidth={3} strokeDasharray="6 6" dot={false} activeDot={false} name={`${y} Trend`} />
+                        <Line 
+                          type="monotone" 
+                          dataKey={`${y}_trend`} 
+                          stroke={getSeriesColor(index)} 
+                          strokeWidth={3} 
+                          strokeDasharray="6 6" 
+                          dot={false} 
+                          activeDot={false} 
+                          name={`${y} Trend`} 
+                          isAnimationActive={false}
+                        />
                       )}
                     </React.Fragment>
                   ))}
