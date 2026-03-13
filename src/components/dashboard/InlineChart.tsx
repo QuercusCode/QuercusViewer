@@ -69,7 +69,6 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
     const intercept = (sumY - slope * sumX) / n;
 
     // Generate points for the trend line
-    // For scatter plots, the trend line is also plotted as scatter points on the same numeric X-axis
     return data.map((d: any, i: number) => {
       const xVal = type === 'scatter' ? Number(d[xAxis]) : i;
       return {
@@ -81,31 +80,14 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
   // Statistics: Mean & Stdev
   const getSeriesStats = (seriesName: string) => {
     const vals = data
-      .map((d: any) => d[seriesName])
-      .filter((v: any) => typeof v === 'number');
+      .map((d: any) => Number(d[seriesName]))
+      .filter((v: number) => !isNaN(v));
     
     if (vals.length === 0) return null;
 
     const mean = vals.reduce((a: number, b: number) => a + b, 0) / vals.length;
     return { mean };
   };
-
-  // Augment data with trend lines if needed
-  const augmentedData = useMemo(() => {
-    if (!showTrendLine || !data) return data;
-    
-    let result = [...data];
-    activeYAxes.forEach((y: string) => {
-      const trend = getRegressionLine(y);
-      if (trend) {
-        result = result.map((d: any, i: number) => ({
-          ...d,
-          ...trend[i]
-        }));
-      }
-    });
-    return result;
-  }, [data, activeYAxes, showTrendLine, type]); // Added type dependency
 
   // Sanitized numeric data specifically for Scatter plots
   const sanitizedScatterData = useMemo(() => {
@@ -122,12 +104,12 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
     }).filter((d: any) => !isNaN(d[xAxis]));
   }, [data, type, xAxis, activeYAxes]);
 
-  // Augmented sanitized data for scatter regression
-  const augmentedScatterData = useMemo(() => {
-    if (type !== 'scatter' || !sanitizedScatterData) return sanitizedScatterData;
-    if (!showTrendLine) return sanitizedScatterData;
-
-    let result = [...sanitizedScatterData];
+  // Augmented data with trend lines
+  const augmentedData = useMemo(() => {
+    const sourceData = type === 'scatter' ? sanitizedScatterData : data;
+    if (!showTrendLine || !sourceData) return sourceData;
+    
+    let result = [...sourceData];
     activeYAxes.forEach((y: string) => {
       const trend = getRegressionLine(y);
       if (trend) {
@@ -138,7 +120,7 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
       }
     });
     return result;
-  }, [sanitizedScatterData, activeYAxes, showTrendLine, type]);
+  }, [data, sanitizedScatterData, activeYAxes, showTrendLine, type]);
 
   return (
     <NodeViewWrapper ref={chartRef} className="inline-chart-wrapper my-8 group relative">
@@ -334,7 +316,7 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
 
         {/* Chart Area */}
         <div className="h-72 w-full flex items-center justify-center p-2 bg-transparent">
-          {data && data.length > 0 && activeYAxes.length > 0 && data.some((d: any) => activeYAxes.some((y: string) => typeof d[y] === 'number')) ? (
+          {data && data.length > 0 && activeYAxes.length > 0 && data.some((d: any) => activeYAxes.some((y: string) => !isNaN(parseFloat(d[y])))) ? (
             isExporting ? (
               // --- V7 DEFINITIVE FIX: Fixed Pixel Render Bypass ---
               // During export, we bypass ResponsiveContainer and force 1000px width.
@@ -354,8 +336,8 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
               ) : type === 'scatter' ? (
                 <ScatterChart width={1000} height={400} margin={{ top: 20, right: 40, left: 10, bottom: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
-                  <XAxis type="number" dataKey={xAxis} name={xAxis} stroke={textColor} fontSize={14} tickLine={false} axisLine={false} tick={{ fill: textColor }} />
-                  <YAxis type="number" stroke={textColor} fontSize={14} tickLine={false} axisLine={false} tick={{ fill: textColor }} />
+                  <XAxis type="number" dataKey={xAxis} name={xAxis} stroke={textColor} fontSize={14} tickLine={false} axisLine={false} tick={{ fill: textColor }} domain={['auto', 'auto']} />
+                  <YAxis type="number" stroke={textColor} fontSize={14} tickLine={false} axisLine={false} tick={{ fill: textColor }} domain={['auto', 'auto']} />
                   <ZAxis type="number" range={[64, 64]} />
                   {activeYAxes.length > 1 && (
                     <Legend verticalAlign="top" align="right" iconType="circle" wrapperStyle={{ fontSize: '14px', paddingBottom: '30px' }} />
@@ -365,7 +347,8 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
                       <Scatter 
                         key={y} 
                         name={y} 
-                        data={augmentedScatterData} 
+                        data={augmentedData.map((p: any) => ({ ...p, [xAxis]: Number(p[xAxis]) }))} // Ensure X is numeric for scatter
+                        dataKey={y} // EXPLICIT Y KEY
                         fill={getSeriesColor(index)} 
                         isAnimationActive={false} 
                       />
@@ -373,12 +356,12 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
                         <Scatter
                           key={`${y}_trend`}
                           name={`${y} Trend`}
-                          data={augmentedScatterData}
-                          dataKey={`${y}_trend`}
+                          data={augmentedData.map((p: any) => ({ ...p, [xAxis]: Number(p[xAxis]) }))}
+                          dataKey={`${y}_trend`} // USE CALCULATED TREND KEY
                           fill={getSeriesColor(index)}
                           isAnimationActive={false}
                           line={{ stroke: getSeriesColor(index), strokeWidth: 2, strokeDasharray: '5 5' }}
-                          shape={() => null} // Hide dots for the trend line in scatter mode
+                          shape={() => null} 
                         />
                       )}
                     </React.Fragment>
@@ -514,18 +497,19 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
                         <Scatter 
                           key={y} 
                           name={y} 
-                          data={augmentedScatterData} 
+                          data={augmentedData}
+                          dataKey={y} // EXPLICIT Y KEY
                           fill={getSeriesColor(index)} 
                         />
                         {showTrendLine && (
                           <Scatter
                             key={`${y}_trend`}
                             name={`${y} Trend`}
-                            data={augmentedScatterData}
-                            dataKey={`${y}_trend`}
+                            data={augmentedData}
+                            dataKey={`${y}_trend`} // USE CALCULATED TREND KEY
                             fill={getSeriesColor(index)}
                             line={{ stroke: getSeriesColor(index), strokeWidth: 2, strokeDasharray: '5 5' }}
-                            shape={() => null} // Hide dots for the trend line
+                            shape={() => null}
                           />
                         )}
                       </React.Fragment>
