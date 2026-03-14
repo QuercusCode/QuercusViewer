@@ -46,100 +46,128 @@ export const ChemicalSketcher = Node.create({
 
 const JS_CDN = "https://jsme-editor.github.io/dist/jsme/jsme.nocache.js";
 
+// Global script loader tracker
+let scriptLoadingStarted = false;
+
 const ChemicalSketcherComponent = ({ node, updateAttributes, deleteNode }: any) => {
   const { molfile, svg } = node.attrs;
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [jsmeReady, setJsmeReady] = useState(false);
   const jsmeAppletRef = useRef<any>(null);
-  const [containerId] = useState(() => `jsme_container_${Math.random().toString(36).substr(2, 9)}`);
+  const [containerId] = useState(() => `jsme_ct_${Math.random().toString(36).substring(2, 9)}`);
   const [initError, setInitError] = useState<string | null>(null);
 
-  // Load JSME library
+  // 1. Script Loading Logic
   useEffect(() => {
-    if (isModalOpen) {
-      const checkJSME = () => {
-        return (window as any).JSMe || (window as any).JSME || (window as any).jsme;
+    if (!isModalOpen) return;
+
+    const checkLibrary = () => (window as any).JSMe || (window as any).JSME || (window as any).jsme;
+
+    if (checkLibrary()) {
+      setJsmeReady(true);
+      return;
+    }
+
+    if (!scriptLoadingStarted) {
+      scriptLoadingStarted = true;
+      
+      // JSME requires this global callback
+      (window as any).jsmeOnLoad = () => {
+        setJsmeReady(true);
       };
 
-      if (checkJSME()) {
-        setJsmeReady(true);
-        return;
-      }
-
-      if (!document.getElementById('jsme-script')) {
-        (window as any).jsmeOnLoad = () => {
-          setJsmeReady(true);
-        };
-
-        const script = document.createElement('script');
-        script.id = 'jsme-script';
-        script.src = JS_CDN;
-        script.async = true;
-        document.body.appendChild(script);
-      } else {
-        const checkInterval = setInterval(() => {
-          if (checkJSME()) {
-            setJsmeReady(true);
-            clearInterval(checkInterval);
-          }
-        }, 100);
-        return () => clearInterval(checkInterval);
-      }
+      const script = document.createElement('script');
+      script.id = 'jsme-script-v4';
+      script.src = JS_CDN;
+      script.async = true;
+      document.body.appendChild(script);
     }
+
+    // Fallback polling in case callback fails
+    const interval = setInterval(() => {
+      if (checkLibrary()) {
+        setJsmeReady(true);
+        clearInterval(interval);
+      }
+    }, 200);
+
+    return () => clearInterval(interval);
   }, [isModalOpen]);
 
-  // Initialize JSME Applet
-  const initSketcher = () => {
-    setInitError(null);
-    const JSMEConstructor = (window as any).JSMe || (window as any).JSME || (window as any).jsme;
+  // 2. Initializer function (Internal)
+  const initSketcherInternal = () => {
+    if (!isModalOpen || !jsmeReady) return;
     
-    if (JSMEConstructor && isModalOpen && jsmeReady) {
-      try {
-        // Clear previous if any
-        jsmeAppletRef.current = null;
-        
-        jsmeAppletRef.current = new JSMEConstructor(
-          containerId, 
-          "100%", "450px", {
-            "options": "query,perspective,zoom"
-          }
-        );
-        
-        if (molfile) {
-          jsmeAppletRef.current.readMolFile(molfile);
+    setInitError(null);
+    const Constructor = (window as any).JSMe || (window as any).JSME || (window as any).jsme;
+    
+    if (!Constructor) {
+      setInitError("Scientific library not available yet.");
+      return;
+    }
+
+    const container = document.getElementById(containerId);
+    if (!container) {
+      // If container isn't in DOM yet, retry soon
+      setTimeout(initSketcherInternal, 50);
+      return;
+    }
+
+    try {
+      // Cleanup previous instance if exist
+      jsmeAppletRef.current = null;
+      
+      // Initialize fresh instance
+      jsmeAppletRef.current = new Constructor(
+        containerId, 
+        "100%", "450px", {
+          "options": "query,perspective,zoom,hydrogens"
         }
-      } catch (error: any) {
-        console.error("JSME Initialization failed:", error);
-        setInitError(error.message || "Failed to initialize editor");
+      );
+      
+      if (molfile) {
+        // Wrap in another small timeout to ensure applet is fully ready for input
+        setTimeout(() => {
+          if (jsmeAppletRef.current && molfile) {
+            jsmeAppletRef.current.readMolFile(molfile);
+          }
+        }, 100);
       }
+    } catch (err: any) {
+      console.error("Critical Sketcher Error:", err);
+      setInitError(`Engine Error: ${err.message || 'Unknown'}`);
     }
   };
 
+  // 3. Lifecycle Trigger
   useEffect(() => {
     if (isModalOpen && jsmeReady) {
-      const timer = setTimeout(initSketcher, 400);
+      // Use requestAnimationFrame to wait for the DOM to be fully stable (modal animation)
+      const handle = requestAnimationFrame(() => {
+        const timeout = setTimeout(initSketcherInternal, 350);
+        return () => clearTimeout(timeout);
+      });
       return () => {
-        clearTimeout(timer);
+        cancelAnimationFrame(handle);
         jsmeAppletRef.current = null;
       };
     }
   }, [isModalOpen, jsmeReady, containerId]);
 
   const handleSave = () => {
-    if (jsmeAppletRef.current) {
-      try {
-        const newMolfile = jsmeAppletRef.current.molFile();
-        const newSvg = jsmeAppletRef.current.asSVG();
+    if (!jsmeAppletRef.current) return;
+    try {
+      const newMolfile = jsmeAppletRef.current.molFile();
+      const newSvg = jsmeAppletRef.current.asSVG();
 
-        updateAttributes({ 
-          molfile: newMolfile,
-          svg: newSvg
-        });
-        setIsModalOpen(false);
-        jsmeAppletRef.current = null;
-      } catch (e) {
-        console.error("Error saving molecule:", e);
-      }
+      updateAttributes({ 
+        molfile: newMolfile,
+        svg: newSvg
+      });
+      setIsModalOpen(false);
+      jsmeAppletRef.current = null;
+    } catch (e) {
+      console.error("Sketcher Save Error:", e);
     }
   };
 
@@ -235,7 +263,7 @@ const ChemicalSketcherComponent = ({ node, updateAttributes, deleteNode }: any) 
                         {initError}
                       </p>
                       <button 
-                        onClick={initSketcher}
+                        onClick={initSketcherInternal}
                         className="px-6 py-2 rounded-xl bg-[var(--input-bg)] hover:bg-[var(--border-main)] text-[var(--text-primary)] text-xs font-bold transition-all"
                       >
                         Try Again
