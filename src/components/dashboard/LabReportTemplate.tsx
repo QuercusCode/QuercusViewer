@@ -13,8 +13,27 @@ interface LabReportTemplateProps {
 }
 
 /**
+ * Helper for calculator fields in PDF
+ */
+const PdfCalcField = ({ label, value, unit, highlight }: { label: string, value: string, unit: string, highlight?: boolean }) => (
+  <div style={{ marginBottom: '0.5rem' }}>
+    <p style={{ margin: 0, fontSize: '9px', fontWeight: 'bold', color: '#64748b', textTransform: 'uppercase' }}>{label}</p>
+    <p style={{ 
+      margin: 0, 
+      fontSize: '12px', 
+      fontWeight: 'bold', 
+      color: highlight ? '#2563eb' : '#1e293b',
+      fontFamily: 'monospace',
+      borderBottom: '1px solid #f1f5f9',
+      paddingBottom: '2px'
+    }}>
+      {value || '-'} <span style={{ fontSize: '9px', fontWeight: 'normal', color: '#94a3b8' }}>{unit}</span>
+    </p>
+  </div>
+);
+
+/**
  * LabReportTemplate component for multi-page PDF generation.
- * Separated into Cover Page and Content Page.
  */
 export const LabReportTemplate = React.forwardRef<HTMLDivElement, LabReportTemplateProps>(
   ({ title, content, date, author, id, allStructures = [] }, ref) => {
@@ -159,10 +178,10 @@ export const LabReportTemplate = React.forwardRef<HTMLDivElement, LabReportTempl
                 p: ({children}) => {
                   const processed = React.Children.map(children, child => {
                     if (typeof child === 'string') {
-                      // Combined split for both structures and sketchers
-                      const parts = child.split(/(\[\[structure:[a-f0-9-]{36}\]\]|\[\[sketcher:[\s\S]*?###SKETCH_SEP###[\s\S]*?\]\])/g);
+                      // Combined split for all custom nodes
+                      const parts = child.split(/(\[\[structure:[a-f0-9-]{36}\]\]|\[\[sketcher:[A-Za-z0-9+/=]+\]\]|\[\[calculator:[A-Za-z0-9+/=]+\]\])/g);
                       return parts.map((part, i) => {
-                        // Handle Structure Mentions
+                        // 1. Handle Structure Mentions
                         const structMatch = part.match(/\[\[structure:([a-f0-9-]{36})\]\]/);
                         if (structMatch) {
                           const sid = structMatch[1];
@@ -182,7 +201,7 @@ export const LabReportTemplate = React.forwardRef<HTMLDivElement, LabReportTempl
                           );
                         }
 
-                        // Handle Chemical Sketcher (Base64 version)
+                        // 2. Handle Chemical Sketcher (Base64)
                         const sketchMatch = part.match(/\[\[sketcher:([A-Za-z0-9+/=]+)\]\]/);
                         if (sketchMatch) {
                           try {
@@ -195,7 +214,7 @@ export const LabReportTemplate = React.forwardRef<HTMLDivElement, LabReportTempl
                               <div 
                                 key={i}
                                 className="my-4 p-4 border border-gray-100 rounded-xl bg-gray-50/50"
-                                style={{ width: '100%', display: 'flex', justifyContent: 'center' }}
+                                style={{ width: '100%', display: 'flex', justifyContent: 'center', margin: '1rem 0', padding: '1rem', border: '1px solid #f3f4f6', borderRadius: '0.75rem', backgroundColor: '#f9fafb' }}
                                 dangerouslySetInnerHTML={{ 
                                   __html: svgContent.replace('<svg', '<svg style="width:100%; height:auto; max-height:280px" preserveAspectRatio="xMidYMid meet"') 
                                 }}
@@ -203,7 +222,48 @@ export const LabReportTemplate = React.forwardRef<HTMLDivElement, LabReportTempl
                             );
                           } catch (err) {
                             console.error("PDF Sketcher Decode Error:", err);
-                            return <span className="text-red-400 text-[10px]">Error rendering structure</span>;
+                            return <span style={{ color: '#ef4444', fontSize: '10px' }}>Error rendering structure</span>;
+                          }
+                        }
+
+                        // 3. Handle Lab Calculator (Base64)
+                        const calcMatch = part.match(/\[\[calculator:([A-Za-z0-9+/=]+)\]\]/);
+                        if (calcMatch) {
+                          try {
+                            const base64 = calcMatch[1];
+                            const decoded = decodeURIComponent(escape(atob(base64)));
+                            const { type, values } = JSON.parse(decoded);
+                            
+                            return (
+                              <div key={i} style={{ margin: '1.5rem 0', border: '1px solid #bfdbfe', borderRadius: '1rem', overflow: 'hidden', backgroundColor: '#ffffff', boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)' }}>
+                                <div style={{ backgroundColor: '#eff6ff', padding: '0.5rem 1rem', borderBottom: '1px solid #bfdbfe', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                  <span style={{ fontSize: '10px', fontWeight: 'bold', color: '#2563eb', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                    {type === 'dilution' ? 'Dilution (C1V1 = C2V2)' : 'Molarity Calculator'}
+                                  </span>
+                                  <div style={{ width: '16px', height: '16px', color: '#60a5fa' }}>🧪</div>
+                                </div>
+                                <div style={{ padding: '1rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                                  {type === 'dilution' ? (
+                                    <>
+                                      <PdfCalcField label="Initial Conc (C1)" value={values.c1} unit="mM" />
+                                      <PdfCalcField label="Initial Vol (V1)" value={values.v1} unit="mL" />
+                                      <PdfCalcField label="Final Conc (C2)" value={values.c2} unit="mM" highlight />
+                                      <PdfCalcField label="Final Vol (V2)" value={values.v2} unit="mL" highlight />
+                                    </>
+                                  ) : (
+                                    <>
+                                      <PdfCalcField label="Desired Conc" value={values.c} unit="mM" />
+                                      <PdfCalcField label="Target Volume" value={values.v} unit="mL" />
+                                      <PdfCalcField label="Mol. Weight" value={values.mw} unit="g/mol" />
+                                      <PdfCalcField label="Required Mass" value={values.m} unit="mg" highlight />
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          } catch (err) {
+                            console.error("PDF Calculator Decode Error:", err);
+                            return <span style={{ color: '#ef4444', fontSize: '10px' }}>Error rendering calculator</span>;
                           }
                         }
                         

@@ -21,6 +21,7 @@ import { HexColorPicker } from 'react-colorful';
 import { SpreadsheetTable } from './SpreadsheetTable';
 import { InlineChart } from './InlineChart';
 import { ChemicalSketcher } from './ChemicalSketcher';
+import { LabCalculator } from './LabCalculator';
 import { createSuggestion } from './suggestion';
 import { useTheme } from '../../lib/ThemeContext';
 import { 
@@ -30,7 +31,7 @@ import {
   Type, ChevronDown, MoreHorizontal,
   Subscript as SubscriptIcon, Superscript as SuperscriptIcon,
   Highlighter, Eraser, FlaskConical, Clock, FileText,
-  Table as TableIcon, Activity, Beaker
+  Table as TableIcon, Activity, Beaker, Calculator
 } from 'lucide-react';
 import type { Structure } from '../../lib/structuresService';
 
@@ -193,6 +194,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       }),
       InlineChart,
       ChemicalSketcher,
+      LabCalculator,
       TableRow,
       TableHeader,
       TableCell,
@@ -295,6 +297,9 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         break;
       case 'molecule':
         editor.chain().focus().insertContent({ type: 'chemicalSketcher' }).run();
+        break;
+      case 'calculator':
+        editor.chain().focus().insertContent({ type: 'labCalculator' }).run();
         break;
       case 'protocol':
         editor.chain().focus().insertContent('**Protocol:**\n\n- ').run();
@@ -623,6 +628,14 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
               >
                 <Beaker className="w-5 h-5 text-indigo-400" />
                 <span className="font-semibold">Molecular Structure</span>
+              </button>
+
+              <button
+                onClick={() => insertTemplate('calculator')}
+                className="w-full flex items-center gap-4 px-4 py-4 text-sm text-[var(--text-secondary)] hover:bg-[var(--input-bg)] rounded-xl transition-all text-left"
+              >
+                <Calculator className="w-5 h-5 text-blue-400" />
+                <span className="font-semibold">Scientific Calculator</span>
               </button>
 
               <button
