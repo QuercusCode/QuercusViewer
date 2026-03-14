@@ -159,19 +159,32 @@ const ChemicalSketcherComponent = ({ node, updateAttributes, deleteNode }: any) 
   }, [isModalOpen, jsmeReady, containerId]);
 
   const handleSave = () => {
-    if (!jsmeAppletRef.current) return;
-    try {
-      const newMolfile = jsmeAppletRef.current.molFile();
-      const newSvg = jsmeAppletRef.current.asSVG();
+    const applet = jsmeAppletRef.current;
+    if (!applet) return;
 
-      updateAttributes({ 
-        molfile: newMolfile,
-        svg: newSvg
-      });
-      setIsModalOpen(false);
-      jsmeAppletRef.current = null;
-    } catch (e) {
+    try {
+      // retrieval methods based on official JSME research
+      const newMolfile = applet.molFile ? applet.molFile() : "";
+      
+      // getMolecularAreaGraphicsString() is the official SVG getter
+      const newSvg = applet.getMolecularAreaGraphicsString 
+        ? applet.getMolecularAreaGraphicsString() 
+        : "";
+
+      if (newMolfile) {
+        updateAttributes({ 
+          molfile: newMolfile,
+          svg: newSvg
+        });
+        setIsModalOpen(false);
+        setDiagnostics(""); // Clear on success
+        jsmeAppletRef.current = null;
+      } else {
+        setInitError("Please draw a structure before saving.");
+      }
+    } catch (e: any) {
       console.error("Sketcher Save Error:", e);
+      setInitError(`Save failed: ${e.message || 'Unknown API error'}`);
     }
   };
 
