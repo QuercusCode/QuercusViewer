@@ -54,14 +54,15 @@ const ChemicalSketcherComponent = ({ node, updateAttributes, deleteNode }: any) 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [jsmeReady, setJsmeReady] = useState(false);
   const jsmeAppletRef = useRef<any>(null);
-  const [containerId] = useState(() => `jsme_ct_${Math.random().toString(36).substring(2, 9)}`);
+  const [containerId] = useState(() => `jsme_editor_ct_${Math.random().toString(36).substring(2, 9)}`);
   const [initError, setInitError] = useState<string | null>(null);
+  const [diagnostics, setDiagnostics] = useState<string>("");
 
   // 1. Script Loading Logic
   useEffect(() => {
     if (!isModalOpen) return;
 
-    const checkLibrary = () => (window as any).JSMe || (window as any).JSME || (window as any).jsme;
+    const checkLibrary = () => (window as any).JSApplet?.JSME || (window as any).JSMe || (window as any).JSME || (window as any).jsme;
 
     if (checkLibrary()) {
       setJsmeReady(true);
@@ -77,7 +78,7 @@ const ChemicalSketcherComponent = ({ node, updateAttributes, deleteNode }: any) 
       };
 
       const script = document.createElement('script');
-      script.id = 'jsme-script-v4';
+      script.id = 'jsme-script-v5';
       script.src = JS_CDN;
       script.async = true;
       document.body.appendChild(script);
@@ -99,8 +100,13 @@ const ChemicalSketcherComponent = ({ node, updateAttributes, deleteNode }: any) 
     if (!isModalOpen || !jsmeReady) return;
     
     setInitError(null);
-    const Constructor = (window as any).JSMe || (window as any).JSME || (window as any).jsme;
+    const w = window as any;
+    // According to official docs, it's JSApplet.JSME
+    const Constructor = w.JSApplet?.JSME || w.JSMe || w.JSME || w.jsme;
     
+    // Update diagnostics
+    setDiagnostics(`JSApplet: ${!!w.JSApplet}, JSApplet.JSME: ${!!w.JSApplet?.JSME}, JSMe: ${!!w.JSMe}, JSME: ${!!w.JSME}`);
+
     if (!Constructor) {
       setInitError("Scientific library not available yet.");
       return;
@@ -108,13 +114,13 @@ const ChemicalSketcherComponent = ({ node, updateAttributes, deleteNode }: any) 
 
     const container = document.getElementById(containerId);
     if (!container) {
-      // If container isn't in DOM yet, retry soon
       setTimeout(initSketcherInternal, 50);
       return;
     }
 
     try {
-      // Cleanup previous instance if exist
+      // CLEAR the container first to avoid GWT "already attached" errors
+      container.innerHTML = "";
       jsmeAppletRef.current = null;
       
       // Initialize fresh instance
@@ -126,15 +132,14 @@ const ChemicalSketcherComponent = ({ node, updateAttributes, deleteNode }: any) 
       );
       
       if (molfile) {
-        // Wrap in another small timeout to ensure applet is fully ready for input
         setTimeout(() => {
           if (jsmeAppletRef.current && molfile) {
             jsmeAppletRef.current.readMolFile(molfile);
           }
-        }, 100);
+        }, 150);
       }
     } catch (err: any) {
-      console.error("Critical Sketcher Error:", err);
+      console.error("V5 Sketcher Error:", err);
       setInitError(`Engine Error: ${err.message || 'Unknown'}`);
     }
   };
@@ -142,9 +147,8 @@ const ChemicalSketcherComponent = ({ node, updateAttributes, deleteNode }: any) 
   // 3. Lifecycle Trigger
   useEffect(() => {
     if (isModalOpen && jsmeReady) {
-      // Use requestAnimationFrame to wait for the DOM to be fully stable (modal animation)
       const handle = requestAnimationFrame(() => {
-        const timeout = setTimeout(initSketcherInternal, 350);
+        const timeout = setTimeout(initSketcherInternal, 500);
         return () => clearTimeout(timeout);
       });
       return () => {
@@ -259,8 +263,11 @@ const ChemicalSketcherComponent = ({ node, updateAttributes, deleteNode }: any) 
                         <X className="w-6 h-6" />
                       </div>
                       <p className="text-sm font-bold text-[var(--text-primary)] mb-2">Initialization Failed</p>
-                      <p className="text-xs text-[var(--text-muted)] mb-6 text-center max-w-[240px] leading-relaxed">
+                      <p className="text-xs text-[var(--text-muted)] mb-2 text-center max-w-[240px] leading-relaxed">
                         {initError}
+                      </p>
+                      <p className="text-[10px] text-gray-500 mb-6 font-mono bg-black/20 p-2 rounded-lg">
+                        {diagnostics}
                       </p>
                       <button 
                         onClick={initSketcherInternal}
