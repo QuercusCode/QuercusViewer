@@ -28,11 +28,9 @@ export const CollaborationCursor = Extension.create({
 
   addCommands() {
     return {
-      setCollaborationCursors: (cursors: RemoteCursor[]) => ({ storage, editor }) => {
-        storage.remoteCursors = cursors;
+      setCollaborationCursors: (cursors: RemoteCursor[]) => ({ editor }) => {
+        this.storage.remoteCursors = cursors;
         // Force a re-render of decorations by updating the editor state if needed
-        // Tiptap handles this when storage changes in some extensions, 
-        // but often we need a view update.
         editor.view.dispatch(editor.view.state.tr.setMeta('collaborationCursorUpdate', true));
         return true;
       },

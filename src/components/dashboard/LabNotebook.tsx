@@ -406,6 +406,13 @@ export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false
                                 />
 
                                 <div className="h-full min-h-[500px] mb-20">
+                                    <RichTextEditor 
+                                        noteId={activeId || undefined}
+                                        content={editContent}
+                                        onChange={(markdown) => handleEditorChange('content', markdown)}
+                                        allStructures={allStructures}
+                                        placeholder="Write notes... Type @ to mention a structure..."
+                                    />
                                 </div>
                             </div>
                         </div>
