@@ -232,8 +232,14 @@ export const LabReportTemplate = React.forwardRef<HTMLDivElement, LabReportTempl
                           try {
                             const base64 = calcMatch[1];
                             const decoded = decodeURIComponent(escape(atob(base64)));
-                            const { type, values } = JSON.parse(decoded);
+                            const { type, values, units, targetField } = JSON.parse(decoded);
                             
+                            // Safe units fallback for backward compatibility
+                            const u = units || { 
+                              c1: 'mM', v1: 'mL', c2: 'mM', v2: 'mL', 
+                              c: 'mM', v: 'mL', mw: 'g/mol', m: 'mg' 
+                            };
+
                             return (
                               <div key={i} style={{ margin: '1.5rem 0', border: '1px solid #bfdbfe', borderRadius: '1rem', overflow: 'hidden', backgroundColor: '#ffffff', boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)' }}>
                                 <div style={{ backgroundColor: '#eff6ff', padding: '0.5rem 1rem', borderBottom: '1px solid #bfdbfe', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -245,17 +251,17 @@ export const LabReportTemplate = React.forwardRef<HTMLDivElement, LabReportTempl
                                 <div style={{ padding: '1rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                                   {type === 'dilution' ? (
                                     <>
-                                      <PdfCalcField label="Initial Conc (C1)" value={values.c1} unit="mM" />
-                                      <PdfCalcField label="Initial Vol (V1)" value={values.v1} unit="mL" />
-                                      <PdfCalcField label="Final Conc (C2)" value={values.c2} unit="mM" highlight />
-                                      <PdfCalcField label="Final Vol (V2)" value={values.v2} unit="mL" highlight />
+                                      <PdfCalcField label="Initial Conc (C1)" value={values.c1} unit={u.c1} highlight={targetField === 'c1'} />
+                                      <PdfCalcField label="Initial Vol (V1)" value={values.v1} unit={u.v1} highlight={targetField === 'v1'} />
+                                      <PdfCalcField label="Final Conc (C2)" value={values.c2} unit={u.c2} highlight={targetField === 'c2'} />
+                                      <PdfCalcField label="Final Vol (V2)" value={values.v2} unit={u.v2} highlight={targetField === 'v2'} />
                                     </>
                                   ) : (
                                     <>
-                                      <PdfCalcField label="Desired Conc" value={values.c} unit="mM" />
-                                      <PdfCalcField label="Target Volume" value={values.v} unit="mL" />
-                                      <PdfCalcField label="Mol. Weight" value={values.mw} unit="g/mol" />
-                                      <PdfCalcField label="Required Mass" value={values.m} unit="mg" highlight />
+                                      <PdfCalcField label="Desired Conc" value={values.c} unit={u.c} highlight={targetField === 'c'} />
+                                      <PdfCalcField label="Target Volume" value={values.v} unit={u.v} highlight={targetField === 'v'} />
+                                      <PdfCalcField label="Mol. Weight" value={values.mw} unit={u.mw} highlight={targetField === 'mw'} />
+                                      <PdfCalcField label="Required Mass" value={values.m} unit={u.m} highlight={targetField === 'm'} />
                                     </>
                                   )}
                                 </div>
