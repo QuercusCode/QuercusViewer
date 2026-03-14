@@ -74,7 +74,6 @@ const ChemicalSketcherComponent = ({ node, updateAttributes, deleteNode }: any) 
 
   // Resizing state
   const [isResizing, setIsResizing] = useState(false);
-  const resizerRef = useRef<HTMLDivElement>(null);
   const previewRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -250,70 +249,86 @@ const ChemicalSketcherComponent = ({ node, updateAttributes, deleteNode }: any) 
     <NodeViewWrapper className="chemical-sketcher-wrapper my-6 group relative">
       <div className="bg-[var(--bg-sidebar)] border border-[var(--border-main)] rounded-2xl overflow-hidden shadow-lg p-6 transition-all group-hover:border-indigo-500/30">
         
-        {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-indigo-500/10 text-indigo-400">
-              <Beaker className="w-4 h-4" />
+        {/* Card Header - Streamlined */}
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2.5">
+            <div className={`p-1.5 rounded-lg transition-colors ${molfile ? 'bg-indigo-500/10 text-indigo-400' : 'bg-gray-500/10 text-[var(--text-muted)]'}`}>
+              <Beaker className="w-3.5 h-3.5" />
             </div>
-            <div>
-              <h3 className="text-sm font-bold text-[var(--text-primary)]">2D Molecular Structure</h3>
-              <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider">Chemical Sketcher</p>
+            <div className="flex flex-col">
+              <span className="text-[11px] font-bold text-[var(--text-primary)] leading-tight">2D Molecular Structure</span>
+              {!molfile && <span className="text-[9px] text-[var(--text-muted)] uppercase tracking-tight">Empty Sketch</span>}
             </div>
           </div>
           
-          <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="flex items-center gap-1.5">
             <button 
               onClick={() => setIsModalOpen(true)}
-              className="p-1.5 bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-white rounded-lg transition-all cursor-pointer"
+              className="p-1.5 hover:bg-indigo-500/10 text-[var(--text-muted)] hover:text-indigo-400 rounded-lg transition-all cursor-pointer"
               title="Edit Structure"
             >
-              <Edit2 className="w-3.5 h-3.5" />
+              <Edit2 className="w-3 h-3" />
             </button>
             <button 
               onClick={() => deleteNode()}
-              className="p-1.5 bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white rounded-lg transition-all cursor-pointer"
+              className="p-1.5 hover:bg-red-500/10 text-[var(--text-muted)] hover:text-red-400 rounded-lg transition-all cursor-pointer"
               title="Delete Structure"
             >
-              <Trash2 className="w-3.5 h-3.5" />
+              <Trash2 className="w-3 h-3" />
             </button>
           </div>
         </div>
 
-        {/* Preview Area */}
+        {/* Preview Area - Refined */}
         <div 
           ref={previewRef}
           onClick={() => !molfile && setIsModalOpen(true)}
           style={{ width: width || '100%', height: height || '300px' }}
-          className={`relative flex items-center justify-center rounded-xl border-2 border-dashed transition-all cursor-pointer ${
+          className={`relative flex items-center justify-center rounded-xl border border-[var(--border-main)] transition-all duration-300 overflow-hidden cursor-pointer group/canvas ${
             molfile 
-              ? 'bg-white/5 border-transparent' 
-              : 'bg-indigo-500/5 border-indigo-500/20 hover:bg-indigo-500/10 hover:border-indigo-500/40'
-          } ${isResizing ? 'border-indigo-500 ring-4 ring-indigo-500/10' : ''}`}
+              ? 'bg-white/5 hover:border-indigo-500/30' 
+              : 'bg-indigo-500/5 border-dashed border-indigo-500/20 hover:bg-indigo-500/10 hover:border-indigo-500/40'
+          } ${isResizing ? 'ring-2 ring-indigo-500/50 border-indigo-500 shadow-[0_0_20px_rgba(99,102,241,0.2)]' : ''}`}
         >
           {molfile ? (
-            <div className="w-full h-full flex items-center justify-center p-4 invert dark:invert-0 opacity-90 transition-transform duration-300" 
-                 dangerouslySetInnerHTML={{ __html: svg }} 
+            <div 
+              className="w-full h-full flex items-center justify-center p-6 invert dark:invert-0 opacity-80 group-hover/canvas:opacity-100 transition-opacity" 
+              dangerouslySetInnerHTML={{ 
+                __html: svg.replace('<svg', '<svg style="width:100%; height:100%; max-width:100%; max-height:100%" preserveAspectRatio="xMidYMid meet"') 
+              }} 
             />
           ) : (
-            <div className="flex flex-col items-center gap-2 text-indigo-400/60">
-              <Plus className="w-8 h-8 opacity-40" />
-              <span className="text-xs font-bold uppercase tracking-widest">Sketch Molecule</span>
+            <div className="flex flex-col items-center gap-2 text-indigo-400/40 group-hover/canvas:text-indigo-400/60 transition-colors">
+              <Plus className="w-10 h-10 stroke-[1.5]" />
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em]">Start Sketching</span>
             </div>
           )}
 
-          {/* Resize Handle */}
+          {/* Professional Resize Handle */}
           <div 
-            ref={resizerRef}
             onMouseDown={(e) => {
               e.preventDefault();
               e.stopPropagation();
               setIsResizing(true);
             }}
-            className="absolute bottom-1 right-1 w-6 h-6 flex items-end justify-end p-1 cursor-nwse-resize group/resizer"
+            className="absolute bottom-0 right-0 w-8 h-8 flex items-end justify-end p-1.5 cursor-nwse-resize group/resizer z-10"
           >
-            <div className="w-2 h-2 rounded-full bg-[var(--border-main)] group-hover/resizer:bg-indigo-500 transition-colors" />
+            <div className={`transition-all duration-200 ${isResizing ? 'scale-125 text-indigo-400' : 'text-[var(--text-muted)] opacity-30 group-hover/canvas:opacity-100 group-hover/resizer:text-indigo-400'}`}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="22" y1="6" x2="6" y2="22" />
+                <line x1="22" y1="14" x2="14" y2="22" />
+              </svg>
+            </div>
           </div>
+
+          {/* Active Resize Overlay */}
+          {isResizing && (
+            <div className="absolute inset-0 bg-indigo-500/5 backdrop-blur-[1px] pointer-events-none flex items-center justify-center">
+               <span className="px-3 py-1 bg-indigo-600 text-white text-[10px] font-bold rounded-full shadow-lg animate-pulse">
+                 Resizing Canvas...
+               </span>
+            </div>
+          )}
         </div>
       </div>
 
