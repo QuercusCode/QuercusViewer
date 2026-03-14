@@ -1,6 +1,6 @@
 import { Node, mergeAttributes } from '@tiptap/core';
 import { ReactNodeViewRenderer, NodeViewWrapper } from '@tiptap/react';
-import { Calculator, Zap, Trash2, RefreshCcw, Info } from 'lucide-react';
+import { Calculator, Zap, Trash2, Info } from 'lucide-react';
 
 // --- Tiptap Extension ---
 
@@ -136,20 +136,32 @@ const LabCalculatorComponent = ({ node, updateAttributes, deleteNode }: any) => 
       <div className="bg-[var(--bg-sidebar)] border border-[var(--border-main)] rounded-2xl overflow-hidden shadow-xl transition-all group-hover:border-blue-500/30">
         
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 bg-blue-500/5 border-b border-[var(--border-main)]">
-          <div className="flex items-center gap-2.5">
-            <div className="p-1.5 bg-blue-500/10 text-blue-400 rounded-lg shadow-inner">
-              <Calculator className="w-3.5 h-3.5" />
+        <div className="flex items-center justify-between px-4 py-2.5 bg-blue-500/5 border-b border-[var(--border-main)]">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 bg-blue-500/10 text-blue-400 rounded-lg shadow-inner">
+                <Calculator className="w-3.5 h-3.5" />
+              </div>
             </div>
-            <span className="text-[11px] font-bold text-[var(--text-primary)] uppercase tracking-wider">
-              {type === 'dilution' ? 'Dilution (C1V1 = C2V2)' : 'Molarity (Mass = C × V × MW)'}
-            </span>
+
+            {/* Segmented Mode Switcher */}
+            <div className="flex bg-[var(--bg-main)] p-0.5 rounded-lg border border-[var(--border-main)] shadow-inner">
+              <button 
+                onClick={() => type !== 'dilution' && toggleType()}
+                className={`px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md transition-all ${type === 'dilution' ? 'bg-blue-500/10 text-blue-400 shadow-sm' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}
+              >
+                Dilution
+              </button>
+              <button 
+                onClick={() => type !== 'molarity' && toggleType()}
+                className={`px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md transition-all ${type === 'molarity' ? 'bg-blue-500/10 text-blue-400 shadow-sm' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}
+              >
+                Molarity
+              </button>
+            </div>
           </div>
           
           <div className="flex items-center gap-1">
-            <button onClick={toggleType} className="p-1.5 hover:bg-blue-500/10 text-[var(--text-muted)] hover:text-blue-400 rounded-lg transition-all" title="Switch Calculator Type">
-              <RefreshCcw className="w-3 h-3" />
-            </button>
             <button onClick={clear} className="p-1.5 hover:bg-amber-500/10 text-[var(--text-muted)] hover:text-amber-400 rounded-lg transition-all" title="Clear Values">
               <Zap className="w-3 h-3" />
             </button>
