@@ -230,7 +230,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     },
     editorProps: {
       attributes: {
-        class: `prose ${theme === 'dark' ? 'prose-invert' : ''} prose-sm sm:prose-base focus:outline-none max-w-none min-h-[500px] px-4 sm:px-10 py-6 text-[var(--text-primary)]`,
+        class: `prose ${theme !== 'light' ? 'prose-invert' : ''} prose-sm sm:prose-base focus:outline-none max-w-none min-h-[500px] px-4 sm:px-10 py-6 text-[var(--text-primary)]`,
       },
     },
   });
@@ -492,9 +492,8 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
             }
           >
             <div className="p-3">
-              <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider mb-2">Text Color</p>
               <HexColorPicker 
-                color={editor.getAttributes('textStyle').color || (theme === 'dark' ? '#ffffff' : '#000000')} 
+                color={editor.getAttributes('textStyle').color || (theme === 'light' ? '#000000' : '#ffffff')} 
                 onChange={(color) => editor.chain().focus().setColor(color).run()}
               />
               <button 

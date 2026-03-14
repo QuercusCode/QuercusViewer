@@ -24,6 +24,70 @@
     --input-bg: #f5f5f5;
   }
 
+  .dark-room {
+    --bg-main: #050000;
+    --bg-header: #0a0505;
+    --bg-sidebar: #0a0505;
+    --border-main: #2a0505;
+    --text-primary: #ff3333; /* Slightly brighter for readability */
+    --text-secondary: #cc1111;
+    --text-muted: #770000;
+    --input-bg: #150505;
+    --brand-color: #ff0000;
+  }
+
+  /* Dark-Room Global Vision Preservation */
+  html.dark-room * {
+    border-color: var(--border-main) !important;
+  }
+
+  html.dark-room .text-white,
+  html.dark-room .text-neutral-100,
+  html.dark-room .text-neutral-200,
+  html.dark-room .text-neutral-300,
+  html.dark-room .text-slate-100,
+  html.dark-room .text-primary,
+  html.dark-room h1,
+  html.dark-room h2,
+  html.dark-room h3,
+  html.dark-room span {
+    color: var(--text-primary) !important;
+  }
+
+  html.dark-room .bg-blue-600,
+  html.dark-room .bg-blue-500,
+  html.dark-room .bg-indigo-600,
+  html.dark-room .bg-indigo-500,
+  html.dark-room .bg-emerald-600,
+  html.dark-room .bg-emerald-500 {
+    background-color: var(--brand-color) !important;
+    color: #000 !important;
+  }
+
+  html.dark-room .text-blue-400,
+  html.dark-room .text-blue-500,
+  html.dark-room .text-indigo-400,
+  html.dark-room .text-indigo-500,
+  html.dark-room .text-emerald-400,
+  html.dark-room .text-emerald-500,
+  html.dark-room .text-amber-400,
+  html.dark-room .text-amber-500,
+  html.dark-room .text-purple-400,
+  html.dark-room .text-purple-500 {
+    color: var(--brand-color) !important;
+  }
+
+  html.dark-room .border-blue-500,
+  html.dark-room .border-blue-600,
+  html.dark-room .border-indigo-500,
+  html.dark-room .border-emerald-500 {
+    border-color: var(--brand-color) !important;
+  }
+
+  html.dark-room img {
+    filter: sepia(100%) hue-rotate(-50deg) brightness(80%) contrast(120%);
+  }
+
   body {
     @apply m-0 overflow-hidden w-screen h-screen fixed inset-0 transition-colors duration-300;
     color: var(--text-primary);

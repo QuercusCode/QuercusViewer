@@ -1,5 +1,5 @@
 import { useAuth } from '../../lib/AuthContext';
-import { Search, Moon, Sun } from 'lucide-react';
+import { Search, Moon, Sun, EyeOff } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { useTheme } from '../../lib/ThemeContext';
 
@@ -43,9 +43,11 @@ export const DashboardHeader = () => {
                 <button
                     onClick={toggleTheme}
                     className="p-2 hover:bg-[var(--input-bg)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] rounded-lg transition-all border border-transparent hover:border-[var(--border-main)]"
-                    title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                    title={`Current: ${theme.replace('-', ' ')}. Click to cycle themes (Light → Dark → Dark-Room)`}
                 >
-                    {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                    {theme === 'light' ? <Sun className="h-4 w-4" /> : 
+                     theme === 'dark' ? <Moon className="h-4 w-4" /> : 
+                     <EyeOff className="h-4 w-4 text-red-500" />}
                 </button>
 
                 {/* Separator */}
