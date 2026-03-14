@@ -159,11 +159,13 @@ export const LabReportTemplate = React.forwardRef<HTMLDivElement, LabReportTempl
                 p: ({children}) => {
                   const processed = React.Children.map(children, child => {
                     if (typeof child === 'string') {
-                      const parts = child.split(/(\[\[structure:[a-f0-9-]{36}\]\])/g);
+                      // Combined split for both structures and sketchers
+                      const parts = child.split(/(\[\[structure:[a-f0-9-]{36}\]\]|\[\[sketcher:[\s\S]*?###SKETCH_SEP###[\s\S]*?\]\])/g);
                       return parts.map((part, i) => {
-                        const match = part.match(/\[\[structure:([a-f0-9-]{36})\]\]/);
-                        if (match) {
-                          const sid = match[1];
+                        // Handle Structure Mentions
+                        const structMatch = part.match(/\[\[structure:([a-f0-9-]{36})\]\]/);
+                        if (structMatch) {
+                          const sid = structMatch[1];
                           const s = allStructures.find(st => st.id === sid);
                           const name = s?.name || sid.substring(0, 8);
                           const url = `${window.location.origin}/?struct=${sid}`;
@@ -179,6 +181,23 @@ export const LabReportTemplate = React.forwardRef<HTMLDivElement, LabReportTempl
                             </a>
                           );
                         }
+
+                        // Handle Chemical Sketcher
+                        const sketchMatch = part.match(/\[\[sketcher:([\s\S]*?)###SKETCH_SEP###([\s\S]*?)\]\]/);
+                        if (sketchMatch) {
+                          const svgContent = sketchMatch[2];
+                          return (
+                            <div 
+                              key={i}
+                              className="my-4 p-4 border border-gray-100 rounded-xl bg-gray-50/50"
+                              style={{ width: '100%', display: 'flex', justifyContent: 'center' }}
+                              dangerouslySetInnerHTML={{ 
+                                __html: svgContent.replace('<svg', '<svg style="width:100%; height:auto; max-height:280px" preserveAspectRatio="xMidYMid meet"') 
+                              }}
+                            />
+                          );
+                        }
+                        
                         return part;
                       });
                     }

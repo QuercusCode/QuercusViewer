@@ -54,6 +54,22 @@ export const ChemicalSketcher = Node.create({
   addNodeView() {
     return ReactNodeViewRenderer(ChemicalSketcherComponent);
   },
+
+  // Serialization for tiptap-markdown
+  addStorage() {
+    return {
+      markdown: {
+        serialize: (state: any, node: any) => {
+          state.write(`[[sketcher:${node.attrs.molfile}###SKETCH_SEP###${node.attrs.svg}]]`);
+          state.closeBlock(node);
+        },
+        parse: {
+          // We don't necessarily need to parse it back from markdown for now,
+          // as we mostly care about the export content.
+        }
+      }
+    }
+  }
 });
 
 // --- Component & Modal ---
