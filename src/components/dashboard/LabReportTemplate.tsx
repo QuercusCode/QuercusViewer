@@ -182,20 +182,29 @@ export const LabReportTemplate = React.forwardRef<HTMLDivElement, LabReportTempl
                           );
                         }
 
-                        // Handle Chemical Sketcher
-                        const sketchMatch = part.match(/\[\[sketcher:([\s\S]*?)###SKETCH_SEP###([\s\S]*?)\]\]/);
+                        // Handle Chemical Sketcher (Base64 version)
+                        const sketchMatch = part.match(/\[\[sketcher:([A-Za-z0-9+/=]+)\]\]/);
                         if (sketchMatch) {
-                          const svgContent = sketchMatch[2];
-                          return (
-                            <div 
-                              key={i}
-                              className="my-4 p-4 border border-gray-100 rounded-xl bg-gray-50/50"
-                              style={{ width: '100%', display: 'flex', justifyContent: 'center' }}
-                              dangerouslySetInnerHTML={{ 
-                                __html: svgContent.replace('<svg', '<svg style="width:100%; height:auto; max-height:280px" preserveAspectRatio="xMidYMid meet"') 
-                              }}
-                            />
-                          );
+                          try {
+                            const base64 = sketchMatch[1];
+                            const decoded = decodeURIComponent(escape(atob(base64)));
+                            const payload = JSON.parse(decoded);
+                            const svgContent = payload.svg;
+                            
+                            return (
+                              <div 
+                                key={i}
+                                className="my-4 p-4 border border-gray-100 rounded-xl bg-gray-50/50"
+                                style={{ width: '100%', display: 'flex', justifyContent: 'center' }}
+                                dangerouslySetInnerHTML={{ 
+                                  __html: svgContent.replace('<svg', '<svg style="width:100%; height:auto; max-height:280px" preserveAspectRatio="xMidYMid meet"') 
+                                }}
+                              />
+                            );
+                          } catch (err) {
+                            console.error("PDF Sketcher Decode Error:", err);
+                            return <span className="text-red-400 text-[10px]">Error rendering structure</span>;
+                          }
                         }
                         
                         return part;

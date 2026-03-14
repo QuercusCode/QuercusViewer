@@ -60,7 +60,13 @@ export const ChemicalSketcher = Node.create({
     return {
       markdown: {
         serialize: (state: any, node: any) => {
-          state.write(`[[sketcher:${node.attrs.molfile}###SKETCH_SEP###${node.attrs.svg}]]`);
+          // Base64 encode to prevent newlines from breaking Markdown paragraph parsing
+          const payload = JSON.stringify({
+            mol: node.attrs.molfile,
+            svg: node.attrs.svg
+          });
+          const base64 = btoa(unescape(encodeURIComponent(payload)));
+          state.write(`[[sketcher:${base64}]]`);
           state.closeBlock(node);
         },
         parse: {
