@@ -8,7 +8,8 @@ import { RichTextEditor } from './RichTextEditor';
 import { LabReportTemplate } from './LabReportTemplate';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
-import { Share } from 'lucide-react';
+import { Share, Calculator } from 'lucide-react';
+import { FloatingCalculator } from './FloatingCalculator';
 
 export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false }) => {
     const { user } = useAuth();
@@ -27,6 +28,7 @@ export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false
     const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const [isExporting, setIsExporting] = useState(false);
     const reportRef = useRef<HTMLDivElement>(null);
+    const [showFloatingCalc, setShowFloatingCalc] = useState(false);
 
     // Structure Mentions State
     const [allStructures, setAllStructures] = useState<Structure[]>([]);
@@ -363,6 +365,19 @@ export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false
                                                 </div>
                                             )}
                                         </button>
+
+                                        <button
+                                            onClick={() => setShowFloatingCalc(!showFloatingCalc)}
+                                            className={`flex items-center gap-1.5 px-2.5 py-1.5 border rounded-lg text-xs font-medium transition-all ${
+                                                showFloatingCalc 
+                                                    ? 'bg-blue-500/10 border-blue-500/30 text-blue-400' 
+                                                    : 'bg-[var(--input-bg)]/50 hover:bg-[var(--input-bg)] text-[var(--text-muted)] hover:text-[var(--text-primary)] border-[var(--border-main)]'
+                                            }`}
+                                            title="Toggle Floating Calculator"
+                                        >
+                                            <Calculator className="w-3.5 h-3.5" />
+                                            <span className="hidden sm:inline">Calculator</span>
+                                        </button>
                                     </div>
                                 </div>
 
@@ -416,6 +431,11 @@ export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false
                     )}
                 </div>
             )}
+            {/* Floating Tools */}
+            {showFloatingCalc && (
+                <FloatingCalculator onClose={() => setShowFloatingCalc(false)} />
+            )}
+
             {/* Hidden PDF Template Container */}
             <div className="fixed top-[-10000px] left-[-10000px] pointer-events-none">
                 {activeNotebook && (

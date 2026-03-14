@@ -1,6 +1,7 @@
 import { Node, mergeAttributes } from '@tiptap/core';
 import { ReactNodeViewRenderer, NodeViewWrapper } from '@tiptap/react';
 import { Calculator, Zap, Trash2, Info } from 'lucide-react';
+import { performCalculation } from '../../lib/calcUtils';
 
 // --- Tiptap Extension ---
 
@@ -82,29 +83,19 @@ const LabCalculatorComponent = ({ node, updateAttributes, deleteNode }: any) => 
   const { type, values, units, targetField } = node.attrs;
 
   const handleUpdateValue = (key: string, val: string) => {
-    // 1. Update the literal value
     const newValues = { ...values, [key]: val };
-    
-    // 2. Determine if we should solve for a target
     const fields = type === 'dilution' ? ['c1', 'v1', 'c2', 'v2'] : ['c', 'v', 'mw', 'm'];
     const filledFields = fields.filter(f => newValues[f] !== undefined && newValues[f] !== "" && !isNaN(parseFloat(newValues[f])));
     
     let newTarget = targetField;
+    if (key === targetField) newTarget = null;
 
-    // If we just edited the current target, it's no longer the target (unless it's the only option)
-    if (key === targetField) {
-      newTarget = null;
-    }
-
-    // Logic: If 3 fields are filled and 1 is empty, the empty one becomes target
     if (filledFields.length === 3) {
       const empty = fields.find(f => !filledFields.includes(f));
       if (empty) newTarget = empty;
     }
 
-    // 3. Perform calculation
     const result = performCalculation(type, newValues, units, newTarget);
-    
     updateAttributes({ 
       values: result.values,
       targetField: result.targetField
@@ -113,7 +104,6 @@ const LabCalculatorComponent = ({ node, updateAttributes, deleteNode }: any) => 
 
   const handleUpdateUnit = (key: string, unit: string) => {
     const newUnits = { ...units, [key]: unit };
-    // Recalculate with new units keeping values the same
     const result = performCalculation(type, values, newUnits, targetField);
     updateAttributes({ 
       units: newUnits,
@@ -248,58 +238,3 @@ const CalcField = ({ label, value, unit, onValueChange, onUnitChange, unitType, 
     </div>
   );
 };
-
-// --- Math Engine ---
-
-const U_CONV: Record<string, Record<string, number>> = {
-  // To Base (Liters, Molar, Grams)
-  vol: { 'mL': 0.001, 'µL': 0.000001, 'L': 1 },
-  conc: { 'mM': 0.001, 'µM': 0.000001, 'nM': 0.000000001, 'M': 1 },
-  mass: { 'mg': 0.001, 'g': 1, 'µg': 0.000001 },
-  mw: { 'g/mol': 1 }
-};
-
-function performCalculation(type: string, vals: Record<string, string>, units: Record<string, string>, target: string | null) {
-  const v = { ...vals };
-  
-  // Normalize all to base units
-  const base: Record<string, number> = {};
-  const fields = type === 'dilution' ? ['c1', 'v1', 'c2', 'v2'] : ['c', 'v', 'mw', 'm'];
-  
-  fields.forEach(f => {
-    const rawVal = parseFloat(v[f]);
-    if (!isNaN(rawVal)) {
-      const uType = f.startsWith('c') ? 'conc' : f.startsWith('v') ? 'vol' : f === 'm' ? 'mass' : 'mw';
-      const factor = U_CONV[uType]?.[units[f]] || 1;
-      base[f] = rawVal * factor;
-    }
-  });
-
-  if (target) {
-    if (type === 'dilution') {
-      // C1V1 = C2V2
-      if (target === 'c1' && base.v1 && base.c2 && base.v2) base.c1 = (base.c2 * base.v2) / base.v1;
-      else if (target === 'v1' && base.c1 && base.c2 && base.v2) base.v1 = (base.c2 * base.v2) / base.c1;
-      else if (target === 'c2' && base.c1 && base.v1 && base.v2) base.c2 = (base.c1 * base.v1) / base.v2;
-      else if (target === 'v2' && base.c1 && base.v1 && base.c2) base.v2 = (base.c1 * base.v1) / base.c2;
-    } else {
-      // Molarity: Mass = Conc * Vol * MW
-      if (target === 'c' && base.v && base.mw && base.m) base.c = base.m / (base.v * base.mw);
-      else if (target === 'v' && base.c && base.mw && base.m) base.v = base.m / (base.c * base.mw);
-      else if (target === 'mw' && base.c && base.v && base.m) base.mw = base.m / (base.c * base.v);
-      else if (target === 'm' && base.c && base.v && base.mw) base.m = base.c * base.v * base.mw;
-    }
-
-    // Convert base result back to target unit
-    const uType = target.startsWith('c') ? 'conc' : target.startsWith('v') ? 'vol' : target === 'm' ? 'mass' : 'mw';
-    const factor = U_CONV[uType]?.[units[target]] || 1;
-    v[target] = (base[target] / factor).toFixed(4);
-  }
-
-  // Cleanup
-  Object.keys(v).forEach(k => {
-    if (v[k] === "NaN" || v[k] === "Infinity" || v[k] === "-Infinity") v[k] = "";
-  });
-
-  return { values: v, targetField: target };
-}
