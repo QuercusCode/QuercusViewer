@@ -24,6 +24,9 @@ import { ChemicalSketcher } from './ChemicalSketcher';
 import { LabCalculator } from './LabCalculator';
 import { CodeCell } from './CodeCell';
 import { createSuggestion } from './suggestion';
+import { CollaborationCursor } from './CollaborationCursor';
+import { supabase } from '../../lib/supabase';
+import { useAuth } from '../../lib/AuthContext';
 import { useTheme } from '../../lib/ThemeContext';
 import { 
   Bold, Italic, Underline as UnderlineIcon, Strikethrough, 
@@ -42,6 +45,7 @@ interface RichTextEditorProps {
   onBlur?: () => void;
   placeholder?: string;
   allStructures?: Structure[];
+  noteId?: string;
 }
 
 const ToolbarButton: React.FC<{
@@ -159,10 +163,18 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   onChange, 
   onBlur,
   placeholder = 'Start writing...',
-  allStructures = []
+  allStructures = [],
+  noteId
 }) => {
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const { theme } = useTheme();
+  const { user } = useAuth();
+
+  const userColor = React.useMemo(() => {
+    const colors = ['#f43f5e', '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b', '#ec4899'];
+    const index = Math.abs((user?.id || '').split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)) % colors.length;
+    return colors[index];
+  }, [user]);
 
   const editor = useEditor({
     extensions: [
@@ -197,6 +209,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       ChemicalSketcher,
       LabCalculator,
       CodeCell,
+      CollaborationCursor,
       TableRow,
       TableHeader,
       TableCell,
@@ -225,6 +238,17 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     onUpdate: ({ editor }) => {
       onChange((editor.storage as any).markdown.getMarkdown());
     },
+    onSelectionUpdate: ({ editor }) => {
+      if (!noteId || !user) return;
+      const pos = editor.state.selection.from;
+      const channel = supabase.channel(`note:${noteId}`);
+      channel.track({
+        user_id: user.id,
+        user_name: user.email?.split('@')[0] || 'Unknown',
+        color: userColor,
+        pos,
+      });
+    },
     onBlur: () => {
       onBlur?.();
     },
@@ -234,6 +258,47 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       },
     },
   });
+
+  useEffect(() => {
+    if (!editor || !noteId || !user) return;
+
+    const channel = supabase.channel(`note:${noteId}`);
+
+    channel
+      .on('presence', { event: 'sync' }, () => {
+        const state = channel.presenceState();
+        const cursors: any[] = [];
+        
+        Object.values(state).forEach((presences: any) => {
+          presences.forEach((p: any) => {
+            if (p.user_id !== user.id) {
+              cursors.push({
+                userId: p.user_id,
+                userName: p.user_name,
+                color: p.color,
+                pos: p.pos,
+              });
+            }
+          });
+        });
+
+        editor.commands.setCollaborationCursors(cursors);
+      })
+      .subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          await channel.track({
+            user_id: user.id,
+            user_name: user.email?.split('@')[0] || 'Anon',
+            color: userColor,
+            pos: editor.state.selection.from,
+          });
+        }
+      });
+
+    return () => {
+      channel.unsubscribe();
+    };
+  }, [editor, noteId, user, userColor]);
 
   if (!editor) {
     return null;
