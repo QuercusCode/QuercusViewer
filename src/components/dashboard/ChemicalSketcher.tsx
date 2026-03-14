@@ -26,6 +26,20 @@ export const ChemicalSketcher = Node.create({
           'data-svg': attributes.svg,
         }),
       },
+      width: {
+        default: '100%',
+        parseHTML: element => element.getAttribute('data-width') || '100%',
+        renderHTML: attributes => ({
+          'data-width': attributes.width,
+        }),
+      },
+      height: {
+        default: '300px',
+        parseHTML: element => element.getAttribute('data-height') || '300px',
+        renderHTML: attributes => ({
+          'data-height': attributes.height,
+        }),
+      },
     };
   },
 
@@ -50,13 +64,57 @@ const JS_CDN = "https://jsme-editor.github.io/dist/jsme/jsme.nocache.js";
 let scriptLoadingStarted = false;
 
 const ChemicalSketcherComponent = ({ node, updateAttributes, deleteNode }: any) => {
-  const { molfile, svg } = node.attrs;
+  const { molfile, svg, width, height } = node.attrs;
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [jsmeReady, setJsmeReady] = useState(false);
   const jsmeAppletRef = useRef<any>(null);
   const [containerId] = useState(() => `jsme_editor_ct_${Math.random().toString(36).substring(2, 9)}`);
   const [initError, setInitError] = useState<string | null>(null);
   const [diagnostics, setDiagnostics] = useState<string>("");
+
+  // Resizing state
+  const [isResizing, setIsResizing] = useState(false);
+  const resizerRef = useRef<HTMLDivElement>(null);
+  const previewRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isResizing) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!previewRef.current) return;
+      const rect = previewRef.current.getBoundingClientRect();
+      const nextWidth = e.clientX - rect.left;
+      const nextHeight = e.clientY - rect.top;
+
+      // Min constraints
+      const finalWidth = Math.max(300, nextWidth);
+      const finalHeight = Math.max(150, nextHeight);
+
+      // Using styles for smooth visual feedback
+      previewRef.current.style.width = `${finalWidth}px`;
+      previewRef.current.style.height = `${finalHeight}px`;
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+      if (previewRef.current) {
+        updateAttributes({
+          width: previewRef.current.style.width,
+          height: previewRef.current.style.height
+        });
+      }
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isResizing, updateAttributes]);
 
   // 1. Script Loading Logic
   useEffect(() => {
@@ -224,21 +282,38 @@ const ChemicalSketcherComponent = ({ node, updateAttributes, deleteNode }: any) 
 
         {/* Preview Area */}
         <div 
+          ref={previewRef}
           onClick={() => !molfile && setIsModalOpen(true)}
-          className={`flex items-center justify-center min-h-[200px] rounded-xl border-2 border-dashed transition-all cursor-pointer ${
+          style={{ width: width || '100%', height: height || '300px' }}
+          className={`relative flex items-center justify-center rounded-xl border-2 border-dashed transition-all cursor-pointer ${
             molfile 
               ? 'bg-white/5 border-transparent' 
               : 'bg-indigo-500/5 border-indigo-500/20 hover:bg-indigo-500/10 hover:border-indigo-500/40'
-          }`}
+          } ${isResizing ? 'border-indigo-500 ring-4 ring-indigo-500/10' : ''}`}
         >
           {molfile ? (
-            <div className="max-w-full overflow-hidden p-4 invert dark:invert-0 opacity-90 scale-125 transform-gpu" dangerouslySetInnerHTML={{ __html: svg }} />
+            <div className="w-full h-full flex items-center justify-center p-4 invert dark:invert-0 opacity-90 transition-transform duration-300" 
+                 dangerouslySetInnerHTML={{ __html: svg }} 
+            />
           ) : (
             <div className="flex flex-col items-center gap-2 text-indigo-400/60">
               <Plus className="w-8 h-8 opacity-40" />
               <span className="text-xs font-bold uppercase tracking-widest">Sketch Molecule</span>
             </div>
           )}
+
+          {/* Resize Handle */}
+          <div 
+            ref={resizerRef}
+            onMouseDown={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setIsResizing(true);
+            }}
+            className="absolute bottom-1 right-1 w-6 h-6 flex items-end justify-end p-1 cursor-nwse-resize group/resizer"
+          >
+            <div className="w-2 h-2 rounded-full bg-[var(--border-main)] group-hover/resizer:bg-indigo-500 transition-colors" />
+          </div>
         </div>
       </div>
 
