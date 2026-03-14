@@ -179,7 +179,7 @@ export const LabReportTemplate = React.forwardRef<HTMLDivElement, LabReportTempl
                   const processed = React.Children.map(children, child => {
                     if (typeof child === 'string') {
                       // Combined split for all custom nodes
-                      const parts = child.split(/(\[\[structure:[a-f0-9-]{36}\]\]|\[\[sketcher:[A-Za-z0-9+/=]+\]\]|\[\[calculator:[A-Za-z0-9+/=]+\]\])/g);
+                      const parts = child.split(/(\[\[structure:[a-f0-9-]{36}\]\]|\[\[sketcher:[A-Za-z0-9+/=]+\]\]|\[\[calculator:[A-Za-z0-9+/=]+\]\]|\[\[code:[A-Za-z0-9+/=]+\]\])/g);
                       return parts.map((part, i) => {
                         // 1. Handle Structure Mentions
                         const structMatch = part.match(/\[\[structure:([a-f0-9-]{36})\]\]/);
@@ -270,6 +270,37 @@ export const LabReportTemplate = React.forwardRef<HTMLDivElement, LabReportTempl
                           } catch (err) {
                             console.error("PDF Calculator Decode Error:", err);
                             return <span style={{ color: '#ef4444', fontSize: '10px' }}>Error rendering calculator</span>;
+                          }
+                        }
+
+                        // 4. Handle Code Cell (Base64)
+                        const codeMatch = part.match(/\[\[code:([A-Za-z0-9+/=]+)\]\]/);
+                        if (codeMatch) {
+                          try {
+                            const base64 = codeMatch[1];
+                            const decoded = decodeURIComponent(escape(atob(base64)));
+                            const { code, output } = JSON.parse(decoded);
+                            
+                            return (
+                              <div key={i} style={{ margin: '1.5rem 0', border: '1px solid #30363d', borderRadius: '0.75rem', overflow: 'hidden', backgroundColor: '#0d1117' }}>
+                                <div style={{ backgroundColor: '#161b22', padding: '0.4rem 0.75rem', borderBottom: '1px solid #30363d', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                  <div style={{ width: '12px', height: '12px', color: '#3b82f6' }}>⌨️</div>
+                                  <span style={{ fontSize: '9px', fontWeight: 'bold', color: '#8b949e', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Python Execution</span>
+                                </div>
+                                <div style={{ padding: '0.75rem', backgroundColor: '#0d1117' }}>
+                                  <pre style={{ margin: 0, fontSize: '11px', color: '#e6edf3', fontFamily: 'monospace', whiteSpace: 'pre-wrap' }}>{code}</pre>
+                                </div>
+                                {output && (
+                                  <div style={{ padding: '0.75rem', backgroundColor: '#00000050', borderTop: '1px solid #30363d' }}>
+                                    <p style={{ margin: '0 0 4px 0', fontSize: '8px', fontWeight: 'bold', color: '#58a6ff', textTransform: 'uppercase' }}>Output</p>
+                                    <pre style={{ margin: 0, fontSize: '11px', color: '#8b949e', fontFamily: 'monospace', whiteSpace: 'pre-wrap' }}>{output}</pre>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          } catch (err) {
+                            console.error("PDF Code Cell Decode Error:", err);
+                            return <span style={{ color: '#ef4444', fontSize: '10px' }}>Error rendering code cell</span>;
                           }
                         }
                         

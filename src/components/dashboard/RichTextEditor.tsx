@@ -22,6 +22,7 @@ import { SpreadsheetTable } from './SpreadsheetTable';
 import { InlineChart } from './InlineChart';
 import { ChemicalSketcher } from './ChemicalSketcher';
 import { LabCalculator } from './LabCalculator';
+import { CodeCell } from './CodeCell';
 import { createSuggestion } from './suggestion';
 import { useTheme } from '../../lib/ThemeContext';
 import { 
@@ -195,6 +196,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       InlineChart,
       ChemicalSketcher,
       LabCalculator,
+      CodeCell,
       TableRow,
       TableHeader,
       TableCell,
@@ -300,6 +302,9 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         break;
       case 'calculator':
         editor.chain().focus().insertContent({ type: 'labCalculator' }).run();
+        break;
+      case 'codeCell':
+        editor.chain().focus().insertContent({ type: 'codeCell' }).run();
         break;
       case 'protocol':
         editor.chain().focus().insertContent('**Protocol:**\n\n- ').run();
@@ -636,6 +641,14 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
               >
                 <Calculator className="w-5 h-5 text-blue-400" />
                 <span className="font-semibold">Scientific Calculator</span>
+              </button>
+
+              <button
+                onClick={() => insertTemplate('codeCell')}
+                className="w-full flex items-center gap-4 px-4 py-4 text-sm text-[var(--text-secondary)] hover:bg-[var(--input-bg)] rounded-xl transition-all text-left"
+              >
+                <Code className="w-5 h-5 text-emerald-400" />
+                <span className="font-semibold">Code Cell (Python)</span>
               </button>
 
               <button
