@@ -29,6 +29,8 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
   const [isDrawing, setIsDrawing] = useState(false);
   const [imageLoadError, setImageLoadError] = useState<string | null>(null);
   const [isDecoding, setIsDecoding] = useState(false);
+  const [decodingStep, setDecodingStep] = useState<string>('');
+  const [localSrc, setLocalSrc] = useState<string | null>(null);
   const [currentPoints, setCurrentPoints] = useState<{ x: number, y: number }[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -58,12 +60,14 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
   };
 
   // Convert TIFF ArrayBuffer to browser-readable PNG/JPEG Data URL
-  const processTiff = async (buffer: ArrayBuffer) => {
+  const processTiff = async (buffer: ArrayBuffer, onStep: (step: string) => void) => {
+    onStep("Loading Decoder");
     console.log("[TIFF] Starting decoding, input size:", (buffer.byteLength / 1024).toFixed(1), "KB");
     await loadUTIF();
     const UTIF = (window as any).UTIF;
     
     try {
+      onStep("Analyzing Structure");
       const ifds = UTIF.decode(buffer);
       console.log("[TIFF] IFDs found:", ifds.length);
       
@@ -72,7 +76,7 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
       }
 
       // Find the "best" IFD. For scientific images, this is usually the one with the largest dimensions.
-      // We also look for those with standard pixel types (tPixel).
+      onStep("Identifying Best Layer");
       const sortedIFDs = [...ifds].sort((a: any, b: any) => (b.width * b.height) - (a.width * a.height));
       const targetIFD = sortedIFDs[0];
 
@@ -82,15 +86,15 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
       }
 
       console.log("[TIFF] Target Image Dimensions:", targetIFD.width, "x", targetIFD.height);
+      onStep(`Decoding Pixels (${targetIFD.width}x${targetIFD.height})`);
       UTIF.decodeImage(buffer, targetIFD);
       
+      onStep("Converting Color Space");
       let rgba = UTIF.toRGBA8(targetIFD);
       console.log("[TIFF] RGBA conversion complete, buffer length:", rgba.length);
 
       // --- ADAPTIVE DOWNSCALING ---
-      // Browsers have canvas limits (often 4096px or 8192px). 
-      // Large microscopy images can hit these or cause memory overflows.
-      const MAX_DIMENSION = 2048; // Safe threshold for notebook performance
+      const MAX_DIMENSION = 2560; 
       let scale = 1;
       if (targetIFD.width > MAX_DIMENSION || targetIFD.height > MAX_DIMENSION) {
         scale = Math.min(MAX_DIMENSION / targetIFD.width, MAX_DIMENSION / targetIFD.height);
@@ -106,8 +110,8 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
       if (!ctx) throw new Error("Could not initialize conversion canvas (likely browser memory limit).");
 
       if (scale < 1) {
+        onStep(`Applying Adaptive Scale (${Math.floor(scale*100)}%)`);
         console.log("[TIFF] Scaling down image:", scale.toFixed(2), "x ->", finalWidth, "x", finalHeight);
-        // Temporarily put full image on a hidden canvas to use drawImage for high-quality scaling
         const tempCanvas = document.createElement('canvas');
         tempCanvas.width = targetIFD.width;
         tempCanvas.height = targetIFD.height;
@@ -118,7 +122,6 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
         imgData.data.set(new Uint8ClampedArray(rgba));
         tempCtx.putImageData(imgData, 0, 0);
         
-        // Final draw with scaling
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
         ctx.drawImage(tempCanvas, 0, 0, finalWidth, finalHeight);
@@ -128,15 +131,14 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
         ctx.putImageData(imgData, 0, 0);
       }
       
-      // Cleanup large buffers immediately
+      onStep("Finalizing Preview");
       rgba = null;
       
-      // Use image/jpeg for large images to save space (bloating data attributes breaks Tiptap/Supabase)
       const type = (finalWidth * finalHeight > 1000000) ? 'image/jpeg' : 'image/png';
       const quality = type === 'image/jpeg' ? 0.85 : undefined;
       
       const dataUrl = canvas.toDataURL(type, quality);
-      console.log("[TIFF] Success, data URL type:", type, "length:", (dataUrl.length / 1024).toFixed(1), "KB");
+      console.log("[TIFF] Success, data URL length:", (dataUrl.length / 1024).toFixed(1), "KB");
       return dataUrl;
     } catch (error: unknown) {
       console.error("[TIFF] Critical Processing Error:", error);
@@ -153,14 +155,17 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
     const isTiff = fileName.endsWith('.tif') || fileName.endsWith('.tiff');
 
     setImageLoadError(null);
+    setLocalSrc(null);
     
     if (isTiff) {
       setIsDecoding(true);
+      setDecodingStep("Initializing");
       console.log("[TIFF] Upload Request:", fileName, `(${ (file.size / 1024 / 1024).toFixed(2) } MB)`);
       try {
         const buffer = await file.arrayBuffer();
-        const dataUrl = await processTiff(buffer);
-        console.log("[TIFF] Rendering to workbench...");
+        const dataUrl = await processTiff(buffer, setDecodingStep);
+        console.log("[TIFF] Rendering locally...");
+        setLocalSrc(dataUrl);
         updateAttributes({ src: dataUrl });
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : 'Unknown decoding error';
@@ -168,11 +173,14 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
         setImageLoadError(`TIFF Processing Failed: ${msg}. Try a different file or export as PNG/JPG.`);
       } finally {
         setIsDecoding(false);
+        setDecodingStep("");
       }
     } else {
       const reader = new FileReader();
       reader.onload = (event) => {
-        updateAttributes({ src: event.target?.result });
+        const res = event.target?.result as string;
+        setLocalSrc(res);
+        updateAttributes({ src: res });
       };
       reader.readAsDataURL(file);
     }
@@ -244,7 +252,7 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
 
   // Drawing Events
   const startDrawing = (e: React.MouseEvent) => {
-    if (activeTool === 'select' || !src || imageLoadError || isDecoding) return;
+    if (activeTool === 'select' || (!localSrc && !src) || imageLoadError || isDecoding) return;
     setIsDrawing(true);
     const p = getNormalizedPoint(e);
     setCurrentPoints([p]);
@@ -401,11 +409,11 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
         onMouseMove={drawMove}
         onMouseUp={endDrawing}
       >
-        {src ? (
+        {localSrc || src ? (
           <>
             <img 
               ref={imageRef}
-              src={src} 
+              src={localSrc || src} 
               alt="Scientific Sample" 
               className="max-w-full h-auto select-none pointer-events-none"
               onError={() => setImageLoadError("Browser failed to render the decoded binary. This can happen with massive files or corrupt streams.")}
@@ -451,7 +459,9 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
                   <div className="absolute inset-0 border-4 border-blue-500/20 rounded-full" />
                   <div className="absolute inset-0 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
                 </div>
-                <p className="text-white text-xs font-bold uppercase tracking-[0.2em] animate-pulse">Decoding Scientific Data</p>
+                <p className="text-white text-xs font-bold uppercase tracking-[0.2em] animate-pulse">
+                   {decodingStep || "Decoding Data"}
+                </p>
                 <div className="flex flex-col items-center mt-3 text-neutral-500 text-[10px] space-y-1">
                   <span>Converting high bit-depth TIFF to visual preview</span>
                   <span>Applying adaptive scaling for workbench stability</span>
@@ -478,7 +488,7 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
         )}
 
         {/* TOOLBAR */}
-        {src && !isDecoding && (
+        {(localSrc || src) && !isDecoding && (
           <div className="absolute top-4 left-1/2 -translate-x-1/2 flex items-center gap-1 p-1.5 bg-black/80 backdrop-blur-lg border border-white/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:translate-y-0 translate-y-2 shadow-2xl z-30">
             <ToolButton 
               active={activeTool === 'select'} 
@@ -522,7 +532,7 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
         )}
 
         {/* STATUS BAR */}
-        {src && !imageLoadError && !isDecoding && (
+        {(localSrc || src) && !imageLoadError && !isDecoding && (
           <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
             <div className="flex items-center gap-3 px-4 py-2 bg-black/80 backdrop-blur-lg border border-white/10 rounded-full text-[10px] font-mono text-neutral-300 pointer-events-auto shadow-lg">
               <div className="flex items-center gap-2">
