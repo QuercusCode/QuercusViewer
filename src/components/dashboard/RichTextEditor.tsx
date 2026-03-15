@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
@@ -17,6 +17,7 @@ import { TableHeader } from '@tiptap/extension-table-header';
 import { TableCell } from '@tiptap/extension-table-cell';
 import { Markdown } from 'tiptap-markdown';
 import Mention from '@tiptap/extension-mention';
+import Image from '@tiptap/extension-image';
 import { HexColorPicker } from 'react-colorful';
 import { SpreadsheetTable } from './SpreadsheetTable';
 import { InlineChart } from './InlineChart';
@@ -35,7 +36,7 @@ import {
   Type, ChevronDown, MoreHorizontal,
   Subscript as SubscriptIcon, Superscript as SuperscriptIcon,
   Highlighter, Eraser, FlaskConical, Clock, FileText,
-  Table as TableIcon, Activity, Beaker, Calculator
+  Table as TableIcon, Activity, Beaker, Calculator, Image as ImageIcon
 } from 'lucide-react';
 import type { Structure } from '../../lib/structuresService';
 
@@ -46,6 +47,10 @@ interface RichTextEditorProps {
   placeholder?: string;
   allStructures?: Structure[];
   noteId?: string;
+}
+
+export interface RichTextEditorRef {
+  insertImage: (url: string) => void;
 }
 
 const ToolbarButton: React.FC<{
@@ -158,17 +163,25 @@ const TableGridPicker: React.FC<{
   );
 };
 
-export const RichTextEditor: React.FC<RichTextEditorProps> = ({ 
+export const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({ 
   content, 
   onChange, 
   onBlur,
   placeholder = 'Start writing...',
   allStructures = [],
   noteId
-}) => {
+}, ref) => {
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const { theme } = useTheme();
   const { user } = useAuth();
+
+  useImperativeHandle(ref, () => ({
+    insertImage: (url: string) => {
+      if (editor) {
+        editor.chain().focus().setImage({ src: url }).run();
+      }
+    }
+  }));
 
   const userColor = React.useMemo(() => {
     const colors = ['#f43f5e', '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b', '#ec4899'];
@@ -210,6 +223,11 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       ChemicalSketcher,
       LabCalculator,
       CodeCell,
+      Image.configure({
+        HTMLAttributes: {
+          class: 'rounded-lg max-w-full h-auto my-4 border border-[var(--border-main)] shadow-sm',
+        },
+      }),
       TableRow,
       TableHeader,
       TableCell,
@@ -300,6 +318,8 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     };
   }, [editor, noteId, user, userColor]);
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   if (!editor) {
     return null;
   }
@@ -318,6 +338,18 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     }
 
     editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const url = event.target?.result as string;
+        editor.chain().focus().setImage({ src: url }).run();
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const toggleMenu = (menuId: string) => {
@@ -442,6 +474,25 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
           >
             <Heading3 className="w-4 h-4" />
           </ToolbarButton>
+        </div>
+
+        <ToolbarDivider />
+
+        {/* Media */}
+        <div className="flex items-center">
+          <ToolbarButton 
+            onClick={() => fileInputRef.current?.click()} 
+            title="Upload Image"
+          >
+            <ImageIcon className="w-4 h-4" />
+          </ToolbarButton>
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            className="hidden" 
+            accept="image/*" 
+            onChange={handleImageUpload} 
+          />
         </div>
 
         <ToolbarDivider />

@@ -40,3 +40,18 @@ export async function deleteNotebook(id: string): Promise<void> {
 
     if (error) throw new Error(error.message);
 }
+
+export async function uploadNotebookImage(userId: string, file: File): Promise<string> {
+    const ext = file.name.split('.').pop()?.toLowerCase() ?? 'jpg';
+    const uuid = crypto.randomUUID();
+    const filePath = `${userId}/${uuid}.${ext}`;
+
+    const { error: storageError } = await supabase.storage
+        .from('notebook-assets')
+        .upload(filePath, file, { contentType: file.type, upsert: false });
+
+    if (storageError) throw new Error(`Upload failed: ${storageError.message}`);
+
+    const { data } = supabase.storage.from('notebook-assets').getPublicUrl(filePath);
+    return data.publicUrl;
+}
