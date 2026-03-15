@@ -854,4 +854,4 @@ export const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>
       </div>
     </div>
   );
-};
+});
