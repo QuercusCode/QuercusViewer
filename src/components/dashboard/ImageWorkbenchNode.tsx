@@ -41,31 +41,60 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
       const script = document.createElement('script');
       script.src = "https://cdn.jsdelivr.net/npm/utif@1.1.0/UTIF.js";
       script.async = true;
-      script.onload = () => resolve();
-      script.onerror = () => reject(new Error("Failed to load TIFF decoder library."));
+      script.onload = () => {
+        console.log("[TIFF] UTIF.js loaded successfully");
+        resolve();
+      };
+      script.onerror = () => reject(new Error("Failed to load TIFF decoder library. Check your internet connection."));
       document.body.appendChild(script);
     });
   };
 
   // Convert TIFF ArrayBuffer to browser-readable PNG Data URL
   const processTiff = async (buffer: ArrayBuffer) => {
+    console.log("[TIFF] Starting decoding, buffer size:", buffer.byteLength);
     await loadUTIF();
     const UTIF = (window as any).UTIF;
-    const ifds = UTIF.decode(buffer);
-    UTIF.decodeImage(buffer, ifds[0]);
-    const rgba = UTIF.toRGBA8(ifds[0]);
     
-    const canvas = document.createElement('canvas');
-    canvas.width = ifds[0].width;
-    canvas.height = ifds[0].height;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) throw new Error("Could not initialize conversion canvas.");
-    
-    const imgData = ctx.createImageData(canvas.width, canvas.height);
-    imgData.data.set(rgba);
-    ctx.putImageData(imgData, 0, 0);
-    
-    return canvas.toDataURL('image/png');
+    try {
+      const ifds = UTIF.decode(buffer);
+      console.log("[TIFF] IFDs found:", ifds.length);
+      
+      if (!ifds || ifds.length === 0) {
+        throw new Error("The TIFF file appears to be empty or corrupted.");
+      }
+
+      // Find the first IFD with image dimensions
+      const firstIFD = ifds.find((i: any) => i.width && i.height) || ifds[0];
+      if (!firstIFD.width || !firstIFD.height) {
+        console.error("[TIFF] Invalid IFD:", firstIFD);
+        throw new Error("Could not detect image dimensions in the TIFF structure.");
+      }
+
+      console.log("[TIFF] Decoding layer:", { width: firstIFD.width, height: firstIFD.height });
+      UTIF.decodeImage(buffer, firstIFD);
+      
+      const rgba = UTIF.toRGBA8(firstIFD);
+      console.log("[TIFF] RGBA conversion complete, buffer length:", rgba.length);
+      
+      const canvas = document.createElement('canvas');
+      canvas.width = firstIFD.width;
+      canvas.height = firstIFD.height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error("Could not initialize conversion canvas.");
+      
+      const imgData = ctx.createImageData(canvas.width, canvas.height);
+      // Explicitly use Uint8ClampedArray for browser compatibility
+      imgData.data.set(new Uint8ClampedArray(rgba));
+      ctx.putImageData(imgData, 0, 0);
+      
+      const dataUrl = canvas.toDataURL('image/png');
+      console.log("[TIFF] Data URL generated successfully, length:", dataUrl.length);
+      return dataUrl;
+    } catch (error: unknown) {
+      console.error("[TIFF] Error during processing:", error);
+      throw error;
+    }
   };
 
   // Handle Image Upload
@@ -80,12 +109,15 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
     
     if (isTiff) {
       setIsDecoding(true);
+      console.log("[TIFF] Processing file:", fileName);
       try {
         const buffer = await file.arrayBuffer();
         const dataUrl = await processTiff(buffer);
+        console.log("[TIFF] Uploading to workbench...");
         updateAttributes({ src: dataUrl });
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : 'Unknown error';
+        console.error("[TIFF] Upload failed:", msg);
         setImageLoadError(`TIFF decoding failed: ${msg}`);
       } finally {
         setIsDecoding(false);
