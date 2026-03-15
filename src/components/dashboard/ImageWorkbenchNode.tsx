@@ -8,7 +8,6 @@ import {
   Target, 
   Upload,
   AlertCircle,
-  RefreshCw,
   Info,
   Copy,
   ChevronRight,
