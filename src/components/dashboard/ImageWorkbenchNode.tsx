@@ -7,8 +7,7 @@ import {
   Trash2, 
   Target, 
   Upload,
-  AlertCircle,
-  Layers
+  AlertCircle
 } from 'lucide-react';
 
 interface Annotation {
@@ -361,7 +360,7 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
                   <span className="text-blue-400">{layers.length}</span>
                 </div>
                 <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide py-1">
-                  {layers.map((l, i) => (
+                  {layers.map((_, i) => (
                     <button key={i} onClick={() => handleLayerSwitch(i)} className={`flex-shrink-0 w-12 h-12 rounded-lg border-2 transition-all flex items-center justify-center ${metadata.activeLayer === i ? 'border-blue-500 bg-blue-500/10 text-white' : 'border-white/5 bg-white/5 text-neutral-600 hover:border-white/20'}`}>
                       <span className="text-[10px]">{i}</span>
                     </button>
