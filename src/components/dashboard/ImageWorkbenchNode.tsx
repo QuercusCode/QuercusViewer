@@ -7,7 +7,8 @@ import {
   Trash2, 
   Target, 
   Upload,
-  AlertCircle
+  AlertCircle,
+  RefreshCw
 } from 'lucide-react';
 
 interface Annotation {
@@ -17,6 +18,9 @@ interface Annotation {
   result?: string;
   color?: string;
 }
+
+// Global script load promise to prevent multiple injections
+let utifLoadPromise: Promise<void> | null = null;
 
 export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttributes }) => {
   const { src, annotations, calibration } = node.attrs;
@@ -30,14 +34,12 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
   const imageRef = useRef<HTMLImageElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Helper to load UTIF.js dynamically
+  // Helper to load UTIF.js dynamically (Singleton Pattern)
   const loadUTIF = () => {
-    return new Promise<void>((resolve, reject) => {
-      const g = window as any;
-      if (g.UTIF) {
-        resolve();
-        return;
-      }
+    if ((window as any).UTIF) return Promise.resolve();
+    if (utifLoadPromise) return utifLoadPromise;
+
+    utifLoadPromise = new Promise<void>((resolve, reject) => {
       const script = document.createElement('script');
       script.src = "https://cdn.jsdelivr.net/npm/utif@1.1.0/UTIF.js";
       script.async = true;
@@ -45,14 +47,18 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
         console.log("[TIFF] UTIF.js loaded successfully");
         resolve();
       };
-      script.onerror = () => reject(new Error("Failed to load TIFF decoder library. Check your internet connection."));
+      script.onerror = () => {
+        utifLoadPromise = null;
+        reject(new Error("Failed to load TIFF decoder library. Check your internet connection."));
+      };
       document.body.appendChild(script);
     });
+    return utifLoadPromise;
   };
 
   // Convert TIFF ArrayBuffer to browser-readable PNG Data URL
   const processTiff = async (buffer: ArrayBuffer) => {
-    console.log("[TIFF] Starting decoding, buffer size:", buffer.byteLength);
+    console.log("[TIFF] Starting decoding, input size:", (buffer.byteLength / 1024).toFixed(1), "KB");
     await loadUTIF();
     const UTIF = (window as any).UTIF;
     
@@ -64,32 +70,38 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
         throw new Error("The TIFF file appears to be empty or corrupted.");
       }
 
-      // Find the first IFD with image dimensions
-      const firstIFD = ifds.find((i: any) => i.width && i.height) || ifds[0];
-      if (!firstIFD.width || !firstIFD.height) {
-        console.error("[TIFF] Invalid IFD:", firstIFD);
+      // Find the first IFD with image dimensions (skip thumbnails/metadata if possible)
+      let targetIFD = ifds.find((i: any) => i.width > 200 && i.height > 200);
+      if (!targetIFD) targetIFD = ifds.find((i: any) => i.width && i.height);
+      if (!targetIFD) targetIFD = ifds[0];
+
+      if (!targetIFD.width || !targetIFD.height) {
+        console.error("[TIFF] Invalid target IFD:", targetIFD);
         throw new Error("Could not detect image dimensions in the TIFF structure.");
       }
 
-      console.log("[TIFF] Decoding layer:", { width: firstIFD.width, height: firstIFD.height });
-      UTIF.decodeImage(buffer, firstIFD);
+      console.log("[TIFF] Decoding IFD:", { width: targetIFD.width, height: targetIFD.height, tPixel: targetIFD.tPixel });
+      UTIF.decodeImage(buffer, targetIFD);
       
-      const rgba = UTIF.toRGBA8(firstIFD);
+      const rgba = UTIF.toRGBA8(targetIFD);
       console.log("[TIFF] RGBA conversion complete, buffer length:", rgba.length);
       
       const canvas = document.createElement('canvas');
-      canvas.width = firstIFD.width;
-      canvas.height = firstIFD.height;
+      canvas.width = targetIFD.width;
+      canvas.height = targetIFD.height;
       const ctx = canvas.getContext('2d');
       if (!ctx) throw new Error("Could not initialize conversion canvas.");
       
       const imgData = ctx.createImageData(canvas.width, canvas.height);
-      // Explicitly use Uint8ClampedArray for browser compatibility
       imgData.data.set(new Uint8ClampedArray(rgba));
       ctx.putImageData(imgData, 0, 0);
       
-      const dataUrl = canvas.toDataURL('image/png');
-      console.log("[TIFF] Data URL generated successfully, length:", dataUrl.length);
+      // Use image/jpeg for large images to save space/bandwidth if over 4MB
+      const type = (canvas.width * canvas.height > 2000000) ? 'image/jpeg' : 'image/png';
+      const quality = type === 'image/jpeg' ? 0.92 : undefined;
+      
+      const dataUrl = canvas.toDataURL(type, quality);
+      console.log("[TIFF] Data URL generated successfully, type:", type, "length:", (dataUrl.length / 1024).toFixed(1), "KB");
       return dataUrl;
     } catch (error: unknown) {
       console.error("[TIFF] Error during processing:", error);
@@ -109,16 +121,15 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
     
     if (isTiff) {
       setIsDecoding(true);
-      console.log("[TIFF] Processing file:", fileName);
+      console.log("[TIFF] Uploading scientific file:", fileName);
       try {
         const buffer = await file.arrayBuffer();
         const dataUrl = await processTiff(buffer);
-        console.log("[TIFF] Uploading to workbench...");
         updateAttributes({ src: dataUrl });
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : 'Unknown error';
-        console.error("[TIFF] Upload failed:", msg);
-        setImageLoadError(`TIFF decoding failed: ${msg}`);
+        console.error("[TIFF] Error processing upload:", msg);
+        setImageLoadError(`TIFF Processing Error: ${msg}`);
       } finally {
         setIsDecoding(false);
       }
@@ -142,7 +153,7 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
 
   // Intensity Analysis Logic
   const calculateMeanIntensity = useCallback((roi: Annotation) => {
-    if (!imageRef.current) return '0.0';
+    if (!imageRef.current || !imageRef.current.complete || imageRef.current.naturalWidth === 0) return '0.0';
     const img = imageRef.current;
     
     const canvas = document.createElement('canvas');
@@ -216,6 +227,7 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
       const umStr = window.prompt('Enter real-world length (µm) for this line:', '100');
       const um = parseFloat(umStr || '0');
       if (!isNaN(um) && um > 0) {
+        if (currentPoints.length < 2) return;
         const dx = currentPoints[0].x - currentPoints[1].x;
         const dy = currentPoints[0].y - currentPoints[1].y;
         const pxDist = Math.sqrt(dx * dx + dy * dy);
@@ -224,6 +236,7 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
         });
       }
     } else if (activeTool === 'measure' || activeTool === 'roi') {
+      if (currentPoints.length < 2) return;
       const newAnnotation: Annotation = {
         id: Math.random().toString(36).substr(2, 9),
         type: activeTool,
@@ -273,6 +286,7 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
       const h = canvas.height;
 
       annotations.forEach((anno: Annotation) => {
+        if (!anno.points || anno.points.length < 2) return;
         const p1 = { x: (anno.points[0].x / 100) * w, y: (anno.points[0].y / 100) * h };
         const p2 = { x: (anno.points[1].x / 100) * w, y: (anno.points[1].y / 100) * h };
 
@@ -342,7 +356,7 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
     <NodeViewWrapper className="image-workbench-container my-8 relative group">
       <div 
         ref={containerRef}
-        className="relative bg-neutral-900 border border-neutral-700 rounded-2xl overflow-hidden shadow-2xl min-h-[300px] flex items-center justify-center cursor-crosshair"
+        className="relative bg-neutral-900 border border-neutral-700 rounded-2xl overflow-hidden shadow-2xl min-h-[400px] flex items-center justify-center cursor-crosshair"
         onMouseDown={startDrawing}
         onMouseMove={drawMove}
         onMouseUp={endDrawing}
@@ -354,20 +368,21 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
               src={src} 
               alt="Scientific Sample" 
               className="max-w-full h-auto select-none pointer-events-none"
-              onError={() => setImageLoadError("Failed to load image. Ensure it is in a compatible format.")}
+              onError={() => setImageLoadError("Failed to render decoded image. The file might be too large or uses an unsupported compression.")}
             />
             {imageLoadError && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm z-20 p-8 text-center">
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm z-20 p-8 text-center">
                 <div className="p-3 bg-red-500/20 text-red-500 rounded-full mb-4">
                   <AlertCircle className="w-8 h-8" />
                 </div>
-                <h3 className="text-white font-bold mb-2 text-sm">Image Load Error</h3>
+                <h3 className="text-white font-bold mb-2 text-sm uppercase tracking-wider">Image Analysis Error</h3>
                 <p className="text-neutral-400 text-[10px] max-w-xs">{imageLoadError}</p>
                 <button 
                   onClick={() => fileInputRef.current?.click()}
-                  className="mt-6 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition-all"
+                  className="mt-6 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition-all shadow-lg flex items-center gap-2"
                 >
-                  Change Image
+                  <RefreshCw className="w-3 h-3" />
+                  Try Different Image
                 </button>
               </div>
             )}
@@ -377,28 +392,24 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
             />
             {isDecoding && (
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 backdrop-blur-md z-40">
-                <div className="w-10 h-10 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mb-4" />
-                <p className="text-white text-xs font-bold uppercase tracking-widest">Decoding TIFF Analysis...</p>
-                <p className="text-neutral-500 text-[9px] mt-1 italic text-center px-4">Processing high-depth scientific data for browser visualization</p>
+                <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4" />
+                <p className="text-white text-xs font-bold uppercase tracking-widest animate-pulse">Decoding TIFF Layers...</p>
+                <p className="text-neutral-500 text-[9px] mt-2 italic text-center px-6">Parsing scientific bit-depth for web visualization. This may take a moment for large microscopy files.</p>
               </div>
             )}
           </>
         ) : (
           <div 
-            className="flex flex-col items-center gap-4 text-neutral-500 hover:text-blue-400 transition-colors"
+            className="flex flex-col items-center gap-4 text-neutral-500 hover:text-blue-400 transition-colors cursor-pointer"
             onClick={() => fileInputRef.current?.click()}
           >
-            <div className="w-16 h-16 rounded-full bg-neutral-800 flex items-center justify-center border-2 border-dashed border-neutral-700 group-hover:border-blue-500/50">
-              <Upload className="w-8 h-8" />
+            <div className="w-20 h-20 rounded-full bg-neutral-800 flex items-center justify-center border-2 border-dashed border-neutral-700 group-hover:border-blue-500/50 shadow-inner group-hover:scale-110 transition-transform duration-300">
+              <Upload className="w-10 h-10" />
             </div>
-            <p className="text-sm font-medium">Drop microscopic image (PNG, JPG, TIFF) or click to upload</p>
-            <input 
-              type="file" 
-              ref={fileInputRef} 
-              className="hidden" 
-              accept="image/*,.tif,.tiff" 
-              onChange={handleImageUpload} 
-            />
+            <div className="text-center">
+              <p className="text-sm font-bold text-neutral-300">Drop Scientific Image</p>
+              <p className="text-[10px] text-neutral-500 mt-1 uppercase tracking-tighter">Supports PNG, JPG, TIF, TIFF</p>
+            </div>
           </div>
         )}
 
@@ -449,7 +460,7 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
         {/* STATUS BAR */}
         {src && !imageLoadError && !isDecoding && (
           <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
-            <div className="flex items-center gap-3 px-3 py-1.5 bg-black/60 backdrop-blur-md border border-white/10 rounded-full text-[10px] font-mono text-neutral-400">
+            <div className="flex items-center gap-3 px-3 py-1.5 bg-black/60 backdrop-blur-md border border-white/10 rounded-full text-[10px] font-mono text-neutral-400 pointer-events-auto">
               <div className="flex items-center gap-1.5">
                 <div className={`w-1.5 h-1.5 rounded-full ${calibration.ratio > 0 ? 'bg-emerald-500' : 'bg-amber-500'}`} />
                 <span>{calibration.ratio > 0 ? `Calibrated: 1px = ${calibration.ratio.toFixed(2)}µm` : 'Uncalibrated'}</span>
