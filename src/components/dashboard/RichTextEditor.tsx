@@ -17,7 +17,7 @@ import { TableHeader } from '@tiptap/extension-table-header';
 import { TableCell } from '@tiptap/extension-table-cell';
 import { Markdown } from 'tiptap-markdown';
 import Mention from '@tiptap/extension-mention';
-import Image from '@tiptap/extension-image';
+import { ResizableImage } from './ResizableImage';
 import { HexColorPicker } from 'react-colorful';
 import { SpreadsheetTable } from './SpreadsheetTable';
 import { InlineChart } from './InlineChart';
@@ -178,7 +178,7 @@ export const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>
   useImperativeHandle(ref, () => ({
     insertImage: (url: string) => {
       if (editor) {
-        editor.chain().focus().setImage({ src: url }).run();
+        editor.chain().focus().setResizableImage({ src: url }).run();
       }
     }
   }));
@@ -223,9 +223,9 @@ export const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>
       ChemicalSketcher,
       LabCalculator,
       CodeCell,
-      Image.configure({
+      ResizableImage.configure({
         HTMLAttributes: {
-          class: 'rounded-lg max-w-full h-auto my-4 border border-[var(--border-main)] shadow-sm',
+          class: 'rounded-lg max-w-full h-auto my-4 border border-[var(--border-main)] shadow-sm cursor-pointer',
         },
       }),
       TableRow,
@@ -346,7 +346,7 @@ export const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>
       const reader = new FileReader();
       reader.onload = (event) => {
         const url = event.target?.result as string;
-        editor.chain().focus().setImage({ src: url }).run();
+        editor.chain().focus().setResizableImage({ src: url }).run();
       };
       reader.readAsDataURL(file);
     }
