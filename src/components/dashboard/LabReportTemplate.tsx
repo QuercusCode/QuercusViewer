@@ -179,7 +179,7 @@ export const LabReportTemplate = React.forwardRef<HTMLDivElement, LabReportTempl
                   const processed = React.Children.map(children, child => {
                     if (typeof child === 'string') {
                       // Combined split for all custom nodes
-                      const parts = child.split(/(\[\[structure:[a-f0-9-]{36}\]\]|\[\[sketcher:[A-Za-z0-9+/=]+\]\]|\[\[calculator:[A-Za-z0-9+/=]+\]\]|\[\[code:[A-Za-z0-9+/=]+\]\])/g);
+                      const parts = child.split(/(\[\[structure:[a-f0-9-]{36}\]\]|\[\[sketcher:[A-Za-z0-9+/=]+\]\]|\[\[calculator:[A-Za-z0-9+/=]+\]\]|\[\[code:[A-Za-z0-9+/=]+\]\]|\[\[image-workbench:[A-Za-z0-9+/=]+\]\])/g);
                       return parts.map((part, i) => {
                         // 1. Handle Structure Mentions
                         const structMatch = part.match(/\[\[structure:([a-f0-9-]{36})\]\]/);
@@ -301,6 +301,89 @@ export const LabReportTemplate = React.forwardRef<HTMLDivElement, LabReportTempl
                           } catch (err) {
                             console.error("PDF Code Cell Decode Error:", err);
                             return <span style={{ color: '#ef4444', fontSize: '10px' }}>Error rendering code cell</span>;
+                          }
+                        }
+
+                        // 5. Handle Image Workbench (Base64)
+                        const imageMatch = part.match(/\[\[image-workbench:([A-Za-z0-9+/=]+)\]\]/);
+                        if (imageMatch) {
+                          try {
+                            const base64 = imageMatch[1];
+                            const decoded = decodeURIComponent(escape(atob(base64)));
+                            const { src, annotations, calibration } = JSON.parse(decoded);
+                            
+                            if (!src) return null;
+
+                            return (
+                              <div key={i} style={{ margin: '2rem 0', position: 'relative', border: '1px solid #e2e8f0', borderRadius: '1rem', overflow: 'hidden' }}>
+                                <img src={src} style={{ width: '100%', display: 'block' }} alt="Workbench Analysis" />
+                                <svg 
+                                  viewBox="0 0 100 100" 
+                                  preserveAspectRatio="none"
+                                  style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}
+                                >
+                                  {annotations.map((anno: any) => {
+                                    const p1 = anno.points[0];
+                                    const p2 = anno.points[1];
+                                    const color = anno.color || '#3b82f6';
+
+                                    if (anno.type === 'measure') {
+                                      return (
+                                        <g key={anno.id}>
+                                          <line x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} stroke={color} strokeWidth="0.5" />
+                                          <circle cx={p1.x} cy={p1.y} r="0.8" fill={color} />
+                                          <circle cx={p2.x} cy={p2.y} r="0.8" fill={color} />
+                                          <rect 
+                                            x={(p1.x + p2.x) / 2 - 5} 
+                                            y={(p1.y + p2.y) / 2 - 3} 
+                                            width="10" 
+                                            height="6" 
+                                            rx="1"
+                                            fill="rgba(0,0,0,0.7)" 
+                                          />
+                                          <text 
+                                            x={(p1.x + p2.x) / 2} 
+                                            y={(p1.y + p2.y) / 2 + 1} 
+                                            fill="#fff" 
+                                            fontSize="2" 
+                                            textAnchor="middle"
+                                            fontFamily="Arial"
+                                          >
+                                            {anno.result}
+                                          </text>
+                                        </g>
+                                      );
+                                    } else if (anno.type === 'roi') {
+                                      const rx = Math.min(p1.x, p2.x);
+                                      const ry = Math.min(p1.y, p2.y);
+                                      const rw = Math.abs(p1.x - p2.x);
+                                      const rh = Math.abs(p1.y - p2.y);
+                                      return (
+                                        <g key={anno.id}>
+                                          <rect x={rx} y={ry} width={rw} height={rh} stroke={color} strokeWidth="0.5" fill="rgba(16, 185, 129, 0.1)" />
+                                          <rect x={rx} y={ry - 6} width="12" height="5" rx="1" fill="rgba(0,0,0,0.7)" />
+                                          <text x={rx + 1} y={ry - 2.5} fill="#10b981" fontSize="2" fontFamily="Arial">
+                                            Mean: {anno.result}
+                                          </text>
+                                        </g>
+                                      );
+                                    }
+                                    return null;
+                                  })}
+                                </svg>
+                                
+                                {/* Scale Bar Indicator */}
+                                {calibration.ratio > 0 && (
+                                  <div style={{ position: 'absolute', bottom: '10px', right: '10px', display: 'flex', alignItems: 'center', gap: '5px', backgroundColor: 'rgba(0,0,0,0.5)', padding: '4px 8px', borderRadius: '4px', color: '#fff', fontSize: '8px', fontFamily: 'Arial' }}>
+                                    <div style={{ width: '20px', height: '1px', backgroundColor: '#fff' }} />
+                                    <span>{calibration.um} µm calibrated</span>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          } catch (err) {
+                            console.error("PDF Image Workbench Decode Error:", err);
+                            return <span style={{ color: '#ef4444', fontSize: '10px' }}>Error rendering analysis</span>;
                           }
                         }
                         

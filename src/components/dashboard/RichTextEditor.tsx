@@ -20,6 +20,7 @@ import Mention from '@tiptap/extension-mention';
 import { HexColorPicker } from 'react-colorful';
 import { SpreadsheetTable } from './SpreadsheetTable';
 import { InlineChart } from './InlineChart';
+import { ImageWorkbench } from './ImageWorkbench';
 import { ChemicalSketcher } from './ChemicalSketcher';
 import { LabCalculator } from './LabCalculator';
 import { CodeCell } from './CodeCell';
@@ -35,7 +36,7 @@ import {
   Type, ChevronDown, MoreHorizontal,
   Subscript as SubscriptIcon, Superscript as SuperscriptIcon,
   Highlighter, Eraser, FlaskConical, Clock, FileText,
-  Table as TableIcon, Activity, Beaker, Calculator
+  Table as TableIcon, Activity, Beaker, Calculator, Image as ImageIcon
 } from 'lucide-react';
 import type { Structure } from '../../lib/structuresService';
 
@@ -205,11 +206,12 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       SpreadsheetTable.configure({
         resizable: true,
       }),
+      CollaborationCursor,
       InlineChart,
+      ImageWorkbench,
       ChemicalSketcher,
       LabCalculator,
       CodeCell,
-      CollaborationCursor,
       TableRow,
       TableHeader,
       TableCell,
@@ -370,6 +372,9 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         break;
       case 'codeCell':
         editor.chain().focus().insertContent({ type: 'codeCell' }).run();
+        break;
+      case 'imageWorkbench':
+        editor.chain().focus().insertContent({ type: 'imageWorkbench' }).run();
         break;
       case 'protocol':
         editor.chain().focus().insertContent('**Protocol:**\n\n- ').run();
@@ -689,8 +694,6 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
                 </div>
               </div>
 
-              <ToolbarDivider className="!h-px !w-full !my-2 opacity-20" />
-
               <button
                 onClick={() => insertTemplate('molecule')}
                 className="w-full flex items-center gap-4 px-4 py-4 text-sm text-[var(--text-secondary)] hover:bg-[var(--input-bg)] rounded-xl transition-all text-left"
@@ -705,6 +708,13 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
               >
                 <Calculator className="w-5 h-5 text-blue-400" />
                 <span className="font-semibold">Scientific Calculator</span>
+              </button>
+              <button
+                onClick={() => insertTemplate('imageWorkbench')}
+                className="w-full flex items-center gap-4 px-4 py-4 text-sm text-[var(--text-secondary)] hover:bg-[var(--input-bg)] rounded-xl transition-all text-left"
+              >
+                <ImageIcon className="w-5 h-5 text-amber-400" />
+                <span className="font-semibold">Image Workbench</span>
               </button>
 
               <button
@@ -721,14 +731,6 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
               >
                 <FileText className="w-5 h-5 text-purple-400" />
                 <span className="font-semibold">Experiment Setup</span>
-              </button>
-
-              <button 
-                onClick={() => insertTemplate('protocol')}
-                className="w-full flex items-center gap-4 px-4 py-4 text-sm text-[var(--text-secondary)] hover:bg-[var(--input-bg)] rounded-xl transition-all text-left"
-              >
-                <FileText className="w-5 h-5 text-amber-400" />
-                <span className="font-semibold">Quick Protocol</span>
               </button>
 
               <ToolbarDivider className="!h-px !w-full !my-2 opacity-20" />
