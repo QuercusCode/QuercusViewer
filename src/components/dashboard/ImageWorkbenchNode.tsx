@@ -6,7 +6,8 @@ import {
   MousePointer2, 
   Trash2, 
   Target, 
-  Upload
+  Upload,
+  AlertCircle
 } from 'lucide-react';
 
 interface Annotation {
@@ -21,6 +22,7 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
   const { src, annotations, calibration } = node.attrs;
   const [activeTool, setActiveTool] = useState<'select' | 'calibrate' | 'measure' | 'roi'>('select');
   const [isDrawing, setIsDrawing] = useState(false);
+  const [imageLoadError, setImageLoadError] = useState<string | null>(null);
   const [currentPoints, setCurrentPoints] = useState<{ x: number, y: number }[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -32,6 +34,14 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Check for TIF/TIFF which is common in science but unsupported by browsers
+    const fileName = file.name.toLowerCase();
+    if (fileName.endsWith('.tif') || fileName.endsWith('.tiff')) {
+      alert("Note: Browsers cannot display .TIF/.TIFF files directly. Please convert to .PNG or .JPG for the workbench.");
+      return;
+    }
+
+    setImageLoadError(null);
     const reader = new FileReader();
     reader.onload = (event) => {
       updateAttributes({ src: event.target?.result });
@@ -78,7 +88,6 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
       let totalLuminance = 0;
 
       for (let i = 0; i < data.length; i += 4) {
-        // Standard luminance weights: 0.299R + 0.587G + 0.114B
         const luminance = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
         totalLuminance += luminance;
       }
@@ -97,7 +106,6 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
     const p2 = points[1];
     const dx = p1.x - p2.x;
     const dy = p1.y - p2.y;
-    // Euclidean distance in "percent" units
     const distPx = Math.sqrt(dx * dx + dy * dy);
     
     if (calibration.ratio > 0) {
@@ -108,7 +116,7 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
 
   // Drawing Events
   const startDrawing = (e: React.MouseEvent) => {
-    if (activeTool === 'select' || !src) return;
+    if (activeTool === 'select' || !src || imageLoadError) return;
     setIsDrawing(true);
     const p = getNormalizedPoint(e);
     setCurrentPoints([p]);
@@ -157,21 +165,18 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
     setCurrentPoints([]);
   };
 
-  // Clear All
   const clearAnnotations = () => {
     if (window.confirm('Clear all measurements and calibrations?')) {
       updateAttributes({ annotations: [], calibration: { px: 0, um: 0, ratio: 1 } });
     }
   };
 
-  // Animation Frame for Canvas Rendering
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Resize canvas to match container
     const updateCanvasSize = () => {
       const rect = containerRef.current?.getBoundingClientRect();
       if (rect) {
@@ -187,7 +192,6 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
       const w = canvas.width;
       const h = canvas.height;
 
-      // Draw existing annotations
       annotations.forEach((anno: Annotation) => {
         const p1 = { x: (anno.points[0].x / 100) * w, y: (anno.points[0].y / 100) * h };
         const p2 = { x: (anno.points[1].x / 100) * w, y: (anno.points[1].y / 100) * h };
@@ -197,20 +201,15 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
         ctx.setLineDash([]);
 
         if (anno.type === 'measure') {
-          // Draw measurement line
           ctx.beginPath();
           ctx.moveTo(p1.x, p1.y);
           ctx.lineTo(p2.x, p2.y);
           ctx.stroke();
-
-          // Draw end caps
           ctx.beginPath();
           ctx.arc(p1.x, p1.y, 4, 0, Math.PI * 2);
           ctx.arc(p2.x, p2.y, 4, 0, Math.PI * 2);
           ctx.fillStyle = ctx.strokeStyle;
           ctx.fill();
-
-          // Draw label
           ctx.font = '12px Inter, system-ui';
           ctx.fillStyle = 'rgba(0,0,0,0.8)';
           const text = anno.result || '';
@@ -219,17 +218,13 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
           ctx.fillStyle = '#fff';
           ctx.fillText(text, (p1.x + p2.x) / 2 - tw / 2, (p1.y + p2.y) / 2 + 4);
         } else if (anno.type === 'roi') {
-          // Draw ROI rectangle
           const rx = Math.min(p1.x, p2.x);
           const ry = Math.min(p1.y, p2.y);
           const rw = Math.abs(p1.x - p2.x);
           const rh = Math.abs(p1.y - p2.y);
-          
           ctx.strokeRect(rx, ry, rw, rh);
           ctx.fillStyle = 'rgba(16, 185, 129, 0.1)';
           ctx.fillRect(rx, ry, rw, rh);
-
-          // Draw Mean Intensity label
           ctx.fillStyle = 'rgba(0,0,0,0.8)';
           const text = `Mean: ${anno.result}`;
           const tw = ctx.measureText(text).width;
@@ -239,11 +234,9 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
         }
       });
 
-      // Draw current drawing
       if (isDrawing && currentPoints.length === 2) {
         const p1 = { x: (currentPoints[0].x / 100) * w, y: (currentPoints[0].y / 100) * h };
         const p2 = { x: (currentPoints[1].x / 100) * w, y: (currentPoints[1].y / 100) * h };
-
         ctx.strokeStyle = activeTool === 'roi' ? '#10b981' : '#3b82f6';
         ctx.setLineDash([5, 5]);
         ctx.beginPath();
@@ -255,7 +248,6 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
           ctx.stroke();
         }
       }
-
       requestAnimationFrame(render);
     };
 
@@ -282,7 +274,23 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
               src={src} 
               alt="Scientific Sample" 
               className="max-w-full h-auto select-none pointer-events-none"
+              onError={() => setImageLoadError("Failed to load image. If this is a microscopic image, ensure it is in PNG or JPG format.")}
             />
+            {imageLoadError && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm z-20 p-8 text-center">
+                <div className="p-3 bg-red-500/20 text-red-500 rounded-full mb-4">
+                  <AlertCircle className="w-8 h-8" />
+                </div>
+                <h3 className="text-white font-bold mb-2 text-sm">Image Load Error</h3>
+                <p className="text-neutral-400 text-[10px] max-w-xs">{imageLoadError}</p>
+                <button 
+                  onClick={() => fileInputRef.current?.click()}
+                  className="mt-6 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition-all"
+                >
+                  Change Image
+                </button>
+              </div>
+            )}
             <canvas 
               ref={canvasRef}
               className="absolute inset-0 pointer-events-none"
@@ -342,11 +350,17 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
               icon={<Trash2 className="w-4 h-4 text-red-400" />} 
               label="Clear all" 
             />
+            <ToolButton 
+              active={false} 
+              onClick={() => fileInputRef.current?.click()} 
+              icon={<Upload className="w-4 h-4 text-neutral-400" />} 
+              label="Change Image" 
+            />
           </div>
         )}
 
         {/* STATUS BAR */}
-        {src && (
+        {src && !imageLoadError && (
           <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
             <div className="flex items-center gap-3 px-3 py-1.5 bg-black/60 backdrop-blur-md border border-white/10 rounded-full text-[10px] font-mono text-neutral-400">
               <div className="flex items-center gap-1.5">
@@ -366,6 +380,13 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
           </div>
         )}
       </div>
+      <input 
+        type="file" 
+        ref={fileInputRef} 
+        className="hidden" 
+        accept="image/*" 
+        onChange={handleImageUpload} 
+      />
     </NodeViewWrapper>
   );
 };

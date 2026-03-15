@@ -11,15 +11,37 @@ export const ImageWorkbench = Node.create({
     return {
       src: {
         default: null,
+        parseHTML: element => element.getAttribute('data-src'),
+        renderHTML: attributes => ({
+          'data-src': attributes.src,
+        }),
       },
       annotations: {
         default: [],
+        parseHTML: element => {
+          const attr = element.getAttribute('data-annotations');
+          return attr ? JSON.parse(attr) : [];
+        },
+        renderHTML: attributes => ({
+          'data-annotations': JSON.stringify(attributes.annotations),
+        }),
       },
       calibration: {
-        default: { px: 0, um: 0, ratio: 1 }, // ratio = um / px
+        default: { px: 0, um: 0, ratio: 1 },
+        parseHTML: element => {
+          const attr = element.getAttribute('data-calibration');
+          return attr ? JSON.parse(attr) : { px: 0, um: 0, ratio: 1 };
+        },
+        renderHTML: attributes => ({
+          'data-calibration': JSON.stringify(attributes.calibration),
+        }),
       },
       width: {
         default: '100%',
+        parseHTML: element => element.getAttribute('data-width') || '100%',
+        renderHTML: attributes => ({
+          'data-width': attributes.width,
+        }),
       },
     };
   },
