@@ -8,13 +8,8 @@ import {
   Target, 
   Upload,
   AlertCircle,
-  RefreshCw,
-  Info,
-  Copy,
-  ChevronRight,
-  Database,
-  Layers,
-  Eye
+  AlertCircle,
+  Layers
 } from 'lucide-react';
 
 interface Annotation {
