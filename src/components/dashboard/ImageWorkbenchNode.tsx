@@ -8,7 +8,6 @@ import {
   Target, 
   Upload,
   AlertCircle,
-  AlertCircle,
   Layers
 } from 'lucide-react';
 
