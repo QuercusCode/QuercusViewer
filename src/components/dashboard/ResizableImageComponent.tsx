@@ -1,8 +1,9 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, Suspense, lazy } from 'react';
 import { NodeViewWrapper } from '@tiptap/react';
 import type { NodeViewProps } from '@tiptap/react';
 import { Pencil, Maximize2 } from 'lucide-react';
-import { ImageEditorModal } from './ImageEditorModal';
+// Lazy load the editor to prevent it from crashing the main bundle load
+const ImageEditorModal = lazy(() => import('./ImageEditorModal').then(module => ({ default: module.ImageEditorModal })));
 
 const ResizableImageComponent: React.FC<NodeViewProps> = ({ node, updateAttributes, selected }) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -86,14 +87,16 @@ const ResizableImageComponent: React.FC<NodeViewProps> = ({ node, updateAttribut
       </div>
 
       {showEditor && (
-        <ImageEditorModal
-          src={node.attrs.src}
-          onSave={(newUrl: string) => {
-            updateAttributes({ src: newUrl });
-            setShowEditor(false);
-          }}
-          onClose={() => setShowEditor(false)}
-        />
+        <Suspense fallback={<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div></div>}>
+          <ImageEditorModal
+            src={node.attrs.src}
+            onSave={(newUrl: string) => {
+              updateAttributes({ src: newUrl });
+              setShowEditor(false);
+            }}
+            onClose={() => setShowEditor(false)}
+          />
+        </Suspense>
       )}
     </NodeViewWrapper>
   );

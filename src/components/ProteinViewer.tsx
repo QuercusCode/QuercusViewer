@@ -6,10 +6,17 @@ import type { RepresentationType, ColoringType, ChainInfo, Measurement, CustomCo
 import { type DataSource, getStructureUrl, extractChainsFromComponent } from '../utils/pdbUtils';
 
 
+import * as NGL from 'ngl';
+
 declare global {
     interface Window {
         NGL: any;
     }
+}
+
+// Assign to window for global access requested by multiple components
+if (typeof window !== 'undefined') {
+    (window as any).NGL = NGL;
 }
 
 
