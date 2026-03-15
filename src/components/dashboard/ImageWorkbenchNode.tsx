@@ -8,7 +8,8 @@ import {
   Target, 
   Upload,
   AlertCircle,
-  RefreshCw
+  RefreshCw,
+  Info
 } from 'lucide-react';
 
 interface Annotation {
@@ -56,7 +57,7 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
     return utifLoadPromise;
   };
 
-  // Convert TIFF ArrayBuffer to browser-readable PNG Data URL
+  // Convert TIFF ArrayBuffer to browser-readable PNG/JPEG Data URL
   const processTiff = async (buffer: ArrayBuffer) => {
     console.log("[TIFF] Starting decoding, input size:", (buffer.byteLength / 1024).toFixed(1), "KB");
     await loadUTIF();
@@ -67,44 +68,78 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
       console.log("[TIFF] IFDs found:", ifds.length);
       
       if (!ifds || ifds.length === 0) {
-        throw new Error("The TIFF file appears to be empty or corrupted.");
+        throw new Error("The TIFF file appears to be empty or corrupted (no IFDs found).");
       }
 
-      // Find the first IFD with image dimensions (skip thumbnails/metadata if possible)
-      let targetIFD = ifds.find((i: any) => i.width > 200 && i.height > 200);
-      if (!targetIFD) targetIFD = ifds.find((i: any) => i.width && i.height);
-      if (!targetIFD) targetIFD = ifds[0];
+      // Find the "best" IFD. For scientific images, this is usually the one with the largest dimensions.
+      // We also look for those with standard pixel types (tPixel).
+      const sortedIFDs = [...ifds].sort((a: any, b: any) => (b.width * b.height) - (a.width * a.height));
+      const targetIFD = sortedIFDs[0];
 
       if (!targetIFD.width || !targetIFD.height) {
-        console.error("[TIFF] Invalid target IFD:", targetIFD);
-        throw new Error("Could not detect image dimensions in the TIFF structure.");
+        console.error("[TIFF] Invalid IFD data:", targetIFD);
+        throw new Error(`Invalid TIFF structure: Width=${targetIFD.width}, Height=${targetIFD.height}`);
       }
 
-      console.log("[TIFF] Decoding IFD:", { width: targetIFD.width, height: targetIFD.height, tPixel: targetIFD.tPixel });
+      console.log("[TIFF] Target Image Dimensions:", targetIFD.width, "x", targetIFD.height);
       UTIF.decodeImage(buffer, targetIFD);
       
-      const rgba = UTIF.toRGBA8(targetIFD);
+      let rgba = UTIF.toRGBA8(targetIFD);
       console.log("[TIFF] RGBA conversion complete, buffer length:", rgba.length);
-      
+
+      // --- ADAPTIVE DOWNSCALING ---
+      // Browsers have canvas limits (often 4096px or 8192px). 
+      // Large microscopy images can hit these or cause memory overflows.
+      const MAX_DIMENSION = 2048; // Safe threshold for notebook performance
+      let scale = 1;
+      if (targetIFD.width > MAX_DIMENSION || targetIFD.height > MAX_DIMENSION) {
+        scale = Math.min(MAX_DIMENSION / targetIFD.width, MAX_DIMENSION / targetIFD.height);
+      }
+
       const canvas = document.createElement('canvas');
-      canvas.width = targetIFD.width;
-      canvas.height = targetIFD.height;
+      const finalWidth = Math.floor(targetIFD.width * scale);
+      const finalHeight = Math.floor(targetIFD.height * scale);
+      
+      canvas.width = finalWidth;
+      canvas.height = finalHeight;
       const ctx = canvas.getContext('2d');
-      if (!ctx) throw new Error("Could not initialize conversion canvas.");
+      if (!ctx) throw new Error("Could not initialize conversion canvas (likely browser memory limit).");
+
+      if (scale < 1) {
+        console.log("[TIFF] Scaling down image:", scale.toFixed(2), "x ->", finalWidth, "x", finalHeight);
+        // Temporarily put full image on a hidden canvas to use drawImage for high-quality scaling
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = targetIFD.width;
+        tempCanvas.height = targetIFD.height;
+        const tempCtx = tempCanvas.getContext('2d');
+        if (!tempCtx) throw new Error("Could not initialize temporary scaling canvas.");
+        
+        const imgData = tempCtx.createImageData(targetIFD.width, targetIFD.height);
+        imgData.data.set(new Uint8ClampedArray(rgba));
+        tempCtx.putImageData(imgData, 0, 0);
+        
+        // Final draw with scaling
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(tempCanvas, 0, 0, finalWidth, finalHeight);
+      } else {
+        const imgData = ctx.createImageData(canvas.width, canvas.height);
+        imgData.data.set(new Uint8ClampedArray(rgba));
+        ctx.putImageData(imgData, 0, 0);
+      }
       
-      const imgData = ctx.createImageData(canvas.width, canvas.height);
-      imgData.data.set(new Uint8ClampedArray(rgba));
-      ctx.putImageData(imgData, 0, 0);
+      // Cleanup large buffers immediately
+      rgba = null;
       
-      // Use image/jpeg for large images to save space/bandwidth if over 4MB
-      const type = (canvas.width * canvas.height > 2000000) ? 'image/jpeg' : 'image/png';
-      const quality = type === 'image/jpeg' ? 0.92 : undefined;
+      // Use image/jpeg for large images to save space (bloating data attributes breaks Tiptap/Supabase)
+      const type = (finalWidth * finalHeight > 1000000) ? 'image/jpeg' : 'image/png';
+      const quality = type === 'image/jpeg' ? 0.85 : undefined;
       
       const dataUrl = canvas.toDataURL(type, quality);
-      console.log("[TIFF] Data URL generated successfully, type:", type, "length:", (dataUrl.length / 1024).toFixed(1), "KB");
+      console.log("[TIFF] Success, data URL type:", type, "length:", (dataUrl.length / 1024).toFixed(1), "KB");
       return dataUrl;
     } catch (error: unknown) {
-      console.error("[TIFF] Error during processing:", error);
+      console.error("[TIFF] Critical Processing Error:", error);
       throw error;
     }
   };
@@ -121,15 +156,16 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
     
     if (isTiff) {
       setIsDecoding(true);
-      console.log("[TIFF] Uploading scientific file:", fileName);
+      console.log("[TIFF] Upload Request:", fileName, `(${ (file.size / 1024 / 1024).toFixed(2) } MB)`);
       try {
         const buffer = await file.arrayBuffer();
         const dataUrl = await processTiff(buffer);
+        console.log("[TIFF] Rendering to workbench...");
         updateAttributes({ src: dataUrl });
       } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : 'Unknown error';
-        console.error("[TIFF] Error processing upload:", msg);
-        setImageLoadError(`TIFF Processing Error: ${msg}`);
+        const msg = err instanceof Error ? err.message : 'Unknown decoding error';
+        console.error("[TIFF] Failed to process upload:", msg);
+        setImageLoadError(`TIFF Processing Failed: ${msg}. Try a different file or export as PNG/JPG.`);
       } finally {
         setIsDecoding(false);
       }
@@ -195,6 +231,7 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
   const calculateDistance = useCallback((points: { x: number, y: number }[]) => {
     const p1 = points[0];
     const p2 = points[1];
+    if (!p1 || !p2) return '0.0 px';
     const dx = p1.x - p2.x;
     const dy = p1.y - p2.y;
     const distPx = Math.sqrt(dx * dx + dy * dy);
@@ -223,11 +260,15 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
     if (!isDrawing) return;
     setIsDrawing(false);
 
+    if (currentPoints.length < 2) {
+      setCurrentPoints([]);
+      return;
+    }
+
     if (activeTool === 'calibrate') {
       const umStr = window.prompt('Enter real-world length (µm) for this line:', '100');
       const um = parseFloat(umStr || '0');
       if (!isNaN(um) && um > 0) {
-        if (currentPoints.length < 2) return;
         const dx = currentPoints[0].x - currentPoints[1].x;
         const dy = currentPoints[0].y - currentPoints[1].y;
         const pxDist = Math.sqrt(dx * dx + dy * dy);
@@ -236,7 +277,6 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
         });
       }
     } else if (activeTool === 'measure' || activeTool === 'roi') {
-      if (currentPoints.length < 2) return;
       const newAnnotation: Annotation = {
         id: Math.random().toString(36).substr(2, 9),
         type: activeTool,
@@ -368,22 +408,37 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
               src={src} 
               alt="Scientific Sample" 
               className="max-w-full h-auto select-none pointer-events-none"
-              onError={() => setImageLoadError("Failed to render decoded image. The file might be too large or uses an unsupported compression.")}
+              onError={() => setImageLoadError("Browser failed to render the decoded binary. This can happen with massive files or corrupt streams.")}
             />
             {imageLoadError && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm z-20 p-8 text-center">
-                <div className="p-3 bg-red-500/20 text-red-500 rounded-full mb-4">
-                  <AlertCircle className="w-8 h-8" />
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 backdrop-blur-md z-30 p-10 text-center">
+                <div className="p-4 bg-red-500/20 text-red-500 rounded-2xl mb-6 shadow-glow-red">
+                  <AlertCircle className="w-10 h-10" />
                 </div>
-                <h3 className="text-white font-bold mb-2 text-sm uppercase tracking-wider">Image Analysis Error</h3>
-                <p className="text-neutral-400 text-[10px] max-w-xs">{imageLoadError}</p>
-                <button 
+                <h3 className="text-white font-bold mb-3 text-lg tracking-tight">TIFF Rendering Error</h3>
+                <p className="text-neutral-400 text-xs max-w-sm leading-relaxed mb-8">{imageLoadError}</p>
+                
+                <div className="flex flex-col gap-3 w-full max-w-xs">
+                  <button 
                   onClick={() => fileInputRef.current?.click()}
-                  className="mt-6 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition-all shadow-lg flex items-center gap-2"
+                  className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-sm font-bold transition-all shadow-lg flex items-center justify-center gap-2"
+                >
+                  <Upload className="w-4 h-4" />
+                  Try Different File
+                </button>
+                <button 
+                  onClick={() => window.location.reload()}
+                  className="px-6 py-2 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 rounded-xl text-xs transition-all flex items-center justify-center gap-2"
                 >
                   <RefreshCw className="w-3 h-3" />
-                  Try Different Image
+                  Reload App
                 </button>
+                </div>
+                
+                <div className="mt-8 pt-8 border-t border-white/5 flex items-center gap-2 text-neutral-500">
+                  <Info className="w-3 h-3" />
+                  <span className="text-[10px] italic">Check the browser console for exact error details</span>
+                </div>
               </div>
             )}
             <canvas 
@@ -391,31 +446,40 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
               className="absolute inset-0 pointer-events-none"
             />
             {isDecoding && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 backdrop-blur-md z-40">
-                <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4" />
-                <p className="text-white text-xs font-bold uppercase tracking-widest animate-pulse">Decoding TIFF Layers...</p>
-                <p className="text-neutral-500 text-[9px] mt-2 italic text-center px-6">Parsing scientific bit-depth for web visualization. This may take a moment for large microscopy files.</p>
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/85 backdrop-blur-xl z-40">
+                <div className="relative w-16 h-16 mb-6">
+                  <div className="absolute inset-0 border-4 border-blue-500/20 rounded-full" />
+                  <div className="absolute inset-0 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                </div>
+                <p className="text-white text-xs font-bold uppercase tracking-[0.2em] animate-pulse">Decoding Scientific Data</p>
+                <div className="flex flex-col items-center mt-3 text-neutral-500 text-[10px] space-y-1">
+                  <span>Converting high bit-depth TIFF to visual preview</span>
+                  <span>Applying adaptive scaling for workbench stability</span>
+                </div>
               </div>
             )}
           </>
         ) : (
           <div 
-            className="flex flex-col items-center gap-4 text-neutral-500 hover:text-blue-400 transition-colors cursor-pointer"
+            className="flex flex-col items-center gap-4 text-neutral-500 hover:text-blue-400 transition-all cursor-pointer p-12 text-center"
             onClick={() => fileInputRef.current?.click()}
           >
-            <div className="w-20 h-20 rounded-full bg-neutral-800 flex items-center justify-center border-2 border-dashed border-neutral-700 group-hover:border-blue-500/50 shadow-inner group-hover:scale-110 transition-transform duration-300">
-              <Upload className="w-10 h-10" />
+            <div className="w-24 h-24 rounded-3xl bg-neutral-800 flex items-center justify-center border-2 border-dashed border-neutral-700 group-hover:border-blue-500/50 shadow-inner group-hover:scale-105 transition-all duration-300 relative overflow-hidden">
+               <div className="absolute inset-0 bg-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <Upload className="w-10 h-10 group-hover:translate-y--2 transition-transform" />
             </div>
-            <div className="text-center">
-              <p className="text-sm font-bold text-neutral-300">Drop Scientific Image</p>
-              <p className="text-[10px] text-neutral-500 mt-1 uppercase tracking-tighter">Supports PNG, JPG, TIF, TIFF</p>
+            <div>
+              <p className="text-lg font-bold text-neutral-200">Scientific Image Workbench</p>
+              <p className="text-xs text-neutral-500 mt-2 max-w-xs leading-relaxed">
+                Drag and drop your samples here. Supports raw <span className="text-blue-400/80 font-mono">.tif</span>, <span className="text-blue-400/80 font-mono">.tiff</span>, PNG, and JPEG.
+              </p>
             </div>
           </div>
         )}
 
         {/* TOOLBAR */}
         {src && !isDecoding && (
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 flex items-center gap-1 p-1.5 bg-black/60 backdrop-blur-md border border-white/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:translate-y-0 translate-y-2 shadow-2xl z-30">
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 flex items-center gap-1 p-1.5 bg-black/80 backdrop-blur-lg border border-white/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:translate-y-0 translate-y-2 shadow-2xl z-30">
             <ToolButton 
               active={activeTool === 'select'} 
               onClick={() => setActiveTool('select')} 
@@ -460,19 +524,22 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
         {/* STATUS BAR */}
         {src && !imageLoadError && !isDecoding && (
           <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
-            <div className="flex items-center gap-3 px-3 py-1.5 bg-black/60 backdrop-blur-md border border-white/10 rounded-full text-[10px] font-mono text-neutral-400 pointer-events-auto">
-              <div className="flex items-center gap-1.5">
-                <div className={`w-1.5 h-1.5 rounded-full ${calibration.ratio > 0 ? 'bg-emerald-500' : 'bg-amber-500'}`} />
-                <span>{calibration.ratio > 0 ? `Calibrated: 1px = ${calibration.ratio.toFixed(2)}µm` : 'Uncalibrated'}</span>
+            <div className="flex items-center gap-3 px-4 py-2 bg-black/80 backdrop-blur-lg border border-white/10 rounded-full text-[10px] font-mono text-neutral-300 pointer-events-auto shadow-lg">
+              <div className="flex items-center gap-2">
+                <div className={`w-2 h-2 rounded-full ${calibration.ratio > 0 ? 'bg-emerald-500 shadow-glow-emerald' : 'bg-amber-500 shadow-glow-amber'}`} />
+                <span className="tracking-tight uppercase">{calibration.ratio > 0 ? `Scale: 1px = ${calibration.ratio.toFixed(2)}µm` : 'Uncalibrated'}</span>
               </div>
-              <div className="w-px h-3 bg-white/10" />
-              <span>{annotations.length} Annotations</span>
+              <div className="w-px h-4 bg-white/15" />
+              <div className="flex items-center gap-1.5 opacity-80">
+                <Target className="w-3 h-3 text-blue-400" />
+                <span>{annotations.length} Annotations</span>
+              </div>
             </div>
             
             {calibration.ratio > 0 && (
-              <div className="flex items-center gap-2 px-3 py-1 bg-white/5 backdrop-blur-sm rounded-lg border border-white/10">
-                <div className="w-10 h-px bg-white" />
-                <span className="text-[10px] text-white font-mono">{calibration.um} µm</span>
+              <div className="flex items-center gap-3 px-4 py-2 bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 shadow-lg">
+                <div className="w-8 h-[2px] bg-white/80 rounded-full" />
+                <span className="text-[10px] text-white font-mono font-bold tracking-widest">{calibration.um} µm</span>
               </div>
             )}
           </div>
@@ -493,9 +560,9 @@ const ToolButton: React.FC<{ active: boolean, onClick: () => void, icon: React.R
   <button
     onClick={(e) => { e.preventDefault(); e.stopPropagation(); onClick(); }}
     title={label}
-    className={`p-2 rounded-xl flex items-center justify-center transition-all ${
+    className={`p-2.5 rounded-xl flex items-center justify-center transition-all duration-200 ${
       active 
-        ? 'bg-blue-500/20 text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.3)]' 
+        ? 'bg-blue-500/20 text-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.3)] ring-1 ring-blue-500/40' 
         : 'text-neutral-400 hover:bg-white/10 hover:text-white'
     }`}
   >
