@@ -23,30 +23,80 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
   const [activeTool, setActiveTool] = useState<'select' | 'calibrate' | 'measure' | 'roi'>('select');
   const [isDrawing, setIsDrawing] = useState(false);
   const [imageLoadError, setImageLoadError] = useState<string | null>(null);
+  const [isDecoding, setIsDecoding] = useState(false);
   const [currentPoints, setCurrentPoints] = useState<{ x: number, y: number }[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Helper to load UTIF.js dynamically
+  const loadUTIF = () => {
+    return new Promise<void>((resolve, reject) => {
+      const g = window as any;
+      if (g.UTIF) {
+        resolve();
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = "https://cdn.jsdelivr.net/npm/utif@1.1.0/UTIF.js";
+      script.async = true;
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error("Failed to load TIFF decoder library."));
+      document.body.appendChild(script);
+    });
+  };
+
+  // Convert TIFF ArrayBuffer to browser-readable PNG Data URL
+  const processTiff = async (buffer: ArrayBuffer) => {
+    await loadUTIF();
+    const UTIF = (window as any).UTIF;
+    const ifds = UTIF.decode(buffer);
+    UTIF.decodeImage(buffer, ifds[0]);
+    const rgba = UTIF.toRGBA8(ifds[0]);
+    
+    const canvas = document.createElement('canvas');
+    canvas.width = ifds[0].width;
+    canvas.height = ifds[0].height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error("Could not initialize conversion canvas.");
+    
+    const imgData = ctx.createImageData(canvas.width, canvas.height);
+    imgData.data.set(rgba);
+    ctx.putImageData(imgData, 0, 0);
+    
+    return canvas.toDataURL('image/png');
+  };
+
   // Handle Image Upload
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Check for TIF/TIFF which is common in science but unsupported by browsers
     const fileName = file.name.toLowerCase();
-    if (fileName.endsWith('.tif') || fileName.endsWith('.tiff')) {
-      alert("Note: Browsers cannot display .TIF/.TIFF files directly. Please convert to .PNG or .JPG for the workbench.");
-      return;
-    }
+    const isTiff = fileName.endsWith('.tif') || fileName.endsWith('.tiff');
 
     setImageLoadError(null);
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      updateAttributes({ src: event.target?.result });
-    };
-    reader.readAsDataURL(file);
+    
+    if (isTiff) {
+      setIsDecoding(true);
+      try {
+        const buffer = await file.arrayBuffer();
+        const dataUrl = await processTiff(buffer);
+        updateAttributes({ src: dataUrl });
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : 'Unknown error';
+        setImageLoadError(`TIFF decoding failed: ${msg}`);
+      } finally {
+        setIsDecoding(false);
+      }
+    } else {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        updateAttributes({ src: event.target?.result });
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   // Convert Canvas Coordinates to Normalized (0-100)
@@ -63,7 +113,6 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
     if (!imageRef.current) return '0.0';
     const img = imageRef.current;
     
-    // Create offscreen canvas to sample pixels
     const canvas = document.createElement('canvas');
     canvas.width = img.naturalWidth;
     canvas.height = img.naturalHeight;
@@ -71,7 +120,6 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
     if (!ctx) return '0.0';
     ctx.drawImage(img, 0, 0);
 
-    // Points are in percent (0-100)
     const p1 = roi.points[0];
     const p2 = roi.points[1];
 
@@ -116,7 +164,7 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
 
   // Drawing Events
   const startDrawing = (e: React.MouseEvent) => {
-    if (activeTool === 'select' || !src || imageLoadError) return;
+    if (activeTool === 'select' || !src || imageLoadError || isDecoding) return;
     setIsDrawing(true);
     const p = getNormalizedPoint(e);
     setCurrentPoints([p]);
@@ -274,7 +322,7 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
               src={src} 
               alt="Scientific Sample" 
               className="max-w-full h-auto select-none pointer-events-none"
-              onError={() => setImageLoadError("Failed to load image. If this is a microscopic image, ensure it is in PNG or JPG format.")}
+              onError={() => setImageLoadError("Failed to load image. Ensure it is in a compatible format.")}
             />
             {imageLoadError && (
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm z-20 p-8 text-center">
@@ -295,6 +343,13 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
               ref={canvasRef}
               className="absolute inset-0 pointer-events-none"
             />
+            {isDecoding && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 backdrop-blur-md z-40">
+                <div className="w-10 h-10 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mb-4" />
+                <p className="text-white text-xs font-bold uppercase tracking-widest">Decoding TIFF Analysis...</p>
+                <p className="text-neutral-500 text-[9px] mt-1 italic text-center px-4">Processing high-depth scientific data for browser visualization</p>
+              </div>
+            )}
           </>
         ) : (
           <div 
@@ -304,19 +359,19 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
             <div className="w-16 h-16 rounded-full bg-neutral-800 flex items-center justify-center border-2 border-dashed border-neutral-700 group-hover:border-blue-500/50">
               <Upload className="w-8 h-8" />
             </div>
-            <p className="text-sm font-medium">Drop microscopic image or click to upload</p>
+            <p className="text-sm font-medium">Drop microscopic image (PNG, JPG, TIFF) or click to upload</p>
             <input 
               type="file" 
               ref={fileInputRef} 
               className="hidden" 
-              accept="image/*" 
+              accept="image/*,.tif,.tiff" 
               onChange={handleImageUpload} 
             />
           </div>
         )}
 
         {/* TOOLBAR */}
-        {src && (
+        {src && !isDecoding && (
           <div className="absolute top-4 left-1/2 -translate-x-1/2 flex items-center gap-1 p-1.5 bg-black/60 backdrop-blur-md border border-white/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:translate-y-0 translate-y-2 shadow-2xl z-30">
             <ToolButton 
               active={activeTool === 'select'} 
@@ -360,7 +415,7 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
         )}
 
         {/* STATUS BAR */}
-        {src && !imageLoadError && (
+        {src && !imageLoadError && !isDecoding && (
           <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
             <div className="flex items-center gap-3 px-3 py-1.5 bg-black/60 backdrop-blur-md border border-white/10 rounded-full text-[10px] font-mono text-neutral-400">
               <div className="flex items-center gap-1.5">
@@ -384,7 +439,7 @@ export const ImageWorkbenchNode: React.FC<NodeViewProps> = ({ node, updateAttrib
         type="file" 
         ref={fileInputRef} 
         className="hidden" 
-        accept="image/*" 
+        accept="image/*,.tif,.tiff" 
         onChange={handleImageUpload} 
       />
     </NodeViewWrapper>
