@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../lib/AuthContext';
 import { NotebookPen, Plus, Trash2, Save, FileText, Search, Loader2, X, Menu } from 'lucide-react';
-import { listNotebooks, createNotebook, updateNotebook, deleteNotebook, uploadNotebookImage } from '../../lib/notebookService';
+import { listNotebooks, createNotebook, updateNotebook, deleteNotebook } from '../../lib/notebookService';
 import type { NotebookEntry } from '../../types';
 import { listStructures, type Structure } from '../../lib/structuresService';
 import { RichTextEditor, type RichTextEditorRef } from './RichTextEditor';
 import { LabReportTemplate } from './LabReportTemplate';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
-import { Share, Calculator, Camera } from 'lucide-react';
+import { Share, Calculator } from 'lucide-react';
 import { FloatingCalculator } from './FloatingCalculator';
 
 export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false }) => {
@@ -30,8 +30,6 @@ export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false
     const reportRef = useRef<HTMLDivElement>(null);
     const [showFloatingCalc, setShowFloatingCalc] = useState(false);
     const editorRef = useRef<RichTextEditorRef>(null);
-    const fileInputRef = useRef<HTMLInputElement>(null);
-    const [isUploading, setIsUploading] = useState(false);
 
     // Structure Mentions State
     const [allStructures, setAllStructures] = useState<Structure[]>([]);
@@ -126,22 +124,6 @@ export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false
         }, 1000); // 1s debounce
     };
 
-    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file || !user || !activeId) return;
-
-        setIsUploading(true);
-        try {
-            const url = await uploadNotebookImage(user.id, file);
-            editorRef.current?.insertImage(url);
-            // Since we're inserting into the editor, the editor's onUpdate will handle the save
-        } catch (err: any) {
-            setError(err.message || 'Failed to upload image');
-        } finally {
-            setIsUploading(false);
-            if (e.target) e.target.value = '';
-        }
-    };
 
     const filteredNotebooks = notebooks.filter(n => n.title.toLowerCase().includes(searchQuery.toLowerCase()));
 
@@ -399,28 +381,6 @@ export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false
                                             <span className="hidden sm:inline">Calculator</span>
                                         </button>
 
-                                        <button
-                                            onClick={() => fileInputRef.current?.click()}
-                                            disabled={isUploading || !activeId}
-                                            className="flex items-center gap-1.5 px-2.5 py-1.5 bg-[var(--input-bg)]/50 hover:bg-[var(--input-bg)] text-[var(--text-muted)] hover:text-[var(--text-primary)] border border-[var(--border-main)] rounded-lg text-xs font-medium transition-all"
-                                            title="Upload Image"
-                                        >
-                                            {isUploading ? (
-                                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                            ) : (
-                                                <>
-                                                    <Camera className="w-3.5 h-3.5" />
-                                                    <span className="hidden sm:inline">Upload Image</span>
-                                                </>
-                                            )}
-                                        </button>
-                                        <input 
-                                            type="file" 
-                                            ref={fileInputRef} 
-                                            className="hidden" 
-                                            accept="image/*" 
-                                            onChange={handleImageUpload} 
-                                        />
                                     </div>
                                 </div>
 
