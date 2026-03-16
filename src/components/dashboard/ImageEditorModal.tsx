@@ -34,6 +34,7 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ src, onSave,
   const [textInput, setTextInput] = useState('');
   const [isAddingText, setIsAddingText] = useState(false);
   const [textPos, setTextPos] = useState({ x: 0, y: 0 });
+  const [fontFamily, setFontFamily] = useState('Inter, sans-serif');
   
   // Adjustments State
   const [brightness, setBrightness] = useState(100);
@@ -312,7 +313,7 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ src, onSave,
       return;
     }
     const ctx = contextRef.current;
-    ctx.font = `bold ${brushSize * 4}px Inter, sans-serif`;
+    ctx.font = `bold ${brushSize * 4}px ${fontFamily}`;
     ctx.fillStyle = brushColor;
     ctx.fillText(textInput, textPos.x, textPos.y);
     setIsAddingText(false);
@@ -572,22 +573,60 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ src, onSave,
 
             {stage === 'annotate' && (
               <div className="space-y-8">
-                <div className="grid grid-cols-3 gap-2">
-                  <AnnotateToolButton active={annotateTool === 'brush'} onClick={() => setAnnotateTool('brush')} icon={<Pencil className="w-4 h-4" />} label="Brush" />
-                  <AnnotateToolButton active={annotateTool === 'eraser'} onClick={() => setAnnotateTool('eraser')} icon={<Eraser className="w-4 h-4" />} label="Eraser" />
-                  <AnnotateToolButton active={annotateTool === 'text'} onClick={() => setAnnotateTool('text')} icon={<Type className="w-4 h-4" />} label="Text" />
-                  <AnnotateToolButton active={annotateTool === 'rect'} onClick={() => setAnnotateTool('rect')} icon={<Square className="w-4 h-4" />} label="Box" />
-                  <AnnotateToolButton active={annotateTool === 'circle'} onClick={() => setAnnotateTool('circle')} icon={<Circle className="w-4 h-4" />} label="Circle" />
-                  <AnnotateToolButton active={annotateTool === 'arrow'} onClick={() => setAnnotateTool('arrow')} icon={<ArrowUpRight className="w-4 h-4" />} label="Arrow" />
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-gray-500 uppercase mb-4 block">Colors</label>
-                  <div className="grid grid-cols-5 gap-2">
-                    {['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#ffffff', '#8b5cf6', '#ec4899', '#000000', '#64748b', '#fb7185'].map(c => (
-                      <button key={c} onClick={() => setBrushColor(c)} className={`w-8 h-8 rounded-lg border-2 ${brushColor === c ? 'border-white scale-110' : 'border-transparent'}`} style={{ backgroundColor: c }} />
-                    ))}
+                  <div className="grid grid-cols-3 gap-2">
+                    <AnnotateToolButton active={annotateTool === 'brush'} onClick={() => setAnnotateTool('brush')} icon={<Pencil className="w-4 h-4" />} label="Brush" />
+                    <AnnotateToolButton active={annotateTool === 'eraser'} onClick={() => setAnnotateTool('eraser')} icon={<Eraser className="w-4 h-4" />} label="Eraser" />
+                    <AnnotateToolButton active={annotateTool === 'text'} onClick={() => setAnnotateTool('text')} icon={<Type className="w-4 h-4" />} label="Text" />
+                    <AnnotateToolButton active={annotateTool === 'rect'} onClick={() => setAnnotateTool('rect')} icon={<Square className="w-4 h-4" />} label="Box" />
+                    <AnnotateToolButton active={annotateTool === 'circle'} onClick={() => setAnnotateTool('circle')} icon={<Circle className="w-4 h-4" />} label="Circle" />
+                    <AnnotateToolButton active={annotateTool === 'arrow'} onClick={() => setAnnotateTool('arrow')} icon={<ArrowUpRight className="w-4 h-4" />} label="Arrow" />
                   </div>
-                </div>
+
+                  {annotateTool === 'text' && (
+                    <div className="space-y-4 pt-4 border-t border-white/5">
+                      <label className="text-xs font-bold text-gray-500 uppercase">Font Family</label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {[
+                          { label: 'Sans', value: 'Inter, sans-serif' },
+                          { label: 'Serif', value: 'EB Garamond, serif' },
+                          { label: 'Mono', value: 'JetBrains Mono, monospace' },
+                          { label: 'Display', value: 'Outfit, sans-serif' }
+                        ].map(f => (
+                          <button
+                            key={f.value}
+                            onClick={() => setFontFamily(f.value)}
+                            className={`px-3 py-2 rounded-xl text-xs font-medium transition-all ${fontFamily === f.value ? 'bg-blue-600 text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
+                            style={{ fontFamily: f.value }}
+                          >
+                            {f.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="pt-4 border-t border-white/5">
+                    <label className="text-xs font-bold text-gray-500 uppercase mb-4 block">Colors</label>
+                    <div className="grid grid-cols-5 gap-2">
+                      {[
+                        '#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#ffffff', 
+                        '#8b5cf6', '#ec4899', '#000000', '#64748b', '#fb7185',
+                        '#2dd4bf', '#a855f7', '#f43f5e', '#84cc16', '#06b6d4',
+                        '#eab308', '#d946ef', '#6366f1', '#f97316', '#475569'
+                      ].map(c => (
+                        <button key={c} onClick={() => setBrushColor(c)} className={`w-8 h-8 rounded-lg border-2 ${brushColor === c ? 'border-white scale-110' : 'border-transparent hover:scale-105'} transition-transform`} style={{ backgroundColor: c }} />
+                      ))}
+                      <div className="relative">
+                        <input 
+                          type="color" 
+                          value={brushColor} 
+                          onChange={(e) => setBrushColor(e.target.value)}
+                          className="w-8 h-8 rounded-lg bg-transparent border-none cursor-pointer p-0 overflow-hidden"
+                          title="Custom Color"
+                        />
+                      </div>
+                    </div>
+                  </div>
                 <div>
                   <div className="flex justify-between mb-4"><label className="text-xs font-bold text-gray-500 uppercase">Size</label><span className="text-xs text-blue-400">{brushSize}px</span></div>
                   <input type="range" min="1" max="50" value={brushSize} onChange={(e) => setBrushSize(parseInt(e.target.value))} className="w-full accent-blue-500" />
