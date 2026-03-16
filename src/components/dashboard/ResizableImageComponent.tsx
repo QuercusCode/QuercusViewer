@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect, Suspense, lazy } from 'react';
-import { NodeViewWrapper, type NodeViewProps } from '@tiptap/react';
+import { NodeViewWrapper } from '@tiptap/react';
+import type { NodeViewProps } from '@tiptap/react';
 import { Pencil, Maximize2 } from 'lucide-react';
 // Lazy load the editor to prevent it from crashing the main bundle load
 const ImageEditorModal = lazy(() => import('./ImageEditorModal').then(module => ({ default: module.ImageEditorModal })));

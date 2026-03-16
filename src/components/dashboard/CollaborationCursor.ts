@@ -1,7 +1,6 @@
 import { Extension } from '@tiptap/core';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
-import { Plugin, PluginKey } from '@tiptap/pm/state';
-import type { EditorState } from '@tiptap/pm/state';
+import { Plugin, PluginKey, type EditorState } from '@tiptap/pm/state';
 
 export interface RemoteCursor {
   userId: string;

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Node, mergeAttributes } from '@tiptap/core';
-import { ReactNodeViewRenderer, NodeViewWrapper, type NodeViewProps } from '@tiptap/react';
+import { ReactNodeViewRenderer, NodeViewWrapper } from '@tiptap/react';
+import type { NodeViewProps } from '@tiptap/react';
 import { Beaker, Edit2, Trash2, X, Plus } from 'lucide-react';
 
 // --- Tiptap Extension ---

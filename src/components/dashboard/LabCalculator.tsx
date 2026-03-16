@@ -1,5 +1,6 @@
 import { Node, mergeAttributes } from '@tiptap/core';
-import { ReactNodeViewRenderer, NodeViewWrapper, type NodeViewProps } from '@tiptap/react';
+import { ReactNodeViewRenderer, NodeViewWrapper } from '@tiptap/react';
+import type { NodeViewProps } from '@tiptap/react';
 import { Calculator, Zap, Trash2, Info } from 'lucide-react';
 import { performCalculation } from '../../lib/calcUtils';
 

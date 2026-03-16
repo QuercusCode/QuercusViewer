@@ -1,7 +1,8 @@
 import React, { useState, useMemo, useRef } from 'react'
 import html2canvas from 'html2canvas'
 import { Node, mergeAttributes } from '@tiptap/core'
-import { ReactNodeViewRenderer, NodeViewWrapper, type NodeViewProps } from '@tiptap/react'
+import { ReactNodeViewRenderer, NodeViewWrapper } from '@tiptap/react'
+import type { NodeViewProps } from '@tiptap/react'
 import { 
   LineChart, Line, BarChart, Bar, XAxis, YAxis, 
   CartesianGrid, Tooltip, Legend, ResponsiveContainer,

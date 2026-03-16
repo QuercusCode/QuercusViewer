@@ -256,7 +256,7 @@ export const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>
     onUpdate: ({ editor }: { editor: any }) => {
       onChange((editor.storage as any).markdown.getMarkdown());
     },
-    onSelectionUpdate: ({ editor }) => {
+    onSelectionUpdate: ({ editor }: { editor: any }) => {
       if (!noteId || !user) return;
       const pos = editor.state.selection.from;
       const channel = supabase.channel(`note:${noteId}`);

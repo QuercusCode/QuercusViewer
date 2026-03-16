@@ -1,4 +1,5 @@
-import { NodeViewContent, NodeViewWrapper, ReactNodeViewRenderer, type NodeViewProps } from '@tiptap/react'
+import { NodeViewContent, NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap/react'
+import type { NodeViewProps } from '@tiptap/react'
 import { Table } from '@tiptap/extension-table'
 import { useState, useMemo, useEffect } from 'react'
 import { 
