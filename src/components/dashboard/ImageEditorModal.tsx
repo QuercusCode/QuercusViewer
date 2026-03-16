@@ -59,6 +59,34 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ src, onSave,
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
 
+  // Global Keyboard Shield
+  useEffect(() => {
+    const shield = (e: KeyboardEvent) => {
+      // If the target is an input or within our modal, don't stop it
+      const target = e.target as HTMLElement;
+      const isInsideModal = target?.closest('.image-editor-modal-container');
+      
+      if (!isInsideModal) {
+        e.stopPropagation();
+      }
+    };
+
+    // Use capture phase to intercept before Tiptap/other listeners
+    window.addEventListener('keydown', shield, { capture: true });
+    window.addEventListener('keyup', shield, { capture: true });
+    window.addEventListener('keypress', shield, { capture: true });
+
+    // Focus management: move focus away from background
+    const activeElement = document.activeElement as HTMLElement;
+    if (activeElement) activeElement.blur();
+    
+    return () => {
+      window.removeEventListener('keydown', shield, { capture: true });
+      window.removeEventListener('keyup', shield, { capture: true });
+      window.removeEventListener('keypress', shield, { capture: true });
+    };
+  }, []);
+
   // Initialize Canvas
   useEffect(() => {
     const img = new Image();
@@ -409,7 +437,7 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ src, onSave,
       onKeyPress={(e) => e.stopPropagation()}
     >
       <div 
-        className="w-full h-full max-w-7xl bg-[#0a0a0a] rounded-[2rem] border border-white/5 shadow-2xl overflow-hidden flex flex-col md:flex-row relative"
+        className="w-full h-full max-w-7xl bg-[#0a0a0a] rounded-[2rem] border border-white/5 shadow-2xl overflow-hidden flex flex-col md:flex-row relative image-editor-modal-container"
         onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => e.stopPropagation()}
         onKeyUp={(e) => e.stopPropagation()}
