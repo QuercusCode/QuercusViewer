@@ -145,7 +145,7 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ src, onSave,
     };
   };
 
-  // Helper: Get Canvas Coordinates (Account for Zoom & Pan)
+  // Helper: Get Canvas Coordinates
   const getCoordinates = (e: React.MouseEvent | React.TouchEvent) => {
     const canvas = canvasRef.current;
     if (!canvas) return { x: 0, y: 0 };
@@ -153,9 +153,10 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ src, onSave,
     const clientX = 'touches' in e ? (e as React.TouchEvent).touches[0].clientX : (e as React.MouseEvent).clientX;
     const clientY = 'touches' in e ? (e as React.TouchEvent).touches[0].clientY : (e as React.MouseEvent).clientY;
     
-    // Convert screen coordinates to canvas coordinates accounting for zoom and pan
-    const x = (clientX - rect.left - offset.x) / scale;
-    const y = (clientY - rect.top - offset.y) / scale;
+    // Convert screen coordinates to canvas coordinates
+    // We divide by scale because the whole container is scaled
+    const x = (clientX - rect.left) / scale;
+    const y = (clientY - rect.top) / scale;
     
     return { x, y };
   };
@@ -441,44 +442,57 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ src, onSave,
               className="relative flex-1 bg-[#0a0a0c] flex items-center justify-center p-4 sm:p-8 min-h-0 overflow-hidden"
               onWheel={handleWheel}
             >
-              <canvas
-                ref={canvasRef}
-                onMouseDown={startDrawing}
-                onMouseMove={draw}
-                onMouseUp={endDrawing}
-                onMouseLeave={endDrawing}
-                onTouchStart={startDrawing}
-                onTouchMove={draw}
-                onTouchEnd={endDrawing}
-                onMouseDownCapture={(e) => { if (stage === 'crop') handleCropMouseDown(e); }}
-                onMouseMoveCapture={(e) => { if (stage === 'crop') handleCropMouseMove(e); }}
-                onMouseUpCapture={() => { setIsDraggingCrop(false); setResizeHandle(null); }}
-                className={`max-w-full max-h-full shadow-[0_0_50px_rgba(0,0,0,0.5)] bg-white touch-none ${stage === 'crop' ? 'cursor-crosshair' : isPanning ? 'cursor-grabbing' : 'cursor-crosshair'}`}
-                style={{ 
-                  filter: `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%) invert(${invert}%) grayscale(${grayscale}%)`,
+              {/* Scale/Pan Wrapper */}
+              <div
+                style={{
                   transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
-                  transformOrigin: 'center center'
+                  transformOrigin: 'center center',
+                  position: 'relative',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
                 }}
-              />
-            {isAddingText && (
-              <div className="absolute z-50 flex flex-col gap-2 p-3 bg-[#121212] border border-white/10 rounded-xl shadow-2xl" style={{ left: textPos.x, top: textPos.y }}>
-                <input autoFocus type="text" value={textInput} onChange={(e) => setTextInput(e.target.value)} className="bg-transparent border-b border-blue-500 text-white outline-none py-1 min-w-[150px]" placeholder="Type labels..." onKeyDown={(e) => e.key === 'Enter' && finalizeText()} />
-                <div className="flex justify-end gap-2">
-                  <button onClick={() => setIsAddingText(false)} className="p-1 hover:text-red-400"><X className="w-3 h-3"/></button>
-                  <button onClick={finalizeText} className="p-1 hover:text-green-400"><Check className="w-3 h-3"/></button>
-                </div>
+              >
+                <canvas
+                  ref={canvasRef}
+                  onMouseDown={startDrawing}
+                  onMouseMove={draw}
+                  onMouseUp={endDrawing}
+                  onMouseLeave={endDrawing}
+                  onTouchStart={startDrawing}
+                  onTouchMove={draw}
+                  onTouchEnd={endDrawing}
+                  onMouseDownCapture={(e) => { if (stage === 'crop') handleCropMouseDown(e); }}
+                  onMouseMoveCapture={(e) => { if (stage === 'crop') handleCropMouseMove(e); }}
+                  onMouseUpCapture={() => { setIsDraggingCrop(false); setResizeHandle(null); }}
+                  className={`shadow-[0_0_50px_rgba(0,0,0,0.5)] bg-white touch-none ${stage === 'crop' ? 'cursor-crosshair' : isPanning ? 'cursor-grabbing' : 'cursor-crosshair'}`}
+                  style={{ 
+                    filter: `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%) invert(${invert}%) grayscale(${grayscale}%)`,
+                    pointerEvents: 'auto'
+                  }}
+                />
+                
+                {isAddingText && (
+                  <div className="absolute z-50 flex flex-col gap-2 p-3 bg-[#121212] border border-white/10 rounded-xl shadow-2xl" style={{ left: textPos.x, top: textPos.y }}>
+                    <input autoFocus type="text" value={textInput} onChange={(e) => setTextInput(e.target.value)} className="bg-transparent border-b border-blue-500 text-white outline-none py-1 min-w-[150px]" placeholder="Type labels..." onKeyDown={(e) => e.key === 'Enter' && finalizeText()} />
+                    <div className="flex justify-end gap-2">
+                      <button onClick={() => setIsAddingText(false)} className="p-1 hover:text-red-400"><X className="w-3 h-3"/></button>
+                      <button onClick={finalizeText} className="p-1 hover:text-green-400"><Check className="w-3 h-3"/></button>
+                    </div>
+                  </div>
+                )}
+                
+                {stage === 'crop' && (
+                  <div className="absolute border-2 border-blue-500 shadow-[0_0_0_1000px_rgba(0,0,0,0.5)] pointer-events-none"
+                       style={{ left: cropSelection.x, top: cropSelection.y, width: cropSelection.width, height: cropSelection.height }}>
+                    <div className="absolute top-0 left-0 -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-blue-500 rounded-full border-2 border-white" />
+                    <div className="absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-blue-500 rounded-full border-2 border-white" />
+                    <div className="absolute bottom-0 left-0 -translate-x-1/2 translate-y-1/2 w-4 h-4 bg-blue-500 rounded-full border-2 border-white" />
+                    <div className="absolute bottom-0 right-0 translate-x-1/2 translate-y-1/2 w-4 h-4 bg-blue-500 rounded-full border-2 border-white" />
+                  </div>
+                )}
               </div>
-            )}
-            {stage === 'crop' && (
-              <div className="absolute border-2 border-blue-500 shadow-[0_0_0_1000px_rgba(0,0,0,0.5)] pointer-events-none"
-                   style={{ left: cropSelection.x, top: cropSelection.y, width: cropSelection.width, height: cropSelection.height }}>
-                <div className="absolute top-0 left-0 -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-blue-500 rounded-full border-2 border-white" />
-                <div className="absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-blue-500 rounded-full border-2 border-white" />
-                <div className="absolute bottom-0 left-0 -translate-x-1/2 translate-y-1/2 w-4 h-4 bg-blue-500 rounded-full border-2 border-white" />
-                <div className="absolute bottom-0 right-0 translate-x-1/2 translate-y-1/2 w-4 h-4 bg-blue-500 rounded-full border-2 border-white" />
-              </div>
-            )}
-          </div>
+            </div>
         </div>
 
         <div className="w-full md:w-80 bg-[#121212] border-l border-white/5 flex flex-col p-6 overflow-y-auto no-scrollbar">
