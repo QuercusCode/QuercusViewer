@@ -171,16 +171,15 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ src, onSave,
   const handleCropMouseDown = (e: React.MouseEvent) => {
     if (stage !== 'crop') return;
     const { x, y } = getCoordinates(e);
-    const handleSize = 15;
-
-    // Check corners for resizing
-    if (Math.abs(x - cropSelection.x) < handleSize && Math.abs(y - cropSelection.y) < handleSize) {
+    // Check corners for resizing with a larger hit area
+    const hitArea = 30; // 30px hit area
+    if (Math.abs(x - cropSelection.x) < hitArea && Math.abs(y - cropSelection.y) < hitArea) {
       setResizeHandle('nw');
-    } else if (Math.abs(x - (cropSelection.x + cropSelection.width)) < handleSize && Math.abs(y - cropSelection.y) < handleSize) {
+    } else if (Math.abs(x - (cropSelection.x + cropSelection.width)) < hitArea && Math.abs(y - cropSelection.y) < hitArea) {
       setResizeHandle('ne');
-    } else if (Math.abs(x - cropSelection.x) < handleSize && Math.abs(y - (cropSelection.y + cropSelection.height)) < handleSize) {
+    } else if (Math.abs(x - cropSelection.x) < hitArea && Math.abs(y - (cropSelection.y + cropSelection.height)) < hitArea) {
       setResizeHandle('sw');
-    } else if (Math.abs(x - (cropSelection.x + cropSelection.width)) < handleSize && Math.abs(y - (cropSelection.y + cropSelection.height)) < handleSize) {
+    } else if (Math.abs(x - (cropSelection.x + cropSelection.width)) < hitArea && Math.abs(y - (cropSelection.y + cropSelection.height)) < hitArea) {
       setResizeHandle('se');
     } else if (x >= cropSelection.x && x <= cropSelection.x + cropSelection.width &&
         y >= cropSelection.y && y <= cropSelection.y + cropSelection.height) {
@@ -197,33 +196,38 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ src, onSave,
 
     if (resizeHandle) {
       let { x: nx, y: ny, width: nw, height: nh } = cropSelection;
+      const minSize = 20;
       
       switch (resizeHandle) {
-        case 'nw':
-          nw = (nx + nw) - x;
-          nh = (ny + nh) - y;
-          nx = x;
-          ny = y;
+        case 'nw': {
+          const right = nx + nw;
+          const bottom = ny + nh;
+          nx = Math.max(0, Math.min(x, right - minSize));
+          ny = Math.max(0, Math.min(y, bottom - minSize));
+          nw = right - nx;
+          nh = bottom - ny;
           break;
-        case 'ne':
-          nw = x - nx;
-          nh = (ny + nh) - y;
-          ny = y;
+        }
+        case 'ne': {
+          const bottom = ny + nh;
+          ny = Math.max(0, Math.min(y, bottom - minSize));
+          nw = Math.max(minSize, Math.min(x - nx, canvas.width - nx));
+          nh = bottom - ny;
           break;
-        case 'sw':
-          nw = (nx + nw) - x;
-          nh = y - ny;
-          nx = x;
+        }
+        case 'sw': {
+          const right = nx + nw;
+          nx = Math.max(0, Math.min(x, right - minSize));
+          nw = right - nx;
+          nh = Math.max(minSize, Math.min(y - ny, canvas.height - ny));
           break;
-        case 'se':
-          nw = x - nx;
-          nh = y - ny;
+        }
+        case 'se': {
+          nw = Math.max(minSize, Math.min(x - nx, canvas.width - nx));
+          nh = Math.max(minSize, Math.min(y - ny, canvas.height - ny));
           break;
+        }
       }
-
-      // Min size constraints and boundary checks
-      nw = Math.max(20, Math.min(nw, resizeHandle === 'nw' || resizeHandle === 'sw' ? nx + nw : canvas.width - nx));
-      nh = Math.max(20, Math.min(nh, resizeHandle === 'nw' || resizeHandle === 'ne' ? ny + nh : canvas.height - ny));
       
       setCropSelection({ x: nx, y: ny, width: nw, height: nh });
     } else if (isDraggingCrop) {
@@ -376,10 +380,10 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ src, onSave,
                   height: cropSelection.height
                 }}
               >
-                <div className="absolute top-0 left-0 -translate-x-1 -translate-y-1 w-3 h-3 bg-blue-500 rounded-full border border-white cursor-nw-resize pointer-events-auto" />
-                <div className="absolute top-0 right-0 translate-x-1 -translate-y-1 w-3 h-3 bg-blue-500 rounded-full border border-white cursor-ne-resize pointer-events-auto" />
-                <div className="absolute bottom-0 left-0 -translate-x-1 translate-y-1 w-3 h-3 bg-blue-500 rounded-full border border-white cursor-sw-resize pointer-events-auto" />
-                <div className="absolute bottom-0 right-0 translate-x-1 translate-y-1 w-3 h-3 bg-blue-500 rounded-full border border-white cursor-se-resize pointer-events-auto" />
+                <div className="absolute top-0 left-0 -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-blue-500 rounded-full border-2 border-white pointer-events-none" />
+                <div className="absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-blue-500 rounded-full border-2 border-white pointer-events-none" />
+                <div className="absolute bottom-0 left-0 -translate-x-1/2 translate-y-1/2 w-4 h-4 bg-blue-500 rounded-full border-2 border-white pointer-events-none" />
+                <div className="absolute bottom-0 right-0 translate-x-1/2 translate-y-1/2 w-4 h-4 bg-blue-500 rounded-full border-2 border-white pointer-events-none" />
               </div>
             )}
           </div>
