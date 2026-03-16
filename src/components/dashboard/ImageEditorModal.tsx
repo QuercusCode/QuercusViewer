@@ -605,26 +605,45 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ src, onSave,
                     </div>
                   )}
 
-                  <div className="pt-4 border-t border-white/5">
-                    <label className="text-xs font-bold text-gray-500 uppercase mb-4 block">Colors</label>
-                    <div className="grid grid-cols-5 gap-2">
-                      {[
-                        '#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#ffffff', 
-                        '#8b5cf6', '#ec4899', '#000000', '#64748b', '#fb7185',
-                        '#2dd4bf', '#a855f7', '#f43f5e', '#84cc16', '#06b6d4',
-                        '#eab308', '#d946ef', '#6366f1', '#f97316', '#475569'
-                      ].map(c => (
-                        <button key={c} onClick={() => setBrushColor(c)} className={`w-8 h-8 rounded-lg border-2 ${brushColor === c ? 'border-white scale-110' : 'border-transparent hover:scale-105'} transition-transform`} style={{ backgroundColor: c }} />
-                      ))}
-                      <div className="relative">
+                  <div className="pt-4 border-t border-white/5 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-gray-500 uppercase">Colors</label>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] text-gray-600 font-mono">Custom</span>
                         <input 
                           type="color" 
                           value={brushColor} 
                           onChange={(e) => setBrushColor(e.target.value)}
-                          className="w-8 h-8 rounded-lg bg-transparent border-none cursor-pointer p-0 overflow-hidden"
-                          title="Custom Color"
+                          className="w-5 h-5 rounded-full bg-transparent border-none cursor-pointer p-0 overflow-hidden"
                         />
                       </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <ColorCategory 
+                        label="Essentials" 
+                        colors={['#ffffff', '#000000', '#64748b', '#475569', '#334155']} 
+                        selectedColor={brushColor} 
+                        onSelect={setBrushColor} 
+                      />
+                      <ColorCategory 
+                        label="Vibrant" 
+                        colors={['#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6']} 
+                        selectedColor={brushColor} 
+                        onSelect={setBrushColor} 
+                      />
+                      <ColorCategory 
+                        label="Professional" 
+                        colors={['#dc2626', '#d97706', '#059669', '#2563eb', '#7c3aed']} 
+                        selectedColor={brushColor} 
+                        onSelect={setBrushColor} 
+                      />
+                      <ColorCategory 
+                        label="Accents" 
+                        colors={['#ec4899', '#f97316', '#06b6d4', '#84cc16', '#fb7185']} 
+                        selectedColor={brushColor} 
+                        onSelect={setBrushColor} 
+                      />
                     </div>
                   </div>
                 <div>
@@ -685,5 +704,21 @@ const AdjustmentSlider: React.FC<{ label: string; value: number; onChange: (v: n
   <div>
     <div className="flex justify-between mb-2"><label className="text-[10px] font-bold text-gray-500 uppercase">{label}</label><span className="text-[10px] font-mono text-blue-400">{value}%</span></div>
     <input type="range" min={min} max={max} value={value} onChange={(e) => onChange(parseInt(e.target.value))} className="w-full accent-blue-500 h-1" />
+  </div>
+);
+
+const ColorCategory: React.FC<{ label: string; colors: string[]; selectedColor: string; onSelect: (c: string) => void }> = ({ label, colors, selectedColor, onSelect }) => (
+  <div className="space-y-2">
+    <span className="text-[9px] font-bold text-gray-600 uppercase tracking-widest">{label}</span>
+    <div className="grid grid-cols-5 gap-2">
+      {colors.map(c => (
+        <button 
+          key={c} 
+          onClick={() => onSelect(c)} 
+          className={`w-8 h-8 rounded-lg border-2 transition-all ${selectedColor === c ? 'border-white scale-110' : 'border-transparent hover:scale-105'}`} 
+          style={{ backgroundColor: c }} 
+        />
+      ))}
+    </div>
   </div>
 );
