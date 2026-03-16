@@ -3,7 +3,9 @@ import {
   X, Crop, Pencil, Type, Save, 
   ChevronRight, Undo2, Redo2,
   Square, Circle, ArrowUpRight, Eraser,
-  SlidersHorizontal, Check, Maximize2
+  SlidersHorizontal, Check, Maximize2,
+  Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight,
+  Type as TypeIcon
 } from 'lucide-react';
 
 interface ImageEditorModalProps {
@@ -35,6 +37,11 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ src, onSave,
   const [isAddingText, setIsAddingText] = useState(false);
   const [textPos, setTextPos] = useState({ x: 0, y: 0 });
   const [fontFamily, setFontFamily] = useState('Inter, sans-serif');
+  const [fontSize, setFontSize] = useState(24);
+  const [isBold, setIsBold] = useState(false);
+  const [isItalic, setIsItalic] = useState(false);
+  const [isUnderline, setIsUnderline] = useState(false);
+  const [textAlign, setTextAlign] = useState<CanvasTextAlign>('left');
   
   // Adjustments State
   const [brightness, setBrightness] = useState(100);
@@ -308,14 +315,38 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ src, onSave,
   };
 
   const finalizeText = () => {
-    if (!textInput.trim() || !contextRef.current) {
-      setIsAddingText(false);
-      return;
-    }
     const ctx = contextRef.current;
-    ctx.font = `bold ${brushSize * 4}px ${fontFamily}`;
+    
+    // Construct font string: "bold italic 24px Arial"
+    const styleString = [
+      isBold ? 'bold' : '',
+      isItalic ? 'italic' : '',
+      `${fontSize}px`,
+      fontFamily
+    ].filter(Boolean).join(' ');
+
+    ctx.font = styleString;
     ctx.fillStyle = brushColor;
+    ctx.textAlign = textAlign;
+    
     ctx.fillText(textInput, textPos.x, textPos.y);
+
+    if (isUnderline) {
+      const metrics = ctx.measureText(textInput);
+      const textWidth = metrics.width;
+      let startX = textPos.x;
+      
+      if (textAlign === 'center') startX = textPos.x - textWidth / 2;
+      else if (textAlign === 'right') startX = textPos.x - textWidth;
+      
+      ctx.beginPath();
+      ctx.lineWidth = Math.max(1, fontSize / 15);
+      ctx.strokeStyle = brushColor;
+      ctx.moveTo(startX, textPos.y + fontSize / 4);
+      ctx.lineTo(startX + textWidth, textPos.y + fontSize / 4);
+      ctx.stroke();
+    }
+
     setIsAddingText(false);
     setTextInput('');
     saveHistory();
@@ -515,24 +546,52 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ src, onSave,
                 />
                 
                 {isAddingText && (
-                  <div className="absolute z-50 flex flex-col gap-2 p-3 bg-[#121212] border border-white/10 rounded-xl shadow-2xl" style={{ left: textPos.x, top: textPos.y }}>
-                    <input 
-                      autoFocus 
-                      type="text" 
-                      value={textInput} 
-                      onChange={(e) => setTextInput(e.target.value)} 
-                      onKeyDown={(e) => {
-                        e.stopPropagation();
-                        if (e.key === 'Enter') finalizeText();
-                      }}
-                      onKeyUp={(e) => e.stopPropagation()}
-                      onKeyPress={(e) => e.stopPropagation()}
-                      className="bg-transparent border-b border-blue-500 text-white outline-none py-1 min-w-[150px]" 
-                      placeholder="Type labels..." 
-                    />
-                    <div className="flex justify-end gap-2">
-                      <button onClick={() => setIsAddingText(false)} className="p-1 hover:text-red-400"><X className="w-3 h-3"/></button>
-                      <button onClick={finalizeText} className="p-1 hover:text-green-400"><Check className="w-3 h-3"/></button>
+                  <div className="absolute z-50 flex flex-col gap-3 p-4 bg-[#121212] border border-white/10 rounded-2xl shadow-2xl animate-in zoom-in duration-200" style={{ left: textPos.x, top: textPos.y - 120 }}>
+                    {/* Floating Style Toolbar */}
+                    <div className="flex items-center gap-1 border-b border-white/5 pb-2 mb-1">
+                      <TextStyleButton active={isBold} onClick={() => setIsBold(!isBold)} icon={<Bold className="w-3.5 h-3.5" />} />
+                      <TextStyleButton active={isItalic} onClick={() => setIsItalic(!isItalic)} icon={<Italic className="w-3.5 h-3.5" />} />
+                      <TextStyleButton active={isUnderline} onClick={() => setIsUnderline(!isUnderline)} icon={<Underline className="w-3.5 h-3.5" />} />
+                      <div className="w-px h-4 bg-white/10 mx-1" />
+                      <TextStyleButton active={textAlign === 'left'} onClick={() => setTextAlign('left')} icon={<AlignLeft className="w-3.5 h-3.5" />} />
+                      <TextStyleButton active={textAlign === 'center'} onClick={() => setTextAlign('center')} icon={<AlignCenter className="w-3.5 h-3.5" />} />
+                      <TextStyleButton active={textAlign === 'right'} onClick={() => setTextAlign('right')} icon={<AlignRight className="w-3.5 h-3.5" />} />
+                      <div className="w-px h-4 bg-white/10 mx-1" />
+                      <div className="flex items-center gap-2 px-2">
+                        <span className="text-[10px] font-bold text-gray-500">Size</span>
+                        <input 
+                          type="number" 
+                          value={fontSize} 
+                          onChange={(e) => setFontSize(parseInt(e.target.value))} 
+                          className="w-10 bg-white/5 border border-white/10 rounded px-1 py-0.5 text-[10px] text-white outline-none focus:border-blue-500"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="flex flex-col gap-2">
+                      <input 
+                        autoFocus 
+                        type="text" 
+                        value={textInput} 
+                        onChange={(e) => setTextInput(e.target.value)} 
+                        onKeyDown={(e) => {
+                          e.stopPropagation();
+                          if (e.key === 'Enter') finalizeText();
+                          if (e.key === 'Escape') setIsAddingText(false);
+                        }}
+                        onKeyUp={(e) => e.stopPropagation()}
+                        onKeyPress={(e) => e.stopPropagation()}
+                        className="bg-transparent border-b border-blue-500 text-white outline-none py-1 min-w-[200px] text-lg" 
+                        placeholder="Type labels..." 
+                        style={{ fontFamily, fontWeight: isBold ? 'bold' : 'normal', fontStyle: isItalic ? 'italic' : 'normal', textDecoration: isUnderline ? 'underline' : 'none', textAlign }}
+                      />
+                      <div className="flex justify-between items-center gap-2">
+                        <span className="text-[10px] text-gray-500 font-medium">Hit Enter to place</span>
+                        <div className="flex gap-2">
+                          <button onClick={() => setIsAddingText(false)} className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-gray-400 rounded-lg text-xs transition-colors">Cancel</button>
+                          <button onClick={finalizeText} className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold transition-colors">Place Text</button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -683,6 +742,16 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ src, onSave,
     </div>
   );
 };
+
+const TextStyleButton: React.FC<{ active: boolean; onClick: () => void; icon: React.ReactNode }> = ({ active, onClick, icon }) => (
+  <button 
+    onClick={(e) => { e.stopPropagation(); onClick(); }} 
+    onMouseDown={(e) => e.stopPropagation()}
+    className={`p-1.5 rounded-lg transition-all ${active ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-500 hover:text-white hover:bg-white/5'}`}
+  >
+    {icon}
+  </button>
+);
 
 const ToolbarDivider = () => <div className="w-10 h-px bg-white/5 my-2 mx-auto" />;
 
