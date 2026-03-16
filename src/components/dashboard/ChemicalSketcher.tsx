@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Node, mergeAttributes } from '@tiptap/core';
-import { ReactNodeViewRenderer, NodeViewWrapper } from '@tiptap/react';
+import { ReactNodeViewRenderer, NodeViewWrapper, type NodeViewProps } from '@tiptap/react';
 import { Beaker, Edit2, Trash2, X, Plus } from 'lucide-react';
 
 // --- Tiptap Extension ---
@@ -85,7 +85,6 @@ const JS_CDN = "https://jsme-editor.github.io/dist/jsme/jsme.nocache.js";
 // Global script loader tracker
 let scriptLoadingStarted = false;
 
-import type { NodeViewProps } from '@tiptap/react';
 
 const ChemicalSketcherComponent = ({ node, updateAttributes, deleteNode }: NodeViewProps) => {
   const { molfile, svg, width, height } = node.attrs;

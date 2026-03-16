@@ -1,4 +1,4 @@
-import { NodeViewContent, NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap/react'
+import { NodeViewContent, NodeViewWrapper, ReactNodeViewRenderer, type NodeViewProps } from '@tiptap/react'
 import { Table } from '@tiptap/extension-table'
 import { useState, useMemo, useEffect } from 'react'
 import { 
@@ -9,9 +9,6 @@ import {
 } from 'lucide-react'
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#ef4444', '#06b6d4', '#84cc16'];
-
-import type { NodeViewProps } from '@tiptap/react'
-
 const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode, updateAttributes }: NodeViewProps) => {
   const [rowCount, setRowCount] = useState(1);
   const [activeCell, setActiveCell] = useState<string | null>(null);

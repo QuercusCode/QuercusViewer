@@ -1,5 +1,5 @@
 import { Node, mergeAttributes } from '@tiptap/core';
-import { ReactNodeViewRenderer, NodeViewWrapper } from '@tiptap/react';
+import { ReactNodeViewRenderer, NodeViewWrapper, type NodeViewProps } from '@tiptap/react';
 import { Calculator, Zap, Trash2, Info } from 'lucide-react';
 import { performCalculation } from '../../lib/calcUtils';
 
@@ -78,8 +78,6 @@ export const LabCalculator = Node.create({
 });
 
 // --- Component ---
-
-import type { NodeViewProps } from '@tiptap/react';
 
 const LabCalculatorComponent = ({ node, updateAttributes, deleteNode }: NodeViewProps) => {
   const { type, values, units, targetField } = node.attrs;

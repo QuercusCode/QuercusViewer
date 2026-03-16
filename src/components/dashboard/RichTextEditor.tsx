@@ -185,7 +185,7 @@ export const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>
 
   const userColor = React.useMemo(() => {
     const colors = ['#f43f5e', '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b', '#ec4899'];
-    const index = Math.abs((user?.id || '').split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)) % colors.length;
+    const index = Math.abs((user?.id || '').split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0)) % colors.length;
     return colors[index];
   }, [user]);
 
@@ -302,7 +302,7 @@ export const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>
 
         editor.commands.setCollaborationCursors(cursors);
       })
-      .subscribe(async (status) => {
+      .subscribe(async (status: string) => {
         if (status === 'SUBSCRIBED') {
           await channel.track({
             user_id: user.id,

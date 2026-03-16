@@ -262,7 +262,7 @@ export const AccountSettings = () => {
         // Delete all files from storage
         const { data: files } = await supabase.storage.from('structures').list(user.id);
         if (files?.length) {
-            const paths = files.map(f => `${user.id}/${f.name}`);
+            const paths = files.map((f: any) => `${user.id}/${f.name}`);
             await supabase.storage.from('structures').remove(paths);
         }
         // Delete DB rows (RLS will ensure only own data)
@@ -279,7 +279,7 @@ export const AccountSettings = () => {
         // 2. Delete avatar from storage
         const { data: avatars } = await supabase.storage.from('avatars').list(user.id);
         if (avatars?.length) {
-            const paths = avatars.map(f => `${user.id}/${f.name}`);
+            const paths = avatars.map((f: any) => `${user.id}/${f.name}`);
             await supabase.storage.from('avatars').remove(paths);
         }
         // 3. Sign out (account deletion requires admin API; we sign out and show a message)

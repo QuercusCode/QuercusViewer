@@ -1,5 +1,5 @@
 import { Node, mergeAttributes } from '@tiptap/core';
-import { ReactNodeViewRenderer, NodeViewWrapper } from '@tiptap/react';
+import { ReactNodeViewRenderer, NodeViewWrapper, type NodeViewProps } from '@tiptap/react';
 import { Play, Terminal, Trash2, Loader2, AlertCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
@@ -90,10 +90,8 @@ async function getPyodide() {
 }
 
 // --- Component ---
-
-import type { NodeViewProps } from '@tiptap/react';
-
 const CodeCellComponent = ({ node, updateAttributes, deleteNode }: NodeViewProps) => {
+
   const { code, output } = node.attrs;
   const [localCode, setLocalCode] = useState(code);
   const [localOutput, setLocalOutput] = useState(output);
