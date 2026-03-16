@@ -400,8 +400,15 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ src, onSave,
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-md p-4 animate-in fade-in duration-300">
-      <div className="w-full h-full max-w-7xl bg-[#0a0a0a] rounded-[2rem] border border-white/5 shadow-2xl overflow-hidden flex flex-col md:flex-row relative">
+    <div 
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-md p-4 animate-in fade-in duration-300"
+      onClick={(e) => e.stopPropagation()}
+      onMouseDown={(e) => e.stopPropagation()}
+    >
+      <div 
+        className="w-full h-full max-w-7xl bg-[#0a0a0a] rounded-[2rem] border border-white/5 shadow-2xl overflow-hidden flex flex-col md:flex-row relative"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="w-full md:w-20 bg-[#121212] border-r border-white/5 flex md:flex-col items-center py-4 gap-4 overflow-x-auto md:overflow-visible no-scrollbar">
           <ToolButton active={stage === 'crop'} onClick={() => setStage('crop')} icon={<Crop className="w-5 h-5" />} label="Crop" />
           <ToolButton active={stage === 'annotate'} onClick={() => setStage('annotate')} icon={<Pencil className="w-5 h-5" />} label="Annotate" />

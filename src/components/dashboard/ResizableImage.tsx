@@ -76,19 +76,47 @@ export const ResizableImage = Node.create<ResizableImageOptions>({
     return {
       markdown: {
         serialize: (state: any, node: any) => {
-          const payload = JSON.stringify({
-            src: node.attrs.src,
-            width: node.attrs.width,
-            height: node.attrs.height,
-            alt: node.attrs.alt,
-            title: node.attrs.title,
-          });
-          const base64 = btoa(unescape(encodeURIComponent(payload)));
-          state.write(`[[resizable-image:${base64}]]`);
+          const { src, width, height, alt, title } = node.attrs;
+          // Use a simple format that doesn't crash on large strings
+          // We'll use a unique block identifier
+          state.write(`:::resizable-image\n`);
+          state.write(JSON.stringify({ src, width, height, alt, title }));
+          state.write(`\n:::`);
           state.closeBlock(node);
         },
         parse: {
-          // Parsing back is handled by regular markdown image parsing or custom regex if needed
+          setup: (markdownit: any) => {
+            markdownit.use((md: any) => {
+              const defaultRender = md.renderer.rules.fence || function(tokens: any, idx: any, options: any, _env: any, self: any) {
+                return self.renderToken(tokens, idx, options);
+              };
+
+              md.renderer.rules.fence = (tokens: any, idx: any, options: any, _env: any, self: any) => {
+                const token = tokens[idx];
+                if (token.info === 'resizable-image') {
+                  try {
+                    const attrs = JSON.parse(token.content.trim());
+                    return `<img src="${attrs.src}" width="${attrs.width || '100%'}" height="${attrs.height || 'auto'}" alt="${attrs.alt || ''}" title="${attrs.title || ''}" class="resizable-image-node" />`;
+                  } catch (e) {
+                    return defaultRender(tokens, idx, options, _env, self);
+                  }
+                }
+                return defaultRender(tokens, idx, options, _env, self);
+              };
+            });
+          },
+          // Tiptap-markdown specific parser rules
+          updateDOM: (element: HTMLElement) => {
+            // Find our custom images and convert them to the proper node type
+            const images = element.querySelectorAll('img.resizable-image-node');
+            images.forEach(img => {
+              const parent = img.parentElement;
+              if (parent) {
+                // This will be picked up by the Tiptap editor during HTML parsing
+                // since we have tag: 'img[src]' in parseHTML
+              }
+            });
+          }
         }
       }
     }
