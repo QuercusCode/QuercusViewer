@@ -404,10 +404,16 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ src, onSave,
       className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-md p-4 animate-in fade-in duration-300"
       onClick={(e) => e.stopPropagation()}
       onMouseDown={(e) => e.stopPropagation()}
+      onKeyDown={(e) => e.stopPropagation()}
+      onKeyUp={(e) => e.stopPropagation()}
+      onKeyPress={(e) => e.stopPropagation()}
     >
       <div 
         className="w-full h-full max-w-7xl bg-[#0a0a0a] rounded-[2rem] border border-white/5 shadow-2xl overflow-hidden flex flex-col md:flex-row relative"
         onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
+        onKeyUp={(e) => e.stopPropagation()}
+        onKeyPress={(e) => e.stopPropagation()}
       >
         <div className="w-full md:w-20 bg-[#121212] border-r border-white/5 flex md:flex-col items-center py-4 gap-4 overflow-x-auto md:overflow-visible no-scrollbar">
           <ToolButton active={stage === 'crop'} onClick={() => setStage('crop')} icon={<Crop className="w-5 h-5" />} label="Crop" />
@@ -481,7 +487,20 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ src, onSave,
                 
                 {isAddingText && (
                   <div className="absolute z-50 flex flex-col gap-2 p-3 bg-[#121212] border border-white/10 rounded-xl shadow-2xl" style={{ left: textPos.x, top: textPos.y }}>
-                    <input autoFocus type="text" value={textInput} onChange={(e) => setTextInput(e.target.value)} className="bg-transparent border-b border-blue-500 text-white outline-none py-1 min-w-[150px]" placeholder="Type labels..." onKeyDown={(e) => e.key === 'Enter' && finalizeText()} />
+                    <input 
+                      autoFocus 
+                      type="text" 
+                      value={textInput} 
+                      onChange={(e) => setTextInput(e.target.value)} 
+                      onKeyDown={(e) => {
+                        e.stopPropagation();
+                        if (e.key === 'Enter') finalizeText();
+                      }}
+                      onKeyUp={(e) => e.stopPropagation()}
+                      onKeyPress={(e) => e.stopPropagation()}
+                      className="bg-transparent border-b border-blue-500 text-white outline-none py-1 min-w-[150px]" 
+                      placeholder="Type labels..." 
+                    />
                     <div className="flex justify-end gap-2">
                       <button onClick={() => setIsAddingText(false)} className="p-1 hover:text-red-400"><X className="w-3 h-3"/></button>
                       <button onClick={finalizeText} className="p-1 hover:text-green-400"><Check className="w-3 h-3"/></button>
