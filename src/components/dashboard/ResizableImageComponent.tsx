@@ -33,11 +33,7 @@ const ResizableImageComponent: React.FC<NodeViewProps> = ({ node, updateAttribut
       // Limit minimum width
       newWidth = Math.max(newWidth, 100);
       
-      // Limit maximum width to container width
-      if (containerRef.current?.parentElement) {
-        const maxWidth = containerRef.current.parentElement.offsetWidth;
-        newWidth = Math.min(newWidth, maxWidth);
-      }
+      // Removed parent container width constraint to allow bigger images
 
       updateAttributes({ width: `${newWidth}px` });
     };

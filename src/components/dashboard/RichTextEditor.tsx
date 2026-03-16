@@ -225,7 +225,7 @@ export const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>
       CodeCell,
       ResizableImage.configure({
         HTMLAttributes: {
-          class: 'rounded-lg max-w-full h-auto my-4 border border-[var(--border-main)] shadow-sm cursor-pointer',
+          class: 'rounded-lg h-auto my-4 border border-[var(--border-main)] shadow-sm cursor-pointer',
         },
       }),
       TableRow,
