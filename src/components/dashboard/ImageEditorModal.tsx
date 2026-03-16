@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { 
   X, Crop, Pencil, Type, Save, 
-  ChevronRight, Minus, Plus
+  ChevronRight, Minus, Plus, Undo2, Redo2
 } from 'lucide-react';
 
 interface ImageEditorModalProps {
@@ -29,7 +29,12 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ src, onSave,
   // Crop State
   const [cropSelection, setCropSelection] = useState({ x: 50, y: 50, width: 200, height: 200 });
   const [isDraggingCrop, setIsDraggingCrop] = useState(false);
+  const [resizeHandle, setResizeHandle] = useState<string | null>(null);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  
+  // History State
+  const [history, setHistory] = useState<string[]>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
   
   // Meta State
   const [fileName, setFileName] = useState('Edited Image');
@@ -70,15 +75,60 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ src, onSave,
         contextRef.current = ctx;
       }
 
-      // Initial crop box
       setCropSelection({
         x: width * 0.1,
         y: height * 0.1,
         width: width * 0.8,
         height: height * 0.8
       });
+
+      // Initialize history
+      const dataUrl = canvas.toDataURL();
+      setHistory([dataUrl]);
+      setHistoryIndex(0);
     };
   }, [src]);
+
+  const saveHistory = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const dataUrl = canvas.toDataURL();
+    const newHistory = history.slice(0, historyIndex + 1);
+    newHistory.push(dataUrl);
+    setHistory(newHistory);
+    setHistoryIndex(newHistory.length - 1);
+  };
+
+  const undo = () => {
+    if (historyIndex <= 0) return;
+    const newIndex = historyIndex - 1;
+    loadHistoryAt(newIndex);
+  };
+
+  const redo = () => {
+    if (historyIndex >= history.length - 1) return;
+    const newIndex = historyIndex + 1;
+    loadHistoryAt(newIndex);
+  };
+
+  const loadHistoryAt = (index: number) => {
+    const canvas = canvasRef.current;
+    const ctx = contextRef.current;
+    if (!canvas || !ctx) return;
+
+    const img = new Image();
+    img.src = history[index];
+    img.onload = () => {
+      // If dimensions changed (e.g. after crop), update canvas size
+      if (canvas.width !== img.width || canvas.height !== img.height) {
+        canvas.width = img.width;
+        canvas.height = img.height;
+      }
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0);
+      setHistoryIndex(index);
+    };
+  };
 
   // Drawing Logic
   const startDrawing = (e: React.MouseEvent | React.TouchEvent) => {
@@ -99,8 +149,10 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ src, onSave,
   };
 
   const endDrawing = () => {
+    if (!isDrawing) return;
     contextRef.current?.closePath();
     setIsDrawing(false);
+    saveHistory();
   };
 
   const getCoordinates = (e: React.MouseEvent | React.TouchEvent) => {
@@ -119,7 +171,18 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ src, onSave,
   const handleCropMouseDown = (e: React.MouseEvent) => {
     if (stage !== 'crop') return;
     const { x, y } = getCoordinates(e);
-    if (x >= cropSelection.x && x <= cropSelection.x + cropSelection.width &&
+    const handleSize = 15;
+
+    // Check corners for resizing
+    if (Math.abs(x - cropSelection.x) < handleSize && Math.abs(y - cropSelection.y) < handleSize) {
+      setResizeHandle('nw');
+    } else if (Math.abs(x - (cropSelection.x + cropSelection.width)) < handleSize && Math.abs(y - cropSelection.y) < handleSize) {
+      setResizeHandle('ne');
+    } else if (Math.abs(x - cropSelection.x) < handleSize && Math.abs(y - (cropSelection.y + cropSelection.height)) < handleSize) {
+      setResizeHandle('sw');
+    } else if (Math.abs(x - (cropSelection.x + cropSelection.width)) < handleSize && Math.abs(y - (cropSelection.y + cropSelection.height)) < handleSize) {
+      setResizeHandle('se');
+    } else if (x >= cropSelection.x && x <= cropSelection.x + cropSelection.width &&
         y >= cropSelection.y && y <= cropSelection.y + cropSelection.height) {
       setIsDraggingCrop(true);
       setDragStart({ x: x - cropSelection.x, y: y - cropSelection.y });
@@ -127,19 +190,51 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ src, onSave,
   };
 
   const handleCropMouseMove = (e: React.MouseEvent) => {
-    if (!isDraggingCrop || stage !== 'crop') return;
+    if (stage !== 'crop') return;
     const { x, y } = getCoordinates(e);
     const canvas = canvasRef.current;
     if (!canvas) return;
-    
-    let newX = x - dragStart.x;
-    let newY = y - dragStart.y;
-    
-    // Bounds check
-    newX = Math.max(0, Math.min(newX, canvas.width - cropSelection.width));
-    newY = Math.max(0, Math.min(newY, canvas.height - cropSelection.height));
-    
-    setCropSelection(prev => ({ ...prev, x: newX, y: newY }));
+
+    if (resizeHandle) {
+      let { x: nx, y: ny, width: nw, height: nh } = cropSelection;
+      
+      switch (resizeHandle) {
+        case 'nw':
+          nw = (nx + nw) - x;
+          nh = (ny + nh) - y;
+          nx = x;
+          ny = y;
+          break;
+        case 'ne':
+          nw = x - nx;
+          nh = (ny + nh) - y;
+          ny = y;
+          break;
+        case 'sw':
+          nw = (nx + nw) - x;
+          nh = y - ny;
+          nx = x;
+          break;
+        case 'se':
+          nw = x - nx;
+          nh = y - ny;
+          break;
+      }
+
+      // Min size constraints and boundary checks
+      nw = Math.max(20, Math.min(nw, resizeHandle === 'nw' || resizeHandle === 'sw' ? nx + nw : canvas.width - nx));
+      nh = Math.max(20, Math.min(nh, resizeHandle === 'nw' || resizeHandle === 'ne' ? ny + nh : canvas.height - ny));
+      
+      setCropSelection({ x: nx, y: ny, width: nw, height: nh });
+    } else if (isDraggingCrop) {
+      let newX = x - dragStart.x;
+      let newY = y - dragStart.y;
+      
+      newX = Math.max(0, Math.min(newX, canvas.width - cropSelection.width));
+      newY = Math.max(0, Math.min(newY, canvas.height - cropSelection.height));
+      
+      setCropSelection((prev: { x: number; y: number; width: number; height: number }) => ({ ...prev, x: newX, y: newY }));
+    }
   };
 
   const applyCrop = () => {
@@ -161,6 +256,7 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ src, onSave,
       canvas.width = cropSelection.width;
       canvas.height = cropSelection.height;
       contextRef.current.drawImage(tempCanvas, 0, 0);
+      saveHistory(); // Save after crop
       setStage('draw');
     }
   };
@@ -210,6 +306,23 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ src, onSave,
             icon={<Type className="w-5 h-5" />} 
             label="Info" 
           />
+
+          <ToolbarDivider />
+
+          <ToolButton 
+            active={false} 
+            onClick={undo} 
+            disabled={historyIndex <= 0}
+            icon={<Undo2 className="w-5 h-5" />} 
+            label="Undo" 
+          />
+          <ToolButton 
+            active={false} 
+            onClick={redo} 
+            disabled={historyIndex >= history.length - 1}
+            icon={<Redo2 className="w-5 h-5" />} 
+            label="Redo" 
+          />
           
           <div className="flex-1 hidden md:block" />
           
@@ -237,11 +350,17 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ src, onSave,
               }}
               onMouseUp={() => {
                 if (stage === 'draw') endDrawing();
-                if (stage === 'crop') setIsDraggingCrop(false);
+                if (stage === 'crop') {
+                  setIsDraggingCrop(false);
+                  setResizeHandle(null);
+                }
               }}
               onMouseLeave={() => {
                 if (stage === 'draw') endDrawing();
-                if (stage === 'crop') setIsDraggingCrop(false);
+                if (stage === 'crop') {
+                  setIsDraggingCrop(false);
+                  setResizeHandle(null);
+                }
               }}
               className="bg-[#121212] rounded-lg max-w-full touch-none shadow-2xl"
             />
@@ -257,10 +376,10 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ src, onSave,
                   height: cropSelection.height
                 }}
               >
-                <div className="absolute top-0 left-0 -translate-x-1 -translate-y-1 w-2.5 h-2.5 bg-blue-500 rounded-full" />
-                <div className="absolute top-0 right-0 translate-x-1 -translate-y-1 w-2.5 h-2.5 bg-blue-500 rounded-full" />
-                <div className="absolute bottom-0 left-0 -translate-x-1 translate-y-1 w-2.5 h-2.5 bg-blue-500 rounded-full" />
-                <div className="absolute bottom-0 right-0 translate-x-1 translate-y-1 w-2.5 h-2.5 bg-blue-500 rounded-full" />
+                <div className="absolute top-0 left-0 -translate-x-1 -translate-y-1 w-3 h-3 bg-blue-500 rounded-full border border-white cursor-nw-resize pointer-events-auto" />
+                <div className="absolute top-0 right-0 translate-x-1 -translate-y-1 w-3 h-3 bg-blue-500 rounded-full border border-white cursor-ne-resize pointer-events-auto" />
+                <div className="absolute bottom-0 left-0 -translate-x-1 translate-y-1 w-3 h-3 bg-blue-500 rounded-full border border-white cursor-sw-resize pointer-events-auto" />
+                <div className="absolute bottom-0 right-0 translate-x-1 translate-y-1 w-3 h-3 bg-blue-500 rounded-full border border-white cursor-se-resize pointer-events-auto" />
               </div>
             )}
           </div>
@@ -400,17 +519,22 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ src, onSave,
   );
 };
 
+const ToolbarDivider = () => (
+  <div className="w-10 h-px bg-white/5 my-2 mx-auto" />
+);
+
 // UI Helper Components
-const ToolButton: React.FC<{ active: boolean; onClick: () => void; icon: React.ReactNode; label: string }> = ({ 
-  active, onClick, icon, label 
+const ToolButton: React.FC<{ active: boolean; onClick: () => void; icon: React.ReactNode; label: string; disabled?: boolean }> = ({ 
+  active, onClick, icon, label, disabled 
 }) => (
   <button
     onClick={onClick}
+    disabled={disabled}
     className={`w-14 h-14 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all group ${
       active 
         ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30' 
         : 'text-gray-500 hover:text-white hover:bg-white/5'
-    }`}
+    } ${disabled ? 'opacity-30 cursor-not-allowed' : ''}`}
   >
     {icon}
     <span className={`text-[9px] font-black uppercase tracking-tighter ${active ? 'text-blue-100' : 'text-gray-600 group-hover:text-gray-400'}`}>
