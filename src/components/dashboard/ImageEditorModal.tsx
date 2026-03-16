@@ -1,7 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { 
   X, Crop, Pencil, Type, Save, 
-  ChevronRight, Minus, Plus, Undo2, Redo2
+  ChevronRight, Undo2, Redo2,
+  Square, Circle, ArrowUpRight, Eraser,
+  SlidersHorizontal, Check, Maximize2
 } from 'lucide-react';
 
 interface ImageEditorModalProps {
@@ -10,10 +12,12 @@ interface ImageEditorModalProps {
   onClose: () => void;
 }
 
-type EditorStage = 'crop' | 'draw' | 'meta';
+type EditorStage = 'crop' | 'annotate' | 'adjust' | 'meta';
+type AnnotateTool = 'brush' | 'eraser' | 'text' | 'rect' | 'circle' | 'arrow';
 
 export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ src, onSave, onClose }) => {
   const [stage, setStage] = useState<EditorStage>('crop');
+  const [annotateTool, setAnnotateTool] = useState<AnnotateTool>('brush');
   const [isProcessing, setIsProcessing] = useState(false);
   
   // Canvas Refs
@@ -21,10 +25,22 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ src, onSave,
   const contextRef = useRef<CanvasRenderingContext2D | null>(null);
   const imageRef = useRef<HTMLImageElement | null>(null);
   
-  // Drawing State
+  // Drawing & Annotation State
   const [isDrawing, setIsDrawing] = useState(false);
-  const [brushColor, setBrushColor] = useState('#3b82f6'); // Blue-500
+  const [brushColor, setBrushColor] = useState('#3b82f6');
   const [brushSize, setBrushSize] = useState(5);
+  const [shapeStart, setShapeStart] = useState<{ x: number; y: number } | null>(null);
+  const [canvasStateBeforeShape, setCanvasStateBeforeShape] = useState<string | null>(null);
+  const [textInput, setTextInput] = useState('');
+  const [isAddingText, setIsAddingText] = useState(false);
+  const [textPos, setTextPos] = useState({ x: 0, y: 0 });
+  
+  // Adjustments State
+  const [brightness, setBrightness] = useState(100);
+  const [contrast, setContrast] = useState(100);
+  const [saturation, setSaturation] = useState(100);
+  const [invert, setInvert] = useState(0);
+  const [grayscale, setGrayscale] = useState(0);
   
   // Crop State
   const [cropSelection, setCropSelection] = useState({ x: 50, y: 50, width: 200, height: 200 });
@@ -34,10 +50,14 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ src, onSave,
   
   // History State
   const [history, setHistory] = useState<string[]>([]);
-  const [historyIndex, setHistoryIndex] = useState(-1);
-  
-  // Meta State
-  const [fileName, setFileName] = useState('Edited Image');
+  const [historyIndex, setHistoryIndex] = useState(0);
+  const [fileName, setFileName] = useState('edited_image.png');
+
+  // Zoom & Pan State
+  const [scale, setScale] = useState(1);
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const [panStart, setPanStart] = useState({ x: 0, y: 0 });
 
   // Initialize Canvas
   useEffect(() => {
@@ -49,7 +69,6 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ src, onSave,
       const canvas = canvasRef.current;
       if (!canvas) return;
       
-      // Calculate responsive dimensions
       const maxWidth = window.innerWidth * 0.7;
       const maxHeight = window.innerHeight * 0.6;
       let width = img.width;
@@ -82,7 +101,6 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ src, onSave,
         height: height * 0.8
       });
 
-      // Initialize history
       const dataUrl = canvas.toDataURL();
       setHistory([dataUrl]);
       setHistoryIndex(0);
@@ -101,14 +119,12 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ src, onSave,
 
   const undo = () => {
     if (historyIndex <= 0) return;
-    const newIndex = historyIndex - 1;
-    loadHistoryAt(newIndex);
+    loadHistoryAt(historyIndex - 1);
   };
 
   const redo = () => {
     if (historyIndex >= history.length - 1) return;
-    const newIndex = historyIndex + 1;
-    loadHistoryAt(newIndex);
+    loadHistoryAt(historyIndex + 1);
   };
 
   const loadHistoryAt = (index: number) => {
@@ -119,7 +135,6 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ src, onSave,
     const img = new Image();
     img.src = history[index];
     img.onload = () => {
-      // If dimensions changed (e.g. after crop), update canvas size
       if (canvas.width !== img.width || canvas.height !== img.height) {
         canvas.width = img.width;
         canvas.height = img.height;
@@ -130,49 +145,158 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ src, onSave,
     };
   };
 
-  // Drawing Logic
-  const startDrawing = (e: React.MouseEvent | React.TouchEvent) => {
-    if (stage !== 'draw') return;
-    const { x, y } = getCoordinates(e);
-    contextRef.current?.beginPath();
-    contextRef.current?.moveTo(x, y);
-    setIsDrawing(true);
-  };
-
-  const draw = (e: React.MouseEvent | React.TouchEvent) => {
-    if (!isDrawing || stage !== 'draw' || !contextRef.current) return;
-    const { x, y } = getCoordinates(e);
-    contextRef.current.strokeStyle = brushColor;
-    contextRef.current.lineWidth = brushSize;
-    contextRef.current.lineTo(x, y);
-    contextRef.current.stroke();
-  };
-
-  const endDrawing = () => {
-    if (!isDrawing) return;
-    contextRef.current?.closePath();
-    setIsDrawing(false);
-    saveHistory();
-  };
-
+  // Helper: Get Canvas Coordinates (Account for Zoom & Pan)
   const getCoordinates = (e: React.MouseEvent | React.TouchEvent) => {
     const canvas = canvasRef.current;
     if (!canvas) return { x: 0, y: 0 };
     const rect = canvas.getBoundingClientRect();
-    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
-    return {
-      x: clientX - rect.left,
-      y: clientY - rect.top
-    };
+    const clientX = 'touches' in e ? (e as React.TouchEvent).touches[0].clientX : (e as React.MouseEvent).clientX;
+    const clientY = 'touches' in e ? (e as React.TouchEvent).touches[0].clientY : (e as React.MouseEvent).clientY;
+    
+    // Convert screen coordinates to canvas coordinates accounting for zoom and pan
+    const x = (clientX - rect.left - offset.x) / scale;
+    const y = (clientY - rect.top - offset.y) / scale;
+    
+    return { x, y };
+  };
+
+  const handleWheel = (e: React.WheelEvent) => {
+    if (stage !== 'annotate') return;
+    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+    const newScale = Math.max(0.1, Math.min(scale * delta, 5));
+    setScale(newScale);
+  };
+
+  // Annotation Logic
+  const startDrawing = (e: React.MouseEvent | React.TouchEvent) => {
+    if (stage !== 'annotate') return;
+    
+    // Pan with middle mouse button or Alt key
+    if (('button' in e && e.button === 1) || ('altKey' in e && e.altKey)) {
+      setIsPanning(true);
+      const clientX = 'touches' in e ? (e as React.TouchEvent).touches[0].clientX : (e as React.MouseEvent).clientX;
+      const clientY = 'touches' in e ? (e as React.TouchEvent).touches[0].clientY : (e as React.MouseEvent).clientY;
+      setPanStart({ x: clientX - offset.x, y: clientY - offset.y });
+      return;
+    }
+
+    const { x, y } = getCoordinates(e);
+
+    if (annotateTool === 'text') {
+      setTextPos({ x, y });
+      setIsAddingText(true);
+      setTextInput('');
+      return;
+    }
+
+    if (['rect', 'circle', 'arrow'].includes(annotateTool)) {
+      setShapeStart({ x, y });
+      setCanvasStateBeforeShape(canvasRef.current?.toDataURL() || null);
+    } else {
+      contextRef.current?.beginPath();
+      contextRef.current?.moveTo(x, y);
+    }
+    
+    setIsDrawing(true);
+  };
+
+  const draw = (e: React.MouseEvent | React.TouchEvent) => {
+    if (stage !== 'annotate') return;
+    
+    if (isPanning) {
+      const clientX = 'touches' in e ? (e as React.TouchEvent).touches[0].clientX : (e as React.MouseEvent).clientX;
+      const clientY = 'touches' in e ? (e as React.TouchEvent).touches[0].clientY : (e as React.MouseEvent).clientY;
+      setOffset({
+        x: clientX - panStart.x,
+        y: clientY - panStart.y
+      });
+      return;
+    }
+
+    if (!isDrawing || !contextRef.current) return;
+    const { x, y } = getCoordinates(e);
+    const ctx = contextRef.current;
+
+    if (['rect', 'circle', 'arrow'].includes(annotateTool) && canvasStateBeforeShape) {
+      // Redraw previous state to clear preview
+      const img = new Image();
+      img.src = canvasStateBeforeShape;
+      ctx.clearRect(0, 0, canvasRef.current!.width, canvasRef.current!.height);
+      ctx.drawImage(img, 0, 0);
+
+      ctx.strokeStyle = brushColor;
+      ctx.lineWidth = brushSize;
+      ctx.fillStyle = brushColor + '33'; // Semi-transparent fill
+
+      if (annotateTool === 'rect') {
+        ctx.strokeRect(shapeStart!.x, shapeStart!.y, x - shapeStart!.x, y - shapeStart!.y);
+      } else if (annotateTool === 'circle') {
+        const radius = Math.sqrt(Math.pow(x - shapeStart!.x, 2) + Math.pow(y - shapeStart!.y, 2));
+        ctx.beginPath();
+        ctx.arc(shapeStart!.x, shapeStart!.y, radius, 0, Math.PI * 2);
+        ctx.stroke();
+      } else if (annotateTool === 'arrow') {
+        drawArrow(ctx, shapeStart!.x, shapeStart!.y, x, y);
+      }
+    } else {
+      ctx.strokeStyle = brushColor;
+      ctx.lineWidth = brushSize;
+      ctx.globalCompositeOperation = annotateTool === 'eraser' ? 'destination-out' : 'source-over';
+      ctx.lineTo(x, y);
+      ctx.stroke();
+    }
+  };
+
+  const drawArrow = (ctx: CanvasRenderingContext2D, fromX: number, fromY: number, toX: number, toY: number) => {
+    const headLength = 15;
+    const angle = Math.atan2(toY - fromY, toX - fromX);
+    ctx.beginPath();
+    ctx.moveTo(fromX, fromY);
+    ctx.lineTo(toX, toY);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(toX, toY);
+    ctx.lineTo(toX - headLength * Math.cos(angle - Math.PI / 6), toY - headLength * Math.sin(angle - Math.PI / 6));
+    ctx.lineTo(toX - headLength * Math.cos(angle + Math.PI / 6), toY - headLength * Math.sin(angle + Math.PI / 6));
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+  };
+
+  const endDrawing = () => {
+    if (isPanning) {
+      setIsPanning(false);
+      return;
+    }
+    if (!isDrawing) return;
+    contextRef.current?.closePath();
+    contextRef.current!.globalCompositeOperation = 'source-over';
+    setIsDrawing(false);
+    setShapeStart(null);
+    setCanvasStateBeforeShape(null);
+    saveHistory();
+  };
+
+  const finalizeText = () => {
+    if (!textInput.trim() || !contextRef.current) {
+      setIsAddingText(false);
+      return;
+    }
+    const ctx = contextRef.current;
+    ctx.font = `bold ${brushSize * 4}px Inter, sans-serif`;
+    ctx.fillStyle = brushColor;
+    ctx.fillText(textInput, textPos.x, textPos.y);
+    setIsAddingText(false);
+    setTextInput('');
+    saveHistory();
   };
 
   // Crop Logic
   const handleCropMouseDown = (e: React.MouseEvent) => {
     if (stage !== 'crop') return;
     const { x, y } = getCoordinates(e);
-    // Check corners for resizing with a larger hit area
-    const hitArea = 30; // 30px hit area
+    const hitArea = 30;
+    
     if (Math.abs(x - cropSelection.x) < hitArea && Math.abs(y - cropSelection.y) < hitArea) {
       setResizeHandle('nw');
     } else if (Math.abs(x - (cropSelection.x + cropSelection.width)) < hitArea && Math.abs(y - cropSelection.y) < hitArea) {
@@ -197,47 +321,33 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ src, onSave,
     if (resizeHandle) {
       let { x: nx, y: ny, width: nw, height: nh } = cropSelection;
       const minSize = 20;
-      
       switch (resizeHandle) {
-        case 'nw': {
-          const right = nx + nw;
-          const bottom = ny + nh;
-          nx = Math.max(0, Math.min(x, right - minSize));
-          ny = Math.max(0, Math.min(y, bottom - minSize));
-          nw = right - nx;
-          nh = bottom - ny;
+        case 'nw':
+          nx = Math.max(0, Math.min(x, nx + nw - minSize));
+          ny = Math.max(0, Math.min(y, ny + nh - minSize));
+          nw = (cropSelection.x + cropSelection.width) - nx;
+          nh = (cropSelection.y + cropSelection.height) - ny;
           break;
-        }
-        case 'ne': {
-          const bottom = ny + nh;
-          ny = Math.max(0, Math.min(y, bottom - minSize));
+        case 'ne':
+          ny = Math.max(0, Math.min(y, ny + nh - minSize));
           nw = Math.max(minSize, Math.min(x - nx, canvas.width - nx));
-          nh = bottom - ny;
+          nh = (cropSelection.y + cropSelection.height) - ny;
           break;
-        }
-        case 'sw': {
-          const right = nx + nw;
-          nx = Math.max(0, Math.min(x, right - minSize));
-          nw = right - nx;
+        case 'sw':
+          nx = Math.max(0, Math.min(x, nx + nw - minSize));
+          nw = (cropSelection.x + cropSelection.width) - nx;
           nh = Math.max(minSize, Math.min(y - ny, canvas.height - ny));
           break;
-        }
-        case 'se': {
+        case 'se':
           nw = Math.max(minSize, Math.min(x - nx, canvas.width - nx));
           nh = Math.max(minSize, Math.min(y - ny, canvas.height - ny));
           break;
-        }
       }
-      
       setCropSelection({ x: nx, y: ny, width: nw, height: nh });
     } else if (isDraggingCrop) {
-      let newX = x - dragStart.x;
-      let newY = y - dragStart.y;
-      
-      newX = Math.max(0, Math.min(newX, canvas.width - cropSelection.width));
-      newY = Math.max(0, Math.min(newY, canvas.height - cropSelection.height));
-      
-      setCropSelection((prev: { x: number; y: number; width: number; height: number }) => ({ ...prev, x: newX, y: newY }));
+      let newX = Math.max(0, Math.min(x - dragStart.x, canvas.width - cropSelection.width));
+      let newY = Math.max(0, Math.min(y - dragStart.y, canvas.height - cropSelection.height));
+      setCropSelection(prev => ({ ...prev, x: newX, y: newY }));
     }
   };
 
@@ -256,23 +366,31 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ src, onSave,
         cropSelection.x, cropSelection.y, cropSelection.width, cropSelection.height,
         0, 0, cropSelection.width, cropSelection.height
       );
-      
       canvas.width = cropSelection.width;
       canvas.height = cropSelection.height;
       contextRef.current.drawImage(tempCanvas, 0, 0);
-      saveHistory(); // Save after crop
-      setStage('draw');
+      saveHistory();
+      setStage('annotate');
     }
   };
 
   const handleSave = async () => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas || !contextRef.current) return;
     
     setIsProcessing(true);
     try {
-      const dataUrl = canvas.toDataURL('image/png');
-      onSave(dataUrl);
+      // Create a final canvas to apply filters permanently
+      const finalCanvas = document.createElement('canvas');
+      finalCanvas.width = canvas.width;
+      finalCanvas.height = canvas.height;
+      const finalCtx = finalCanvas.getContext('2d');
+      if (finalCtx) {
+        finalCtx.filter = `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%) invert(${invert}%) grayscale(${grayscale}%)`;
+        finalCtx.drawImage(canvas, 0, 0);
+        const dataUrl = finalCanvas.toDataURL('image/png');
+        onSave(dataUrl);
+      }
     } catch (err) {
       console.error('Save failed', err);
     } finally {
@@ -283,238 +401,155 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ src, onSave,
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-md p-4 animate-in fade-in duration-300">
       <div className="w-full h-full max-w-7xl bg-[#0a0a0a] rounded-[2rem] border border-white/5 shadow-2xl overflow-hidden flex flex-col md:flex-row relative">
-        
-        {/* LEFT: Sidebar Toolbar */}
         <div className="w-full md:w-20 bg-[#121212] border-r border-white/5 flex md:flex-col items-center py-4 gap-4 overflow-x-auto md:overflow-visible no-scrollbar">
-          <div className="hidden md:flex flex-col items-center mb-6">
-            <div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center mb-1">
-              <Pencil className="w-5 h-5 text-blue-500" />
-            </div>
-          </div>
-          
-          <ToolButton 
-            active={stage === 'crop'} 
-            onClick={() => setStage('crop')} 
-            icon={<Crop className="w-5 h-5" />} 
-            label="Crop" 
-          />
-          <ToolButton 
-            active={stage === 'draw'} 
-            onClick={() => setStage('draw')} 
-            icon={<Pencil className="w-5 h-5" />} 
-            label="Draw" 
-          />
-          <ToolButton 
-            active={stage === 'meta'} 
-            onClick={() => setStage('meta')} 
-            icon={<Type className="w-5 h-5" />} 
-            label="Info" 
-          />
-
+          <ToolButton active={stage === 'crop'} onClick={() => setStage('crop')} icon={<Crop className="w-5 h-5" />} label="Crop" />
+          <ToolButton active={stage === 'annotate'} onClick={() => setStage('annotate')} icon={<Pencil className="w-5 h-5" />} label="Annotate" />
+          <ToolButton active={stage === 'adjust'} onClick={() => setStage('adjust')} icon={<SlidersHorizontal className="w-5 h-5" />} label="Adjust" />
+          <ToolButton active={stage === 'meta'} onClick={() => setStage('meta')} icon={<Type className="w-5 h-5" />} label="Info" />
           <ToolbarDivider />
+            <ToolButton onClick={undo} disabled={historyIndex <= 0} title="Undo">
+              <Undo2 className="w-5 h-5" />
+            </ToolButton>
+            <ToolButton onClick={redo} disabled={historyIndex >= history.length - 1} title="Redo">
+              <Redo2 className="w-5 h-5" />
+            </ToolButton>
 
-          <ToolButton 
-            active={false} 
-            onClick={undo} 
-            disabled={historyIndex <= 0}
-            icon={<Undo2 className="w-5 h-5" />} 
-            label="Undo" 
-          />
-          <ToolButton 
-            active={false} 
-            onClick={redo} 
-            disabled={historyIndex >= history.length - 1}
-            icon={<Redo2 className="w-5 h-5" />} 
-            label="Redo" 
-          />
-          
+            <ToolbarDivider />
+
+            <div className="flex flex-col items-center gap-1 group relative">
+              <input
+                type="range"
+                min="0.1"
+                max="3"
+                step="0.1"
+                value={scale}
+                onChange={(e) => setScale(parseFloat(e.target.value))}
+                className="w-24 h-1 bg-neutral-800 rounded-full appearance-none cursor-pointer accent-blue-500"
+              />
+              <span className="text-[10px] text-neutral-500 font-mono">{Math.round(scale * 100)}%</span>
+            </div>
+
+            <ToolButton onClick={() => { setScale(1); setOffset({ x: 0, y: 0 }); }} title="Reset Zoom">
+              <Maximize2 className="w-4 h-4 opacity-50" />
+            </ToolButton>
           <div className="flex-1 hidden md:block" />
-          
-          <button
-            onClick={onClose}
-            className="p-3 text-gray-500 hover:text-white hover:bg-white/5 rounded-2xl transition-all"
-            title="Cancel"
-          >
-            <X className="w-6 h-6" />
-          </button>
+          <button onClick={onClose} className="p-3 text-gray-500 hover:text-white hover:bg-white/5 rounded-2xl transition-all"><X className="w-6 h-6" /></button>
         </div>
 
-        {/* MIDDLE: Canvas Workspace */}
         <div className="flex-1 relative flex items-center justify-center bg-[radial-gradient(circle_at_center,_#1a1a1a_0%,_#0a0a0a_100%)] p-6 overflow-hidden">
-          <div className="relative group shadow-[0_0_100px_rgba(37,99,235,0.1)] rounded-xl overflow-hidden cursor-crosshair">
-            <canvas
-              ref={canvasRef}
-              onMouseDown={(e) => {
-                if (stage === 'draw') startDrawing(e);
-                if (stage === 'crop') handleCropMouseDown(e);
-              }}
-              onMouseMove={(e) => {
-                if (stage === 'draw') draw(e);
-                if (stage === 'crop') handleCropMouseMove(e);
-              }}
-              onMouseUp={() => {
-                if (stage === 'draw') endDrawing();
-                if (stage === 'crop') {
-                  setIsDraggingCrop(false);
-                  setResizeHandle(null);
-                }
-              }}
-              onMouseLeave={() => {
-                if (stage === 'draw') endDrawing();
-                if (stage === 'crop') {
-                  setIsDraggingCrop(false);
-                  setResizeHandle(null);
-                }
-              }}
-              className="bg-[#121212] rounded-lg max-w-full touch-none shadow-2xl"
-            />
-            
-            {/* Crop Overlay */}
-            {stage === 'crop' && (
-              <div 
-                className="absolute border-2 border-blue-500 shadow-[0_0_0_1000px_rgba(0,0,0,0.5)] pointer-events-none"
-                style={{
-                  left: cropSelection.x,
-                  top: cropSelection.y,
-                  width: cropSelection.width,
-                  height: cropSelection.height
+            <div 
+              className="relative flex-1 bg-[#0a0a0c] flex items-center justify-center p-4 sm:p-8 min-h-0 overflow-hidden"
+              onWheel={handleWheel}
+            >
+              <canvas
+                ref={canvasRef}
+                onMouseDown={startDrawing}
+                onMouseMove={draw}
+                onMouseUp={endDrawing}
+                onMouseLeave={endDrawing}
+                onTouchStart={startDrawing}
+                onTouchMove={draw}
+                onTouchEnd={endDrawing}
+                onMouseDownCapture={(e) => { if (stage === 'crop') handleCropMouseDown(e); }}
+                onMouseMoveCapture={(e) => { if (stage === 'crop') handleCropMouseMove(e); }}
+                onMouseUpCapture={() => { setIsDraggingCrop(false); setResizeHandle(null); }}
+                className={`max-w-full max-h-full shadow-[0_0_50px_rgba(0,0,0,0.5)] bg-white touch-none ${stage === 'crop' ? 'cursor-crosshair' : isPanning ? 'cursor-grabbing' : 'cursor-crosshair'}`}
+                style={{ 
+                  filter: `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%) invert(${invert}%) grayscale(${grayscale}%)`,
+                  transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
+                  transformOrigin: 'center center'
                 }}
-              >
-                <div className="absolute top-0 left-0 -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-blue-500 rounded-full border-2 border-white pointer-events-none" />
-                <div className="absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-blue-500 rounded-full border-2 border-white pointer-events-none" />
-                <div className="absolute bottom-0 left-0 -translate-x-1/2 translate-y-1/2 w-4 h-4 bg-blue-500 rounded-full border-2 border-white pointer-events-none" />
-                <div className="absolute bottom-0 right-0 translate-x-1/2 translate-y-1/2 w-4 h-4 bg-blue-500 rounded-full border-2 border-white pointer-events-none" />
-              </div>
-            )}
-          </div>
-          
-          {/* Zoom/Pan Controls could go here */}
-        </div>
-
-        {/* RIGHT: Properties Panel */}
-        <div className="w-full md:w-80 bg-[#121212] border-l border-white/5 flex flex-col p-6 animate-in slide-in-from-right duration-500">
-          <div className="flex items-center justify-between mb-8">
-            <h3 className="text-lg font-bold text-white flex items-center gap-2">
-              {stage === 'crop' && 'Crop & Adjust'}
-              {stage === 'draw' && 'Precision Drawing'}
-              {stage === 'meta' && 'Image Information'}
-            </h3>
-            <span className="text-[10px] font-bold px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded-full border border-blue-500/20">BETA</span>
-          </div>
-
-          <div className="flex-1 space-y-8 overflow-y-auto no-scrollbar">
-            {stage === 'crop' && (
-              <div className="space-y-6">
-                <p className="text-sm text-gray-400 leading-relaxed">
-                  Drag the selection box to define your area. Click apply to move to drawing tools.
-                </p>
-                <div className="pt-4">
-                  <button
-                    onClick={applyCrop}
-                    className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-[1.25rem] font-bold flex items-center justify-center gap-3 transition-all shadow-lg shadow-blue-600/20 group"
-                  >
-                    <span>Apply Selection</span>
-                    <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                  </button>
+              />
+            {isAddingText && (
+              <div className="absolute z-50 flex flex-col gap-2 p-3 bg-[#121212] border border-white/10 rounded-xl shadow-2xl" style={{ left: textPos.x, top: textPos.y }}>
+                <input autoFocus type="text" value={textInput} onChange={(e) => setTextInput(e.target.value)} className="bg-transparent border-b border-blue-500 text-white outline-none py-1 min-w-[150px]" placeholder="Type labels..." onKeyDown={(e) => e.key === 'Enter' && finalizeText()} />
+                <div className="flex justify-end gap-2">
+                  <button onClick={() => setIsAddingText(false)} className="p-1 hover:text-red-400"><X className="w-3 h-3"/></button>
+                  <button onClick={finalizeText} className="p-1 hover:text-green-400"><Check className="w-3 h-3"/></button>
                 </div>
               </div>
             )}
+            {stage === 'crop' && (
+              <div className="absolute border-2 border-blue-500 shadow-[0_0_0_1000px_rgba(0,0,0,0.5)] pointer-events-none"
+                   style={{ left: cropSelection.x, top: cropSelection.y, width: cropSelection.width, height: cropSelection.height }}>
+                <div className="absolute top-0 left-0 -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-blue-500 rounded-full border-2 border-white" />
+                <div className="absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-blue-500 rounded-full border-2 border-white" />
+                <div className="absolute bottom-0 left-0 -translate-x-1/2 translate-y-1/2 w-4 h-4 bg-blue-500 rounded-full border-2 border-white" />
+                <div className="absolute bottom-0 right-0 translate-x-1/2 translate-y-1/2 w-4 h-4 bg-blue-500 rounded-full border-2 border-white" />
+              </div>
+            )}
+          </div>
+        </div>
 
-            {stage === 'draw' && (
+        <div className="w-full md:w-80 bg-[#121212] border-l border-white/5 flex flex-col p-6 overflow-y-auto no-scrollbar">
+          <div className="flex items-center justify-between mb-8">
+            <h3 className="text-lg font-bold text-white uppercase tracking-tighter">
+              {stage === 'crop' && 'Crop Image'}
+              {stage === 'annotate' && 'Annotate'}
+              {stage === 'adjust' && 'Adjust'}
+              {stage === 'meta' && 'Info'}
+            </h3>
+            <span className="text-[10px] font-bold px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded-full border border-blue-500/20">PRO</span>
+          </div>
+
+          <div className="flex-1 space-y-8">
+            {stage === 'crop' && (
+              <div className="space-y-6">
+                <p className="text-sm text-gray-400">Drag corners to resize or drag the box to move the selection.</p>
+                <button onClick={applyCrop} className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-bold flex items-center justify-center gap-2 transition-all">
+                  Next Stage <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+
+            {stage === 'annotate' && (
               <div className="space-y-8">
-                {/* Color Palette */}
+                <div className="grid grid-cols-3 gap-2">
+                  <AnnotateToolButton active={annotateTool === 'brush'} onClick={() => setAnnotateTool('brush')} icon={<Pencil className="w-4 h-4" />} label="Brush" />
+                  <AnnotateToolButton active={annotateTool === 'eraser'} onClick={() => setAnnotateTool('eraser')} icon={<Eraser className="w-4 h-4" />} label="Eraser" />
+                  <AnnotateToolButton active={annotateTool === 'text'} onClick={() => setAnnotateTool('text')} icon={<Type className="w-4 h-4" />} label="Text" />
+                  <AnnotateToolButton active={annotateTool === 'rect'} onClick={() => setAnnotateTool('rect')} icon={<Square className="w-4 h-4" />} label="Box" />
+                  <AnnotateToolButton active={annotateTool === 'circle'} onClick={() => setAnnotateTool('circle')} icon={<Circle className="w-4 h-4" />} label="Circle" />
+                  <AnnotateToolButton active={annotateTool === 'arrow'} onClick={() => setAnnotateTool('arrow')} icon={<ArrowUpRight className="w-4 h-4" />} label="Arrow" />
+                </div>
                 <div>
-                  <label className="text-xs font-black text-gray-500 uppercase tracking-widest mb-4 block">Brush Color</label>
-                  <div className="grid grid-cols-5 gap-3">
+                  <label className="text-xs font-bold text-gray-500 uppercase mb-4 block">Colors</label>
+                  <div className="grid grid-cols-5 gap-2">
                     {['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#ffffff', '#8b5cf6', '#ec4899', '#000000', '#64748b', '#fb7185'].map(c => (
-                      <button
-                        key={c}
-                        onClick={() => setBrushColor(c)}
-                        className={`w-10 h-10 rounded-xl border-2 transition-all ${brushColor === c ? 'border-white scale-110 shadow-lg' : 'border-transparent hover:scale-105'}`}
-                        style={{ backgroundColor: c }}
-                      />
+                      <button key={c} onClick={() => setBrushColor(c)} className={`w-8 h-8 rounded-lg border-2 ${brushColor === c ? 'border-white scale-110' : 'border-transparent'}`} style={{ backgroundColor: c }} />
                     ))}
                   </div>
                 </div>
-
-                {/* Brush Size */}
                 <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <label className="text-xs font-black text-gray-500 uppercase tracking-widest block">Brush Size</label>
-                    <span className="text-xs font-mono text-blue-400">{brushSize}px</span>
-                  </div>
-                  <div className="flex items-center gap-4 bg-[#1a1a1a] p-3 rounded-2xl border border-white/5">
-                    <button onClick={() => setBrushSize(Math.max(1, brushSize - 2))} className="text-gray-400 hover:text-white p-1">
-                      <Minus className="w-4 h-4" />
-                    </button>
-                    <input
-                      type="range"
-                      min="1"
-                      max="50"
-                      value={brushSize}
-                      onChange={(e) => setBrushSize(parseInt(e.target.value))}
-                      className="flex-1 accent-blue-500 bg-transparent h-1.5"
-                    />
-                    <button onClick={() => setBrushSize(Math.min(100, brushSize + 2))} className="text-gray-400 hover:text-white p-1">
-                      <Plus className="w-4 h-4" />
-                    </button>
-                  </div>
+                  <div className="flex justify-between mb-4"><label className="text-xs font-bold text-gray-500 uppercase">Size</label><span className="text-xs text-blue-400">{brushSize}px</span></div>
+                  <input type="range" min="1" max="50" value={brushSize} onChange={(e) => setBrushSize(parseInt(e.target.value))} className="w-full accent-blue-500" />
                 </div>
+                <button onClick={() => setStage('adjust')} className="w-full py-4 bg-white/5 hover:bg-white/10 text-white rounded-2xl font-bold flex items-center justify-center gap-2 transition-all">Adjust Image <ChevronRight className="w-4 h-4" /></button>
+              </div>
+            )}
 
-                <div className="pt-4 space-y-3">
-                  <button
-                    onClick={() => setStage('meta')}
-                    className="w-full py-4 bg-white/5 hover:bg-white/10 text-white rounded-[1.25rem] font-bold flex items-center justify-center gap-3 transition-all border border-white/5"
-                  >
-                    <span>Continue to Info</span>
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
+            {stage === 'adjust' && (
+              <div className="space-y-6">
+                <AdjustmentSlider label="Brightness" value={brightness} onChange={setBrightness} min={0} max={200} />
+                <AdjustmentSlider label="Contrast" value={contrast} onChange={setContrast} min={0} max={200} />
+                <AdjustmentSlider label="Saturation" value={saturation} onChange={setSaturation} min={0} max={200} />
+                <AdjustmentSlider label="Invert" value={invert} onChange={setInvert} min={0} max={100} />
+                <AdjustmentSlider label="Grayscale" value={grayscale} onChange={setGrayscale} min={0} max={100} />
+                <button onClick={() => setStage('meta')} className="w-full py-4 bg-white/5 hover:bg-white/10 text-white rounded-2xl font-bold flex items-center justify-center gap-2 transition-all">Finalize <ChevronRight className="w-4 h-4" /></button>
               </div>
             )}
 
             {stage === 'meta' && (
               <div className="space-y-6">
-                <div>
-                  <label className="text-xs font-black text-gray-500 uppercase tracking-widest mb-4 block">File Name</label>
-                  <input
-                    type="text"
-                    value={fileName}
-                    onChange={(e) => setFileName(e.target.value)}
-                    className="w-full bg-[#1a1a1a] border border-white/5 rounded-2xl px-5 py-4 text-white focus:outline-none focus:border-blue-500/50 transition-all font-medium"
-                    placeholder="Enter file name..."
-                  />
-                </div>
-                
-                <p className="text-xs text-gray-500 leading-relaxed italic">
-                  * Changes are saved as a high-quality PNG structure and will replace the current notebook image.
-                </p>
+                <label className="text-xs font-bold text-gray-500 uppercase block">File Name</label>
+                <input type="text" value={fileName} onChange={(e) => setFileName(e.target.value)} className="w-full bg-[#1a1a1a] border border-white/5 rounded-xl p-4 text-white placeholder-gray-600 focus:outline-none focus:border-blue-500" placeholder="Export name..." />
               </div>
             )}
           </div>
 
-          {/* SAVE BUTTON */}
           <div className="mt-8 pt-6 border-t border-white/5">
-            <button
-              onClick={handleSave}
-              disabled={isProcessing}
-              className={`w-full py-4 rounded-[1.25rem] font-black uppercase tracking-widest text-sm flex items-center justify-center gap-3 transition-all shadow-2xl ${
-                isProcessing 
-                  ? 'bg-gray-800 text-gray-500 cursor-not-allowed' 
-                  : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-blue-900/40'
-              }`}
-            >
-              {isProcessing ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                  <span>Processing...</span>
-                </>
-              ) : (
-                <>
-                  <Save className="w-5 h-5" />
-                  <span>Save Changes</span>
-                </>
-              )}
+            <button onClick={handleSave} disabled={isProcessing} className={`w-full py-4 rounded-2xl font-bold uppercase tracking-widest text-sm flex items-center justify-center gap-3 transition-all ${isProcessing ? 'bg-gray-800 text-gray-500 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-500 text-white shadow-xl shadow-blue-900/40'}`}>
+              {isProcessing ? 'Processing...' : <><Save className="w-5 h-5" /> Save Changes</>}
             </button>
           </div>
         </div>
@@ -523,26 +558,25 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ src, onSave,
   );
 };
 
-const ToolbarDivider = () => (
-  <div className="w-10 h-px bg-white/5 my-2 mx-auto" />
+const ToolbarDivider = () => <div className="w-10 h-px bg-white/5 my-2 mx-auto" />;
+
+const ToolButton: React.FC<{ active?: boolean; onClick: () => void; icon?: React.ReactNode; label?: string; disabled?: boolean; title?: string; children?: React.ReactNode }> = ({ active, onClick, icon, label, disabled, title, children }) => (
+  <button onClick={onClick} disabled={disabled} title={title} className={`w-14 h-14 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all ${active ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-500 hover:text-white hover:bg-white/5'} ${disabled ? 'opacity-30 cursor-not-allowed' : ''}`}>
+    {icon || children}
+    {label && <span className="text-[8px] font-bold uppercase tracking-tighter">{label}</span>}
+  </button>
 );
 
-// UI Helper Components
-const ToolButton: React.FC<{ active: boolean; onClick: () => void; icon: React.ReactNode; label: string; disabled?: boolean }> = ({ 
-  active, onClick, icon, label, disabled 
-}) => (
-  <button
-    onClick={onClick}
-    disabled={disabled}
-    className={`w-14 h-14 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all group ${
-      active 
-        ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30' 
-        : 'text-gray-500 hover:text-white hover:bg-white/5'
-    } ${disabled ? 'opacity-30 cursor-not-allowed' : ''}`}
-  >
+const AnnotateToolButton: React.FC<{ active: boolean; onClick: () => void; icon: React.ReactNode; label: string }> = ({ active, onClick, icon, label }) => (
+  <button onClick={onClick} className={`p-3 rounded-xl flex flex-col items-center gap-1 transition-all ${active ? 'bg-blue-600 text-white shadow-lg' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}>
     {icon}
-    <span className={`text-[9px] font-black uppercase tracking-tighter ${active ? 'text-blue-100' : 'text-gray-600 group-hover:text-gray-400'}`}>
-      {label}
-    </span>
+    <span className="text-[8px] font-bold uppercase tracking-tighter">{label}</span>
   </button>
+);
+
+const AdjustmentSlider: React.FC<{ label: string; value: number; onChange: (v: number) => void; min: number; max: number }> = ({ label, value, onChange, min, max }) => (
+  <div>
+    <div className="flex justify-between mb-2"><label className="text-[10px] font-bold text-gray-500 uppercase">{label}</label><span className="text-[10px] font-mono text-blue-400">{value}%</span></div>
+    <input type="range" min={min} max={max} value={value} onChange={(e) => onChange(parseInt(e.target.value))} className="w-full accent-blue-500 h-1" />
+  </div>
 );
