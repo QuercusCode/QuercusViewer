@@ -253,7 +253,7 @@ export const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>
       }),
     ],
     content,
-    onUpdate: ({ editor }) => {
+    onUpdate: ({ editor }: { editor: any }) => {
       onChange((editor.storage as any).markdown.getMarkdown());
     },
     onSelectionUpdate: ({ editor }) => {

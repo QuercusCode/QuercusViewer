@@ -15,13 +15,13 @@ export const CodeCell = Node.create({
     return {
       code: {
         default: '# Type your Python code here\nprint("Hello, Scientist!")',
-        parseHTML: element => element.getAttribute('data-code') || '',
-        renderHTML: attributes => ({ 'data-code': attributes.code }),
+        parseHTML: (element: HTMLElement) => element.getAttribute('data-code') || '',
+        renderHTML: (attributes: Record<string, any>) => ({ 'data-code': attributes.code }),
       },
       output: {
         default: '',
-        parseHTML: element => element.getAttribute('data-output') || '',
-        renderHTML: attributes => ({ 'data-output': attributes.output }),
+        parseHTML: (element: HTMLElement) => element.getAttribute('data-output') || '',
+        renderHTML: (attributes: Record<string, any>) => ({ 'data-output': attributes.output }),
       },
       lastRun: {
         default: null,
@@ -33,7 +33,7 @@ export const CodeCell = Node.create({
     return [{ tag: 'div[data-type="code-cell"]' }];
   },
 
-  renderHTML({ HTMLAttributes }) {
+  renderHTML({ HTMLAttributes }: { HTMLAttributes: Record<string, any> }) {
     return ['div', mergeAttributes(HTMLAttributes, { 'data-type': 'code-cell' })];
   },
 
@@ -91,7 +91,9 @@ async function getPyodide() {
 
 // --- Component ---
 
-const CodeCellComponent = ({ node, updateAttributes, deleteNode }: any) => {
+import type { NodeViewProps } from '@tiptap/react';
+
+const CodeCellComponent = ({ node, updateAttributes, deleteNode }: NodeViewProps) => {
   const { code, output } = node.attrs;
   const [localCode, setLocalCode] = useState(code);
   const [localOutput, setLocalOutput] = useState(output);

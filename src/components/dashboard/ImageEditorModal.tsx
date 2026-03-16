@@ -3,9 +3,8 @@ import {
   X, Crop, Pencil, Type, Save, 
   ChevronRight, Undo2, Redo2,
   Square, Circle, ArrowUpRight, Eraser,
-  SlidersHorizontal, Check, Maximize2,
-  Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight,
-  Type as TypeIcon
+  SlidersHorizontal, Maximize2,
+  Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight
 } from 'lucide-react';
 
 interface ImageEditorModalProps {
@@ -316,6 +315,7 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ src, onSave,
 
   const finalizeText = () => {
     const ctx = contextRef.current;
+    if (!ctx) return;
     
     // Construct font string: "bold italic 24px Arial"
     const styleString = [

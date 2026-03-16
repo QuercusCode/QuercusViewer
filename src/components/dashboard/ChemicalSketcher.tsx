@@ -14,29 +14,29 @@ export const ChemicalSketcher = Node.create({
     return {
       molfile: {
         default: '',
-        parseHTML: element => element.getAttribute('data-molfile') || '',
-        renderHTML: attributes => ({
+        parseHTML: (element: HTMLElement) => element.getAttribute('data-molfile') || '',
+        renderHTML: (attributes: Record<string, any>) => ({
           'data-molfile': attributes.molfile,
         }),
       },
       svg: {
         default: '',
-        parseHTML: element => element.getAttribute('data-svg') || '',
-        renderHTML: attributes => ({
+        parseHTML: (element: HTMLElement) => element.getAttribute('data-svg') || '',
+        renderHTML: (attributes: Record<string, any>) => ({
           'data-svg': attributes.svg,
         }),
       },
       width: {
         default: '100%',
-        parseHTML: element => element.getAttribute('data-width') || '100%',
-        renderHTML: attributes => ({
+        parseHTML: (element: HTMLElement) => element.getAttribute('data-width') || '100%',
+        renderHTML: (attributes: Record<string, any>) => ({
           'data-width': attributes.width,
         }),
       },
       height: {
         default: '300px',
-        parseHTML: element => element.getAttribute('data-height') || '300px',
-        renderHTML: attributes => ({
+        parseHTML: (element: HTMLElement) => element.getAttribute('data-height') || '300px',
+        renderHTML: (attributes: Record<string, any>) => ({
           'data-height': attributes.height,
         }),
       },
@@ -47,7 +47,7 @@ export const ChemicalSketcher = Node.create({
     return [{ tag: 'div[data-type="chemical-sketcher"]' }];
   },
 
-  renderHTML({ HTMLAttributes }) {
+  renderHTML({ HTMLAttributes }: { HTMLAttributes: Record<string, any> }) {
     return ['div', mergeAttributes(HTMLAttributes, { 'data-type': 'chemical-sketcher' })];
   },
 
@@ -85,7 +85,9 @@ const JS_CDN = "https://jsme-editor.github.io/dist/jsme/jsme.nocache.js";
 // Global script loader tracker
 let scriptLoadingStarted = false;
 
-const ChemicalSketcherComponent = ({ node, updateAttributes, deleteNode }: any) => {
+import type { NodeViewProps } from '@tiptap/react';
+
+const ChemicalSketcherComponent = ({ node, updateAttributes, deleteNode }: NodeViewProps) => {
   const { molfile, svg, width, height } = node.attrs;
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [jsmeReady, setJsmeReady] = useState(false);

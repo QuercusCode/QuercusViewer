@@ -10,7 +10,9 @@ import {
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#ef4444', '#06b6d4', '#84cc16'];
 
-const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode, updateAttributes }: any) => {
+import type { NodeViewProps } from '@tiptap/react'
+
+const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode, updateAttributes }: NodeViewProps) => {
   const [rowCount, setRowCount] = useState(1);
   const [activeCell, setActiveCell] = useState<string | null>(null);
   const [cellValue, setCellValue] = useState("");
@@ -230,6 +232,8 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode, updateAtt
       const { selection } = editor.state;
       const pos = getPos();
       
+      if (pos === undefined || pos === null) return;
+
       // Check if selection is within THIS table
       if (selection.from >= pos && selection.to <= pos + node.nodeSize) {
         let foundAddress: string | null = null;
@@ -272,13 +276,16 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode, updateAtt
     };
 
     editor.on('selectionUpdate', handleSelectionUpdate);
-    return () => editor.off('selectionUpdate', handleSelectionUpdate);
+    return () => {
+      editor.off('selectionUpdate', handleSelectionUpdate);
+    };
   }, [editor, getPos, node, letters]);
 
   const addRows = (e: React.MouseEvent) => {
     e.preventDefault();
     if (typeof getPos !== 'function') return;
     const tablePos = getPos();
+    if (tablePos === undefined || tablePos === null) return;
     const tableEnd = tablePos + node.nodeSize;
     
     editor.chain()
@@ -354,6 +361,7 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode, updateAtt
 
     if (typeof getPos !== 'function') return;
     const pos = getPos();
+    if (pos === undefined || pos === null) return;
     const tableEnd = pos + node.nodeSize;
 
     editor.chain()
@@ -779,8 +787,8 @@ export const SpreadsheetTable = Table.extend({
       ...this.parent?.(),
       id: {
         default: null,
-        parseHTML: element => element.getAttribute('data-table-id') || element.getAttribute('data-id'),
-        renderHTML: attributes => {
+        parseHTML: (element: HTMLElement) => element.getAttribute('data-table-id') || element.getAttribute('data-id'),
+        renderHTML: (attributes: Record<string, any>) => {
           if (!attributes.id) return {}
           return {
             'data-table-id': attributes.id,

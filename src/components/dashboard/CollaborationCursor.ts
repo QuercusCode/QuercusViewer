@@ -1,6 +1,7 @@
 import { Extension } from '@tiptap/core';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
+import type { EditorState } from '@tiptap/pm/state';
 
 export interface RemoteCursor {
   userId: string;
@@ -28,7 +29,7 @@ export const CollaborationCursor = Extension.create({
 
   addCommands() {
     return {
-      setCollaborationCursors: (cursors: RemoteCursor[]) => ({ editor }) => {
+      setCollaborationCursors: (cursors: RemoteCursor[]) => ({ editor }: { editor: any }) => {
         this.storage.remoteCursors = cursors;
         // Force a re-render of decorations by updating the editor state if needed
         editor.view.dispatch(editor.view.state.tr.setMeta('collaborationCursorUpdate', true));
@@ -44,7 +45,7 @@ export const CollaborationCursor = Extension.create({
       new Plugin({
         key: new PluginKey('collaborationCursor'),
         props: {
-          decorations(state) {
+          decorations(state: EditorState) {
             const remoteCursors = storage.remoteCursors as RemoteCursor[];
             const decorations: Decoration[] = [];
 

@@ -2,6 +2,7 @@ import React, { useState, useMemo, useRef } from 'react'
 import html2canvas from 'html2canvas'
 import { Node, mergeAttributes } from '@tiptap/core'
 import { ReactNodeViewRenderer, NodeViewWrapper } from '@tiptap/react'
+import type { NodeViewProps } from '@tiptap/react'
 import { 
   LineChart, Line, BarChart, Bar, XAxis, YAxis, 
   CartesianGrid, Tooltip, Legend, ResponsiveContainer,
@@ -11,7 +12,7 @@ import { Trash2, BarChart2, TrendingUp, Palette, X, Download, Zap } from 'lucide
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#ef4444', '#06b6d4', '#84cc16'];
 
-const InlineChartComponent = ({ node, updateAttributes, deleteNode }: any) => {
+const InlineChartComponent = ({ node, updateAttributes, deleteNode }: NodeViewProps) => {
   const { data, type, title, xAxis, yAxes, customColors, showTrendLine, showStatistics } = node.attrs
   const [showColorEditor, setShowColorEditor] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
@@ -643,80 +644,80 @@ export const InlineChart = Node.create({
     return {
       data: {
         default: [],
-        parseHTML: element => {
+        parseHTML: (element: HTMLElement) => {
           const raw = element.getAttribute('data-chart-data')
           try { return raw ? JSON.parse(raw) : [] } catch { return [] }
         },
-        renderHTML: attributes => ({
+        renderHTML: (attributes: Record<string, any>) => ({
           'data-chart-data': JSON.stringify(attributes.data),
         }),
       },
       type: {
         default: 'line', // 'line' | 'bar'
-        parseHTML: element => element.getAttribute('data-chart-type') || 'line',
-        renderHTML: attributes => ({
+        parseHTML: (element: HTMLElement) => element.getAttribute('data-chart-type') || 'line',
+        renderHTML: (attributes: Record<string, any>) => ({
           'data-chart-type': attributes.type,
         }),
       },
       title: {
         default: '',
-        parseHTML: element => element.getAttribute('data-chart-title') || '',
-        renderHTML: attributes => ({
+        parseHTML: (element: HTMLElement) => element.getAttribute('data-chart-title') || '',
+        renderHTML: (attributes: Record<string, any>) => ({
           'data-chart-title': attributes.title,
         }),
       },
       xAxis: {
         default: '',
-        parseHTML: element => element.getAttribute('data-chart-xaxis') || '',
-        renderHTML: attributes => ({
+        parseHTML: (element: HTMLElement) => element.getAttribute('data-chart-xaxis') || '',
+        renderHTML: (attributes: Record<string, any>) => ({
           'data-chart-xaxis': attributes.xAxis,
         }),
       },
       yAxis: {
         default: '',
-        parseHTML: element => element.getAttribute('data-chart-yaxis') || '',
-        renderHTML: attributes => ({
+        parseHTML: (element: HTMLElement) => element.getAttribute('data-chart-yaxis') || '',
+        renderHTML: (attributes: Record<string, any>) => ({
           'data-chart-yaxis': attributes.yAxis,
         }),
       },
       yAxes: {
         default: [],
-        parseHTML: element => {
+        parseHTML: (element: HTMLElement) => {
           const raw = element.getAttribute('data-chart-yaxes')
           try { return raw ? JSON.parse(raw) : [] } catch { return [] }
         },
-        renderHTML: attributes => ({
+        renderHTML: (attributes: Record<string, any>) => ({
           'data-chart-yaxes': JSON.stringify(attributes.yAxes),
         }),
       },
       customColors: {
         default: [],
-        parseHTML: element => {
+        parseHTML: (element: HTMLElement) => {
           const raw = element.getAttribute('data-chart-colors')
           try { return raw ? JSON.parse(raw) : [] } catch { return [] }
         },
-        renderHTML: attributes => ({
+        renderHTML: (attributes: Record<string, any>) => ({
           'data-chart-colors': JSON.stringify(attributes.customColors),
         }),
       },
       tableId: {
         default: '',
-        parseHTML: element => element.getAttribute('data-table-id') || '',
-        renderHTML: attributes => ({
+        parseHTML: (element: HTMLElement) => element.getAttribute('data-table-id') || '',
+        renderHTML: (attributes: Record<string, any>) => ({
           'data-table-id': attributes.tableId,
         }),
       },
       showTrendLine: {
         default: false,
-        parseHTML: element => element.getAttribute('data-show-trendline') === 'true',
-        renderHTML: attributes => ({
+        parseHTML: (element: HTMLElement) => element.getAttribute('data-show-trendline') === 'true',
+        renderHTML: (attributes: Record<string, any>) => ({
           'data-show-trendline': attributes.showTrendLine ? 'true' : 'false',
         }),
       },
       showStatistics: {
         default: false,
-        parseHTML: element => element.getAttribute('data-show-statistics') === 'true',
-        renderHTML: attributes => ({
+        parseHTML: (element: HTMLElement) => element.getAttribute('data-show-statistics') === 'true',
+        renderHTML: (attributes: Record<string, any>) => ({
           'data-show-statistics': attributes.showStatistics ? 'true' : 'false',
         }),
       },
@@ -731,7 +732,7 @@ export const InlineChart = Node.create({
     ]
   },
 
-  renderHTML({ HTMLAttributes }) {
+  renderHTML({ HTMLAttributes }: { HTMLAttributes: Record<string, any> }) {
     return ['div', mergeAttributes(HTMLAttributes, { 'data-type': 'inline-chart' })]
   },
 

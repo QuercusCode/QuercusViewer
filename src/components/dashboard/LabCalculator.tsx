@@ -14,34 +14,34 @@ export const LabCalculator = Node.create({
     return {
       type: {
         default: 'dilution',
-        parseHTML: element => element.getAttribute('data-calc-type') || 'dilution',
-        renderHTML: attributes => ({ 'data-calc-type': attributes.type }),
+        parseHTML: (element: HTMLElement) => element.getAttribute('data-calc-type') || 'dilution',
+        renderHTML: (attributes: Record<string, any>) => ({ 'data-calc-type': attributes.type }),
       },
       values: {
         default: {},
-        parseHTML: element => {
+        parseHTML: (element: HTMLElement) => {
           try {
             return JSON.parse(element.getAttribute('data-values') || '{}');
           } catch { return {}; }
         },
-        renderHTML: attributes => ({ 'data-values': JSON.stringify(attributes.values) }),
+        renderHTML: (attributes: Record<string, any>) => ({ 'data-values': JSON.stringify(attributes.values) }),
       },
       units: {
         default: {
           c1: 'mM', v1: 'mL', c2: 'mM', v2: 'mL',
           c: 'mM', v: 'mL', mw: 'g/mol', m: 'mg'
         },
-        parseHTML: element => {
+        parseHTML: (element: HTMLElement) => {
           try {
             return JSON.parse(element.getAttribute('data-units') || '{}');
           } catch { return {}; }
         },
-        renderHTML: attributes => ({ 'data-units': JSON.stringify(attributes.units) }),
+        renderHTML: (attributes: Record<string, any>) => ({ 'data-units': JSON.stringify(attributes.units) }),
       },
       targetField: {
         default: null,
-        parseHTML: element => element.getAttribute('data-target-field') || null,
-        renderHTML: attributes => ({ 'data-target-field': attributes.targetField }),
+        parseHTML: (element: HTMLElement) => element.getAttribute('data-target-field') || null,
+        renderHTML: (attributes: Record<string, any>) => ({ 'data-target-field': attributes.targetField }),
       }
     };
   },
@@ -50,7 +50,7 @@ export const LabCalculator = Node.create({
     return [{ tag: 'div[data-type="lab-calculator"]' }];
   },
 
-  renderHTML({ HTMLAttributes }) {
+  renderHTML({ HTMLAttributes }: { HTMLAttributes: Record<string, any> }) {
     return ['div', mergeAttributes(HTMLAttributes, { 'data-type': 'lab-calculator' })];
   },
 
@@ -79,7 +79,9 @@ export const LabCalculator = Node.create({
 
 // --- Component ---
 
-const LabCalculatorComponent = ({ node, updateAttributes, deleteNode }: any) => {
+import type { NodeViewProps } from '@tiptap/react';
+
+const LabCalculatorComponent = ({ node, updateAttributes, deleteNode }: NodeViewProps) => {
   const { type, values, units, targetField } = node.attrs;
 
   const handleUpdateValue = (key: string, val: string) => {
@@ -205,7 +207,17 @@ const UNIT_OPTIONS = {
   mw: ['g/mol']
 };
 
-const CalcField = ({ label, value, unit, onValueChange, onUnitChange, unitType, isTarget }: any) => {
+interface CalcFieldProps {
+  label: string;
+  value: string;
+  unit: string;
+  onValueChange: (val: string) => void;
+  onUnitChange: (unit: string) => void;
+  unitType: string;
+  isTarget: boolean;
+}
+
+const CalcField = ({ label, value, unit, onValueChange, onUnitChange, unitType, isTarget }: CalcFieldProps) => {
   const options = UNIT_OPTIONS[unitType as keyof typeof UNIT_OPTIONS] || [];
   
   return (
