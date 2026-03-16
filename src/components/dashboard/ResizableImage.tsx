@@ -72,6 +72,28 @@ export const ResizableImage = Node.create<ResizableImageOptions>({
     return ReactNodeViewRenderer(ResizableImageComponent);
   },
 
+  addStorage() {
+    return {
+      markdown: {
+        serialize: (state: any, node: any) => {
+          const payload = JSON.stringify({
+            src: node.attrs.src,
+            width: node.attrs.width,
+            height: node.attrs.height,
+            alt: node.attrs.alt,
+            title: node.attrs.title,
+          });
+          const base64 = btoa(unescape(encodeURIComponent(payload)));
+          state.write(`[[resizable-image:${base64}]]`);
+          state.closeBlock(node);
+        },
+        parse: {
+          // Parsing back is handled by regular markdown image parsing or custom regex if needed
+        }
+      }
+    }
+  },
+
   addCommands() {
     return {
       setResizableImage: (options: { src: string; alt?: string; title?: string; width?: string | number; height?: string | number }) => ({ commands }) => {

@@ -179,7 +179,7 @@ export const LabReportTemplate = React.forwardRef<HTMLDivElement, LabReportTempl
                   const processed = React.Children.map(children, child => {
                     if (typeof child === 'string') {
                       // Combined split for all custom nodes
-                      const parts = child.split(/(\[\[structure:[a-f0-9-]{36}\]\]|\[\[sketcher:[A-Za-z0-9+/=]+\]\]|\[\[calculator:[A-Za-z0-9+/=]+\]\]|\[\[code:[A-Za-z0-9+/=]+\]\]|\[\[image-workbench:[A-Za-z0-9+/=]+\]\])/g);
+                      const parts = child.split(/(\[\[structure:[a-f0-9-]{36}\]\]|\[\[sketcher:[A-Za-z0-9+/=]+\]\]|\[\[calculator:[A-Za-z0-9+/=]+\]\]|\[\[code:[A-Za-z0-9+/=]+\]\]|\[\[image-workbench:[A-Za-z0-9+/=]+\]\]|\[\[resizable-image:[A-Za-z0-9+/=]+\]\])/g);
                       return parts.map((part, i) => {
                         // 1. Handle Structure Mentions
                         const structMatch = part.match(/\[\[structure:([a-f0-9-]{36})\]\]/);
@@ -384,6 +384,35 @@ export const LabReportTemplate = React.forwardRef<HTMLDivElement, LabReportTempl
                           } catch (err) {
                             console.error("PDF Image Workbench Decode Error:", err);
                             return <span style={{ color: '#ef4444', fontSize: '10px' }}>Error rendering analysis</span>;
+                          }
+                        }
+
+                        // 6. Handle Resizable Image (Base64)
+                        const resizableMatch = part.match(/\[\[resizable-image:([A-Za-z0-9+/=]+)\]\]/);
+                        if (resizableMatch) {
+                          try {
+                            const base64 = resizableMatch[1];
+                            const decoded = decodeURIComponent(escape(atob(base64)));
+                            const { src, width, height, alt } = JSON.parse(decoded);
+                            
+                            return (
+                              <div key={i} style={{ margin: '1.5rem 0', display: 'flex', justifyContent: 'center' }}>
+                                <img 
+                                  src={src} 
+                                  alt={alt || "Notebook Image"} 
+                                  style={{ 
+                                    maxWidth: '100%', 
+                                    width: typeof width === 'number' ? `${width}px` : width,
+                                    height: typeof height === 'number' ? `${height}px` : height,
+                                    borderRadius: '0.5rem',
+                                    border: '1px solid #f1f5f9'
+                                  }} 
+                                />
+                              </div>
+                            );
+                          } catch (err) {
+                            console.error("PDF Resizable Image Decode Error:", err);
+                            return <span style={{ color: '#ef4444', fontSize: '10px' }}>Error rendering image</span>;
                           }
                         }
                         
