@@ -298,7 +298,7 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode, updateAtt
 
   const toolbarAction = (e: React.MouseEvent, action: string) => {
     e.preventDefault();
-    const chain = editor.chain().focus();
+    const chain = (editor as any).chain().focus();
     switch(action) {
       case 'bold': chain.toggleBold().run(); break;
       case 'italic': chain.toggleItalic().run(); break;

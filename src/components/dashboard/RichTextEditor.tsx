@@ -2,6 +2,14 @@ import React, { useState, useEffect, useRef, useImperativeHandle, forwardRef } f
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
+import TiptapBold from '@tiptap/extension-bold';
+import TiptapItalic from '@tiptap/extension-italic';
+import Strike from '@tiptap/extension-strike';
+import TiptapCode from '@tiptap/extension-code';
+import BulletList from '@tiptap/extension-bullet-list';
+import OrderedList from '@tiptap/extension-ordered-list';
+import Heading from '@tiptap/extension-heading';
+import History from '@tiptap/extension-history';
 import Link from '@tiptap/extension-link';
 import { Color } from '@tiptap/extension-color';
 import { TextStyle } from '@tiptap/extension-text-style';
@@ -192,10 +200,24 @@ export const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
-        heading: {
-          levels: [1, 2, 3],
-        },
+        bold: false,
+        italic: false,
+        strike: false,
+        code: false,
+        bulletList: false,
+        orderedList: false,
+        heading: false,
       }),
+      TiptapBold,
+      TiptapItalic,
+      Strike,
+      TiptapCode,
+      BulletList,
+      OrderedList,
+      Heading.configure({
+        levels: [1, 2, 3],
+      }),
+      History,
       Underline,
       Link.configure({
         openOnClick: false,
@@ -275,7 +297,7 @@ export const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>
         class: `prose ${theme !== 'light' ? 'prose-invert' : ''} prose-sm sm:prose-base focus:outline-none max-w-none min-h-[500px] px-4 sm:px-10 py-6 text-[var(--text-primary)]`,
       },
     },
-  });
+  }) as any;
 
   useEffect(() => {
     if (!editor || !noteId || !user) return;
