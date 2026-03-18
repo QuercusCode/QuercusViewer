@@ -430,7 +430,7 @@ export const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>
   return (
     <div className="flex flex-col w-full h-full bg-[var(--bg-main)] rounded-xl focus-within:border-neutral-700 transition-colors overflow-hidden">
       {/* TOOLBAR */}
-      <div className="flex items-center flex-wrap gap-0.5 p-1 bg-[var(--bg-header)] border-b border-[var(--border-main)] sticky top-0 z-20 rounded-t-xl">
+      <div className="flex items-center flex-wrap gap-0.5 p-1 bg-[var(--bg-header)] border-b border-[var(--border-main)] sticky top-0 z-50 rounded-t-xl">
         {/* History */}
         <div className="flex items-center">
           <ToolbarButton 
