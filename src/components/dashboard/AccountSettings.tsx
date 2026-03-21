@@ -1,8 +1,17 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useAuth } from '../../lib/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { User, Mail, Shield, Loader2, Camera, Trash2, AlertTriangle, X, Check } from 'lucide-react';
+import { User, Mail, Shield, Loader2, Camera, Trash2, AlertTriangle, X, Check, HardDrive, Zap, Bell, Globe, Link2, Github, Settings2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+
+// ─── Format Helpers ───────────────────────────────────────────────
+function formatBytes(bytes: number | null): string {
+    if (!bytes) return '0 B';
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────
 
@@ -233,6 +242,22 @@ export const AccountSettings = () => {
     const [isChangingPassword, setIsChangingPassword] = useState(false);
     const [passwordStatus, setPasswordStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
+    // Storage calculation
+    const [storageUsed, setStorageUsed] = useState<number>(0);
+    const STORAGE_QUOTA = 5 * 1024 * 1024 * 1024; // 5 GB default quota
+
+    // UI Toggles
+    const [emailNotifs, setEmailNotifs] = useState(true);
+    const [publicProfile, setPublicProfile] = useState(false);
+
+    // Fetch storage
+    useEffect(() => {
+        if (!user) return;
+        supabase.from('structures').select('file_size').eq('user_id', user.id).then(({ data }) => {
+            if (data) setStorageUsed(data.reduce((acc, row) => acc + (row.file_size || 0), 0));
+        });
+    }, [user]);
+
     // Danger zone modals
     const [showClearModal, setShowClearModal] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -359,6 +384,136 @@ export const AccountSettings = () => {
                             {saveStatus === 'success' && <span className="text-sm text-green-400">✓ Saved!</span>}
                             {saveStatus === 'error' && <span className="text-sm text-red-400">Failed to save.</span>}
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Storage Usage Card */}
+            <div className="bg-[var(--bg-header)] border border-[var(--border-main)] rounded-xl overflow-hidden">
+                <div className="px-6 py-4 border-b border-[var(--border-main)] flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <HardDrive className="w-4 h-4 text-orange-400" />
+                        <h2 className="text-sm font-semibold text-[var(--text-primary)]">Storage Usage</h2>
+                    </div>
+                    <span className="text-xs font-medium text-[var(--text-muted)]">{formatBytes(storageUsed)} / {formatBytes(STORAGE_QUOTA)}</span>
+                </div>
+                <div className="p-6">
+                    <div className="relative h-2.5 w-full bg-[var(--input-bg)] rounded-full overflow-hidden mb-3">
+                        <div 
+                            className="absolute top-0 left-0 h-full bg-gradient-to-r from-orange-500 to-amber-400 rounded-full transition-all duration-1000"
+                            style={{ width: `${Math.min(100, (storageUsed / STORAGE_QUOTA) * 100)}%` }}
+                        />
+                    </div>
+                    <div className="flex items-center justify-between">
+                        <p className="text-xs text-[var(--text-secondary)]">You are currently using <strong>{((storageUsed / STORAGE_QUOTA) * 100).toFixed(1)}%</strong> of your free tier quota.</p>
+                        <button className="flex items-center gap-1.5 text-xs font-semibold text-orange-400 hover:text-orange-300 bg-orange-500/10 hover:bg-orange-500/20 px-3 py-1.5 rounded-lg border border-orange-500/20 hover:border-orange-500/40 transition-all">
+                            <Zap className="w-3.5 h-3.5" /> Upgrade Plan
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {/* Preferences Card */}
+            <div className="bg-[var(--bg-header)] border border-[var(--border-main)] rounded-xl overflow-hidden">
+                <div className="px-6 py-4 border-b border-[var(--border-main)] flex items-center gap-2">
+                    <Settings2 className="w-4 h-4 text-cyan-400" />
+                    <h2 className="text-sm font-semibold text-[var(--text-primary)]">Application Preferences</h2>
+                </div>
+                <div className="p-6 space-y-5">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        {/* Language */}
+                        <div>
+                            <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">Language</label>
+                            <select className="w-full px-3 py-2 bg-[var(--bg-header)] border border-[var(--border-main)] rounded-lg text-sm text-[var(--text-primary)] outline-none focus:border-blue-500">
+                                <option>English (US)</option>
+                                <option>Spanish (ES)</option>
+                                <option>French (FR)</option>
+                                <option>German (DE)</option>
+                            </select>
+                        </div>
+                        {/* Timezone */}
+                        <div>
+                            <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">Timezone</label>
+                            <select className="w-full px-3 py-2 bg-[var(--bg-header)] border border-[var(--border-main)] rounded-lg text-sm text-[var(--text-primary)] outline-none focus:border-blue-500">
+                                <option>Pacific Time (PT)</option>
+                                <option>Eastern Time (ET)</option>
+                                <option>Central European Time (CET)</option>
+                                <option>Coordinated Universal Time (UTC)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div className="border-t border-[var(--border-main)] pt-5 space-y-4">
+                        {/* Toggles */}
+                        <label className="flex items-center justify-between cursor-pointer group">
+                            <div>
+                                <p className="text-sm font-medium text-[var(--text-primary)] flex items-center gap-2"><Bell className="w-4 h-4 text-cyan-500" /> Email Notifications</p>
+                                <p className="text-xs text-[var(--text-muted)] mt-0.5">Receive product updates and weekly digests.</p>
+                            </div>
+                            <div className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors ${emailNotifs ? 'bg-blue-600' : 'bg-neutral-600'}`}
+                                onClick={() => setEmailNotifs(!emailNotifs)}>
+                                <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${emailNotifs ? 'translate-x-2' : '-translate-x-2'}`} />
+                            </div>
+                        </label>
+                        <label className="flex items-center justify-between cursor-pointer group">
+                            <div>
+                                <p className="text-sm font-medium text-[var(--text-primary)] flex items-center gap-2"><Globe className="w-4 h-4 text-emerald-500" /> Public Profile Discovery</p>
+                                <p className="text-xs text-[var(--text-muted)] mt-0.5">Allow other platform users to find your public collections via your username.</p>
+                            </div>
+                            <div className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors ${publicProfile ? 'bg-blue-600' : 'bg-neutral-600'}`}
+                                onClick={() => setPublicProfile(!publicProfile)}>
+                                <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${publicProfile ? 'translate-x-2' : '-translate-x-2'}`} />
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            {/* Connected Accounts Card */}
+            <div className="bg-[var(--bg-header)] border border-[var(--border-main)] rounded-xl overflow-hidden">
+                <div className="px-6 py-4 border-b border-[var(--border-main)] flex items-center gap-2">
+                    <Link2 className="w-4 h-4 text-emerald-400" />
+                    <h2 className="text-sm font-semibold text-[var(--text-primary)]">Connected Integrations</h2>
+                </div>
+                <div className="divide-y divide-[var(--border-main)]">
+                    {/* Google */}
+                    <div className="flex items-center justify-between p-5 hover:bg-[var(--input-bg)]/50 transition-colors">
+                        <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 rounded-xl bg-white border border-neutral-200 flex items-center justify-center shrink-0">
+                                <svg className="w-5 h-5" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" /><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" /><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" /><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" /></svg>
+                            </div>
+                            <div>
+                                <p className="text-sm font-semibold text-[var(--text-primary)]">Google Workspace</p>
+                                <p className="text-xs text-[var(--text-muted)]">Single Sign-On authentication</p>
+                            </div>
+                        </div>
+                        <span className="text-xs font-medium px-2.5 py-1 bg-green-500/10 text-green-400 border border-green-500/20 rounded-md">Connected</span>
+                    </div>
+                    {/* GitHub */}
+                    <div className="flex items-center justify-between p-5 hover:bg-[var(--input-bg)]/50 transition-colors">
+                        <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 rounded-xl bg-neutral-900 border border-neutral-700 flex items-center justify-center shrink-0">
+                                <Github className="w-5 h-5 text-white" />
+                            </div>
+                            <div>
+                                <p className="text-sm font-semibold text-[var(--text-primary)]">GitHub</p>
+                                <p className="text-xs text-[var(--text-muted)]">Import repositories and scripts</p>
+                            </div>
+                        </div>
+                        <button className="text-xs font-medium px-4 py-1.5 bg-[var(--input-bg)] text-[var(--text-primary)] border border-[var(--border-main)] hover:bg-[var(--border-main)] rounded-md transition-colors">Connect</button>
+                    </div>
+                    {/* ORCID */}
+                    <div className="flex items-center justify-between p-5 hover:bg-[var(--input-bg)]/50 transition-colors">
+                        <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 rounded-xl bg-[#A6CE39]/10 border border-[#A6CE39]/30 flex items-center justify-center shrink-0">
+                                <span className="font-bold text-[#A6CE39] text-sm">iD</span>
+                            </div>
+                            <div>
+                                <p className="text-sm font-semibold text-[var(--text-primary)]">ORCID iD</p>
+                                <p className="text-xs text-[var(--text-muted)]">Link researcher identity</p>
+                            </div>
+                        </div>
+                        <button className="text-xs font-medium px-4 py-1.5 bg-[var(--input-bg)] text-[var(--text-primary)] border border-[var(--border-main)] hover:bg-[var(--border-main)] rounded-md transition-colors">Connect</button>
                     </div>
                 </div>
             </div>
