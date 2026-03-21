@@ -321,7 +321,6 @@ interface ControlsProps {
 
 
     isLightMode: boolean;
-    setIsLightMode: (mode: boolean) => void;
     highlightedResidue: { chain: string; resNo: number; resName?: string } | null;
     onResidueClick: (chain: string, resNo: number, resName?: string) => void;
     // onToggleAISidebar: () => void;
@@ -450,7 +449,6 @@ export const Controls: React.FC<ControlsProps> = ({
     onDeleteMeasurement,
     pdbMetadata,
     isLightMode,
-    setIsLightMode,
     highlightedResidue,
     onResidueClick,
     showSurface,

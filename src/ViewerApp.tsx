@@ -2982,7 +2982,6 @@ function App() {
                     }
                     isSharedSession={peerSession.isConnected}
                     isLightMode={isLightMode}
-                    setIsLightMode={setIsLightMode}
                     highlightedResidue={highlightedResidue}
                     onResidueClick={handleSequenceResidueClick}
                     showSurface={showSurface}
