@@ -3357,8 +3357,10 @@ function App() {
 
             {/* Notebook Drawer */}
             {!isEmbedMode && !isStudioMode && isNotebookOpen && (
-              <div className="hidden md:block w-[400px] lg:w-[450px] border-l border-white/10 shrink-0 bg-neutral-950/50 backdrop-blur-sm z-40">
-                <LabNotebook isDrawer />
+              <div className="hidden md:block w-[400px] lg:w-[450px] shrink-0 z-40 pt-[4.5rem] pointer-events-none flex flex-col h-full border-l border-[var(--border-main)]/30 backdrop-blur-sm bg-neutral-950/10">
+                <div className="w-full flex-1 min-h-0 pointer-events-auto shadow-2xl relative">
+                  <LabNotebook isDrawer />
+                </div>
               </div>
             )}
 
