@@ -779,7 +779,7 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode, updateAtt
 const ToolbarDivider = () => <div className="w-px h-4 bg-neutral-200 mx-1" />
 
 export const SpreadsheetTable = Table.extend({
-  name: 'spreadsheetTable',
+  name: 'table',
   addAttributes() {
     return {
       ...this.parent?.(),

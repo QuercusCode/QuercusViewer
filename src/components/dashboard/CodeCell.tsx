@@ -50,10 +50,36 @@ export const CodeCell = Node.create({
             code: node.attrs.code,
             output: node.attrs.output
           });
-          const base64 = btoa(unescape(encodeURIComponent(payload)));
-          state.write(`[[code:${base64}]]`);
+          const base64 = typeof btoa !== 'undefined' ? btoa(unescape(encodeURIComponent(payload))) : Buffer.from(payload).toString('base64');
+          state.write(`\n\`\`\`python-kernel\n${base64}\n\`\`\`\n`);
           state.closeBlock(node);
         },
+        parse: {
+          setup: (markdownit: any) => {
+            markdownit.use((md: any) => {
+              const defaultRender = md.renderer.rules.fence || function(tokens: any, idx: any, options: any, _env: any, self: any) {
+                return self.renderToken(tokens, idx, options);
+              };
+
+              md.renderer.rules.fence = (tokens: any, idx: any, options: any, _env: any, self: any) => {
+                const token = tokens[idx];
+                if (token.info === 'python-kernel') {
+                  try {
+                    const base64 = token.content.trim();
+                    const jsonStr = typeof atob !== 'undefined' ? decodeURIComponent(escape(atob(base64))) : Buffer.from(base64, 'base64').toString('utf8');
+                    const attrs = JSON.parse(jsonStr);
+                    const escapeHtml = (str: string) => String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+                    
+                    return `<div data-type="code-cell" data-code="${escapeHtml(attrs.code || '')}" data-output="${escapeHtml(attrs.output || '')}"></div>`;
+                  } catch (e) {
+                    console.error('Failed to parse code-cell:', e);
+                  }
+                }
+                return defaultRender(tokens, idx, options, _env, self);
+              };
+            });
+          }
+        }
       }
     }
   }
