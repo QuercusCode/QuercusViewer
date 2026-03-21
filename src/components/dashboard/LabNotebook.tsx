@@ -32,6 +32,7 @@ export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false
     const [allStructures, setAllStructures] = useState<Structure[]>([]);
 
     const [showDrawerList, setShowDrawerList] = useState(isDrawer);
+    const [showMobileList, setShowMobileList] = useState(true);
 
     const activeNotebook = notebooks.find(n => n.id === activeId);
 
@@ -233,7 +234,10 @@ export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false
         <div className={`flex h-full w-full bg-[var(--bg-main)] overflow-hidden text-[var(--text-secondary)] ${isDrawer ? 'border-l border-[var(--border-main)] shadow-2xl' : ''}`}>
             {/* Left Sidebar: List */}
             {(!isDrawer || showDrawerList) && (
-                <div className={`${isDrawer ? 'w-full' : 'w-80'} border-r border-[var(--border-main)] bg-[var(--bg-sidebar)]/50 flex flex-col shrink-0 transition-all`}>
+                <div className={`
+                    ${isDrawer ? 'w-full' : (showMobileList ? 'flex w-full md:w-80' : 'hidden md:flex md:w-80')} 
+                    border-r border-[var(--border-main)] bg-[var(--bg-sidebar)]/50 flex-col shrink-0 transition-all
+                `}>
                     <div className="p-4 border-b border-[var(--border-main)] space-y-4">
                         <div className="flex items-center justify-between">
                             <h2 className="text-lg font-bold text-[var(--text-primary)] flex items-center gap-2">
@@ -287,6 +291,7 @@ export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false
                                     onClick={() => {
                                         setActiveId(entry.id);
                                         if (isDrawer) setShowDrawerList(false);
+                                        setShowMobileList(false);
                                     }}
                                     className={`w-full text-left px-3 py-3 rounded-xl transition-all group relative border ${activeId === entry.id
                                         ? 'bg-blue-500/10 border-blue-500/30 text-[var(--text-primary)] shadow-sm'
@@ -319,16 +324,22 @@ export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false
 
             {/* Right Pane: Editor Shell */}
             {(!isDrawer || !showDrawerList) && (
-                <div className="flex-1 flex flex-col bg-[var(--bg-main)] overflow-hidden relative">
+                <div className={`
+                    ${isDrawer ? 'flex' : (!showMobileList ? 'flex' : 'hidden md:flex')}
+                    flex-1 flex-col bg-[var(--bg-main)] overflow-hidden relative
+                `}>
                     {activeNotebook ? (
                         <div className={`flex-1 flex flex-col h-full w-full ${isDrawer ? '' : 'max-w-[1440px] mx-auto'}`}>
                             {/* Editor Toolbar */}
-                            <div className={`flex items-center justify-between py-4 shrink-0 ${isDrawer ? 'px-4' : 'px-8'}`}>
+                            <div className={`flex items-center justify-between py-4 shrink-0 ${isDrawer ? 'px-4' : 'px-4 sm:px-8'}`}>
                                 <div className="flex items-center gap-2">
-                                    {isDrawer && (
+                                    {(isDrawer || !showMobileList) && (
                                         <button
-                                            onClick={() => setShowDrawerList(true)}
-                                            className="p-1.5 hover:bg-[var(--input-bg)] text-[var(--text-muted)] rounded-lg transition-colors mr-2"
+                                            onClick={() => {
+                                                if (isDrawer) setShowDrawerList(true);
+                                                setShowMobileList(true);
+                                            }}
+                                            className={`${isDrawer ? '' : 'md:hidden'} p-1.5 hover:bg-[var(--input-bg)] text-[var(--text-muted)] rounded-lg transition-colors mr-2 shrink-0`}
                                             title="View All Notes"
                                         >
                                             <Menu className="w-5 h-5" />
@@ -408,10 +419,13 @@ export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false
                         <div className="flex-1 flex flex-col items-center justify-center text-[var(--text-muted)] p-4 text-center">
                             <FileText className="w-12 h-12 sm:w-16 sm:h-16 mb-4 opacity-20" />
                             <p className="text-sm">Select or create a note to start writing.</p>
-                            {isDrawer && (
+                            {(isDrawer || !showMobileList) && (
                                 <button
-                                    onClick={() => setShowDrawerList(true)}
-                                    className="mt-4 px-4 py-2 bg-[var(--bg-header)] border border-[var(--border-main)] rounded-lg text-xs"
+                                    onClick={() => {
+                                        if (isDrawer) setShowDrawerList(true);
+                                        setShowMobileList(true);
+                                    }}
+                                    className={`${isDrawer ? '' : 'md:hidden'} mt-4 px-4 py-2 bg-[var(--bg-header)] border border-[var(--border-main)] rounded-lg text-xs`}
                                 >
                                     View All Notes
                                 </button>
