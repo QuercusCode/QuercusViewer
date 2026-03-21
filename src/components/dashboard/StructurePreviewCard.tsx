@@ -36,7 +36,7 @@ export const StructurePreviewCard: React.FC<StructurePreviewCardProps> = ({ stru
 
   if (loading) {
     return (
-      <div className="my-4 w-full max-w-md h-32 bg-neutral-900/50 border border-neutral-800 rounded-2xl flex items-center justify-center animate-pulse">
+      <div className="my-4 w-full max-w-md h-32 bg-[var(--bg-header)] border border-[var(--border-main)] rounded-2xl flex items-center justify-center animate-pulse">
         <Loader2 className="w-6 h-6 text-neutral-700 animate-spin" />
       </div>
     );
@@ -80,10 +80,10 @@ export const StructurePreviewCard: React.FC<StructurePreviewCardProps> = ({ stru
   };
 
   return (
-    <div className="my-6 w-full max-w-md bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl hover:border-neutral-700 transition-all group isolate">
+    <div className="my-6 w-full max-w-md bg-[var(--bg-header)] border border-[var(--border-main)] rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl hover:border-[var(--border-main)] transition-all group isolate">
       <div className="flex h-36">
         {/* Left: Thumbnail */}
-        <div className="w-36 bg-neutral-950 flex-shrink-0 relative overflow-hidden flex items-center justify-center border-r border-neutral-800">
+        <div className="w-36 bg-[var(--bg-header)] flex-shrink-0 relative overflow-hidden flex items-center justify-center border-r border-[var(--border-main)]">
           {rcsbId ? (
             <img 
               src={`https://cdn.rcsb.org/images/structures/${rcsbId.toLowerCase()}_assembly-1.jpeg`}
@@ -105,16 +105,16 @@ export const StructurePreviewCard: React.FC<StructurePreviewCardProps> = ({ stru
                 {structure.file_type}
               </span>
               {rcsbId && (
-                <span className="text-[10px] font-mono text-neutral-500">{rcsbId}</span>
+                <span className="text-[10px] font-mono text-[var(--text-muted)]">{rcsbId}</span>
               )}
             </div>
-            <h4 className="text-sm font-semibold text-white line-clamp-2 leading-tight group-hover:text-blue-300 transition-colors">
+            <h4 className="text-sm font-semibold text-[var(--text-primary)] line-clamp-2 leading-tight group-hover:text-blue-300 transition-colors">
               {structure.metadata?.title || structure.name}
             </h4>
           </div>
 
           <div className="flex items-center justify-between mt-2">
-            <div className="flex items-center gap-3 text-[10px] text-neutral-500">
+            <div className="flex items-center gap-3 text-[10px] text-[var(--text-muted)]">
                <span className="flex items-center gap-1"><FileText className="w-3 h-3" /> {Math.round((structure.file_size || 0) / 1024)} KB</span>
             </div>
             <button 

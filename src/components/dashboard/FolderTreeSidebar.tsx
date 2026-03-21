@@ -108,9 +108,9 @@ export function FolderTreeSidebar({
                             <div className="flex items-center gap-1 px-2 my-0.5" style={{ marginLeft: depth * 12 }}>
                                 <input ref={inputRef} value={renameDraft} onChange={e => setRenameDraft(e.target.value)}
                                     onKeyDown={e => { if (e.key === 'Enter') handleRename(c.id); if (e.key === 'Escape') setRenamingId(null); }}
-                                    className="flex-1 bg-neutral-800 border border-blue-500/50 rounded px-2 py-0.5 text-xs text-white outline-none" />
+                                    className="flex-1 bg-[var(--input-bg)] border border-blue-500/50 rounded px-2 py-0.5 text-xs text-[var(--text-primary)] outline-none" />
                                 <button onClick={() => handleRename(c.id)} className="text-emerald-400 p-0.5"><Check className="w-3 h-3" /></button>
-                                <button onClick={() => setRenamingId(null)} className="text-neutral-500 p-0.5"><X className="w-3 h-3" /></button>
+                                <button onClick={() => setRenamingId(null)} className="text-[var(--text-muted)] p-0.5"><X className="w-3 h-3" /></button>
                             </div>
                         ) : (
                             <button onClick={() => onSelect(c.id)}
@@ -126,24 +126,24 @@ export function FolderTreeSidebar({
                                 }}
                                 className={`w-full flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-sm transition-all text-left relative focus:outline-none
                                     ${dragOverId === c.id ? 'bg-blue-500/20 text-white ring-1 ring-blue-500 border border-blue-500/50' :
-                                        isActive ? 'bg-neutral-800 text-white border border-transparent' : 'text-neutral-400 hover:bg-neutral-800/60 hover:text-neutral-200 border border-transparent'}`}
+                                        isActive ? 'bg-[var(--input-bg)] text-[var(--text-primary)] border border-transparent' : 'text-[var(--text-secondary)] hover:bg-[var(--input-bg)] hover:text-[var(--text-primary)] border border-transparent'}`}
                                 style={{ paddingLeft: `${depth * 12 + 8}px` }}
                             >
                                 {/* Expaner Icon */}
                                 <div onClick={(e) => hasChildren ? toggleExpand(c.id, e) : undefined}
-                                    className={`w-4 h-4 flex items-center justify-center shrink-0 ${hasChildren ? 'hover:bg-neutral-700 rounded-sm cursor-pointer' : 'opacity-0'}`}>
+                                    className={`w-4 h-4 flex items-center justify-center shrink-0 ${hasChildren ? 'hover:bg-[var(--input-bg)] rounded-sm cursor-pointer' : 'opacity-0'}`}>
                                     {isExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
                                 </div>
 
                                 <span className={`w-2 h-2 rounded-full shrink-0 ${DOT[c.color] ?? 'bg-neutral-400'}`} />
                                 <span className="truncate flex-1 text-[13px]">{c.name}</span>
                                 {c.is_public && <span title="Public" className="flex items-center shrink-0 ml-1 opacity-70"><Globe className="w-3 h-3 text-blue-400" /></span>}
-                                <span className="text-[10px] text-neutral-500 bg-neutral-900 px-1.5 rounded">{counts[c.id] ?? 0}</span>
+                                <span className="text-[10px] text-[var(--text-muted)] bg-[var(--bg-header)] px-1.5 rounded">{counts[c.id] ?? 0}</span>
 
-                                <span className="hidden group-hover:flex items-center gap-0.5 absolute right-2 bg-neutral-800 pl-1">
-                                    <button onClick={e => { e.stopPropagation(); setCreatingInId(c.id); }} className="p-0.5 text-neutral-500 hover:text-blue-400"><Plus className="w-3 h-3" /></button>
-                                    <button onClick={e => { e.stopPropagation(); setRenamingId(c.id); setRenameDraft(c.name); }} className="p-0.5 text-neutral-500 hover:text-white"><Pencil className="w-3 h-3" /></button>
-                                    <button onClick={e => { e.stopPropagation(); handleDelete(c.id); }} className="p-0.5 text-neutral-500 hover:text-red-400"><Trash2 className="w-3 h-3" /></button>
+                                <span className="hidden group-hover:flex items-center gap-0.5 absolute right-2 bg-[var(--input-bg)] pl-1">
+                                    <button onClick={e => { e.stopPropagation(); setCreatingInId(c.id); }} className="p-0.5 text-[var(--text-muted)] hover:text-blue-400"><Plus className="w-3 h-3" /></button>
+                                    <button onClick={e => { e.stopPropagation(); setRenamingId(c.id); setRenameDraft(c.name); }} className="p-0.5 text-[var(--text-muted)] hover:text-[var(--text-primary)]"><Pencil className="w-3 h-3" /></button>
+                                    <button onClick={e => { e.stopPropagation(); handleDelete(c.id); }} className="p-0.5 text-[var(--text-muted)] hover:text-red-400"><Trash2 className="w-3 h-3" /></button>
                                 </span>
                             </button>
                         )}
@@ -164,11 +164,11 @@ export function FolderTreeSidebar({
     };
 
     const renderCreatorBox = () => (
-        <div className="bg-neutral-800/50 border border-neutral-700/50 rounded-lg p-2.5 space-y-2 relative shadow-xl z-10 w-full mt-1 overflow-hidden pointer-events-auto">
+        <div className="bg-[var(--input-bg)] border border-[var(--border-main)] rounded-lg p-2.5 space-y-2 relative shadow-xl z-10 w-full mt-1 overflow-hidden pointer-events-auto">
             <input ref={inputRef} value={newName} onChange={e => setNewName(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') handleCreate(); if (e.key === 'Escape') setCreatingInId(null); }}
                 placeholder="Folder name…"
-                className="w-full bg-neutral-900 text-xs text-white placeholder-neutral-500 px-2.5 py-1.5 rounded border border-neutral-800 focus:border-blue-500/50 outline-none" />
+                className="w-full bg-[var(--bg-header)] text-xs text-[var(--text-primary)] placeholder-neutral-500 px-2.5 py-1.5 rounded border border-[var(--border-main)] focus:border-blue-500/50 outline-none" />
 
             <div className="flex flex-wrap gap-1">
                 {['blue', 'violet', 'emerald', 'orange', 'pink', 'amber', 'cyan', 'rose'].map(col => (
@@ -182,7 +182,7 @@ export function FolderTreeSidebar({
                     className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded text-xs">
                     {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />} Add
                 </button>
-                <button onClick={() => { setCreatingInId(null); setNewName(''); }} className="px-2 text-neutral-500 hover:text-white bg-neutral-800/50 rounded hover:bg-neutral-800">
+                <button onClick={() => { setCreatingInId(null); setNewName(''); }} className="px-2 text-[var(--text-muted)] hover:text-[var(--text-primary)] bg-[var(--input-bg)] rounded hover:bg-[var(--input-bg)]">
                     <X className="w-3.5 h-3.5" />
                 </button>
             </div>
@@ -190,15 +190,15 @@ export function FolderTreeSidebar({
     );
 
     return (
-        <div className="w-64 shrink-0 flex flex-col h-full bg-neutral-950/90 sm:bg-neutral-950/30 border-r border-neutral-800/50 backdrop-blur-xl sm:backdrop-blur-none">
+        <div className="w-64 shrink-0 flex flex-col h-full bg-[var(--bg-header)] sm:bg-[var(--bg-header)] border-r border-[var(--border-main)] backdrop-blur-xl sm:backdrop-blur-none">
             <div className="p-4 flex items-center justify-between">
-                <p className="text-xs font-semibold text-neutral-400 uppercase tracking-widest">Projects</p>
+                <p className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-widest">Projects</p>
                 <div className="flex items-center gap-1">
-                    <button onClick={() => setCreatingInId('root')} className="p-1 text-neutral-500 hover:text-white rounded-md hover:bg-neutral-800 transition-colors">
+                    <button onClick={() => setCreatingInId('root')} className="p-1 text-[var(--text-muted)] hover:text-[var(--text-primary)] rounded-md hover:bg-[var(--input-bg)] transition-colors">
                         <Plus className="w-4 h-4" />
                     </button>
                     {onClose && (
-                        <button onClick={onClose} className="p-1 text-neutral-500 hover:text-white rounded-md hover:bg-neutral-800 transition-colors sm:hidden">
+                        <button onClick={onClose} className="p-1 text-[var(--text-muted)] hover:text-[var(--text-primary)] rounded-md hover:bg-[var(--input-bg)] transition-colors sm:hidden">
                             <X className="w-4 h-4" />
                         </button>
                     )}
@@ -210,14 +210,14 @@ export function FolderTreeSidebar({
                 {/* Pinned / Quick Access */}
                 {((recentStructures && recentStructures.length > 0) || (pinnedCollectionIds && pinnedCollectionIds.length > 0)) && (
                     <div className="mb-4">
-                        <p className="px-2 mb-1.5 text-[10px] font-bold text-neutral-500 uppercase tracking-widest mt-2">Quick Access</p>
+                        <p className="px-2 mb-1.5 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest mt-2">Quick Access</p>
                         {pinnedCollectionIds?.map(id => {
                             const c = collections.find(col => col.id === id);
                             if (!c) return null;
                             return (
                                 <button key={`pin-${id}`} onClick={() => onSelect(c.id)}
                                     className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm transition-all focus:outline-none mb-0.5
-                                        ${activeCollection === c.id ? 'bg-blue-500/10 text-blue-400 font-medium' : 'text-neutral-400 hover:bg-neutral-800/60 hover:text-neutral-200'}`}>
+                                        ${activeCollection === c.id ? 'bg-blue-500/10 text-blue-400 font-medium' : 'text-[var(--text-secondary)] hover:bg-[var(--input-bg)] hover:text-white'}`}>
                                     <Pin className="w-3.5 h-3.5 shrink-0 text-blue-400/70 rotate-45" />
                                     <span className="truncate flex-1 text-left text-[13px]">{c.name}</span>
                                 </button>
@@ -225,7 +225,7 @@ export function FolderTreeSidebar({
                         })}
                         {recentStructures?.map(s => (
                             <button key={`recent-${s.id}`} onClick={() => onOpenStructure?.(s)}
-                                className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm text-neutral-400 hover:bg-neutral-800/60 hover:text-neutral-200 transition-all focus:outline-none mb-0.5">
+                                className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm text-[var(--text-secondary)] hover:bg-[var(--input-bg)] hover:text-[var(--text-primary)] transition-all focus:outline-none mb-0.5">
                                 <Clock className="w-3.5 h-3.5 shrink-0 opacity-60" />
                                 <span className="truncate flex-1 text-left text-[13px]">{s.name}</span>
                             </button>
@@ -236,10 +236,10 @@ export function FolderTreeSidebar({
                 {/* All structures */}
                 <button onClick={() => onSelect(null)}
                     className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm transition-all focus:outline-none mb-2
-                        ${activeCollection === null ? 'bg-blue-500/10 text-blue-400 font-medium' : 'text-neutral-400 hover:bg-neutral-800/60 hover:text-neutral-200'}`}>
+                        ${activeCollection === null ? 'bg-blue-500/10 text-blue-400 font-medium' : 'text-[var(--text-secondary)] hover:bg-[var(--input-bg)] hover:text-white'}`}>
                     <Database className="w-4 h-4 shrink-0" />
                     <span className="truncate flex-1 text-left text-[13px]">Library Overview</span>
-                    <span className="text-[10px] text-neutral-500 bg-neutral-900 px-1.5 rounded">{counts['__all__'] ?? 0}</span>
+                    <span className="text-[10px] text-[var(--text-muted)] bg-[var(--bg-header)] px-1.5 rounded">{counts['__all__'] ?? 0}</span>
                 </button>
 
                 {/* Tree Root */}
@@ -254,22 +254,22 @@ export function FolderTreeSidebar({
 
                 {/* Uncategorized (bottom) */}
                 {uncategorizedCount > 0 && (
-                    <div className="pt-4 mt-4 border-t border-neutral-800/50">
+                    <div className="pt-4 mt-4 border-t border-[var(--border-main)]">
                         <button onClick={() => onSelect('__none__')}
                             className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm transition-all focus:outline-none
-                                ${activeCollection === '__none__' ? 'bg-blue-500/10 text-blue-400 font-medium' : 'text-neutral-400 hover:bg-neutral-800/60 hover:text-neutral-200'}`}>
+                                ${activeCollection === '__none__' ? 'bg-blue-500/10 text-blue-400 font-medium' : 'text-[var(--text-secondary)] hover:bg-[var(--input-bg)] hover:text-white'}`}>
                             <Folder className="w-4 h-4 shrink-0" />
                             <span className="truncate flex-1 text-left text-[13px]">Uncategorized</span>
-                            <span className="text-[10px] text-neutral-600 bg-neutral-900 px-1.5 rounded">{uncategorizedCount}</span>
+                            <span className="text-[10px] text-[var(--text-muted)] bg-[var(--bg-header)] px-1.5 rounded">{uncategorizedCount}</span>
                         </button>
                     </div>
                 )}
 
                 {/* Trash */}
-                <div className="pt-2 mt-2 border-t border-neutral-800/50 mb-8">
+                <div className="pt-2 mt-2 border-t border-[var(--border-main)] mb-8">
                     <button onClick={() => onSelect('__trash__')}
                         className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm transition-all focus:outline-none
-                            ${activeCollection === '__trash__' ? 'bg-red-500/10 text-red-500 font-medium' : 'text-neutral-500 hover:bg-red-500/10 hover:text-red-400'}`}>
+                            ${activeCollection === '__trash__' ? 'bg-red-500/10 text-red-500 font-medium' : 'text-[var(--text-muted)] hover:bg-red-500/10 hover:text-red-400'}`}>
                         <Trash2 className="w-4 h-4 shrink-0" />
                         <span className="truncate flex-1 text-left text-[13px]">Trash</span>
                     </button>

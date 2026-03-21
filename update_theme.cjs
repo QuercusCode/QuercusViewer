@@ -1,9 +1,9 @@
 const fs = require('fs');
 
 const files = [
-  'src/components/dashboard/MyStructures.tsx',
-  'src/components/dashboard/ActivityTimeline.tsx',
-  'src/components/dashboard/AccountSettings.tsx'
+  'src/components/dashboard/FolderTreeSidebar.tsx',
+  'src/components/dashboard/CollectionsSidebar.tsx',
+  'src/components/dashboard/StructurePreviewCard.tsx'
 ];
 
 files.forEach(file => {
