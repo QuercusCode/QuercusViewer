@@ -731,39 +731,35 @@ function StructureCard({
                     </div>
 
                     {/* Action bar */}
-                    <div className="mt-auto space-y-1.5">
+                    <div className="mt-auto pt-2">
                         {/* Primary: Open */}
                         <button onClick={() => onOpen(item)} disabled={!!openingId}
-                            className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-blue-600/10 hover:bg-blue-600/25 border border-blue-500/20 hover:border-blue-500/40 text-blue-400 text-xs font-medium transition-all disabled:opacity-50">
+                            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-blue-600 text-white hover:bg-blue-500 text-sm font-semibold transition-all shadow-sm shadow-blue-900/20 disabled:opacity-50">
                             {openingId === item.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <ExternalLink className="w-4 h-4" />}
                             Open in Viewer
                         </button>
-                        {/* Secondary: 5 small buttons */}
-                        <div className="grid grid-cols-5 gap-1.5">
+                        
+                        {/* Secondary: Icon Actions */}
+                        <div className="flex items-center justify-between border-t border-[var(--border-main)] pt-3 mt-3">
                             <button onClick={handleDownload} disabled={downloading} title="Download"
-                                className="flex flex-col items-center gap-1 py-2 rounded-xl bg-[var(--input-bg)] hover:bg-[var(--input-bg)] border border-[var(--border-main)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all disabled:opacity-50">
-                                {downloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
-                                <span className="text-[9px]">Downld</span>
+                                className="p-2 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--input-bg)] transition-colors disabled:opacity-50">
+                                {downloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
                             </button>
                             <button onClick={handleShare} title="Copy link"
-                                className="flex flex-col items-center gap-1 py-2 rounded-xl bg-[var(--input-bg)] hover:bg-[var(--input-bg)] border border-[var(--border-main)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all">
-                                {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Share2 className="w-3.5 h-3.5" />}
-                                <span className={`text-[9px] ${copied ? 'text-emerald-400' : ''}`}>{copied ? 'Copied' : 'Share'}</span>
+                                className="p-2 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--input-bg)] transition-colors">
+                                {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Share2 className="w-4 h-4" />}
                             </button>
                             <button onClick={() => onDuplicate(item)} disabled={duplicatingId === item.id} title="Duplicate"
-                                className="flex flex-col items-center gap-1 py-2 rounded-xl bg-[var(--input-bg)] hover:bg-[var(--input-bg)] border border-[var(--border-main)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all disabled:opacity-50">
-                                {duplicatingId === item.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Copy className="w-3.5 h-3.5" />}
-                                <span className="text-[9px]">Clone</span>
+                                className="p-2 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--input-bg)] transition-colors disabled:opacity-50">
+                                {duplicatingId === item.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Copy className="w-4 h-4" />}
                             </button>
                             <button onClick={() => onMove(item)} title="Move to folder"
-                                className="flex flex-col items-center gap-1 py-2 rounded-xl bg-[var(--input-bg)] hover:bg-[var(--input-bg)] border border-[var(--border-main)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all">
-                                <FolderInput className="w-3.5 h-3.5" />
-                                <span className="text-[9px]">Move</span>
+                                className="p-2 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--input-bg)] transition-colors">
+                                <FolderInput className="w-4 h-4" />
                             </button>
                             <button onClick={() => onDelete(item)} title="Delete"
-                                className="flex flex-col items-center gap-1 py-2 rounded-xl bg-[var(--input-bg)] hover:bg-red-500/15 border border-[var(--border-main)] hover:border-red-500/30 text-[var(--text-muted)] hover:text-red-400 transition-all">
-                                <Trash2 className="w-3.5 h-3.5" />
-                                <span className="text-[9px]">Delete</span>
+                                className="p-2 rounded-lg text-[var(--text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors">
+                                <Trash2 className="w-4 h-4" />
                             </button>
                         </div>
                     </div>
