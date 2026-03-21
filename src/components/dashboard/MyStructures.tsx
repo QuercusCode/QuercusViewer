@@ -74,13 +74,13 @@ const PRESET_TAGS: { label: string; color: string }[] = [
     { label: 'Published', color: 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400' },
     { label: 'In progress', color: 'bg-yellow-500/15 border-yellow-500/30 text-yellow-400' },
     { label: 'Mutant', color: 'bg-pink-500/15 border-pink-500/30 text-pink-400' },
-    { label: 'Control', color: 'bg-neutral-500/15 border-neutral-500/30 text-neutral-400' },
+    { label: 'Control', color: 'bg-neutral-500/15 border-neutral-500/30 text-[var(--text-secondary)]' },
     { label: 'Complex', color: 'bg-cyan-500/15 border-cyan-500/30 text-cyan-400' },
 ];
 
 function tagColor(label: string): string {
     return PRESET_TAGS.find(t => t.label.toLowerCase() === label.toLowerCase())?.color
-        ?? 'bg-neutral-500/15 border-neutral-500/30 text-neutral-400';
+        ?? 'bg-neutral-500/15 border-neutral-500/30 text-[var(--text-secondary)]';
 }
 
 interface TagEditorProps {
@@ -116,13 +116,13 @@ function TagEditor({ tags, onChange }: TagEditorProps) {
                     </span>
                 ))}
                 <button onClick={() => setOpen(p => !p)}
-                    className="inline-flex items-center gap-1 text-[10px] text-neutral-600 hover:text-neutral-300 border border-dashed border-neutral-700 hover:border-neutral-500 rounded-md px-1.5 py-0.5 transition-all">
+                    className="inline-flex items-center gap-1 text-[10px] text-[var(--text-muted)] hover:text-[var(--text-secondary)] border border-dashed border-[var(--border-main)] hover:border-neutral-500 rounded-md px-1.5 py-0.5 transition-all">
                     <Tag className="w-2.5 h-2.5" />Add tag
                 </button>
             </div>
 
             {open && (
-                <div className="mt-2 bg-neutral-800 border border-neutral-700 rounded-xl p-2.5 shadow-xl">
+                <div className="mt-2 bg-[var(--input-bg)] border border-[var(--border-main)] rounded-xl p-2.5 shadow-xl">
                     <div className="flex flex-wrap gap-1.5 mb-2">
                         {PRESET_TAGS.filter(p => !tags.includes(p.label)).map(p => (
                             <button key={p.label} onClick={() => { addTag(p.label); setOpen(false); }}
@@ -135,7 +135,7 @@ function TagEditor({ tags, onChange }: TagEditorProps) {
                         <input value={custom} onChange={e => setCustom(e.target.value)}
                             onKeyDown={e => { if (e.key === 'Enter') { addTag(custom); setCustom(''); setOpen(false); } }}
                             placeholder="Custom tag…"
-                            className="flex-1 bg-neutral-700 rounded-lg text-xs text-white placeholder-neutral-500 px-2.5 py-1.5 outline-none border border-transparent focus:border-blue-500/50" />
+                            className="flex-1 bg-[var(--input-bg)] rounded-lg text-xs text-[var(--text-primary)] placeholder-neutral-500 px-2.5 py-1.5 outline-none border border-transparent focus:border-blue-500/50" />
                         <button onClick={() => { addTag(custom); setCustom(''); setOpen(false); }}
                             className="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-medium transition-colors">+</button>
                     </div>
@@ -149,20 +149,20 @@ function TagEditor({ tags, onChange }: TagEditorProps) {
 
 function SkeletonCard() {
     return (
-        <div className="bg-neutral-900/80 border border-neutral-800 rounded-2xl overflow-hidden flex flex-col animate-pulse">
-            <div className="h-1 w-full bg-neutral-800" />
-            <div className="h-36 bg-neutral-800/60" />
+        <div className="bg-[var(--bg-header)] border border-[var(--border-main)] rounded-2xl overflow-hidden flex flex-col animate-pulse">
+            <div className="h-1 w-full bg-[var(--input-bg)]" />
+            <div className="h-36 bg-[var(--input-bg)]" />
             <div className="p-5 space-y-3">
                 <div className="flex items-center gap-2">
-                    <div className="h-9 w-9 rounded-xl bg-neutral-800" />
-                    <div className="h-5 w-12 rounded-md bg-neutral-800" />
+                    <div className="h-9 w-9 rounded-xl bg-[var(--input-bg)]" />
+                    <div className="h-5 w-12 rounded-md bg-[var(--input-bg)]" />
                 </div>
-                <div className="h-4 w-3/4 rounded-lg bg-neutral-800" />
+                <div className="h-4 w-3/4 rounded-lg bg-[var(--input-bg)]" />
                 <div className="flex gap-3">
-                    <div className="h-3 w-16 rounded bg-neutral-800" />
-                    <div className="h-3 w-12 rounded bg-neutral-800" />
+                    <div className="h-3 w-16 rounded bg-[var(--input-bg)]" />
+                    <div className="h-3 w-12 rounded bg-[var(--input-bg)]" />
                 </div>
-                <div className="h-8 w-full rounded-xl bg-neutral-800 mt-2" />
+                <div className="h-8 w-full rounded-xl bg-[var(--input-bg)] mt-2" />
             </div>
         </div>
     );
@@ -171,16 +171,16 @@ function SkeletonCard() {
 // ── Hover preview popover ─────────────────────────────────────────
 
 function HoverPreview({ item }: { item: Structure }) {
-    const badge = TYPE_BADGE[item.file_type] ?? 'bg-neutral-500/10 border-neutral-500/30 text-neutral-400';
+    const badge = TYPE_BADGE[item.file_type] ?? 'bg-neutral-500/10 border-neutral-500/30 text-[var(--text-secondary)]';
     const rcsbId = item.name.match(/^[1-9][A-Z0-9]{3}$/i)?.[0]?.toUpperCase();
     return (
         <div
-            className="absolute z-50 top-0 left-0 w-full bg-neutral-900 border border-neutral-700/80 rounded-2xl shadow-2xl shadow-black/80 overflow-hidden pointer-events-none flex flex-col"
+            className="absolute z-50 top-0 left-0 w-full bg-[var(--bg-header)] border border-[var(--border-main)] rounded-2xl shadow-2xl shadow-black/80 overflow-hidden pointer-events-none flex flex-col"
             style={{ maxHeight: 'calc(100% - 48px)' }}
         >
             {/* Thumbnail */}
             {rcsbId && (
-                <div className="relative h-36 bg-neutral-800 overflow-hidden">
+                <div className="relative h-36 bg-[var(--input-bg)] overflow-hidden">
                     <img
                         src={`https://cdn.rcsb.org/images/structures/${rcsbId.toLowerCase()}_assembly-1.jpeg`}
                         alt={rcsbId}
@@ -188,13 +188,13 @@ function HoverPreview({ item }: { item: Structure }) {
                         onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
                     />
                     < div className="absolute inset-0 bg-gradient-to-t from-neutral-900/80 to-transparent" />
-                    <span className="absolute bottom-2 left-3 text-xs font-mono text-white/80 bg-black/40 backdrop-blur-sm px-2 py-0.5 rounded-md">{rcsbId}</span>
+                    <span className="absolute bottom-2 left-3 text-xs font-mono text-[var(--text-primary)]/80 bg-black/40 backdrop-blur-sm px-2 py-0.5 rounded-md">{rcsbId}</span>
                 </div >
             )}
             <div className="p-4 space-y-3 overflow-y-auto overflow-x-hidden flex-1 scrollbar-hide">
                 {/* Name */}
                 <div>
-                    <p className="text-sm font-semibold text-white leading-snug">{item.metadata?.title || item.name}</p>
+                    <p className="text-sm font-semibold text-[var(--text-primary)] leading-snug">{item.metadata?.title || item.name}</p>
                     <span className={`inline-block text-[10px] font-bold px-1.5 py-0.5 rounded-md border mt-1 ${badge}`}>{item.file_type}</span>
                 </div>
                 {/* RCSB metadata grid */}
@@ -202,33 +202,33 @@ function HoverPreview({ item }: { item: Structure }) {
                     <div className="grid grid-cols-2 gap-2">
                         {item.metadata.organism && (
                             <div>
-                                <p className="text-[9px] text-neutral-600 uppercase tracking-wider mb-0.5">Organism</p>
-                                <p className="text-xs text-neutral-300 truncate">{item.metadata.organism}</p>
+                                <p className="text-[9px] text-[var(--text-muted)] uppercase tracking-wider mb-0.5">Organism</p>
+                                <p className="text-xs text-[var(--text-secondary)] truncate">{item.metadata.organism}</p>
                             </div>
                         )}
                         {item.metadata.method && (
                             <div>
-                                <p className="text-[9px] text-neutral-600 uppercase tracking-wider mb-0.5">Method</p>
-                                <p className="text-xs text-neutral-300">{item.metadata.method}</p>
+                                <p className="text-[9px] text-[var(--text-muted)] uppercase tracking-wider mb-0.5">Method</p>
+                                <p className="text-xs text-[var(--text-secondary)]">{item.metadata.method}</p>
                             </div>
                         )}
                         {item.metadata.resolution != null && (
                             <div>
-                                <p className="text-[9px] text-neutral-600 uppercase tracking-wider mb-0.5">Resolution</p>
-                                <p className="text-xs text-neutral-300">{item.metadata.resolution.toFixed(2)} Å</p>
+                                <p className="text-[9px] text-[var(--text-muted)] uppercase tracking-wider mb-0.5">Resolution</p>
+                                <p className="text-xs text-[var(--text-secondary)]">{item.metadata.resolution.toFixed(2)} Å</p>
                             </div>
                         )}
                         <div>
-                            <p className="text-[9px] text-neutral-600 uppercase tracking-wider mb-0.5">Uploaded</p>
-                            <p className="text-xs text-neutral-300">{timeAgo(item.created_at)}</p>
+                            <p className="text-[9px] text-[var(--text-muted)] uppercase tracking-wider mb-0.5">Uploaded</p>
+                            <p className="text-xs text-[var(--text-secondary)]">{timeAgo(item.created_at)}</p>
                         </div>
                     </div>
                 )}
                 {/* Notes preview */}
                 {item.notes && (
-                    <div className="pt-2 border-t border-neutral-800">
-                        <p className="text-[9px] text-neutral-600 uppercase tracking-wider mb-1">Notes</p>
-                        <p className="text-xs text-neutral-400 line-clamp-3 leading-relaxed">{item.notes}</p>
+                    <div className="pt-2 border-t border-[var(--border-main)]">
+                        <p className="text-[9px] text-[var(--text-muted)] uppercase tracking-wider mb-1">Notes</p>
+                        <p className="text-xs text-[var(--text-secondary)] line-clamp-3 leading-relaxed">{item.notes}</p>
                     </div>
                 )}
                 {/* Tags */}
@@ -240,7 +240,7 @@ function HoverPreview({ item }: { item: Structure }) {
                     </div>
                 )}
                 {/* Stats */}
-                <div className="flex items-center gap-3 pt-1 border-t border-neutral-800 text-[10px] text-neutral-600">
+                <div className="flex items-center gap-3 pt-1 border-t border-[var(--border-main)] text-[10px] text-[var(--text-muted)]">
                     <span>{formatBytes(item.file_size)}</span>
                     {(item.view_count ?? 0) > 0 && <span className="flex items-center gap-0.5"><Eye className="w-2.5 h-2.5" />{item.view_count} opens</span>}
                 </div>
@@ -253,7 +253,7 @@ function HoverPreview({ item }: { item: Structure }) {
 
 function QuickLookModal({ item, onClose, onOpen }: { item: Structure; onClose: () => void; onOpen: (s: Structure) => void }) {
     if (!item) return null;
-    const badge = TYPE_BADGE[item.file_type] ?? 'bg-neutral-500/10 border-neutral-500/30 text-neutral-400';
+    const badge = TYPE_BADGE[item.file_type] ?? 'bg-neutral-500/10 border-neutral-500/30 text-[var(--text-secondary)]';
     const rcsbId = item.name.match(/^[1-9][A-Z0-9]{3}$/i)?.[0]?.toUpperCase();
 
     // Close on click outside
@@ -263,10 +263,10 @@ function QuickLookModal({ item, onClose, onOpen }: { item: Structure; onClose: (
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 sm:p-8" onClick={handleBackdropClick}>
-            <div className="relative w-full max-w-4xl max-h-[90vh] bg-neutral-900 border border-neutral-800 rounded-3xl shadow-2xl flex flex-col md:flex-row overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="relative w-full max-w-4xl max-h-[90vh] bg-[var(--bg-header)] border border-[var(--border-main)] rounded-3xl shadow-2xl flex flex-col md:flex-row overflow-hidden animate-in fade-in zoom-in-95 duration-200">
 
                 {/* Visual Preview Side (Left) */}
-                <div className="md:w-3/5 bg-neutral-950 relative flex items-center justify-center border-b md:border-b-0 md:border-r border-neutral-800 p-8 min-h-[300px]">
+                <div className="md:w-3/5 bg-[var(--bg-header)] relative flex items-center justify-center border-b md:border-b-0 md:border-r border-[var(--border-main)] p-8 min-h-[300px]">
                     {rcsbId ? (
                         <div className="relative w-full h-full flex flex-col items-center justify-center">
                             <img
@@ -278,9 +278,9 @@ function QuickLookModal({ item, onClose, onOpen }: { item: Structure; onClose: (
                             <div className="absolute inset-0 bg-gradient-to-t from-neutral-950/80 via-transparent to-transparent pointer-events-none" />
                         </div>
                     ) : (
-                        <div className="flex flex-col items-center justify-center text-neutral-600">
+                        <div className="flex flex-col items-center justify-center text-[var(--text-muted)]">
                             <Dna className="w-24 h-24 mb-4 opacity-50" />
-                            <p className="text-lg font-medium text-neutral-500">No Preview Available</p>
+                            <p className="text-lg font-medium text-[var(--text-muted)]">No Preview Available</p>
                             <p className="text-sm">Cannot fetch RCSB thumbnail for this uploaded file.</p>
                         </div>
                     )}
@@ -295,45 +295,45 @@ function QuickLookModal({ item, onClose, onOpen }: { item: Structure; onClose: (
                 </div>
 
                 {/* Metadata Side (Right) */}
-                <div className="md:w-2/5 flex flex-col overflow-y-auto scrollbar-hide bg-neutral-900">
+                <div className="md:w-2/5 flex flex-col overflow-y-auto scrollbar-hide bg-[var(--bg-header)]">
                     <div className="p-6 md:p-8 space-y-8">
                         <div>
-                            <h2 className="text-2xl font-bold text-white leading-tight mb-2">{item.metadata?.title || item.name}</h2>
+                            <h2 className="text-2xl font-bold text-[var(--text-primary)] leading-tight mb-2">{item.metadata?.title || item.name}</h2>
                             <div className="flex items-center gap-2 flex-wrap">
                                 <span className={`text-[11px] font-bold px-2 py-0.5 rounded-md border ${badge}`}>{item.file_type}</span>
                                 {item.starred && <span className="text-[11px] font-bold px-2 py-0.5 rounded-md border border-amber-500/30 bg-amber-500/10 text-amber-400 flex items-center gap-1"><Star className="w-3 h-3 fill-amber-400" /> Starred</span>}
-                                {(item.view_count ?? 0) > 0 && <span className="text-[11px] font-medium px-2 py-0.5 rounded border border-neutral-700 bg-neutral-800 text-neutral-400"><Eye className="w-3 h-3 inline mr-1" />{item.view_count} views</span>}
+                                {(item.view_count ?? 0) > 0 && <span className="text-[11px] font-medium px-2 py-0.5 rounded border border-[var(--border-main)] bg-[var(--input-bg)] text-[var(--text-secondary)]"><Eye className="w-3 h-3 inline mr-1" />{item.view_count} views</span>}
                             </div>
                         </div>
 
                         {/* Metadata Grid */}
                         <div className="space-y-4">
-                            <h3 className="text-xs font-bold text-neutral-500 uppercase tracking-wider">Information</h3>
+                            <h3 className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Information</h3>
                             <div className="grid grid-cols-2 gap-y-4 gap-x-4">
                                 <div>
-                                    <p className="text-[10px] text-neutral-500 uppercase tracking-wider mb-1">Size</p>
-                                    <p className="text-sm font-medium text-neutral-200">{formatBytes(item.file_size)}</p>
+                                    <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider mb-1">Size</p>
+                                    <p className="text-sm font-medium text-[var(--text-primary)]">{formatBytes(item.file_size)}</p>
                                 </div>
                                 <div>
-                                    <p className="text-[10px] text-neutral-500 uppercase tracking-wider mb-1">Uploaded</p>
-                                    <p className="text-sm font-medium text-neutral-200">{timeAgo(item.created_at)}</p>
+                                    <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider mb-1">Uploaded</p>
+                                    <p className="text-sm font-medium text-[var(--text-primary)]">{timeAgo(item.created_at)}</p>
                                 </div>
                                 {item.metadata?.resolution != null && (
                                     <div>
-                                        <p className="text-[10px] text-neutral-500 uppercase tracking-wider mb-1">Resolution</p>
-                                        <p className="text-sm font-medium text-neutral-200">{item.metadata.resolution.toFixed(2)} Å</p>
+                                        <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider mb-1">Resolution</p>
+                                        <p className="text-sm font-medium text-[var(--text-primary)]">{item.metadata.resolution.toFixed(2)} Å</p>
                                     </div>
                                 )}
                                 {item.metadata?.method && (
                                     <div className="col-span-2">
-                                        <p className="text-[10px] text-neutral-500 uppercase tracking-wider mb-1">Method</p>
-                                        <p className="text-sm font-medium text-neutral-200">{item.metadata.method}</p>
+                                        <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider mb-1">Method</p>
+                                        <p className="text-sm font-medium text-[var(--text-primary)]">{item.metadata.method}</p>
                                     </div>
                                 )}
                                 {item.metadata?.organism && (
                                     <div className="col-span-2">
-                                        <p className="text-[10px] text-neutral-500 uppercase tracking-wider mb-1">Organism</p>
-                                        <p className="text-sm font-medium text-neutral-200">{item.metadata.organism}</p>
+                                        <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider mb-1">Organism</p>
+                                        <p className="text-sm font-medium text-[var(--text-primary)]">{item.metadata.organism}</p>
                                     </div>
                                 )}
                             </div>
@@ -342,7 +342,7 @@ function QuickLookModal({ item, onClose, onOpen }: { item: Structure; onClose: (
                         {/* Tags */}
                         {(item.tags ?? []).length > 0 && (
                             <div className="space-y-3">
-                                <h3 className="text-xs font-bold text-neutral-500 uppercase tracking-wider">Tags</h3>
+                                <h3 className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Tags</h3>
                                 <div className="flex flex-wrap gap-1.5">
                                     {item.tags.map(t => (
                                         <span key={t} className={`text-xs font-medium px-2 py-1 rounded-md border ${tagColor(t)}`}>{t}</span>
@@ -354,8 +354,8 @@ function QuickLookModal({ item, onClose, onOpen }: { item: Structure; onClose: (
                         {/* Notes */}
                         {item.notes && (
                             <div className="space-y-3">
-                                <h3 className="text-xs font-bold text-neutral-500 uppercase tracking-wider">Notes</h3>
-                                <div className="p-3 bg-neutral-950 rounded-xl border border-neutral-800 text-sm text-neutral-300 whitespace-pre-wrap leading-relaxed">
+                                <h3 className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Notes</h3>
+                                <div className="p-3 bg-[var(--bg-header)] rounded-xl border border-[var(--border-main)] text-sm text-[var(--text-secondary)] whitespace-pre-wrap leading-relaxed">
                                     {item.notes}
                                 </div>
                             </div>
@@ -364,7 +364,7 @@ function QuickLookModal({ item, onClose, onOpen }: { item: Structure; onClose: (
                 </div>
 
                 {/* Close Button Cross */}
-                <button onClick={onClose} className="absolute top-4 right-4 p-2 bg-neutral-900/50 hover:bg-neutral-800 text-neutral-400 hover:text-white rounded-full backdrop-blur transition-colors hidden md:block z-10">
+                <button onClick={onClose} className="absolute top-4 right-4 p-2 bg-[var(--bg-header)] hover:bg-[var(--input-bg)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] rounded-full backdrop-blur transition-colors hidden md:block z-10">
                     <X className="w-5 h-5" />
                 </button>
             </div>
@@ -414,18 +414,18 @@ function FolderCard({ collection, count, onOpen, onDropStructure, onContextMenu,
                 const id = e.dataTransfer.getData('text/plain');
                 if (id) onDropStructure(id, collection.id);
             }}
-            className={`flex flex-col bg-neutral-900/80 border hover:border-neutral-600 rounded-2xl overflow-hidden transition-all duration-200 hover:shadow-xl hover:shadow-black/30 group text-left ${isDragOver ? 'border-blue-500 ring-2 ring-blue-500/50 bg-blue-500/10' : 'border-neutral-800'}`}>
+            className={`flex flex-col bg-[var(--bg-header)] border hover:border-neutral-600 rounded-2xl overflow-hidden transition-all duration-200 hover:shadow-xl hover:shadow-black/30 group text-left ${isDragOver ? 'border-blue-500 ring-2 ring-blue-500/50 bg-blue-500/10' : 'border-[var(--border-main)]'}`}>
             <div className={`h-1.5 w-full ${DOT[collection.color] ?? 'bg-blue-500'}`} />
             <div className="p-4 flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 bg-neutral-800 group-hover:bg-neutral-700 transition-colors relative isolate">
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 bg-[var(--input-bg)] group-hover:bg-[var(--input-bg)] transition-colors relative isolate">
                     {collection.is_public && <div title="Public" className="absolute top-1 right-1 z-20 drop-shadow-md flex items-center justify-center"><Globe className="w-3.5 h-3.5 text-blue-400" /></div>}
                     {previews.length > 0 ? (
                         <>
                             <Folder className={`w-6 h-6 absolute opacity-20 ${COLOR_CLASSES[collection.color]?.split(' ')[0] ?? 'text-blue-400'}`} />
                             <div className="flex -space-x-1.5 z-10 w-full h-full items-center justify-center">
                                 {previews.map((p, i) => (
-                                    <div key={p.id} className="w-[18px] h-6 rounded-[3px] border border-neutral-700/80 bg-neutral-900 shadow-sm flex items-center justify-center relative shadow-black/40" style={{ zIndex: 10 - i }}>
-                                        <span className={`text-[5px] font-bold ${TYPE_BADGE[p.file_type]?.split(' ')[2] ?? 'text-white'}`}>{p.file_type}</span>
+                                    <div key={p.id} className="w-[18px] h-6 rounded-[3px] border border-[var(--border-main)] bg-[var(--bg-header)] shadow-sm flex items-center justify-center relative shadow-black/40" style={{ zIndex: 10 - i }}>
+                                        <span className={`text-[5px] font-bold ${TYPE_BADGE[p.file_type]?.split(' ')[2] ?? 'text-[var(--text-primary)]'}`}>{p.file_type}</span>
                                     </div>
                                 ))}
                             </div>
@@ -435,8 +435,8 @@ function FolderCard({ collection, count, onOpen, onDropStructure, onContextMenu,
                     )}
                 </div>
                 <div className="min-w-0 flex-1">
-                    <h3 className="font-semibold text-neutral-200 text-sm truncate group-hover:text-white">{collection.name}</h3>
-                    <p className="text-xs text-neutral-500">{count} items</p>
+                    <h3 className="font-semibold text-[var(--text-primary)] text-sm truncate group-hover:text-[var(--text-primary)]">{collection.name}</h3>
+                    <p className="text-xs text-[var(--text-muted)]">{count} items</p>
                 </div>
             </div>
         </button>
@@ -460,7 +460,7 @@ function FolderRow({ collection, count, onOpen, onDropStructure, onContextMenu, 
     const [isDragOver, setIsDragOver] = useState(false);
 
     return (
-        <tr className={`group border-b transition-colors cursor-pointer ${isDragOver ? 'bg-blue-500/10 border-blue-500/50' : 'border-neutral-800 hover:bg-neutral-800/40'}`}
+        <tr className={`group border-b transition-colors cursor-pointer ${isDragOver ? 'bg-blue-500/10 border-blue-500/50' : 'border-[var(--border-main)] hover:bg-[var(--input-bg)]'}`}
             onClick={onOpen}
             onContextMenu={e => onContextMenu(e, 'folder', collection)}
             onDragOver={e => { e.preventDefault(); setIsDragOver(true); }}
@@ -477,17 +477,17 @@ function FolderRow({ collection, count, onOpen, onDropStructure, onContextMenu, 
             <td className="px-3 py-3 relative">
                 <div className="flex items-center gap-3">
                     <Folder className={`w-4 h-4 ${COLOR_CLASSES[collection.color]?.split(' ')[0] ?? 'text-blue-400'} shrink-0`} />
-                    <span className="text-sm font-medium text-neutral-200 group-hover:text-white truncate">{collection.name}</span>
+                    <span className="text-sm font-medium text-[var(--text-primary)] group-hover:text-[var(--text-primary)] truncate">{collection.name}</span>
                     {collection.is_public && <div title="Public Share Link Enabled" className="flex items-center shrink-0 ml-1"><Globe className="w-3.5 h-3.5 text-blue-400" /></div>}
                 </div>
             </td>
-            {visibleColumns.type && <td className="px-3 py-3"><span className="text-[10px] font-bold px-2 py-0.5 rounded-md border bg-neutral-800 text-neutral-400 border-neutral-700">Folder</span></td>}
-            {visibleColumns.tags && <td className="px-3 py-3 text-xs text-neutral-500">-</td>}
-            {visibleColumns.size && <td className="px-3 py-3 text-xs text-neutral-500">{count === 1 ? '1 item' : `${count} items`}</td>}
-            {visibleColumns.uploaded && <td className="px-3 py-3 text-xs text-neutral-500">-</td>}
-            {visibleColumns.resolution && <td className="px-3 py-3 text-xs text-neutral-500">-</td>}
-            {visibleColumns.organism && <td className="px-3 py-3 text-xs text-neutral-500">-</td>}
-            {visibleColumns.method && <td className="px-3 py-3 text-xs text-neutral-500">-</td>}
+            {visibleColumns.type && <td className="px-3 py-3"><span className="text-[10px] font-bold px-2 py-0.5 rounded-md border bg-[var(--input-bg)] text-[var(--text-secondary)] border-[var(--border-main)]">Folder</span></td>}
+            {visibleColumns.tags && <td className="px-3 py-3 text-xs text-[var(--text-muted)]">-</td>}
+            {visibleColumns.size && <td className="px-3 py-3 text-xs text-[var(--text-muted)]">{count === 1 ? '1 item' : `${count} items`}</td>}
+            {visibleColumns.uploaded && <td className="px-3 py-3 text-xs text-[var(--text-muted)]">-</td>}
+            {visibleColumns.resolution && <td className="px-3 py-3 text-xs text-[var(--text-muted)]">-</td>}
+            {visibleColumns.organism && <td className="px-3 py-3 text-xs text-[var(--text-muted)]">-</td>}
+            {visibleColumns.method && <td className="px-3 py-3 text-xs text-[var(--text-muted)]">-</td>}
             <td className="px-3 py-3"></td>
         </tr>
     );
@@ -584,7 +584,7 @@ function StructureCard({
     };
 
     const strip = TYPE_STRIP[item.file_type] ?? 'from-neutral-500 to-neutral-700';
-    const badge = TYPE_BADGE[item.file_type] ?? 'bg-neutral-500/10 border-neutral-500/30 text-neutral-400';
+    const badge = TYPE_BADGE[item.file_type] ?? 'bg-neutral-500/10 border-neutral-500/30 text-[var(--text-secondary)]';
 
     return (
         <div
@@ -602,12 +602,12 @@ function StructureCard({
             {hovered && <HoverPreview item={item} />}
 
             {/* Inner clipping wrapper */}
-            <div className={`flex-1 flex flex-col bg-neutral-900/80 border rounded-2xl overflow-hidden transition-colors
-                ${selected ? 'border-blue-500/60' : 'border-neutral-800 group-hover:border-neutral-600'}`}>
+            <div className={`flex-1 flex flex-col bg-[var(--bg-header)] border rounded-2xl overflow-hidden transition-colors
+                ${selected ? 'border-blue-500/60' : 'border-[var(--border-main)] group-hover:border-neutral-600'}`}>
 
                 {/* Gradient strip or RCSB Thumbnail */}
                 {hasThumbnail ? (
-                    <div className="relative h-36 overflow-hidden bg-neutral-800">
+                    <div className="relative h-36 overflow-hidden bg-[var(--input-bg)]">
                         <img
                             src={`https://cdn.rcsb.org/images/structures/${rcsbId!.toLowerCase()}_assembly-1.jpeg`}
                             alt={rcsbId}
@@ -632,7 +632,7 @@ function StructureCard({
                                 className={`p-1.5 rounded-md backdrop-blur-md border shadow-sm transition-all
                     ${selected
                                         ? 'bg-blue-500/90 border-blue-400 text-white'
-                                        : 'bg-black/40 border-white/20 text-neutral-300 hover:bg-black/60 hover:text-white hover:border-white/40'}`}>
+                                        : 'bg-black/40 border-white/20 text-[var(--text-secondary)] hover:bg-black/60 hover:text-[var(--text-primary)] hover:border-white/40'}`}>
                                 <CheckSquare className="w-4 h-4" />
                             </button>
                         </div>
@@ -644,12 +644,12 @@ function StructureCard({
                     <div className={`flex items-start justify-between mb-3 ${selected ? 'pl-6' : ''}`}>
                         <div className="flex items-center gap-2">
                             <div className="h-9 w-9 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center shrink-0">
-                                <Dna className="w-4 h-4 text-white/50" />
+                                <Dna className="w-4 h-4 text-[var(--text-primary)]/50" />
                             </div>
                             <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${badge}`}>{item.file_type}</span>
                         </div>
                         <button onClick={() => onToggleStar(item)} className="p-1.5 rounded-lg hover:bg-white/5 transition-colors">
-                            <Star className={`w-4 h-4 transition-all ${item.starred ? 'text-amber-400 fill-amber-400' : 'text-neutral-600 hover:text-amber-400'}`} />
+                            <Star className={`w-4 h-4 transition-all ${item.starred ? 'text-amber-400 fill-amber-400' : 'text-[var(--text-muted)] hover:text-amber-400'}`} />
                         </button>
                     </div>
 
@@ -660,21 +660,21 @@ function StructureCard({
                             onBlur={commitRename}
                             onKeyDown={e => { if (e.key === 'Enter') commitRename(); if (e.key === 'Escape') { setEditing(false); setDraftName(item.name); } }}
                             onClick={e => e.stopPropagation()}
-                            className="text-sm font-semibold text-white bg-neutral-800 border border-blue-500/60 rounded-lg px-2.5 py-1 w-full outline-none focus:ring-1 focus:ring-blue-500 mb-1" />
+                            className="text-sm font-semibold text-[var(--text-primary)] bg-[var(--input-bg)] border border-blue-500/60 rounded-lg px-2.5 py-1 w-full outline-none focus:ring-1 focus:ring-blue-500 mb-1" />
                     ) : (
                         <button onClick={e => { e.stopPropagation(); setEditing(true); }}
                             className="group/name flex items-center gap-1.5 text-left mb-1 w-full min-w-0" title="Click to rename">
-                            <span className="text-sm font-semibold text-neutral-100 truncate">{item.name}</span>
-                            <Pencil className="w-3 h-3 text-neutral-600 opacity-0 group-hover/name:opacity-100 transition-all shrink-0" />
+                            <span className="text-sm font-semibold text-[var(--text-primary)] truncate">{item.name}</span>
+                            <Pencil className="w-3 h-3 text-[var(--text-muted)] opacity-0 group-hover/name:opacity-100 transition-all shrink-0" />
                         </button>
                     )}
 
                     {/* File metadata */}
-                    <div className="flex items-center gap-3 text-xs text-neutral-500 mb-2">
+                    <div className="flex items-center gap-3 text-xs text-[var(--text-muted)] mb-2">
                         <span className="flex items-center gap-1"><FileText className="w-3 h-3" />{formatBytes(item.file_size)}</span>
                         <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{timeAgo(item.created_at)}</span>
                         {(item.view_count ?? 0) > 0 && (
-                            <span className="flex items-center gap-1 ml-auto text-neutral-600">
+                            <span className="flex items-center gap-1 ml-auto text-[var(--text-muted)]">
                                 <Eye className="w-3 h-3" />{item.view_count}
                             </span>
                         )}
@@ -684,17 +684,17 @@ function StructureCard({
                     {item.metadata && (
                         <div className="grid grid-cols-2 gap-1.5 mb-3">
                             {item.metadata.organism && (
-                                <div className="flex items-center gap-1 text-[10px] text-neutral-500 truncate" title={item.metadata.organism}>
+                                <div className="flex items-center gap-1 text-[10px] text-[var(--text-muted)] truncate" title={item.metadata.organism}>
                                     <Globe className="w-2.5 h-2.5 shrink-0" />{item.metadata.organism}
                                 </div>
                             )}
                             {item.metadata.method && (
-                                <div className="flex items-center gap-1 text-[10px] text-neutral-500 truncate" title={item.metadata.method}>
+                                <div className="flex items-center gap-1 text-[10px] text-[var(--text-muted)] truncate" title={item.metadata.method}>
                                     <Microscope className="w-2.5 h-2.5 shrink-0" />{item.metadata.method}
                                 </div>
                             )}
                             {item.metadata.resolution != null && (
-                                <div className="flex items-center gap-1 text-[10px] text-neutral-500">
+                                <div className="flex items-center gap-1 text-[10px] text-[var(--text-muted)]">
                                     <Beaker className="w-2.5 h-2.5 shrink-0" />{item.metadata.resolution.toFixed(2)} Å
                                 </div>
                             )}
@@ -717,7 +717,7 @@ function StructureCard({
                     {/* Notes */}
                     <div className="mb-4">
                         <button onClick={e => { e.stopPropagation(); setShowNotes(p => !p); }}
-                            className="flex items-center gap-1.5 text-xs text-neutral-500 hover:text-neutral-300 transition-colors mb-1.5">
+                            className="flex items-center gap-1.5 text-xs text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors mb-1.5">
                             <NotebookPen className="w-3 h-3" />
                             {draftNotes ? 'Notes' : 'Add notes'}
                             {showNotes ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
@@ -729,7 +729,7 @@ function StructureCard({
                                 onClick={e => e.stopPropagation()}
                                 placeholder="Source, experiment notes, doi:10.1234/…"
                                 rows={3}
-                                className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-xs text-neutral-300 placeholder-neutral-600 resize-none focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500" />
+                                className="w-full bg-[var(--input-bg)] border border-[var(--border-main)] rounded-lg px-3 py-2 text-xs text-[var(--text-secondary)] placeholder-neutral-600 resize-none focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500" />
                         )}
                     </div>
 
@@ -744,27 +744,27 @@ function StructureCard({
                         {/* Secondary: 5 small buttons */}
                         <div className="grid grid-cols-5 gap-1.5">
                             <button onClick={handleDownload} disabled={downloading} title="Download"
-                                className="flex flex-col items-center gap-1 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 border border-neutral-700/50 text-neutral-400 hover:text-white transition-all disabled:opacity-50">
+                                className="flex flex-col items-center gap-1 py-2 rounded-xl bg-[var(--input-bg)] hover:bg-[var(--input-bg)] border border-[var(--border-main)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all disabled:opacity-50">
                                 {downloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
                                 <span className="text-[9px]">Downld</span>
                             </button>
                             <button onClick={handleShare} title="Copy link"
-                                className="flex flex-col items-center gap-1 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 border border-neutral-700/50 text-neutral-400 hover:text-white transition-all">
+                                className="flex flex-col items-center gap-1 py-2 rounded-xl bg-[var(--input-bg)] hover:bg-[var(--input-bg)] border border-[var(--border-main)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all">
                                 {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Share2 className="w-3.5 h-3.5" />}
                                 <span className={`text-[9px] ${copied ? 'text-emerald-400' : ''}`}>{copied ? 'Copied' : 'Share'}</span>
                             </button>
                             <button onClick={() => onDuplicate(item)} disabled={duplicatingId === item.id} title="Duplicate"
-                                className="flex flex-col items-center gap-1 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 border border-neutral-700/50 text-neutral-400 hover:text-white transition-all disabled:opacity-50">
+                                className="flex flex-col items-center gap-1 py-2 rounded-xl bg-[var(--input-bg)] hover:bg-[var(--input-bg)] border border-[var(--border-main)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all disabled:opacity-50">
                                 {duplicatingId === item.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Copy className="w-3.5 h-3.5" />}
                                 <span className="text-[9px]">Clone</span>
                             </button>
                             <button onClick={() => onMove(item)} title="Move to folder"
-                                className="flex flex-col items-center gap-1 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 border border-neutral-700/50 text-neutral-400 hover:text-white transition-all">
+                                className="flex flex-col items-center gap-1 py-2 rounded-xl bg-[var(--input-bg)] hover:bg-[var(--input-bg)] border border-[var(--border-main)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all">
                                 <FolderInput className="w-3.5 h-3.5" />
                                 <span className="text-[9px]">Move</span>
                             </button>
                             <button onClick={() => onDelete(item)} title="Delete"
-                                className="flex flex-col items-center gap-1 py-2 rounded-xl bg-neutral-800 hover:bg-red-500/15 border border-neutral-700/50 hover:border-red-500/30 text-neutral-600 hover:text-red-400 transition-all">
+                                className="flex flex-col items-center gap-1 py-2 rounded-xl bg-[var(--input-bg)] hover:bg-red-500/15 border border-[var(--border-main)] hover:border-red-500/30 text-[var(--text-muted)] hover:text-red-400 transition-all">
                                 <Trash2 className="w-3.5 h-3.5" />
                                 <span className="text-[9px]">Delete</span>
                             </button>
@@ -801,7 +801,7 @@ function StructureRow({ item, selected, onSelect, onToggleStar, onDelete, onRena
         try { const url = await getDownloadUrl(item.file_path); const a = document.createElement('a'); a.href = url; a.download = `${item.name}.${item.file_type.toLowerCase()}`; a.click(); }
         catch { /* ignore */ } finally { setDownloading(false); }
     };
-    const badge = TYPE_BADGE[item.file_type] ?? 'bg-neutral-500/10 border-neutral-500/30 text-neutral-400';
+    const badge = TYPE_BADGE[item.file_type] ?? 'bg-neutral-500/10 border-neutral-500/30 text-[var(--text-secondary)]';
 
     const handleDragStart = (e: React.DragEvent) => {
         e.dataTransfer.setData('text/plain', item.id);
@@ -810,7 +810,7 @@ function StructureRow({ item, selected, onSelect, onToggleStar, onDelete, onRena
 
     return (
         <tr className={`group border-b transition-colors cursor-pointer
-            ${selected ? 'bg-blue-500/10 border-blue-500/50' : 'border-neutral-800 hover:bg-neutral-800/40'}
+            ${selected ? 'bg-blue-500/10 border-blue-500/50' : 'border-[var(--border-main)] hover:bg-[var(--input-bg)]'}
             ${openingId === item.id ? 'opacity-50' : ''}`}
             onContextMenu={e => onContextMenu(e, 'structure', item)}
             onClick={(e) => onSelect(e, item.id)}
@@ -819,22 +819,22 @@ function StructureRow({ item, selected, onSelect, onToggleStar, onDelete, onRena
             onDragStart={handleDragStart}>
             <td className="px-4 py-3 w-8">
                 <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-all ${selected ? 'bg-blue-500 border-blue-500' : 'border-neutral-600 group-hover:border-blue-400'}`}>
-                    {selected && <Check className="w-2.5 h-2.5 text-white" />}
+                    {selected && <Check className="w-2.5 h-2.5 text-[var(--text-primary)]" />}
                 </div>
             </td>
             <td className="px-3 py-3">
                 <div className="flex items-center gap-3">
-                    <Dna className="w-4 h-4 text-neutral-600 shrink-0" />
+                    <Dna className="w-4 h-4 text-[var(--text-muted)] shrink-0" />
                     {editing ? (
                         <input ref={inputRef} value={draftName} onChange={e => setDraftName(e.target.value)}
                             onBlur={commitRename}
                             onKeyDown={e => { if (e.key === 'Enter') commitRename(); if (e.key === 'Escape') { setEditing(false); setDraftName(item.name); } }}
                             onClick={e => e.stopPropagation()}
-                            className="text-sm text-white bg-neutral-700 border border-blue-500/60 rounded px-2 py-0.5 outline-none w-40" />
+                            className="text-sm text-[var(--text-primary)] bg-[var(--input-bg)] border border-blue-500/60 rounded px-2 py-0.5 outline-none w-40" />
                     ) : (
                         <button onClick={e => { e.stopPropagation(); setEditing(true); }} className="group/n flex items-center gap-1 min-w-0">
-                            <span className="text-sm text-neutral-100 truncate max-w-[160px]">{item.name}</span>
-                            <Pencil className="w-3 h-3 text-neutral-600 opacity-0 group-hover/n:opacity-100 shrink-0" />
+                            <span className="text-sm text-[var(--text-primary)] truncate max-w-[160px]">{item.name}</span>
+                            <Pencil className="w-3 h-3 text-[var(--text-muted)] opacity-0 group-hover/n:opacity-100 shrink-0" />
                         </button>
                     )}
                 </div>
@@ -853,30 +853,30 @@ function StructureRow({ item, selected, onSelect, onToggleStar, onDelete, onRena
                     </div>
                 </td>
             )}
-            {visibleColumns?.size && <td className="px-3 py-3 text-xs text-neutral-500">{formatBytes(item.file_size)}</td>}
-            {visibleColumns?.uploaded && <td className="px-3 py-3 text-xs text-neutral-500">{timeAgo(item.created_at)}</td>}
-            {visibleColumns?.resolution && <td className="px-3 py-3 text-xs text-neutral-500">{item.metadata?.resolution ? `${item.metadata.resolution.toFixed(2)} Å` : '-'}</td>}
-            {visibleColumns?.organism && <td className="px-3 py-3 text-xs text-neutral-500 truncate max-w-[120px]" title={item.metadata?.organism || ''}>{item.metadata?.organism || '-'}</td>}
-            {visibleColumns?.method && <td className="px-3 py-3 text-xs text-neutral-500 truncate max-w-[120px]" title={item.metadata?.method || ''}>{item.metadata?.method || '-'}</td>}
+            {visibleColumns?.size && <td className="px-3 py-3 text-xs text-[var(--text-muted)]">{formatBytes(item.file_size)}</td>}
+            {visibleColumns?.uploaded && <td className="px-3 py-3 text-xs text-[var(--text-muted)]">{timeAgo(item.created_at)}</td>}
+            {visibleColumns?.resolution && <td className="px-3 py-3 text-xs text-[var(--text-muted)]">{item.metadata?.resolution ? `${item.metadata.resolution.toFixed(2)} Å` : '-'}</td>}
+            {visibleColumns?.organism && <td className="px-3 py-3 text-xs text-[var(--text-muted)] truncate max-w-[120px]" title={item.metadata?.organism || ''}>{item.metadata?.organism || '-'}</td>}
+            {visibleColumns?.method && <td className="px-3 py-3 text-xs text-[var(--text-muted)] truncate max-w-[120px]" title={item.metadata?.method || ''}>{item.metadata?.method || '-'}</td>}
             <td className="px-3 py-3">
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
                     <button onClick={e => { e.stopPropagation(); onOpen(item); }} disabled={!!openingId} title="Open"
-                        className="p-1.5 rounded-lg hover:bg-blue-500/20 text-neutral-500 hover:text-blue-400 transition-colors disabled:opacity-50">
+                        className="p-1.5 rounded-lg hover:bg-blue-500/20 text-[var(--text-muted)] hover:text-blue-400 transition-colors disabled:opacity-50">
                         {openingId === item.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ExternalLink className="w-3.5 h-3.5" />}
                     </button>
                     <button onClick={e => { e.stopPropagation(); handleDownload(); }} disabled={downloading} title="Download"
-                        className="p-1.5 rounded-lg hover:bg-neutral-700 text-neutral-500 hover:text-white transition-colors disabled:opacity-50">
+                        className="p-1.5 rounded-lg hover:bg-[var(--input-bg)] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors disabled:opacity-50">
                         {downloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
                     </button>
-                    <button onClick={e => { e.stopPropagation(); onToggleStar(item); }} className="p-1.5 rounded-lg hover:bg-neutral-700 transition-colors">
-                        <Star className={`w-3.5 h-3.5 ${item.starred ? 'text-amber-400 fill-amber-400' : 'text-neutral-600 hover:text-amber-400'}`} />
+                    <button onClick={e => { e.stopPropagation(); onToggleStar(item); }} className="p-1.5 rounded-lg hover:bg-[var(--input-bg)] transition-colors">
+                        <Star className={`w-3.5 h-3.5 ${item.starred ? 'text-amber-400 fill-amber-400' : 'text-[var(--text-muted)] hover:text-amber-400'}`} />
                     </button>
                     <button onClick={e => { e.stopPropagation(); onMove(item); }} title="Move to folder"
-                        className="p-1.5 rounded-lg hover:bg-neutral-700 text-neutral-500 hover:text-white transition-colors">
+                        className="p-1.5 rounded-lg hover:bg-[var(--input-bg)] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors">
                         <FolderInput className="w-3.5 h-3.5" />
                     </button>
                     <button onClick={e => { e.stopPropagation(); onDelete(item); }} title="Delete"
-                        className="p-1.5 rounded-lg hover:bg-red-500/10 text-neutral-600 hover:text-red-400 transition-colors">
+                        className="p-1.5 rounded-lg hover:bg-red-500/10 text-[var(--text-muted)] hover:text-red-400 transition-colors">
                         <Trash2 className="w-3.5 h-3.5" />
                     </button>
                 </div>
@@ -901,11 +901,11 @@ function RCSBImport({ userId, onImported }: { userId: string; onImported: (s: St
     };
 
     return (
-        <form onSubmit={handle} className="flex items-center gap-1.5 bg-neutral-900 border border-neutral-700 hover:border-neutral-600 focus-within:border-blue-500/50 rounded-lg px-2.5 py-1.5 transition-colors w-40 shrink-0">
-            <Import className="w-3.5 h-3.5 text-neutral-500 shrink-0" />
+        <form onSubmit={handle} className="flex items-center gap-1.5 bg-[var(--bg-header)] border border-[var(--border-main)] hover:border-neutral-600 focus-within:border-blue-500/50 rounded-lg px-2.5 py-1.5 transition-colors w-40 shrink-0">
+            <Import className="w-3.5 h-3.5 text-[var(--text-muted)] shrink-0" />
             <input value={pdbId} onChange={e => setPdbId(e.target.value.toUpperCase())}
                 placeholder="PDB" maxLength={4}
-                className="flex-1 min-w-0 bg-transparent text-sm text-white placeholder-neutral-500 outline-none uppercase font-mono tracking-widest" />
+                className="flex-1 min-w-0 bg-transparent text-sm text-[var(--text-primary)] placeholder-neutral-500 outline-none uppercase font-mono tracking-widest" />
             <button type="submit" disabled={pdbId.length !== 4 || loading} title="Import from RCSB"
                 className="text-blue-400 hover:text-blue-300 disabled:opacity-50 transition-colors">
                 {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ChevronRight className="w-3.5 h-3.5" />}
@@ -931,7 +931,7 @@ function ExportZipButton({ structures }: { structures: Structure[] }) {
     return (
         <button onClick={handle} disabled={exporting || structures.length === 0}
             title="Export all as ZIP"
-            className="flex items-center gap-2 px-3 py-2 text-sm text-neutral-400 bg-neutral-900 border border-neutral-700 rounded-lg hover:text-white hover:border-neutral-600 disabled:opacity-50 transition-all">
+            className="flex items-center gap-2 px-3 py-2 text-sm text-[var(--text-secondary)] bg-[var(--bg-header)] border border-[var(--border-main)] rounded-lg hover:text-[var(--text-primary)] hover:border-neutral-600 disabled:opacity-50 transition-all">
             {exporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
             Export ZIP
         </button>
@@ -1492,10 +1492,10 @@ export const MyStructures = () => {
             {/* Global Dropzone Overlay */}
             {isWindowDragOver && (
                 <div className="absolute inset-x-2 inset-y-0 z-[200] max-h-[80vh] bg-blue-500/10 border-2 border-dashed border-blue-500 rounded-3xl flex flex-col items-center justify-center backdrop-blur-[2px]">
-                    <div className="bg-neutral-900 border border-neutral-700 shadow-2xl rounded-2xl p-8 flex flex-col items-center animate-in zoom-in duration-200">
+                    <div className="bg-[var(--bg-header)] border border-[var(--border-main)] shadow-2xl rounded-2xl p-8 flex flex-col items-center animate-in zoom-in duration-200">
                         <Upload className="w-12 h-12 text-blue-400 mb-4 animate-bounce" />
-                        <h2 className="text-xl font-bold text-white mb-1">Drop files to upload</h2>
-                        <p className="text-neutral-400 text-sm">
+                        <h2 className="text-xl font-bold text-[var(--text-primary)] mb-1">Drop files to upload</h2>
+                        <p className="text-[var(--text-secondary)] text-sm">
                             {activeCollection && activeCollection !== '__none__'
                                 ? `Adding to: ${collections.find(c => c.id === activeCollection)?.name}`
                                 : 'Adding to Library root'}
@@ -1570,9 +1570,9 @@ export const MyStructures = () => {
                     {/* Breadcrumbs Header */}
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 min-h-[32px]">
                         {!loading && (
-                            <div className="flex items-center gap-2 text-[15px] font-medium text-neutral-400 px-1 py-1 w-full sm:w-auto">
+                            <div className="flex items-center gap-2 text-[15px] font-medium text-[var(--text-secondary)] px-1 py-1 w-full sm:w-auto">
                                 <button onClick={() => setShowMobileSidebar(true)}
-                                    className="sm:hidden p-1.5 -ml-1 text-neutral-400 hover:text-white rounded-md hover:bg-neutral-800 transition-colors shrink-0">
+                                    className="sm:hidden p-1.5 -ml-1 text-[var(--text-secondary)] hover:text-[var(--text-primary)] rounded-md hover:bg-[var(--input-bg)] transition-colors shrink-0">
                                     <Menu className="w-5 h-5" />
                                 </button>
 
@@ -1594,7 +1594,7 @@ export const MyStructures = () => {
                                     </button>
                                     {activeCollection && activeCollection !== '__none__' ? currentBreadcrumbs.map((crumb: Collection, idx: number) => (
                                         <React.Fragment key={crumb.id}>
-                                            <span className="text-neutral-600">/</span>
+                                            <span className="text-[var(--text-muted)]">/</span>
                                             <button
                                                 onClick={() => setActiveCollection(crumb.id)}
                                                 onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; setDragOverBreadcrumb(crumb.id); }}
@@ -1606,15 +1606,15 @@ export const MyStructures = () => {
                                                         handleDropMove(id, crumb.id);
                                                     }
                                                 }}
-                                                className={`transition-colors px-1.5 py-0.5 rounded ${dragOverBreadcrumb === crumb.id ? 'bg-blue-500/20 text-blue-400 ring-1 ring-blue-500/50' : (idx === currentBreadcrumbs.length - 1 ? "text-neutral-200" : "hover:text-white")}`}
+                                                className={`transition-colors px-1.5 py-0.5 rounded ${dragOverBreadcrumb === crumb.id ? 'bg-blue-500/20 text-blue-400 ring-1 ring-blue-500/50' : (idx === currentBreadcrumbs.length - 1 ? "text-white" : "hover:text-[var(--text-primary)]")}`}
                                             >
                                                 {crumb.name}
                                             </button>
                                         </React.Fragment>
                                     )) : activeCollection === '__none__' && (
                                         <>
-                                            <span className="text-neutral-600">/</span>
-                                            <span className="text-neutral-200">Uncategorized</span>
+                                            <span className="text-[var(--text-muted)]">/</span>
+                                            <span className="text-[var(--text-primary)]">Uncategorized</span>
                                         </>
                                     )}
                                 </div>
@@ -1634,16 +1634,16 @@ export const MyStructures = () => {
                     {/* Toolbar */}
                     <div className="flex flex-wrap items-center gap-2 mb-4">
                         <div className="relative flex-1 min-w-[200px] w-full sm:w-auto sm:max-w-xs">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500" />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
                             <input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
                                 placeholder="Filter structures…"
-                                className="w-full pl-9 pr-3 py-1.5 bg-neutral-900 border border-neutral-700 rounded-lg text-sm text-white placeholder-neutral-500 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all" />
+                                className="w-full pl-9 pr-3 py-1.5 bg-[var(--bg-header)] border border-[var(--border-main)] rounded-lg text-sm text-[var(--text-primary)] placeholder-neutral-500 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all" />
                         </div>
 
                         {!loading && user && <RCSBImport userId={user.id} onImported={s => setStructures(prev => [s, ...prev])} />}
 
                         <button onClick={() => setShowStarred(p => !p)}
-                            className={`flex items-center gap-1.5 px-2.5 py-1.5 text-sm border rounded-lg transition-all ${showStarred ? 'text-amber-400 border-amber-400/50 bg-amber-500/5' : 'text-neutral-400 bg-neutral-900 border-neutral-700 hover:text-amber-400 hover:border-neutral-600'}`}>
+                            className={`flex items-center gap-1.5 px-2.5 py-1.5 text-sm border rounded-lg transition-all ${showStarred ? 'text-amber-400 border-amber-400/50 bg-amber-500/5' : 'text-[var(--text-secondary)] bg-[var(--bg-header)] border-[var(--border-main)] hover:text-amber-400 hover:border-neutral-600'}`}>
                             <Star className={`w-3.5 h-3.5 ${showStarred ? 'fill-amber-400' : ''}`} />Starred
                         </button>
 
@@ -1652,68 +1652,68 @@ export const MyStructures = () => {
                             <div className="flex items-center gap-1.5 overflow-x-auto">
                                 {activeTag && (
                                     <button onClick={() => setActiveTag(null)}
-                                        className="flex items-center gap-1 text-xs text-neutral-400 hover:text-white border border-neutral-700 rounded-lg px-2 py-1.5 transition-all">
+                                        className="flex items-center gap-1 text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border-main)] rounded-lg px-2 py-1.5 transition-all">
                                         <X className="w-3 h-3" />Clear
                                     </button>
                                 )}
                                 {allTags.map(t => (
                                     <button key={t} onClick={() => setActiveTag(activeTag === t ? null : t)}
-                                        className={`text-[10px] font-medium px-2 py-1 rounded-md border whitespace-nowrap transition-all ${activeTag === t ? tagColor(t) : 'bg-neutral-900 border-neutral-700 text-neutral-500 hover:text-neutral-300'}`}>
+                                        className={`text-[10px] font-medium px-2 py-1 rounded-md border whitespace-nowrap transition-all ${activeTag === t ? tagColor(t) : 'bg-[var(--bg-header)] border-[var(--border-main)] text-[var(--text-muted)] hover:text-[var(--text-secondary)]'}`}>
                                         {t}
                                     </button>
                                 ))}
                             </div>
                         )}
 
-                        <div className="flex flex-wrap items-center gap-1 bg-neutral-900 border border-neutral-700 rounded-lg p-1 text-xs w-full sm:w-auto mt-2 sm:mt-0 sm:ml-auto">
+                        <div className="flex flex-wrap items-center gap-1 bg-[var(--bg-header)] border border-[var(--border-main)] rounded-lg p-1 text-xs w-full sm:w-auto mt-2 sm:mt-0 sm:ml-auto">
                             <button onClick={() => setFilters(prev => [...prev, { id: Date.now().toString(), field: 'type', operator: '==', value: '' }])}
-                                className="flex items-center gap-1 px-2.5 py-1 text-blue-400 hover:text-blue-300 font-medium transition-colors border-r border-neutral-700 mr-1 pr-3">
+                                className="flex items-center gap-1 px-2.5 py-1 text-blue-400 hover:text-blue-300 font-medium transition-colors border-r border-[var(--border-main)] mr-1 pr-3">
                                 <Filter className="w-3.5 h-3.5" />+ Rule
                             </button>
-                            <div className="flex items-center text-neutral-500 mr-0.5"><Filter className="w-3.5 h-3.5 ml-1 mr-1" />Sort</div>
+                            <div className="flex items-center text-[var(--text-muted)] mr-0.5"><Filter className="w-3.5 h-3.5 ml-1 mr-1" />Sort</div>
                             {(['date', 'name', 'size'] as SortKey[]).map(k => (
                                 <button key={k} onClick={() => setSortBy(k)}
-                                    className={`px-2.5 py-1 rounded-md font-medium capitalize transition-all ${sortBy === k ? 'bg-neutral-700 text-white' : 'text-neutral-500 hover:text-neutral-300'}`}>{k}</button>
+                                    className={`px-2.5 py-1 rounded-md font-medium capitalize transition-all ${sortBy === k ? 'bg-[var(--input-bg)] text-[var(--text-primary)]' : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]'}`}>{k}</button>
                             ))}
                         </div>
 
                         {/* View toggle */}
-                        <div className="flex items-center gap-0.5 bg-neutral-900 border border-neutral-700 rounded-lg p-1 w-full sm:w-auto justify-center">
+                        <div className="flex items-center gap-0.5 bg-[var(--bg-header)] border border-[var(--border-main)] rounded-lg p-1 w-full sm:w-auto justify-center">
                             <button onClick={() => setViewMode('grid')} title="Grid view"
-                                className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-neutral-700 text-white' : 'text-neutral-500 hover:text-neutral-300'}`}>
+                                className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-[var(--input-bg)] text-[var(--text-primary)]' : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]'}`}>
                                 <LayoutGrid className="w-3.5 h-3.5" />
                             </button>
                             <button onClick={() => setViewMode('list')} title="List view"
-                                className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-neutral-700 text-white' : 'text-neutral-500 hover:text-neutral-300'}`}>
+                                className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-[var(--input-bg)] text-[var(--text-primary)]' : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]'}`}>
                                 <List className="w-3.5 h-3.5" />
                             </button>
-                            <div className="w-px h-4 mx-1.5 bg-neutral-700" />
+                            <div className="w-px h-4 mx-1.5 bg-[var(--input-bg)]" />
                             <div className="relative" ref={columnDropdownRef}>
                                 <button onClick={() => setShowColumnDropdown(p => !p)} title="Columns"
-                                    className={`p-1.5 rounded-md transition-all ${showColumnDropdown ? 'bg-neutral-700 text-white' : 'text-neutral-500 hover:text-neutral-300'}`}>
+                                    className={`p-1.5 rounded-md transition-all ${showColumnDropdown ? 'bg-[var(--input-bg)] text-[var(--text-primary)]' : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]'}`}>
                                     <Settings2 className="w-3.5 h-3.5" />
                                 </button>
                                 {showColumnDropdown && (
-                                    <div className="absolute top-full right-0 mt-2 w-52 bg-neutral-900 border border-neutral-700 rounded-xl shadow-xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2">
-                                        <div className="px-3 py-2 border-b border-neutral-800 text-[10px] uppercase tracking-wider font-bold text-neutral-500 bg-neutral-800/50">Visible Columns</div>
+                                    <div className="absolute top-full right-0 mt-2 w-52 bg-[var(--bg-header)] border border-[var(--border-main)] rounded-xl shadow-xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2">
+                                        <div className="px-3 py-2 border-b border-[var(--border-main)] text-[10px] uppercase tracking-wider font-bold text-[var(--text-muted)] bg-[var(--input-bg)]">Visible Columns</div>
                                         <div className="p-1.5 flex flex-col gap-0.5">
                                             {AVAILABLE_COLUMNS.map(col => (
-                                                <label key={col.id} className="flex items-center gap-2.5 px-2 py-1.5 hover:bg-neutral-800 rounded-lg cursor-pointer transition-colors group">
+                                                <label key={col.id} className="flex items-center gap-2.5 px-2 py-1.5 hover:bg-[var(--input-bg)] rounded-lg cursor-pointer transition-colors group">
                                                     <div className="relative flex items-center justify-center">
-                                                        <input type="checkbox" className="appearance-none w-4 h-4 rounded border border-neutral-600 bg-neutral-900 checked:bg-blue-500 checked:border-blue-500 focus:bg-white/5 transition-colors cursor-pointer"
+                                                        <input type="checkbox" className="appearance-none w-4 h-4 rounded border border-neutral-600 bg-[var(--bg-header)] checked:bg-blue-500 checked:border-blue-500 focus:bg-white/5 transition-colors cursor-pointer"
                                                             checked={visibleColumns[col.id]} onChange={e => setVisibleColumns(p => ({ ...p, [col.id]: e.target.checked }))} />
-                                                        {visibleColumns[col.id] && <Check className="absolute w-3 h-3 text-white pointer-events-none" />}
+                                                        {visibleColumns[col.id] && <Check className="absolute w-3 h-3 text-[var(--text-primary)] pointer-events-none" />}
                                                     </div>
-                                                    <span className="text-sm font-medium text-neutral-300 group-hover:text-white transition-colors">{col.label}</span>
+                                                    <span className="text-sm font-medium text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] transition-colors">{col.label}</span>
                                                 </label>
                                             ))}
                                         </div>
                                     </div>
                                 )}
                             </div>
-                            <div className="w-px h-4 mx-1.5 bg-neutral-700" />
+                            <div className="w-px h-4 mx-1.5 bg-[var(--input-bg)]" />
                             <button onClick={() => setShowInspector(prev => !prev)} title="Toggle Inspector"
-                                className={`p-1.5 rounded-md transition-all ${showInspector ? 'bg-neutral-700 text-white' : 'text-neutral-500 hover:text-neutral-300'}`}>
+                                className={`p-1.5 rounded-md transition-all ${showInspector ? 'bg-[var(--input-bg)] text-[var(--text-primary)]' : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]'}`}>
                                 <PanelRight className="w-3.5 h-3.5" />
                             </button>
                         </div>
@@ -1723,28 +1723,28 @@ export const MyStructures = () => {
 
                     {/* Advanced Filters Builder UI */}
                     {filters.length > 0 && (
-                        <div className="flex flex-col gap-2 w-full mb-4 bg-neutral-900 overflow-hidden rounded-xl border border-neutral-800 animate-in fade-in slide-in-from-top-4 duration-200">
-                            <div className="bg-neutral-800/50 px-3 py-2 border-b border-neutral-800 flex items-center justify-between">
-                                <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-1.5">
+                        <div className="flex flex-col gap-2 w-full mb-4 bg-[var(--bg-header)] overflow-hidden rounded-xl border border-[var(--border-main)] animate-in fade-in slide-in-from-top-4 duration-200">
+                            <div className="bg-[var(--input-bg)] px-3 py-2 border-b border-[var(--border-main)] flex items-center justify-between">
+                                <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider flex items-center gap-1.5">
                                     <Filter className="w-3.5 h-3.5" /> Advanced Rules
                                 </span>
-                                <button onClick={() => setFilters([])} className="text-[10px] font-medium text-neutral-500 hover:text-red-400 uppercase tracking-wide transition-colors">Clear all</button>
+                                <button onClick={() => setFilters([])} className="text-[10px] font-medium text-[var(--text-muted)] hover:text-red-400 uppercase tracking-wide transition-colors">Clear all</button>
                             </div>
                             <div className="p-3 flex flex-wrap gap-2.5">
                                 {filters.map(f => (
-                                    <div key={f.id} className="flex items-center bg-black/40 border border-neutral-700/60 rounded-lg text-sm shadow-sm ring-1 ring-white/5 overflow-hidden">
-                                        <select value={f.field} onChange={e => setFilters(prev => prev.map(x => x.id === f.id ? { ...x, field: e.target.value as any } : x))} className="bg-neutral-800 text-white outline-none px-2 py-1.5 font-medium border-r border-neutral-700/60 cursor-pointer appearance-none">
+                                    <div key={f.id} className="flex items-center bg-black/40 border border-[var(--border-main)] rounded-lg text-sm shadow-sm ring-1 ring-white/5 overflow-hidden">
+                                        <select value={f.field} onChange={e => setFilters(prev => prev.map(x => x.id === f.id ? { ...x, field: e.target.value as any } : x))} className="bg-[var(--input-bg)] text-[var(--text-primary)] outline-none px-2 py-1.5 font-medium border-r border-[var(--border-main)] cursor-pointer appearance-none">
                                             <option value="name">Name</option>
                                             <option value="type">Type</option>
                                             <option value="size">Size (MB)</option>
                                         </select>
-                                        <select value={f.operator} onChange={e => setFilters(prev => prev.map(x => x.id === f.id ? { ...x, operator: e.target.value as any } : x))} className="bg-transparent text-neutral-400 outline-none px-2 py-1.5 cursor-pointer appearance-none border-r border-neutral-700/60 hover:text-white transition-colors">
+                                        <select value={f.operator} onChange={e => setFilters(prev => prev.map(x => x.id === f.id ? { ...x, operator: e.target.value as any } : x))} className="bg-transparent text-[var(--text-secondary)] outline-none px-2 py-1.5 cursor-pointer appearance-none border-r border-[var(--border-main)] hover:text-[var(--text-primary)] transition-colors">
                                             <option value="contains">contains</option>
                                             <option value="==">is exactly</option>
                                             {f.field === 'size' && <><option value=">">greater than</option><option value="<">less than</option></>}
                                         </select>
-                                        <input type={f.field === 'size' ? "number" : "text"} value={f.value} onChange={e => setFilters(prev => prev.map(x => x.id === f.id ? { ...x, value: e.target.value } : x))} placeholder="Value" className="w-24 bg-transparent px-2 py-1.5 text-white outline-none placeholder-neutral-600 focus:bg-white/5 transition-colors" />
-                                        <button onClick={() => setFilters(prev => prev.filter(x => x.id !== f.id))} className="px-2 py-1.5 text-neutral-500 hover:text-red-400 hover:bg-red-500/10 transition-colors border-l border-neutral-700/60">
+                                        <input type={f.field === 'size' ? "number" : "text"} value={f.value} onChange={e => setFilters(prev => prev.map(x => x.id === f.id ? { ...x, value: e.target.value } : x))} placeholder="Value" className="w-24 bg-transparent px-2 py-1.5 text-[var(--text-primary)] outline-none placeholder-neutral-600 focus:bg-white/5 transition-colors" />
+                                        <button onClick={() => setFilters(prev => prev.filter(x => x.id !== f.id))} className="px-2 py-1.5 text-[var(--text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors border-l border-[var(--border-main)]">
                                             <X className="w-3.5 h-3.5" />
                                         </button>
                                     </div>
@@ -1764,8 +1764,8 @@ export const MyStructures = () => {
                     {!loading && structures.length === 0 && (
                         <div className="text-center py-20">
                             <Dna className="w-12 h-12 mx-auto mb-4 text-neutral-700" />
-                            <p className="text-base font-medium text-neutral-400 mb-1">No structures yet</p>
-                            <p className="text-sm text-neutral-600 mb-4">Upload a file or import by PDB ID above.</p>
+                            <p className="text-base font-medium text-[var(--text-secondary)] mb-1">No structures yet</p>
+                            <p className="text-sm text-[var(--text-muted)] mb-4">Upload a file or import by PDB ID above.</p>
                             <button onClick={() => fileInputRef.current?.click()}
                                 className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors">
                                 <Upload className="w-4 h-4" />Upload your first structure
@@ -1775,10 +1775,10 @@ export const MyStructures = () => {
 
                     {/* Empty State */}
                     {!loading && structures.length === 0 && (
-                        <div className="text-center py-32 bg-neutral-900/50 border border-neutral-800 rounded-xl mt-4">
+                        <div className="text-center py-32 bg-[var(--bg-header)] border border-[var(--border-main)] rounded-xl mt-4">
                             <Database className="w-12 h-12 mx-auto mb-4 text-neutral-700" />
-                            <p className="text-[15px] font-medium text-neutral-300 mb-1">Your library is empty</p>
-                            <p className="text-sm text-neutral-500 mb-6 max-w-sm mx-auto">Upload a molecular file or import from the RCSB database to get started.</p>
+                            <p className="text-[15px] font-medium text-[var(--text-secondary)] mb-1">Your library is empty</p>
+                            <p className="text-sm text-[var(--text-muted)] mb-6 max-w-sm mx-auto">Upload a molecular file or import from the RCSB database to get started.</p>
                             <div className="flex items-center justify-center gap-3">
                                 <button onClick={() => fileInputRef.current?.click()}
                                     className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors shadow shadow-blue-900/20">
@@ -1807,70 +1807,70 @@ export const MyStructures = () => {
                             ))}
 
                             <button onClick={() => fileInputRef.current?.click()}
-                                className="border-2 border-dashed border-neutral-800 rounded-2xl p-5 flex flex-col items-center justify-center text-neutral-600 hover:text-blue-400 hover:border-blue-500/40 hover:bg-blue-500/5 transition-all min-h-[280px] group">
-                                <div className="w-10 h-10 rounded-full bg-neutral-800 group-hover:bg-blue-500/10 flex items-center justify-center mb-3 transition-colors">
+                                className="border-2 border-dashed border-[var(--border-main)] rounded-2xl p-5 flex flex-col items-center justify-center text-[var(--text-muted)] hover:text-blue-400 hover:border-blue-500/40 hover:bg-blue-500/5 transition-all min-h-[280px] group">
+                                <div className="w-10 h-10 rounded-full bg-[var(--input-bg)] group-hover:bg-blue-500/10 flex items-center justify-center mb-3 transition-colors">
                                     <Plus className="w-5 h-5" />
                                 </div>
                                 <span className="text-sm font-medium">Upload New Structure</span>
-                                <span className="text-xs mt-1 text-neutral-700 group-hover:text-neutral-500">.pdb · .cif · .sdf · .mol</span>
+                                <span className="text-xs mt-1 text-neutral-700 group-hover:text-[var(--text-muted)]">.pdb · .cif · .sdf · .mol</span>
                             </button>
                         </div>
                     )}
 
                     {/* List */}
                     {!loading && structures.length > 0 && viewMode === 'list' && (
-                        <div className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-x-auto custom-scrollbar">
+                        <div className="bg-[var(--bg-header)] border border-[var(--border-main)] rounded-2xl overflow-x-auto custom-scrollbar">
                             <table className="w-full text-left table-fixed min-w-[800px]">
                                 <thead>
-                                    <tr className="border-b border-neutral-800">
+                                    <tr className="border-b border-[var(--border-main)]">
                                         <th className="px-4 py-3 w-8" />
-                                        <th className="px-3 py-3 text-xs font-medium text-neutral-500 relative group/th" style={{ width: columnWidths.name }}>
+                                        <th className="px-3 py-3 text-xs font-medium text-[var(--text-muted)] relative group/th" style={{ width: columnWidths.name }}>
                                             Name
                                             <div className="absolute right-0 top-0 bottom-0 w-1 flex items-center justify-center cursor-col-resize hover:bg-blue-500 transition-colors z-10" onMouseDown={e => handleResize('name', e)} />
                                         </th>
                                         {visibleColumns.type && (
-                                            <th className="px-3 py-3 text-xs font-medium text-neutral-500 relative group/th" style={{ width: columnWidths.type }}>
+                                            <th className="px-3 py-3 text-xs font-medium text-[var(--text-muted)] relative group/th" style={{ width: columnWidths.type }}>
                                                 Type
                                                 <div className="absolute right-0 top-0 bottom-0 w-1 flex items-center justify-center cursor-col-resize hover:bg-blue-500 transition-colors z-10" onMouseDown={e => handleResize('type', e)} />
                                             </th>
                                         )}
                                         {visibleColumns.tags && (
-                                            <th className="px-3 py-3 text-xs font-medium text-neutral-500 relative group/th" style={{ width: columnWidths.tags }}>
+                                            <th className="px-3 py-3 text-xs font-medium text-[var(--text-muted)] relative group/th" style={{ width: columnWidths.tags }}>
                                                 Tags
                                                 <div className="absolute right-0 top-0 bottom-0 w-1 flex items-center justify-center cursor-col-resize hover:bg-blue-500 transition-colors z-10" onMouseDown={e => handleResize('tags', e)} />
                                             </th>
                                         )}
                                         {visibleColumns.size && (
-                                            <th className="px-3 py-3 text-xs font-medium text-neutral-500 relative group/th" style={{ width: columnWidths.size }}>
+                                            <th className="px-3 py-3 text-xs font-medium text-[var(--text-muted)] relative group/th" style={{ width: columnWidths.size }}>
                                                 Size
                                                 <div className="absolute right-0 top-0 bottom-0 w-1 flex items-center justify-center cursor-col-resize hover:bg-blue-500 transition-colors z-10" onMouseDown={e => handleResize('size', e)} />
                                             </th>
                                         )}
                                         {visibleColumns.uploaded && (
-                                            <th className="px-3 py-3 text-xs font-medium text-neutral-500 relative group/th" style={{ width: columnWidths.uploaded }}>
+                                            <th className="px-3 py-3 text-xs font-medium text-[var(--text-muted)] relative group/th" style={{ width: columnWidths.uploaded }}>
                                                 Uploaded
                                                 <div className="absolute right-0 top-0 bottom-0 w-1 flex items-center justify-center cursor-col-resize hover:bg-blue-500 transition-colors z-10" onMouseDown={e => handleResize('uploaded', e)} />
                                             </th>
                                         )}
                                         {visibleColumns.resolution && (
-                                            <th className="px-3 py-3 text-xs font-medium text-neutral-500 relative group/th" style={{ width: columnWidths.resolution }}>
+                                            <th className="px-3 py-3 text-xs font-medium text-[var(--text-muted)] relative group/th" style={{ width: columnWidths.resolution }}>
                                                 Resolution
                                                 <div className="absolute right-0 top-0 bottom-0 w-1 flex items-center justify-center cursor-col-resize hover:bg-blue-500 transition-colors z-10" onMouseDown={e => handleResize('resolution', e)} />
                                             </th>
                                         )}
                                         {visibleColumns.organism && (
-                                            <th className="px-3 py-3 text-xs font-medium text-neutral-500 relative group/th" style={{ width: columnWidths.organism }}>
+                                            <th className="px-3 py-3 text-xs font-medium text-[var(--text-muted)] relative group/th" style={{ width: columnWidths.organism }}>
                                                 Organism
                                                 <div className="absolute right-0 top-0 bottom-0 w-1 flex items-center justify-center cursor-col-resize hover:bg-blue-500 transition-colors z-10" onMouseDown={e => handleResize('organism', e)} />
                                             </th>
                                         )}
                                         {visibleColumns.method && (
-                                            <th className="px-3 py-3 text-xs font-medium text-neutral-500 relative group/th" style={{ width: columnWidths.method }}>
+                                            <th className="px-3 py-3 text-xs font-medium text-[var(--text-muted)] relative group/th" style={{ width: columnWidths.method }}>
                                                 Exp. Method
                                                 <div className="absolute right-0 top-0 bottom-0 w-1 flex items-center justify-center cursor-col-resize hover:bg-blue-500 transition-colors z-10" onMouseDown={e => handleResize('method', e)} />
                                             </th>
                                         )}
-                                        <th className="px-3 py-3 text-xs font-medium text-neutral-500">Actions</th>
+                                        <th className="px-3 py-3 text-xs font-medium text-[var(--text-muted)]">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -1892,11 +1892,11 @@ export const MyStructures = () => {
                     )}
 
                     {!loading && structures.length > 0 && filtered.length === 0 && (
-                        <p className="text-center text-neutral-500 text-sm py-8">No structures match your filter.</p>
+                        <p className="text-center text-[var(--text-muted)] text-sm py-8">No structures match your filter.</p>
                     )}
 
                     {!loading && structures.length > 0 && selected.size === 0 && (
-                        <p className="text-xs text-neutral-600 text-center">
+                        <p className="text-xs text-[var(--text-muted)] text-center">
                             💡 Click a name to rename · Add tags and notes · Files auto-save when uploaded in the viewer
                         </p>
                     )}
@@ -1906,13 +1906,13 @@ export const MyStructures = () => {
                 {/* Inspector Pane Container - Responsive overlay on mobile */}
                 <div className={`
                     fixed xl:relative inset-y-0 right-0 z-[100] xl:z-auto 
-                    bg-neutral-900 border-l border-neutral-800 
+                    bg-[var(--bg-header)] border-l border-[var(--border-main)] 
                     transform transition-all duration-300 ease-out flex flex-col pt-14 xl:pt-0
                     ${showInspector ? 'translate-x-0 w-80 shadow-2xl xl:shadow-none' : 'translate-x-[100%] xl:translate-x-0 w-0 pointer-events-none xl:pointer-events-auto overflow-hidden hidden'}
                     xl:rounded-2xl h-screen xl:h-[calc(100vh-140px)] xl:top-6 sticky
                 `}>
                     {showInspector && (
-                        <div className="w-80 h-full overflow-y-auto custom-scrollbar bg-neutral-900 xl:bg-transparent">
+                        <div className="w-80 h-full overflow-y-auto custom-scrollbar bg-[var(--bg-header)] xl:bg-transparent">
                             <InspectorPane
                                 item={selected.size === 1 ? structures.find(s => s.id === Array.from(selected)[0]) || null : null}
                                 selectionCount={selected.size}
@@ -1943,8 +1943,8 @@ export const MyStructures = () => {
 
             {/* Bulk action floating bar */}
             {selected.size > 0 && (
-                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-neutral-800 border border-neutral-600 rounded-2xl px-5 py-3 shadow-2xl shadow-black/50">
-                    <span className="text-sm font-medium text-white">{selected.size} selected</span>
+                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-[var(--input-bg)] border border-neutral-600 rounded-2xl px-5 py-3 shadow-2xl shadow-black/50">
+                    <span className="text-sm font-medium text-[var(--text-primary)]">{selected.size} selected</span>
                     <div className="w-px h-4 bg-neutral-600" />
                     {activeCollection === '__trash__' ? (
                         <>
@@ -1966,7 +1966,7 @@ export const MyStructures = () => {
                                 </button>
                             )}
                             <button onClick={handleBulkDownload}
-                                className="flex items-center gap-2 px-3 py-1.5 text-sm text-neutral-300 hover:text-white hover:bg-neutral-700 rounded-lg transition-all">
+                                className="flex items-center gap-2 px-3 py-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--input-bg)] rounded-lg transition-all">
                                 <Download className="w-4 h-4" />Download all
                             </button>
                             <button onClick={handleBulkDelete}
@@ -1975,7 +1975,7 @@ export const MyStructures = () => {
                             </button>
                         </>
                     )}
-                    <button onClick={deselectAll} className="p-1.5 text-neutral-500 hover:text-white transition-colors">
+                    <button onClick={deselectAll} className="p-1.5 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors">
                         <X className="w-4 h-4" />
                     </button>
                 </div>
@@ -1983,13 +1983,13 @@ export const MyStructures = () => {
             {/* Move Modal */}
             {movingStructure && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-                    <div className="bg-neutral-900 border border-neutral-800 rounded-2xl w-full max-w-md shadow-2xl flex flex-col max-h-[80vh]">
-                        <div className="p-5 border-b border-neutral-800 flex justify-between items-center shrink-0">
+                    <div className="bg-[var(--bg-header)] border border-[var(--border-main)] rounded-2xl w-full max-w-md shadow-2xl flex flex-col max-h-[80vh]">
+                        <div className="p-5 border-b border-[var(--border-main)] flex justify-between items-center shrink-0">
                             <div>
-                                <h3 className="text-sm font-semibold text-white">Move Structure</h3>
-                                <p className="text-xs text-neutral-500 mt-0.5 truncate max-w-xs">{movingStructure.name}</p>
+                                <h3 className="text-sm font-semibold text-[var(--text-primary)]">Move Structure</h3>
+                                <p className="text-xs text-[var(--text-muted)] mt-0.5 truncate max-w-xs">{movingStructure.name}</p>
                             </div>
-                            <button onClick={() => setMovingStructure(null)} className="p-1.5 text-neutral-500 hover:text-white rounded-lg hover:bg-neutral-800 transition-colors">
+                            <button onClick={() => setMovingStructure(null)} className="p-1.5 text-[var(--text-muted)] hover:text-[var(--text-primary)] rounded-lg hover:bg-[var(--input-bg)] transition-colors">
                                 <X className="w-4 h-4" />
                             </button>
                         </div>
@@ -1997,7 +1997,7 @@ export const MyStructures = () => {
                         <div className="p-2 overflow-y-auto flex-1 custom-scrollbar">
                             <button onClick={() => handleMoveConfirm(null)}
                                 className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm transition-all focus:outline-none mb-1 text-left
-                                    ${movingStructure.collection_id === null ? 'bg-blue-500/10 text-blue-400 font-medium' : 'text-neutral-300 hover:bg-neutral-800/50'}`}>
+                                    ${movingStructure.collection_id === null ? 'bg-blue-500/10 text-blue-400 font-medium' : 'text-[var(--text-secondary)] hover:bg-[var(--input-bg)]'}`}>
                                 <Database className="w-4 h-4 shrink-0" />
                                 <span className="flex-1">Library Overview</span>
                                 {movingStructure.collection_id === null && <Check className="w-4 h-4 text-blue-400" />}
@@ -2017,7 +2017,7 @@ export const MyStructures = () => {
                                 return (
                                     <button key={c.id} onClick={() => handleMoveConfirm(c.id)}
                                         className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm transition-all focus:outline-none text-left
-                                            ${isCurrent ? 'bg-blue-500/10 text-blue-400 font-medium' : 'text-neutral-300 hover:bg-neutral-800/50'}`}
+                                            ${isCurrent ? 'bg-blue-500/10 text-blue-400 font-medium' : 'text-[var(--text-secondary)] hover:bg-[var(--input-bg)]'}`}
                                         style={{ paddingLeft: `${depth * 16 + 12}px` }}>
                                         <Folder className="w-4 h-4 shrink-0 opacity-50" />
                                         <span className={`w-2 h-2 rounded-full shrink-0 ${DOT[c.color] ?? 'bg-neutral-400'}`} />
@@ -2028,9 +2028,9 @@ export const MyStructures = () => {
                             })}
                         </div>
 
-                        <div className="p-4 border-t border-neutral-800 flex justify-end gap-2 shrink-0 bg-neutral-900/50 rounded-b-2xl">
+                        <div className="p-4 border-t border-[var(--border-main)] flex justify-end gap-2 shrink-0 bg-[var(--bg-header)] rounded-b-2xl">
                             <button onClick={() => setMovingStructure(null)}
-                                className="px-4 py-2 text-sm font-medium text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-lg transition-colors">
+                                className="px-4 py-2 text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--input-bg)] rounded-lg transition-colors">
                                 Cancel
                             </button>
                             {/* Disabled: The user has to click a row to instantly move, so explicit Move button is purely visual/optional */}
@@ -2042,7 +2042,7 @@ export const MyStructures = () => {
             {/* Global Context Menu Render */}
             {contextMenu && (
                 <div
-                    className="fixed z-[100] w-48 bg-neutral-900 border border-neutral-700/60 rounded-xl shadow-2xl shadow-black overflow-hidden flex flex-col py-1 text-[13px] font-medium animate-in fade-in zoom-in duration-150"
+                    className="fixed z-[100] w-48 bg-[var(--bg-header)] border border-[var(--border-main)] rounded-xl shadow-2xl shadow-black overflow-hidden flex flex-col py-1 text-[13px] font-medium animate-in fade-in zoom-in duration-150"
                     style={{
                         left: `${Math.min(contextMenu.x, window.innerWidth - 200)}px`,
                         top: `${Math.min(contextMenu.y, window.innerHeight - 250)}px`
@@ -2052,38 +2052,38 @@ export const MyStructures = () => {
                         <>
                             {activeCollection === '__trash__' ? (
                                 <>
-                                    <button onClick={() => { handleRestore(contextMenu.item); setContextMenu(null); }} className="flex items-center gap-2.5 px-3 py-1.5 text-blue-400 hover:text-white hover:bg-blue-500/10 text-left">
+                                    <button onClick={() => { handleRestore(contextMenu.item); setContextMenu(null); }} className="flex items-center gap-2.5 px-3 py-1.5 text-blue-400 hover:text-[var(--text-primary)] hover:bg-blue-500/10 text-left">
                                         <FolderInput className="w-4 h-4" /> Restore
                                     </button>
-                                    <div className="h-px bg-neutral-800 my-1 mx-2" />
+                                    <div className="h-px bg-[var(--input-bg)] my-1 mx-2" />
                                     <button onClick={() => { handleDelete(contextMenu.item); setContextMenu(null); }} className="flex items-center gap-2.5 px-3 py-1.5 text-red-500 hover:text-red-400 hover:bg-red-500/10 text-left">
                                         <Trash2 className="w-4 h-4" /> Delete Permanently
                                     </button>
                                 </>
                             ) : (
                                 <>
-                                    <button onClick={() => { handleOpen(contextMenu.item); setContextMenu(null); }} className="flex items-center gap-2.5 px-3 py-1.5 text-neutral-300 hover:text-white hover:bg-blue-500/20 text-left">
+                                    <button onClick={() => { handleOpen(contextMenu.item); setContextMenu(null); }} className="flex items-center gap-2.5 px-3 py-1.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-blue-500/20 text-left">
                                         <ExternalLink className="w-4 h-4 text-blue-400" /> Open in Viewer
                                     </button>
-                                    <div className="h-px bg-neutral-800 my-1 mx-2" />
-                                    <button onClick={() => { setOpeningId("rename-" + contextMenu.item.id); setContextMenu(null); }} className="flex items-center gap-2.5 px-3 py-1.5 text-neutral-400 hover:text-white hover:bg-neutral-800 text-left">
+                                    <div className="h-px bg-[var(--input-bg)] my-1 mx-2" />
+                                    <button onClick={() => { setOpeningId("rename-" + contextMenu.item.id); setContextMenu(null); }} className="flex items-center gap-2.5 px-3 py-1.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--input-bg)] text-left">
                                         <Pencil className="w-4 h-4" /> Rename...
                                     </button>
-                                    <button onClick={() => { setMovingStructure(contextMenu.item); setContextMenu(null); }} className="flex items-center gap-2.5 px-3 py-1.5 text-neutral-400 hover:text-white hover:bg-neutral-800 text-left">
+                                    <button onClick={() => { setMovingStructure(contextMenu.item); setContextMenu(null); }} className="flex items-center gap-2.5 px-3 py-1.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--input-bg)] text-left">
                                         <FolderInput className="w-4 h-4" /> Move to...
                                     </button>
-                                    <button onClick={() => { handleDuplicate(contextMenu.item); setContextMenu(null); }} className="flex items-center gap-2.5 px-3 py-1.5 text-neutral-400 hover:text-white hover:bg-neutral-800 text-left">
+                                    <button onClick={() => { handleDuplicate(contextMenu.item); setContextMenu(null); }} className="flex items-center gap-2.5 px-3 py-1.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--input-bg)] text-left">
                                         <Copy className="w-4 h-4" /> Duplicate
                                     </button>
-                                    <div className="h-px bg-neutral-800 my-1 mx-2" />
+                                    <div className="h-px bg-[var(--input-bg)] my-1 mx-2" />
                                     <button onClick={async () => {
                                         const url = await getDownloadUrl(contextMenu.item.file_path);
                                         const a = document.createElement('a'); a.href = url; a.download = `${contextMenu.item.name}.${contextMenu.item.file_type.toLowerCase()}`; a.click();
                                         setContextMenu(null);
-                                    }} className="flex items-center gap-2.5 px-3 py-1.5 text-neutral-400 hover:text-white hover:bg-neutral-800 text-left">
+                                    }} className="flex items-center gap-2.5 px-3 py-1.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--input-bg)] text-left">
                                         <Download className="w-4 h-4" /> Download File
                                     </button>
-                                    <div className="h-px bg-neutral-800 my-1 mx-2" />
+                                    <div className="h-px bg-[var(--input-bg)] my-1 mx-2" />
                                     <button onClick={() => { handleDelete(contextMenu.item); setContextMenu(null); }} className="flex items-center gap-2.5 px-3 py-1.5 text-red-500 hover:text-red-400 hover:bg-red-500/10 text-left">
                                         <Trash2 className="w-4 h-4" /> Move to Trash
                                     </button>
@@ -2092,7 +2092,7 @@ export const MyStructures = () => {
                         </>
                     ) : (
                         <>
-                            <button onClick={() => { setActiveCollection(contextMenu.item.id); setContextMenu(null); }} className="flex items-center gap-2.5 px-3 py-1.5 text-neutral-300 hover:text-white hover:bg-neutral-800 text-left">
+                            <button onClick={() => { setActiveCollection(contextMenu.item.id); setContextMenu(null); }} className="flex items-center gap-2.5 px-3 py-1.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--input-bg)] text-left">
                                 <Folder className="w-4 h-4 text-blue-400" /> Open Folder
                             </button>
                             <button onClick={async () => {
@@ -2110,29 +2110,29 @@ export const MyStructures = () => {
                                 } finally {
                                     setContextMenu(null);
                                 }
-                            }} className="flex items-center gap-2.5 px-3 py-1.5 text-blue-400 hover:text-white hover:bg-neutral-800 text-left font-medium">
+                            }} className="flex items-center gap-2.5 px-3 py-1.5 text-blue-400 hover:text-[var(--text-primary)] hover:bg-[var(--input-bg)] text-left font-medium">
                                 <Globe className="w-4 h-4" /> {contextMenu.item.is_public ? 'Make Private' : 'Share Public Link'}
                             </button>
-                            <button onClick={() => { handleTogglePin(contextMenu.item.id); setContextMenu(null); }} className="flex items-center gap-2.5 px-3 py-1.5 text-neutral-300 hover:text-white hover:bg-neutral-800 text-left">
-                                <Pin className={`w-4 h-4 ${pinnedCollectionIds.includes(contextMenu.item.id) ? 'text-blue-400 rotate-45' : 'text-neutral-500'}`} />
+                            <button onClick={() => { handleTogglePin(contextMenu.item.id); setContextMenu(null); }} className="flex items-center gap-2.5 px-3 py-1.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--input-bg)] text-left">
+                                <Pin className={`w-4 h-4 ${pinnedCollectionIds.includes(contextMenu.item.id) ? 'text-blue-400 rotate-45' : 'text-[var(--text-muted)]'}`} />
                                 {pinnedCollectionIds.includes(contextMenu.item.id) ? 'Unpin from Quick Access' : 'Pin to Quick Access'}
                             </button>
-                            <div className="h-px bg-neutral-800 my-1 mx-2" />
+                            <div className="h-px bg-[var(--input-bg)] my-1 mx-2" />
 
                             {/* Color Tag Picker row */}
                             <div className="px-3 py-2 flex gap-1.5 flex-wrap items-center">
-                                <Tag className="w-3.5 h-3.5 text-neutral-500 mr-1" />
+                                <Tag className="w-3.5 h-3.5 text-[var(--text-muted)] mr-1" />
                                 {Object.keys(COLOR_CLASSES).map(colorKey => (
                                     <button
                                         key={colorKey}
                                         onClick={(e) => { e.stopPropagation(); handleSetFolderColor(contextMenu.item.id, colorKey); setContextMenu(null); }}
-                                        className={`w-4 h-4 rounded-full shadow-sm hover:scale-125 transition-transform ${DOT[colorKey] || 'bg-neutral-500'} ${contextMenu.item.color === colorKey ? 'ring-2 ring-white ring-offset-1 ring-offset-neutral-900 pointer-events-none' : 'border border-neutral-800'}`}
+                                        className={`w-4 h-4 rounded-full shadow-sm hover:scale-125 transition-transform ${DOT[colorKey] || 'bg-neutral-500'} ${contextMenu.item.color === colorKey ? 'ring-2 ring-white ring-offset-1 ring-offset-neutral-900 pointer-events-none' : 'border border-[var(--border-main)]'}`}
                                         title={colorKey.charAt(0).toUpperCase() + colorKey.slice(1)}
                                     />
                                 ))}
                             </div>
 
-                            <div className="h-px bg-neutral-800 my-1 mx-2" />
+                            <div className="h-px bg-[var(--input-bg)] my-1 mx-2" />
                             <button onClick={async () => {
                                 try {
                                     if (!user?.id) return;
@@ -2155,10 +2155,10 @@ export const MyStructures = () => {
                                 } finally {
                                     setContextMenu(null);
                                 }
-                            }} className="flex items-center gap-2.5 px-3 py-1.5 text-neutral-400 hover:text-white hover:bg-neutral-800 text-left">
+                            }} className="flex items-center gap-2.5 px-3 py-1.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--input-bg)] text-left">
                                 <Download className="w-4 h-4" /> Download ZIP
                             </button>
-                            <div className="h-px bg-neutral-800 my-1 mx-2" />
+                            <div className="h-px bg-[var(--input-bg)] my-1 mx-2" />
                             <button onClick={() => {
                                 if (!confirm('This will delete the folder. Its items will become uncategorized. Proceed?')) return;
                                 deleteCollection(contextMenu.item.id).then(() => {
@@ -2195,9 +2195,9 @@ function InspectorPane({ item, selectionCount, onClose, onNotesChange, onRestore
 
     if (!item) {
         return (
-            <div className="flex-1 flex flex-col items-center justify-center text-center p-6 text-neutral-500">
+            <div className="flex-1 flex flex-col items-center justify-center text-center p-6 text-[var(--text-muted)]">
                 <PanelRight className="w-12 h-12 mb-4 opacity-20" />
-                <h3 className="font-medium text-neutral-400 mb-1">Inspector</h3>
+                <h3 className="font-medium text-[var(--text-secondary)] mb-1">Inspector</h3>
                 <p className="text-sm">
                     {selectionCount === 0
                         ? "Select a single file to view its details."
@@ -2208,13 +2208,13 @@ function InspectorPane({ item, selectionCount, onClose, onNotesChange, onRestore
         );
     }
 
-    const badge = TYPE_BADGE[item.file_type] ?? 'bg-neutral-500/10 border-neutral-500/30 text-neutral-400';
+    const badge = TYPE_BADGE[item.file_type] ?? 'bg-neutral-500/10 border-neutral-500/30 text-[var(--text-secondary)]';
 
     return (
         <div className="flex flex-col h-full animate-in fade-in duration-200">
-            <div className="flex items-center justify-between p-4 border-b border-neutral-800 shrink-0 sticky top-0 bg-neutral-900/90 backdrop-blur-md">
-                <h3 className="font-semibold text-white capitalize">Get Info</h3>
-                <button onClick={onClose} className="p-1 rounded-md text-neutral-500 hover:text-white hover:bg-neutral-800 transition-colors">
+            <div className="flex items-center justify-between p-4 border-b border-[var(--border-main)] shrink-0 sticky top-0 bg-[var(--bg-header)] backdrop-blur-md">
+                <h3 className="font-semibold text-[var(--text-primary)] capitalize">Get Info</h3>
+                <button onClick={onClose} className="p-1 rounded-md text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--input-bg)] transition-colors">
                     <X className="w-4 h-4" />
                 </button>
             </div>
@@ -2223,16 +2223,16 @@ function InspectorPane({ item, selectionCount, onClose, onNotesChange, onRestore
 
                 {/* Header section */}
                 <div>
-                    <h2 className="text-lg font-bold text-neutral-200 leading-tight mb-2 break-words">{item.name}</h2>
+                    <h2 className="text-lg font-bold text-[var(--text-primary)] leading-tight mb-2 break-words">{item.name}</h2>
                     <div className="flex flex-wrap gap-1.5">
                         <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md border ${badge}`}>{item.file_type.toUpperCase()}</span>
-                        <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-md border border-neutral-700 bg-neutral-800 text-neutral-400">{formatBytes(item.file_size)}</span>
+                        <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-md border border-[var(--border-main)] bg-[var(--input-bg)] text-[var(--text-secondary)]">{formatBytes(item.file_size)}</span>
                     </div>
                 </div>
 
                 {/* Notes Editor */}
                 <div>
-                    <h4 className="text-[11px] font-bold text-neutral-500 uppercase tracking-wider mb-2 flex items-center justify-between">
+                    <h4 className="text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-wider mb-2 flex items-center justify-between">
                         Notes
                         {draftNotes !== (item.notes || '') && <span className="text-[10px] text-blue-400 lowercase italic normal-case">Unsaved changes</span>}
                     </h4>
@@ -2244,14 +2244,14 @@ function InspectorPane({ item, selectionCount, onClose, onNotesChange, onRestore
                             if (t !== (item.notes || '')) onNotesChange(item.id, t);
                         }}
                         placeholder="Add notes, context, or observations..."
-                        className="w-full h-32 bg-neutral-950 border border-neutral-800 rounded-xl p-3 text-sm text-neutral-300 placeholder-neutral-600 focus:outline-none focus:border-blue-500/50 resize-y transition-colors"
+                        className="w-full h-32 bg-[var(--bg-header)] border border-[var(--border-main)] rounded-xl p-3 text-sm text-[var(--text-secondary)] placeholder-neutral-600 focus:outline-none focus:border-blue-500/50 resize-y transition-colors"
                     />
                 </div>
 
                 {/* Tags Read-only view (for now) */}
                 {(item.tags ?? []).length > 0 && (
                     <div>
-                        <h4 className="text-[11px] font-bold text-neutral-500 uppercase tracking-wider mb-2">Tags</h4>
+                        <h4 className="text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-wider mb-2">Tags</h4>
                         <div className="flex flex-wrap gap-1">
                             {item.tags.map(t => (
                                 <span key={t} className={`text-[11px] font-medium px-2 py-0.5 rounded-md border ${tagColor(t)}`}>{t}</span>
@@ -2262,28 +2262,28 @@ function InspectorPane({ item, selectionCount, onClose, onNotesChange, onRestore
 
                 {/* Metadata */}
                 <div>
-                    <h4 className="text-[11px] font-bold text-neutral-500 uppercase tracking-wider mb-2">Metadata</h4>
-                    <div className="grid grid-cols-2 gap-3 bg-neutral-950 border border-neutral-800 rounded-xl p-4">
+                    <h4 className="text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-wider mb-2">Metadata</h4>
+                    <div className="grid grid-cols-2 gap-3 bg-[var(--bg-header)] border border-[var(--border-main)] rounded-xl p-4">
                         <div>
-                            <p className="text-[10px] text-neutral-600 mb-0.5">Uploaded</p>
-                            <p className="text-xs text-neutral-300 font-medium">{timeAgo(item.created_at)}</p>
+                            <p className="text-[10px] text-[var(--text-muted)] mb-0.5">Uploaded</p>
+                            <p className="text-xs text-[var(--text-secondary)] font-medium">{timeAgo(item.created_at)}</p>
                         </div>
                         {item.metadata?.resolution != null && (
                             <div>
-                                <p className="text-[10px] text-neutral-600 mb-0.5">Resolution</p>
-                                <p className="text-xs text-neutral-300 font-medium">{item.metadata.resolution.toFixed(2)} Å</p>
+                                <p className="text-[10px] text-[var(--text-muted)] mb-0.5">Resolution</p>
+                                <p className="text-xs text-[var(--text-secondary)] font-medium">{item.metadata.resolution.toFixed(2)} Å</p>
                             </div>
                         )}
                         {item.metadata?.method && (
                             <div className="col-span-2">
-                                <p className="text-[10px] text-neutral-600 mb-0.5">Exp. Method</p>
-                                <p className="text-xs text-neutral-300 font-medium">{item.metadata.method}</p>
+                                <p className="text-[10px] text-[var(--text-muted)] mb-0.5">Exp. Method</p>
+                                <p className="text-xs text-[var(--text-secondary)] font-medium">{item.metadata.method}</p>
                             </div>
                         )}
                         {item.metadata?.organism && (
                             <div className="col-span-2">
-                                <p className="text-[10px] text-neutral-600 mb-0.5">Organism</p>
-                                <p className="text-xs text-neutral-300 font-medium">{item.metadata.organism}</p>
+                                <p className="text-[10px] text-[var(--text-muted)] mb-0.5">Organism</p>
+                                <p className="text-xs text-[var(--text-secondary)] font-medium">{item.metadata.organism}</p>
                             </div>
                         )}
                     </div>
@@ -2291,15 +2291,15 @@ function InspectorPane({ item, selectionCount, onClose, onNotesChange, onRestore
 
                 {/* Activity stats */}
                 <div>
-                    <h4 className="text-[11px] font-bold text-neutral-500 uppercase tracking-wider mb-2">Activity Tracker</h4>
+                    <h4 className="text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-wider mb-2">Activity Tracker</h4>
                     <div className="flex gap-4">
-                        <div className="flex flex-col items-center flex-1 bg-neutral-950 border border-neutral-800 rounded-xl p-3">
-                            <Star className={`w-4 h-4 mb-1 ${item.starred ? 'text-amber-400 fill-amber-400' : 'text-neutral-600'}`} />
-                            <p className="text-xs text-neutral-400">{item.starred ? 'Starred' : 'Not Starred'}</p>
+                        <div className="flex flex-col items-center flex-1 bg-[var(--bg-header)] border border-[var(--border-main)] rounded-xl p-3">
+                            <Star className={`w-4 h-4 mb-1 ${item.starred ? 'text-amber-400 fill-amber-400' : 'text-[var(--text-muted)]'}`} />
+                            <p className="text-xs text-[var(--text-secondary)]">{item.starred ? 'Starred' : 'Not Starred'}</p>
                         </div>
-                        <div className="flex flex-col items-center flex-1 bg-neutral-950 border border-neutral-800 rounded-xl p-3">
+                        <div className="flex flex-col items-center flex-1 bg-[var(--bg-header)] border border-[var(--border-main)] rounded-xl p-3">
                             <Eye className="w-4 h-4 mb-1 text-blue-400" />
-                            <p className="text-xs text-neutral-400">{item.view_count || 0} Opens</p>
+                            <p className="text-xs text-[var(--text-secondary)]">{item.view_count || 0} Opens</p>
                         </div>
                     </div>
                 </div>

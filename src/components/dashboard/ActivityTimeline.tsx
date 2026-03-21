@@ -72,7 +72,7 @@ function StatsBar({ logs }: { logs: ActivityLog[] }) {
                         className={`rounded-xl border p-4 flex flex-col gap-1.5 ${cfg.bg}`}>
                         <Icon className={`w-4 h-4 ${cfg.color}`} />
                         <div className={`text-2xl font-bold tabular-nums ${cfg.color}`}>{count}</div>
-                        <div className="text-xs text-neutral-500 font-medium capitalize">{cfg.label}s</div>
+                        <div className="text-xs text-[var(--text-muted)] font-medium capitalize">{cfg.label}s</div>
                     </div>
                 );
             })}
@@ -123,16 +123,16 @@ export const ActivityTimeline = () => {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+                    <h2 className="text-2xl font-bold text-[var(--text-primary)] flex items-center gap-2">
                         <Activity className="w-6 h-6 text-blue-400" />
                         Activity Timeline
                     </h2>
-                    <p className="text-sm text-neutral-500 mt-0.5">
+                    <p className="text-sm text-[var(--text-muted)] mt-0.5">
                         A log of your recent actions — opens, uploads, shares, and more.
                     </p>
                 </div>
                 <button onClick={load} disabled={loading}
-                    className="p-2 text-neutral-500 hover:text-white transition-colors disabled:opacity-50">
+                    className="p-2 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors disabled:opacity-50">
                     <Loader2 className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
                 </button>
             </div>
@@ -146,8 +146,8 @@ export const ActivityTimeline = () => {
                     <button key={f.key} onClick={() => setFilter(f.key)}
                         className={`px-3 py-1 rounded-full text-xs font-medium border transition-all
                             ${filter === f.key
-                                ? 'bg-neutral-700 border-neutral-600 text-white'
-                                : 'bg-transparent border-neutral-800 text-neutral-500 hover:border-neutral-700 hover:text-neutral-300'}`}>
+                                ? 'bg-[var(--input-bg)] border-neutral-600 text-[var(--text-primary)]'
+                                : 'bg-transparent border-[var(--border-main)] text-[var(--text-muted)] hover:border-[var(--border-main)] hover:text-[var(--text-secondary)]'}`}>
                         {f.label}
                     </button>
                 ))}
@@ -162,14 +162,14 @@ export const ActivityTimeline = () => {
 
             {/* Loading */}
             {loading && (
-                <div className="flex items-center justify-center py-16 text-neutral-600">
+                <div className="flex items-center justify-center py-16 text-[var(--text-muted)]">
                     <Loader2 className="w-6 h-6 animate-spin" />
                 </div>
             )}
 
             {/* Empty */}
             {!loading && visible.length === 0 && (
-                <div className="text-center py-16 text-neutral-600">
+                <div className="text-center py-16 text-[var(--text-muted)]">
                     <Clock className="w-10 h-10 mx-auto mb-3 opacity-30" />
                     <p className="text-sm">No activity yet — open or upload a structure to get started.</p>
                 </div>
@@ -179,10 +179,10 @@ export const ActivityTimeline = () => {
             {!loading && grouped.map(group => (
                 <div key={group.date} className="space-y-2">
                     <div className="flex items-center gap-3">
-                        <span className="text-xs font-semibold text-neutral-500 uppercase tracking-wider whitespace-nowrap">
+                        <span className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap">
                             {group.date}
                         </span>
-                        <div className="flex-1 h-px bg-neutral-800" />
+                        <div className="flex-1 h-px bg-[var(--input-bg)]" />
                     </div>
 
                     <div className="space-y-1.5">
@@ -191,7 +191,7 @@ export const ActivityTimeline = () => {
                             const Icon = cfg.icon;
                             return (
                                 <div key={log.id}
-                                    className="flex items-center gap-3 px-4 py-3 rounded-xl bg-neutral-900 border border-neutral-800 hover:border-neutral-700 transition-colors group">
+                                    className="flex items-center gap-3 px-4 py-3 rounded-xl bg-[var(--bg-header)] border border-[var(--border-main)] hover:border-[var(--border-main)] transition-colors group">
                                     {/* Icon */}
                                     <div className={`w-8 h-8 rounded-lg border flex items-center justify-center shrink-0 ${cfg.bg}`}>
                                         <Icon className={`w-3.5 h-3.5 ${cfg.color}`} />
@@ -204,7 +204,7 @@ export const ActivityTimeline = () => {
                                                 {cfg.label}
                                             </span>
                                             {log.structure_name && (
-                                                <span className="text-sm text-white font-medium truncate" title={log.structure_name}>
+                                                <span className="text-sm text-[var(--text-primary)] font-medium truncate" title={log.structure_name}>
                                                     {log.structure_name}
                                                 </span>
                                             )}
@@ -212,7 +212,7 @@ export const ActivityTimeline = () => {
                                     </div>
 
                                     {/* Time */}
-                                    <span className="text-xs text-neutral-600 group-hover:text-neutral-500 transition-colors whitespace-nowrap shrink-0">
+                                    <span className="text-xs text-[var(--text-muted)] group-hover:text-[var(--text-muted)] transition-colors whitespace-nowrap shrink-0">
                                         {timeAgo(log.created_at)}
                                     </span>
                                 </div>

@@ -49,22 +49,22 @@ function ConfirmModal({ title, description, confirmLabel, confirmClass, requireP
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-            <div className="w-full max-w-md bg-neutral-900 border border-neutral-700 rounded-2xl shadow-2xl overflow-hidden">
-                <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-800">
+            <div className="w-full max-w-md bg-[var(--bg-header)] border border-[var(--border-main)] rounded-2xl shadow-2xl overflow-hidden">
+                <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border-main)]">
                     <div className="flex items-center gap-2 text-red-400">
                         <AlertTriangle className="w-4 h-4" />
                         <span className="font-semibold text-sm">{title}</span>
                     </div>
-                    <button onClick={onClose} className="p-1 text-neutral-500 hover:text-white transition-colors">
+                    <button onClick={onClose} className="p-1 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors">
                         <X className="w-4 h-4" />
                     </button>
                 </div>
                 <div className="p-6 space-y-4">
-                    <p className="text-sm text-neutral-300 leading-relaxed">{description}</p>
+                    <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{description}</p>
 
                     {requirePhrase && (
                         <div>
-                            <label className="block text-xs text-neutral-500 mb-1.5">
+                            <label className="block text-xs text-[var(--text-muted)] mb-1.5">
                                 Type <span className="font-mono text-red-400 bg-red-500/10 px-1 rounded">{requirePhrase}</span> to confirm
                             </label>
                             <input
@@ -72,7 +72,7 @@ function ConfirmModal({ title, description, confirmLabel, confirmClass, requireP
                                 onChange={e => setPhrase(e.target.value)}
                                 onKeyDown={e => e.key === 'Enter' && canConfirm && handle()}
                                 autoFocus
-                                className="w-full px-3 py-2.5 bg-neutral-950 border border-neutral-700 rounded-lg text-sm text-white font-mono placeholder-neutral-700 focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500"
+                                className="w-full px-3 py-2.5 bg-[var(--bg-header)] border border-[var(--border-main)] rounded-lg text-sm text-[var(--text-primary)] font-mono placeholder-neutral-700 focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500"
                                 placeholder={requirePhrase}
                             />
                         </div>
@@ -81,13 +81,13 @@ function ConfirmModal({ title, description, confirmLabel, confirmClass, requireP
                     {err && <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{err}</p>}
 
                     <div className="flex gap-3 pt-1">
-                        <button onClick={onClose} className="flex-1 py-2.5 text-sm font-medium text-neutral-400 border border-neutral-700 rounded-lg hover:bg-neutral-800 hover:text-white transition-all">
+                        <button onClick={onClose} className="flex-1 py-2.5 text-sm font-medium text-[var(--text-secondary)] border border-[var(--border-main)] rounded-lg hover:bg-[var(--input-bg)] hover:text-[var(--text-primary)] transition-all">
                             Cancel
                         </button>
                         <button
                             onClick={handle}
                             disabled={!canConfirm || running}
-                            className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-medium rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed text-white ${confirmClass ?? 'bg-red-600 hover:bg-red-500'}`}
+                            className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-medium rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed text-[var(--text-primary)] ${confirmClass ?? 'bg-red-600 hover:bg-red-500'}`}
                         >
                             {running ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
                             {confirmLabel}
@@ -161,12 +161,12 @@ function AvatarUpload({ userId, currentUrl, onUpdated }: { userId: string; curre
                 onDragOver={e => e.preventDefault()}
             >
                 <img
-                    className="h-20 w-20 rounded-full border-2 border-neutral-700 object-cover transition-opacity group-hover:opacity-70"
+                    className="h-20 w-20 rounded-full border-2 border-[var(--border-main)] object-cover transition-opacity group-hover:opacity-70"
                     src={displayUrl}
                     alt="Avatar"
                 />
                 <div className="absolute inset-0 rounded-full flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Camera className="w-5 h-5 text-white" />
+                    <Camera className="w-5 h-5 text-[var(--text-primary)]" />
                 </div>
                 <input
                     ref={fileRef}
@@ -180,8 +180,8 @@ function AvatarUpload({ userId, currentUrl, onUpdated }: { userId: string; curre
             {/* Controls */}
             <div className="space-y-2 min-w-0">
                 <div>
-                    <p className="text-sm font-medium text-neutral-200">Profile Photo</p>
-                    <p className="text-xs text-neutral-500 mt-0.5">Max {MAX_AVATAR_MB} MB · JPG, PNG, or WebP</p>
+                    <p className="text-sm font-medium text-[var(--text-primary)]">Profile Photo</p>
+                    <p className="text-xs text-[var(--text-muted)] mt-0.5">Max {MAX_AVATAR_MB} MB · JPG, PNG, or WebP</p>
                 </div>
 
                 {!file ? (
@@ -196,14 +196,14 @@ function AvatarUpload({ userId, currentUrl, onUpdated }: { userId: string; curre
                         <button
                             onClick={handleUpload}
                             disabled={uploading}
-                            className="flex items-center gap-1.5 text-xs text-white bg-blue-600 hover:bg-blue-500 disabled:opacity-50 px-3 py-1.5 rounded-lg transition-colors"
+                            className="flex items-center gap-1.5 text-xs text-[var(--text-primary)] bg-blue-600 hover:bg-blue-500 disabled:opacity-50 px-3 py-1.5 rounded-lg transition-colors"
                         >
                             {uploading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
                             {uploading ? 'Uploading…' : 'Save Photo'}
                         </button>
                         <button
                             onClick={() => { setFile(null); setPreview(null); setErrMsg(''); }}
-                            className="text-xs text-neutral-500 hover:text-white transition-colors px-2 py-1.5"
+                            className="text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors px-2 py-1.5"
                         >
                             Discard
                         </button>
@@ -292,15 +292,15 @@ export const AccountSettings = () => {
     return (
         <div className="max-w-3xl mx-auto space-y-6">
             <div>
-                <h1 className="text-xl font-semibold text-white tracking-tight">Account Settings</h1>
-                <p className="text-sm text-neutral-500 mt-0.5">Manage your profile, security, and account preferences.</p>
+                <h1 className="text-xl font-semibold text-[var(--text-primary)] tracking-tight">Account Settings</h1>
+                <p className="text-sm text-[var(--text-muted)] mt-0.5">Manage your profile, security, and account preferences.</p>
             </div>
 
             {/* Profile Card */}
-            <div className="bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden">
-                <div className="px-6 py-4 border-b border-neutral-800 flex items-center gap-2">
+            <div className="bg-[var(--bg-header)] border border-[var(--border-main)] rounded-xl overflow-hidden">
+                <div className="px-6 py-4 border-b border-[var(--border-main)] flex items-center gap-2">
                     <User className="w-4 h-4 text-blue-400" />
-                    <h2 className="text-sm font-semibold text-white">Profile Information</h2>
+                    <h2 className="text-sm font-semibold text-[var(--text-primary)]">Profile Information</h2>
                 </div>
                 <div className="p-6 space-y-6">
                     {/* Avatar Upload */}
@@ -312,37 +312,37 @@ export const AccountSettings = () => {
                         />
                     )}
 
-                    <div className="border-t border-neutral-800 pt-5 space-y-4">
+                    <div className="border-t border-[var(--border-main)] pt-5 space-y-4">
                         {/* Full Name */}
                         <div>
-                            <label className="block text-sm font-medium text-neutral-300 mb-1.5">Display Name</label>
+                            <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">Display Name</label>
                             <input
                                 type="text"
                                 value={fullName}
                                 onChange={e => setFullName(e.target.value)}
                                 onKeyDown={e => e.key === 'Enter' && handleSaveProfile()}
-                                className="w-full max-w-sm px-3 py-2.5 bg-neutral-950 border border-neutral-700 rounded-lg text-sm text-white placeholder-neutral-600 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                className="w-full max-w-sm px-3 py-2.5 bg-[var(--bg-header)] border border-[var(--border-main)] rounded-lg text-sm text-[var(--text-primary)] placeholder-neutral-600 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                                 placeholder="Enter your full name"
                             />
                         </div>
 
                         {/* Email (readonly) */}
                         <div>
-                            <label className="block text-sm font-medium text-neutral-300 mb-1.5">Email Address</label>
+                            <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">Email Address</label>
                             <div className="relative max-w-sm">
-                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-600" />
+                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
                                 <input
                                     type="email"
                                     disabled
                                     value={user?.email || ''}
-                                    className="w-full pl-9 pr-3 py-2.5 bg-neutral-950 border border-neutral-800 rounded-lg text-sm text-neutral-500 cursor-not-allowed"
+                                    className="w-full pl-9 pr-3 py-2.5 bg-[var(--bg-header)] border border-[var(--border-main)] rounded-lg text-sm text-[var(--text-muted)] cursor-not-allowed"
                                 />
                             </div>
-                            <p className="text-xs text-neutral-600 mt-1.5">Email cannot be changed.</p>
+                            <p className="text-xs text-[var(--text-muted)] mt-1.5">Email cannot be changed.</p>
                         </div>
 
                         {/* Member since */}
-                        <p className="text-xs text-neutral-600">
+                        <p className="text-xs text-[var(--text-muted)]">
                             Member since {new Date(user?.created_at || '').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
                         </p>
 
@@ -364,20 +364,20 @@ export const AccountSettings = () => {
             </div>
 
             {/* Security Card */}
-            <div className="bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden">
-                <div className="px-6 py-4 border-b border-neutral-800 flex items-center gap-2">
+            <div className="bg-[var(--bg-header)] border border-[var(--border-main)] rounded-xl overflow-hidden">
+                <div className="px-6 py-4 border-b border-[var(--border-main)] flex items-center gap-2">
                     <Shield className="w-4 h-4 text-green-400" />
-                    <h2 className="text-sm font-semibold text-white">Security</h2>
+                    <h2 className="text-sm font-semibold text-[var(--text-primary)]">Security</h2>
                 </div>
                 <div className="p-6 space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-neutral-300 mb-1.5">New Password</label>
+                        <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">New Password</label>
                         <input
                             type="password"
                             value={newPassword}
                             onChange={e => setNewPassword(e.target.value)}
                             onKeyDown={e => e.key === 'Enter' && handleChangePassword()}
-                            className="w-full max-w-sm px-3 py-2.5 bg-neutral-950 border border-neutral-700 rounded-lg text-sm text-white placeholder-neutral-600 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                            className="w-full max-w-sm px-3 py-2.5 bg-[var(--bg-header)] border border-[var(--border-main)] rounded-lg text-sm text-[var(--text-primary)] placeholder-neutral-600 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                             placeholder="Enter new password (min 6 chars)"
                         />
                     </div>
@@ -385,7 +385,7 @@ export const AccountSettings = () => {
                         <button
                             onClick={handleChangePassword}
                             disabled={isChangingPassword || newPassword.length < 6}
-                            className="flex items-center gap-2 border border-neutral-700 hover:border-neutral-500 hover:bg-neutral-800 text-neutral-300 px-4 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-40"
+                            className="flex items-center gap-2 border border-[var(--border-main)] hover:border-neutral-500 hover:bg-[var(--input-bg)] text-[var(--text-secondary)] px-4 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-40"
                         >
                             {isChangingPassword && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                             Change Password
@@ -397,7 +397,7 @@ export const AccountSettings = () => {
             </div>
 
             {/* Danger Zone */}
-            <div className="bg-neutral-900 border border-red-500/25 rounded-xl overflow-hidden">
+            <div className="bg-[var(--bg-header)] border border-red-500/25 rounded-xl overflow-hidden">
                 <div className="px-6 py-4 border-b border-red-500/20 flex items-center gap-2">
                     <AlertTriangle className="w-4 h-4 text-red-400" />
                     <h2 className="text-sm font-semibold text-red-400">Danger Zone</h2>
@@ -406,8 +406,8 @@ export const AccountSettings = () => {
                     {/* Clear all data */}
                     <div className="p-6 flex items-center justify-between gap-4">
                         <div>
-                            <p className="text-sm font-medium text-neutral-200">Clear All Data</p>
-                            <p className="text-xs text-neutral-500 mt-0.5 max-w-xs">
+                            <p className="text-sm font-medium text-[var(--text-primary)]">Clear All Data</p>
+                            <p className="text-xs text-[var(--text-muted)] mt-0.5 max-w-xs">
                                 Delete all your uploaded structures, files, collections, and activity logs. Your account remains active.
                             </p>
                         </div>
@@ -423,8 +423,8 @@ export const AccountSettings = () => {
                     {/* Delete account */}
                     <div className="p-6 flex items-center justify-between gap-4">
                         <div>
-                            <p className="text-sm font-medium text-neutral-200">Delete Account</p>
-                            <p className="text-xs text-neutral-500 mt-0.5 max-w-xs">
+                            <p className="text-sm font-medium text-[var(--text-primary)]">Delete Account</p>
+                            <p className="text-xs text-[var(--text-muted)] mt-0.5 max-w-xs">
                                 Permanently remove all your data and sign you out. This action is irreversible.
                             </p>
                         </div>
