@@ -190,8 +190,9 @@ export function FolderTreeSidebar({
     );
 
     return (
-        <div className="w-64 shrink-0 flex flex-col h-full bg-[var(--bg-header)] sm:bg-[var(--bg-header)] border-r border-[var(--border-main)] backdrop-blur-xl sm:backdrop-blur-none">
-            <div className="p-4 flex items-center justify-between">
+            <div className="w-64 shrink-0 flex flex-col h-full sm:h-[calc(100vh-8rem)] sm:sticky sm:top-2 bg-[var(--bg-header)] sm:border border-[var(--border-main)] sm:rounded-2xl sm:shadow-sm overflow-hidden backdrop-blur-xl sm:backdrop-blur-none transition-all">
+                {/* Header Actions */}
+                <div className="p-4 flex items-center justify-between">
                 <p className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-widest">Projects</p>
                 <div className="flex items-center gap-1">
                     <button onClick={() => setCreatingInId('root')} className="p-1 text-[var(--text-muted)] hover:text-[var(--text-primary)] rounded-md hover:bg-[var(--input-bg)] transition-colors">
