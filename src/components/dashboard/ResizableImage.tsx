@@ -78,10 +78,9 @@ export const ResizableImage = Node.create<ResizableImageOptions>({
         serialize: (state: any, node: any) => {
           const { src, width, height, alt, title } = node.attrs;
           // Use a simple format that doesn't crash on large strings
-          // We'll use a unique block identifier
-          state.write(`:::resizable-image\n`);
+          state.write(`\n\`\`\`resizable-image\n`);
           state.write(JSON.stringify({ src, width, height, alt, title }));
-          state.write(`\n:::`);
+          state.write(`\n\`\`\`\n`);
           state.closeBlock(node);
         },
         parse: {

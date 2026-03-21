@@ -61,18 +61,38 @@ export const ChemicalSketcher = Node.create({
     return {
       markdown: {
         serialize: (state: any, node: any) => {
-          // Base64 encode to prevent newlines from breaking Markdown paragraph parsing
           const payload = JSON.stringify({
             mol: node.attrs.molfile,
             svg: node.attrs.svg
           });
-          const base64 = btoa(unescape(encodeURIComponent(payload)));
-          state.write(`[[sketcher:${base64}]]`);
+          const base64 = typeof btoa !== 'undefined' ? btoa(unescape(encodeURIComponent(payload))) : Buffer.from(payload).toString('base64');
+          state.write(`\n\`\`\`chemical-sketcher\n${base64}\n\`\`\`\n`);
           state.closeBlock(node);
         },
         parse: {
-          // We don't necessarily need to parse it back from markdown for now,
-          // as we mostly care about the export content.
+          setup: (markdownit: any) => {
+            markdownit.use((md: any) => {
+              const defaultRender = md.renderer.rules.fence || function(tokens: any, idx: any, options: any, _env: any, self: any) {
+                return self.renderToken(tokens, idx, options);
+              };
+
+              md.renderer.rules.fence = (tokens: any, idx: any, options: any, _env: any, self: any) => {
+                const token = tokens[idx];
+                if (token.info === 'chemical-sketcher') {
+                  try {
+                    const base64 = token.content.trim();
+                    const jsonStr = typeof atob !== 'undefined' ? decodeURIComponent(escape(atob(base64))) : Buffer.from(base64, 'base64').toString('utf8');
+                    const attrs = JSON.parse(jsonStr);
+                    const escapeHtml = (str: string) => String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+                    return `<div data-type="chemical-sketcher" data-molfile="${escapeHtml(attrs.mol || '')}" data-svg="${escapeHtml(attrs.svg || '')}"></div>`;
+                  } catch (e) {
+                    console.error('Failed to parse chemical-sketcher:', e);
+                  }
+                }
+                return defaultRender(tokens, idx, options, _env, self);
+              };
+            });
+          }
         }
       }
     }

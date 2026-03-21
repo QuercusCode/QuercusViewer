@@ -69,10 +69,36 @@ export const LabCalculator = Node.create({
             units: node.attrs.units,
             targetField: node.attrs.targetField
           });
-          const base64 = btoa(unescape(encodeURIComponent(payload)));
-          state.write(`[[calculator:${base64}]]`);
+          const base64 = typeof btoa !== 'undefined' ? btoa(unescape(encodeURIComponent(payload))) : Buffer.from(payload).toString('base64');
+          state.write(`\n\`\`\`lab-calculator\n${base64}\n\`\`\`\n`);
           state.closeBlock(node);
         },
+        parse: {
+          setup: (markdownit: any) => {
+            markdownit.use((md: any) => {
+              const defaultRender = md.renderer.rules.fence || function(tokens: any, idx: any, options: any, _env: any, self: any) {
+                return self.renderToken(tokens, idx, options);
+              };
+
+              md.renderer.rules.fence = (tokens: any, idx: any, options: any, _env: any, self: any) => {
+                const token = tokens[idx];
+                if (token.info === 'lab-calculator') {
+                  try {
+                    const base64 = token.content.trim();
+                    const jsonStr = typeof atob !== 'undefined' ? decodeURIComponent(escape(atob(base64))) : Buffer.from(base64, 'base64').toString('utf8');
+                    const attrs = JSON.parse(jsonStr);
+                    const escapeHtml = (str: string) => String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+                    // Using single quotes for JSON strings inside attributes to avoid breaking
+                    return `<div data-type="lab-calculator" data-calc-type="${escapeHtml(attrs.type || '')}" data-values="${escapeHtml(JSON.stringify(attrs.values || {}))}" data-units="${escapeHtml(JSON.stringify(attrs.units || {}))}" data-target-field="${escapeHtml(attrs.targetField || '')}"></div>`;
+                  } catch (e) {
+                    console.error('Failed to parse lab-calculator:', e);
+                  }
+                }
+                return defaultRender(tokens, idx, options, _env, self);
+              };
+            });
+          }
+        }
       }
     }
   }

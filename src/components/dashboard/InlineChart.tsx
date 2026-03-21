@@ -739,4 +739,53 @@ export const InlineChart = Node.create({
   addNodeView() {
     return ReactNodeViewRenderer(InlineChartComponent)
   },
+
+  addStorage() {
+    return {
+      markdown: {
+        serialize: (state: any, node: any) => {
+          const payload = JSON.stringify({
+            data: node.attrs.data,
+            type: node.attrs.type,
+            title: node.attrs.title,
+            xAxis: node.attrs.xAxis,
+            yAxes: node.attrs.yAxes,
+            customColors: node.attrs.customColors,
+            tableId: node.attrs.tableId,
+            showTrendLine: node.attrs.showTrendLine,
+            showStatistics: node.attrs.showStatistics,
+          });
+          const base64 = typeof btoa !== 'undefined' ? btoa(unescape(encodeURIComponent(payload))) : Buffer.from(payload).toString('base64');
+          state.write(`\n\`\`\`inline-chart\n${base64}\n\`\`\`\n`);
+          state.closeBlock(node);
+        },
+        parse: {
+          setup: (markdownit: any) => {
+            markdownit.use((md: any) => {
+              const defaultRender = md.renderer.rules.fence || function(tokens: any, idx: any, options: any, _env: any, self: any) {
+                return self.renderToken(tokens, idx, options);
+              };
+
+              md.renderer.rules.fence = (tokens: any, idx: any, options: any, _env: any, self: any) => {
+                const token = tokens[idx];
+                if (token.info === 'inline-chart') {
+                  try {
+                    const base64 = token.content.trim();
+                    const jsonStr = typeof atob !== 'undefined' ? decodeURIComponent(escape(atob(base64))) : Buffer.from(base64, 'base64').toString('utf8');
+                    const attrs = JSON.parse(jsonStr);
+                    const escapeHtml = (str: string) => String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+                    
+                    return `<div data-type="inline-chart" data-chart-data="${escapeHtml(JSON.stringify(attrs.data || []))}" data-chart-type="${escapeHtml(attrs.type || 'line')}" data-chart-title="${escapeHtml(attrs.title || '')}" data-chart-xaxis="${escapeHtml(attrs.xAxis || '')}" data-chart-yaxes="${escapeHtml(JSON.stringify(attrs.yAxes || []))}" data-chart-colors="${escapeHtml(JSON.stringify(attrs.customColors || []))}" data-table-id="${escapeHtml(attrs.tableId || '')}" data-show-trendline="${attrs.showTrendLine ? 'true' : 'false'}" data-show-statistics="${attrs.showStatistics ? 'true' : 'false'}"></div>`;
+                  } catch (e) {
+                    console.error('Failed to parse inline-chart:', e);
+                  }
+                }
+                return defaultRender(tokens, idx, options, _env, self);
+              };
+            });
+          }
+        }
+      }
+    }
+  }
 })
