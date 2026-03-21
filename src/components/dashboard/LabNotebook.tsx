@@ -20,9 +20,6 @@ export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false
 
     const [searchQuery, setSearchQuery] = useState('');
 
-    // Editor State
-    const [editTitle, setEditTitle] = useState('');
-    const [editContent, setEditContent] = useState('');
     const [isSaving, setIsSaving] = useState(false);
     const [lastSaved, setLastSaved] = useState<Date | null>(null);
     const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -35,6 +32,8 @@ export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false
     const [allStructures, setAllStructures] = useState<Structure[]>([]);
 
     const [showDrawerList, setShowDrawerList] = useState(isDrawer);
+
+    const activeNotebook = notebooks.find(n => n.id === activeId);
 
     useEffect(() => {
         if (!user) return;
@@ -49,6 +48,7 @@ export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false
                 setAllStructures(structureData);
                 if (notebookData.length > 0 && !activeId) {
                     setActiveId(notebookData[0].id);
+                    setLastSaved(new Date(notebookData[0].updated_at));
                 }
             } catch (err: any) {
                 setError(err.message || 'Failed to load data');
@@ -66,6 +66,7 @@ export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false
             const newEntry = await createNotebook(user.id);
             setNotebooks(prev => [newEntry, ...prev]);
             setActiveId(newEntry.id);
+            setLastSaved(new Date(newEntry.updated_at));
         } catch (err: any) {
             setError(err.message || 'Failed to create notebook');
         }
@@ -85,26 +86,8 @@ export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false
         }
     };
 
-    const activeNotebook = notebooks.find(n => n.id === activeId);
-
-    // Sync local editor state when active notebook changes
-    useEffect(() => {
-        if (activeNotebook) {
-            setEditTitle(activeNotebook.title);
-            setEditContent(activeNotebook.content);
-            setLastSaved(new Date(activeNotebook.updated_at));
-        } else {
-            setEditTitle('');
-            setEditContent('');
-            setLastSaved(null);
-        }
-    }, [activeId]);
-
     // Auto-save logic
     const handleEditorChange = (field: 'title' | 'content', value: string) => {
-        if (field === 'title') setEditTitle(value);
-        if (field === 'content') setEditContent(value);
-
         // Optimistically update the list view so the sidebar reflects changes immediately
         setNotebooks(prev => prev.map(n => n.id === activeId ? { ...n, [field]: value, updated_at: new Date().toISOString() } : n));
 
@@ -402,7 +385,7 @@ export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false
                             <div className={`flex-1 overflow-y-auto ${isDrawer ? 'p-4' : 'px-4 sm:px-12 py-8'} min-h-0`}>
                                 <input
                                     type="text"
-                                    value={editTitle}
+                                    value={activeNotebook.title}
                                     onChange={(e) => handleEditorChange('title', e.target.value)}
                                     className={`bg-transparent border-none font-bold font-serif text-[var(--text-primary)] focus:outline-none w-full mb-4 sm:mb-8 placeholder-[var(--text-muted)] ${isDrawer ? 'text-2xl' : 'text-4xl'}`}
                                     placeholder="Title..."
@@ -413,7 +396,7 @@ export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false
                                         key={activeId}
                                         ref={editorRef}
                                         noteId={activeId || undefined}
-                                        content={editContent}
+                                        content={activeNotebook.content}
                                         onChange={(markdown) => handleEditorChange('content', markdown)}
                                         allStructures={allStructures}
                                         placeholder="Write notes... Type @ to mention a structure..."
@@ -447,8 +430,8 @@ export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false
                 {activeNotebook && (
                     <LabReportTemplate
                         ref={reportRef}
-                        title={editTitle}
-                        content={editContent}
+                        title={activeNotebook.title}
+                        content={activeNotebook.content}
                         date={activeNotebook.created_at}
                         author={user?.email || 'Quercus User'}
                         id={activeNotebook.id.slice(0, 8)}
