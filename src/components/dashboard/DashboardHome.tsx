@@ -42,10 +42,10 @@ function StatCard({ label, value, sub, icon: Icon, gradient }: {
     icon: React.ElementType; gradient: string;
 }) {
     return (
-        <div className={`relative overflow-hidden rounded-2xl border border-white/5 p-6 flex flex-col gap-4 ${gradient}`}>
+        <div className={`relative overflow-hidden rounded-2xl border border-white/5 p-4 sm:p-6 flex flex-col gap-3 sm:gap-4 ${gradient}`}>
             <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-widest text-white/50">{label}</span>
-                <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center">
+                <span className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-white/50">{label}</span>
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-xl bg-white/10 flex items-center justify-center">
                     <Icon className="w-4 h-4 text-white/80" />
                 </div>
             </div>
@@ -67,7 +67,7 @@ function StorageBar({ totalBytes }: { totalBytes: number }) {
     const color = pct > 85 ? 'bg-red-500' : pct > 65 ? 'bg-amber-500' : 'bg-blue-500';
 
     return (
-        <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 space-y-4">
+        <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-4 sm:p-6 space-y-4">
             <div className="flex items-center gap-2">
                 <Database className="w-4 h-4 text-blue-400" />
                 <h3 className="text-sm font-semibold text-white">Storage</h3>
@@ -97,7 +97,7 @@ function StorageBar({ totalBytes }: { totalBytes: number }) {
 function QuickActions() {
     const navigate = useNavigate();
     return (
-        <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 space-y-3">
+        <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-4 sm:p-6 space-y-3">
             <h3 className="text-sm font-semibold text-white flex items-center gap-2">
                 <Zap className="w-4 h-4 text-yellow-400" /> Quick Actions
             </h3>
@@ -130,7 +130,7 @@ function TopStructures({ structures }: { structures: Structure[] }) {
     if (top.length === 0) return null;
 
     return (
-        <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 space-y-4">
+        <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-4 sm:p-6 space-y-4">
             <div className="flex items-center justify-between">
                 <h3 className="text-sm font-semibold text-white flex items-center gap-2">
                     <TrendingUp className="w-4 h-4 text-emerald-400" /> Most Viewed
@@ -169,7 +169,7 @@ function RecentFeed({ logs }: { logs: ActivityLog[] }) {
     if (recent.length === 0) return null;
 
     return (
-        <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 space-y-4">
+        <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-4 sm:p-6 space-y-4">
             <div className="flex items-center justify-between">
                 <h3 className="text-sm font-semibold text-white flex items-center gap-2">
                     <Clock className="w-4 h-4 text-neutral-400" /> Recent Activity
@@ -207,7 +207,7 @@ function StarredRow({ structures }: { structures: Structure[] }) {
     if (starred.length === 0) return null;
 
     return (
-        <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 space-y-4">
+        <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-4 sm:p-6 space-y-4">
             <h3 className="text-sm font-semibold text-white flex items-center gap-2">
                 <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" /> Starred
             </h3>
@@ -283,9 +283,9 @@ export const DashboardHome = () => {
                 </div>
                 <Link
                     to="/dashboard/structures"
-                    className="hidden sm:flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-xl transition-colors shrink-0"
+                    className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-xl transition-colors shrink-0 shadow-lg shadow-blue-500/20"
                 >
-                    <Plus className="w-4 h-4" /> New Structure
+                    <Plus className="w-4 h-4" /> <span className="hidden sm:inline">New Structure</span>
                 </Link>
             </div>
 
@@ -331,7 +331,7 @@ export const DashboardHome = () => {
 
                     {/* Empty state */}
                     {structures.length === 0 && (
-                        <div className="bg-neutral-900 border border-neutral-800 border-dashed rounded-2xl p-12 text-center space-y-4">
+                        <div className="bg-neutral-900 border border-neutral-800 border-dashed rounded-2xl p-6 sm:p-12 text-center space-y-4">
                             <div className="w-16 h-16 rounded-2xl bg-neutral-800 flex items-center justify-center mx-auto">
                                 <Dna className="w-8 h-8 text-neutral-600" />
                             </div>

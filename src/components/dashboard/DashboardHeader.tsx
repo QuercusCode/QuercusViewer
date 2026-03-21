@@ -1,5 +1,5 @@
 import { useAuth } from '../../lib/AuthContext';
-import { Search, Moon, Sun, EyeOff } from 'lucide-react';
+import { Search, Moon, Sun, EyeOff, Menu } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { useTheme } from '../../lib/ThemeContext';
 
@@ -9,7 +9,11 @@ const pageTitles: Record<string, { title: string; subtitle: string }> = {
     '/dashboard/settings': { title: 'Account Settings', subtitle: 'Manage your profile and security preferences.' },
 };
 
-export const DashboardHeader = () => {
+interface DashboardHeaderProps {
+    onMenuClick?: () => void;
+}
+
+export const DashboardHeader = ({ onMenuClick }: DashboardHeaderProps) => {
     const { user } = useAuth();
     const { pathname } = useLocation();
     const { theme, toggleTheme } = useTheme();
@@ -18,11 +22,19 @@ export const DashboardHeader = () => {
     const { title, subtitle } = page?.[1] ?? { title: 'Dashboard', subtitle: '' };
 
     return (
-        <header className="h-16 bg-[var(--bg-header)] border-b border-[var(--border-main)] px-6 md:px-8 flex items-center justify-between shrink-0 sticky top-0 z-50 transition-colors duration-300">
-            {/* Page Title */}
-            <div className="flex flex-col justify-center">
-                <h1 className="text-base font-semibold text-[var(--text-primary)] leading-tight">{title}</h1>
-                {subtitle && <p className="text-xs text-[var(--text-muted)] hidden md:block">{subtitle}</p>}
+        <header className="h-16 bg-[var(--bg-header)] border-b border-[var(--border-main)] px-4 md:px-8 flex items-center justify-between shrink-0 sticky top-0 z-50 transition-colors duration-300">
+            {/* Page Title & Hamburger */}
+            <div className="flex items-center gap-3">
+                <button 
+                    onClick={onMenuClick}
+                    className="md:hidden p-2 -ml-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] rounded-lg hover:bg-[var(--input-bg)] transition-colors"
+                >
+                    <Menu className="w-5 h-5" />
+                </button>
+                <div className="flex flex-col justify-center">
+                    <h1 className="text-base font-semibold text-[var(--text-primary)] leading-tight">{title}</h1>
+                    {subtitle && <p className="text-xs text-[var(--text-muted)] hidden md:block">{subtitle}</p>}
+                </div>
             </div>
 
             {/* Right Controls */}

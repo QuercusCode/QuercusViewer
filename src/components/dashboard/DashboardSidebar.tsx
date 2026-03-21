@@ -9,9 +9,11 @@ import { useAuth } from '../../lib/AuthContext';
 interface DashboardSidebarProps {
     isCollapsed: boolean;
     onToggle: () => void;
+    isMobileOpen?: boolean;
+    onMobileClose?: () => void;
 }
 
-export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isCollapsed, onToggle }) => {
+export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isCollapsed, onToggle, isMobileOpen, onMobileClose }) => {
     const { pathname } = useLocation();
     const { signOut, user } = useAuth();
     const navigate = useNavigate();
@@ -30,7 +32,21 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isCollapsed,
     ];
 
     return (
-        <aside className={`${isCollapsed ? 'w-20' : 'w-64'} bg-[var(--bg-sidebar)] border-r border-[var(--border-main)] hidden md:flex flex-col h-screen shrink-0 sticky top-0 transition-all duration-300 ease-in-out z-50`}>
+        <>
+            {/* Mobile Overlay Backdrop */}
+            {isMobileOpen && (
+                <div 
+                    className="fixed inset-0 z-[60] bg-black/50 md:hidden backdrop-blur-sm transition-opacity"
+                    onClick={onMobileClose}
+                />
+            )}
+            <aside className={`
+                ${isCollapsed ? 'w-20' : 'w-64'} 
+                bg-[var(--bg-sidebar)] border-r border-[var(--border-main)] flex flex-col h-screen shrink-0 
+                fixed md:sticky top-0 left-0 z-[70] md:z-50
+                transition-all duration-300 ease-in-out
+                ${isMobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+            `}>
             {/* Logo / App Name */}
             <div className={`h-16 flex items-center px-5 border-b border-[var(--border-main)] justify-between gap-3 ${isCollapsed ? 'px-0 justify-center' : ''}`}>
                 <div className="flex items-center gap-3 overflow-hidden">
@@ -124,5 +140,6 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isCollapsed,
                 </button>
             </div>
         </aside>
+        </>
     );
 };
