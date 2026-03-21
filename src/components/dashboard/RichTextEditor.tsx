@@ -112,9 +112,22 @@ const Dropdown: React.FC<{
         if (!isOpen) { e.stopPropagation(); }
       }}>{trigger}</div>
       {isOpen && (
-        <div className={`absolute top-full mt-1 z-50 min-w-[200px] bg-[var(--bg-sidebar)] border border-[var(--border-main)] rounded-lg shadow-xl p-1 animate-in fade-in zoom-in duration-200 ${align === 'right' ? 'right-0' : 'left-0'} ${className}`}>
-          {children}
-        </div>
+        <>
+          {/* Mobile Backdrop */}
+          <div 
+            className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm md:hidden animate-in fade-in duration-200" 
+            onClick={(e) => { e.stopPropagation(); onClose(); }} 
+          />
+          {/* Enhanced Mobile-Responsive Dropdown */}
+          <div className={`
+            fixed bottom-0 left-0 right-0 z-[70] p-4 pb-8 bg-[var(--bg-sidebar)] border-t border-[var(--border-main)] rounded-t-3xl shadow-2xl animate-in slide-in-from-bottom-full duration-200 max-h-[80vh] overflow-y-auto custom-scrollbar
+            md:absolute md:top-full md:bottom-auto md:mt-1 md:z-50 md:min-w-[200px] md:rounded-lg md:border md:shadow-xl md:p-1 md:slide-in-from-top-2 md:fade-in md:zoom-in md:max-h-none md:overflow-visible
+            ${align === 'right' ? 'md:right-0 md:left-auto' : 'md:left-0 md:right-auto'} 
+            ${className}
+          `}>
+            {children}
+          </div>
+        </>
       )}
     </div>
   );
@@ -701,8 +714,8 @@ export const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>
                   <ChevronDown className="w-4 h-4 -rotate-90 opacity-30 group-hover/btn:opacity-100 transition-all" />
                 </button>
                 {/* Interaction Bridge: Precise overlap to eliminate gaps while maintaining stability */}
-                <div className="absolute right-full top-[-10px] bottom-[-10px] pr-2 -mr-2 hidden group-hover/sub:block z-50">
-                  <div className="h-full flex items-start pt-[10px]">
+                <div className="hidden group-hover/sub:block md:absolute md:right-full md:top-[-10px] md:bottom-[-10px] md:pr-2 md:-mr-2 z-50">
+                  <div className="md:h-full flex items-center justify-center md:items-start pt-2 md:pt-[10px] pb-4 md:pb-0">
                     <TableGridPicker onSelect={(r, c) => {
                       editor.chain().focus().insertTable({ rows: r, cols: c, withHeaderRow: true }).run();
                       setActiveMenu(null);
@@ -720,9 +733,9 @@ export const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>
                   </div>
                   <ChevronDown className="w-4 h-4 -rotate-90 opacity-30 group-hover/btn:opacity-100 transition-all" />
                 </button>
-                <div className="absolute right-full top-[-10px] bottom-[-10px] pr-2 -mr-2 hidden group-hover/sub:block z-50 min-w-[200px]">
-                  <div className="h-full flex items-start pt-[10px]">
-                    <div className="bg-neutral-900 border border-neutral-800 rounded-[20px] shadow-[0_30px_90px_rgba(0,0,0,0.7)] p-2 space-y-1">
+                <div className="hidden group-hover/sub:block md:absolute md:right-full md:top-[-10px] md:bottom-[-10px] md:pr-2 md:-mr-2 z-50 md:min-w-[200px]">
+                  <div className="md:h-full flex flex-col items-center justify-center pt-2 md:pt-[10px] px-2 md:px-0 pb-4 md:pb-0 w-full">
+                    <div className="bg-neutral-900 border border-neutral-800 rounded-2xl md:rounded-[20px] shadow-[0_30px_90px_rgba(0,0,0,0.7)] p-2 space-y-1 w-full md:w-auto">
                       <button 
                         onClick={() => insertTemplate('well96')}
                         className="w-full text-left px-4 py-3 text-sm text-[var(--text-secondary)] hover:bg-[var(--input-bg)] rounded-xl transition-colors"
@@ -790,10 +803,10 @@ export const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>
                   </div>
                   <ChevronDown className="w-4 h-4 -rotate-90 opacity-30 group-hover/btn:opacity-100 transition-all" />
                 </button>
-                <div className="absolute right-full top-[-10px] bottom-[-10px] pr-2 -mr-2 hidden group-hover/sub:block z-50 min-w-[240px]">
-                  <div className="h-full flex items-start pt-[10px]">
-                    <div className="bg-[var(--bg-sidebar)] border border-[var(--border-main)] rounded-[20px] shadow-[0_30px_90px_rgba(0,0,0,0.7)] p-4 h-80 overflow-y-auto custom-scrollbar z-50">
-                      <div className="grid grid-cols-5 gap-2">
+                <div className="hidden group-hover/sub:block md:absolute md:right-full md:top-[-10px] md:bottom-[-10px] md:pr-2 md:-mr-2 z-50 md:min-w-[240px]">
+                  <div className="md:h-full flex items-center justify-center pt-2 md:pt-[10px] pb-4 md:pb-0 w-full">
+                    <div className="bg-[var(--bg-sidebar)] border border-[var(--border-main)] rounded-2xl md:rounded-[20px] shadow-[0_30px_90px_rgba(0,0,0,0.7)] p-4 max-h-64 sm:h-80 overflow-y-auto custom-scrollbar z-50 w-full md:w-auto">
+                      <div className="grid grid-cols-6 sm:grid-cols-5 gap-2">
                         {[
                           'α', 'β', 'Δ', 'λ', 'μ', 'π', 'σ', 'ω', 'γ', 'θ', 
                           'ρ', 'τ', 'φ', 'χ', 'ψ', 'ζ', 'Å', '∞', '±', '×', 
