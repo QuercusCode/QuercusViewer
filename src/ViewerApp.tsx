@@ -2865,7 +2865,11 @@ function App() {
 
           {/* Top Right Navigation (Dashboard / Auth / Notebook) */}
           {!isEmbedMode && !isStudioMode && (
-            <div className="absolute top-4 right-4 md:right-8 z-50 flex items-center gap-3">
+            <div className={`absolute top-4 z-50 flex items-center gap-3 transition-all duration-300 ease-in-out ${
+              visualizerEngine === 'molstar' 
+                ? 'right-4 md:right-8' 
+                : (chains.length > 0 ? 'right-[270px]' : 'right-[175px]')
+            }`}>
               <button
                 onClick={() => setIsNotebookOpen(!isNotebookOpen)}
                 className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-all border shadow-sm ${isNotebookOpen ? 'bg-blue-600 border-blue-500 text-white' : isLightMode ? 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50' : 'bg-neutral-800 border-neutral-700 text-white hover:bg-neutral-700'}`}
