@@ -168,87 +168,6 @@ function SkeletonCard() {
     );
 }
 
-// ── Hover preview popover ─────────────────────────────────────────
-
-function HoverPreview({ item }: { item: Structure }) {
-    const badge = TYPE_BADGE[item.file_type] ?? 'bg-neutral-500/10 border-neutral-500/30 text-[var(--text-secondary)]';
-    const rcsbId = item.name.match(/^[1-9][A-Z0-9]{3}$/i)?.[0]?.toUpperCase();
-    return (
-        <div
-            className="absolute z-50 top-0 left-0 w-full bg-[var(--bg-header)] border border-[var(--border-main)] rounded-2xl shadow-2xl shadow-black/80 overflow-hidden pointer-events-none flex flex-col"
-            style={{ maxHeight: 'calc(100% - 48px)' }}
-        >
-            {/* Thumbnail */}
-            {rcsbId && (
-                <div className="relative h-36 bg-[var(--input-bg)] overflow-hidden">
-                    <img
-                        src={`https://cdn.rcsb.org/images/structures/${rcsbId.toLowerCase()}_assembly-1.jpeg`}
-                        alt={rcsbId}
-                        className="w-full h-full object-cover"
-                        onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                    />
-                    < div className="absolute inset-0 bg-gradient-to-t from-neutral-900/80 to-transparent" />
-                    <span className="absolute bottom-2 left-3 text-xs font-mono text-[var(--text-primary)]/80 bg-black/40 backdrop-blur-sm px-2 py-0.5 rounded-md">{rcsbId}</span>
-                </div >
-            )}
-            <div className="p-4 space-y-3 overflow-y-auto overflow-x-hidden flex-1 scrollbar-hide">
-                {/* Name */}
-                <div>
-                    <p className="text-sm font-semibold text-[var(--text-primary)] leading-snug">{item.metadata?.title || item.name}</p>
-                    <span className={`inline-block text-[10px] font-bold px-1.5 py-0.5 rounded-md border mt-1 ${badge}`}>{item.file_type}</span>
-                </div>
-                {/* RCSB metadata grid */}
-                {item.metadata && (
-                    <div className="grid grid-cols-2 gap-2">
-                        {item.metadata.organism && (
-                            <div>
-                                <p className="text-[9px] text-[var(--text-muted)] uppercase tracking-wider mb-0.5">Organism</p>
-                                <p className="text-xs text-[var(--text-secondary)] truncate">{item.metadata.organism}</p>
-                            </div>
-                        )}
-                        {item.metadata.method && (
-                            <div>
-                                <p className="text-[9px] text-[var(--text-muted)] uppercase tracking-wider mb-0.5">Method</p>
-                                <p className="text-xs text-[var(--text-secondary)]">{item.metadata.method}</p>
-                            </div>
-                        )}
-                        {item.metadata.resolution != null && (
-                            <div>
-                                <p className="text-[9px] text-[var(--text-muted)] uppercase tracking-wider mb-0.5">Resolution</p>
-                                <p className="text-xs text-[var(--text-secondary)]">{item.metadata.resolution.toFixed(2)} Å</p>
-                            </div>
-                        )}
-                        <div>
-                            <p className="text-[9px] text-[var(--text-muted)] uppercase tracking-wider mb-0.5">Uploaded</p>
-                            <p className="text-xs text-[var(--text-secondary)]">{timeAgo(item.created_at)}</p>
-                        </div>
-                    </div>
-                )}
-                {/* Notes preview */}
-                {item.notes && (
-                    <div className="pt-2 border-t border-[var(--border-main)]">
-                        <p className="text-[9px] text-[var(--text-muted)] uppercase tracking-wider mb-1">Notes</p>
-                        <p className="text-xs text-[var(--text-secondary)] line-clamp-3 leading-relaxed">{item.notes}</p>
-                    </div>
-                )}
-                {/* Tags */}
-                {(item.tags ?? []).length > 0 && (
-                    <div className="flex flex-wrap gap-1 pt-1">
-                        {item.tags.map(t => (
-                            <span key={t} className={`text-[9px] font-medium px-1.5 py-0.5 rounded-md border ${tagColor(t)}`}>{t}</span>
-                        ))}
-                    </div>
-                )}
-                {/* Stats */}
-                <div className="flex items-center gap-3 pt-1 border-t border-[var(--border-main)] text-[10px] text-[var(--text-muted)]">
-                    <span>{formatBytes(item.file_size)}</span>
-                    {(item.view_count ?? 0) > 0 && <span className="flex items-center gap-0.5"><Eye className="w-2.5 h-2.5" />{item.view_count} opens</span>}
-                </div>
-            </div>
-        </div >
-    );
-}
-
 // ── Quick Look Modal ──────────────────────────────────────────────
 
 function QuickLookModal({ item, onClose, onOpen }: { item: Structure; onClose: () => void; onOpen: (s: Structure) => void }) {
@@ -526,7 +445,6 @@ function StructureCard({
     const [draftNotes, setDraftNotes] = useState(item.notes ?? '');
     const [copied, setCopied] = useState(false);
     const [downloading, setDownloading] = useState(false);
-    const [hovered, setHovered] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
 
     // Use a ref for the dropdown container to detect outside clicks
@@ -594,14 +512,9 @@ function StructureCard({
             onClick={e => onSelect(e, item.id)}
             onDoubleClick={() => onDoubleClick?.(item.id)}
             onContextMenu={e => onContextMenu(e, 'structure', item)}
-            onMouseEnter={() => setHovered(true)}
-            onMouseLeave={() => setHovered(false)}
             draggable
             onDragStart={handleDragStart}
         >
-            {/* Hover preview popover (escapes bounds) */}
-            {hovered && <HoverPreview item={item} />}
-
             {/* Inner clipping wrapper */}
             <div className={`flex-1 flex flex-col bg-[var(--bg-header)] border rounded-2xl overflow-hidden transition-colors relative
                 ${selected ? 'border-blue-500/60' : 'border-[var(--border-main)] group-hover:border-neutral-600'}`}>
