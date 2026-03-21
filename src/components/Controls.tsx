@@ -9,6 +9,7 @@ import {
     Clock,
     Download,
     Eye,
+    EyeOff,
     Grid3X3,
     HelpCircle,
     Hexagon,
@@ -44,6 +45,7 @@ import { findMotifs } from '../utils/searchUtils';
 import type { MotifMatch } from '../utils/searchUtils';
 import { MOTIF_LIBRARY } from '../data/motifLibrary';
 import { HexColorPicker } from 'react-colorful';
+import { useTheme } from '../lib/ThemeContext';
 
 // Reusable Sidebar Section Component - Defined outside to prevent re-renders losing focus
 const SidebarSection = ({ title, icon: Icon, children, isOpen, onToggle, isLightMode, id }: { title: string, icon: any, children: React.ReactNode, isOpen: boolean, onToggle: () => void, isLightMode: boolean, id?: string }) => {
@@ -514,6 +516,9 @@ export const Controls: React.FC<ControlsProps> = ({
     const [isSearching, setIsSearching] = useState(false);
     const [isSearchFocused, setIsSearchFocused] = useState(false);
 
+    // Theme hook for theme toggle cycling
+    const { theme, toggleTheme } = useTheme();
+
     // Chain Styling State
     const [selectedChainForStyle, setSelectedChainForStyle] = useState<string>("__none__");
     const [selectedStyleForChain, setSelectedStyleForChain] = useState<RepresentationType>("cartoon");
@@ -862,14 +867,16 @@ export const Controls: React.FC<ControlsProps> = ({
                                     <HelpCircle className="w-4 h-4" />
                                 </button>
                                 <button
-                                    onClick={() => setIsLightMode(!isLightMode)}
-                                    className={`p-2 rounded-xl border transition-all hover:scale-105 active:scale-95 ${isLightMode
+                                    onClick={toggleTheme}
+                                    className={`p-2 rounded-xl border transition-all hover:scale-105 active:scale-95 ${theme === 'light'
                                         ? 'border-amber-200 bg-amber-50 text-amber-500 hover:bg-amber-100 shadow-sm'
+                                        : theme === 'dark-room'
+                                        ? 'border-red-900/30 bg-black text-red-500 hover:bg-neutral-900 shadow-sm'
                                         : 'border-white/10 bg-neutral-800/50 text-indigo-400 hover:bg-neutral-800 hover:text-indigo-300 hover:border-indigo-500/30'
                                         }`}
-                                    title="Toggle Theme"
+                                    title={`Toggle Theme (Current: ${theme})`}
                                 >
-                                    {isLightMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                                    {theme === 'light' ? <Sun className="w-4 h-4" /> : theme === 'dark-room' ? <EyeOff className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
                                 </button>
                             </div>
                         </div>

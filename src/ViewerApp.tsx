@@ -26,6 +26,7 @@ import { Settings } from './components/Settings';
 import { SessionChat } from './components/SessionChat';
 import { OFFLINE_LIBRARY } from './data/library';
 import { fetchPubChemMetadata } from './utils/pdbUtils';
+import { useTheme } from './lib/ThemeContext';
 import type {
   PDBMetadata,
   Measurement,
@@ -754,13 +755,18 @@ function App() {
     // Users should explicitly select structures from the library or enter IDs
   }, [dataSource]);
 
-  const [isLightMode, setIsLightMode] = useState(() => {
-    return localStorage.getItem('theme') === 'light';
-  });
+  const { theme, setTheme, toggleTheme } = useTheme();
+  
+  // Create alias for backwards compatibility with the hundreds of child props
+  const isLightMode = theme === 'light';
 
-  useEffect(() => {
-    localStorage.setItem('theme', isLightMode ? 'light' : 'dark');
-  }, [isLightMode]);
+  const setIsLightMode = useCallback((val: boolean | ((prev: boolean) => boolean)) => {
+    if (typeof val === 'function') {
+      setTheme(val(theme === 'light') ? 'light' : 'dark');
+    } else {
+      setTheme(val ? 'light' : 'dark');
+    }
+  }, [theme, setTheme]);
 
 
   // Ref to prevent "echo" loops (receiving state -> updating local -> triggering broadcast -> sending back)
@@ -2412,11 +2418,11 @@ function App() {
     },
     {
       id: 'toggle-theme',
-      label: isLightMode ? 'Switch to Dark Mode' : 'Switch to Light Mode',
+      label: theme === 'light' ? 'Switch to Dark Mode' : theme === 'dark' ? 'Switch to Dark Room' : 'Switch to Light Mode',
       icon: Palette,
       shortcut: 'T',
       category: 'View',
-      perform: () => setIsLightMode(prev => !prev)
+      perform: () => toggleTheme()
     },
     {
       id: 'open-settings',
