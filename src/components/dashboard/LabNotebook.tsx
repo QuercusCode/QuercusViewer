@@ -410,6 +410,7 @@ export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false
 
                                 <div className="h-full min-h-[500px] mb-20">
                                     <RichTextEditor 
+                                        key={activeId}
                                         ref={editorRef}
                                         noteId={activeId || undefined}
                                         content={editContent}
