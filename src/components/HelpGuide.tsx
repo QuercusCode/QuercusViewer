@@ -817,12 +817,12 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
     return (
         <>
             {/* Donation Dropdown (Floating next to Help) */}
-            <div className={`fixed z-40 group transition-all duration-300 ease-in-out ${isMolStarActive ? (isMolStarSidebarExpanded ? 'bottom-20 right-[380px]' : 'bottom-20 right-[80px]') : `top-4 ${hasSequence ? 'right-[80px] md:right-[176px]' : 'right-[80px]'}`}`}>
+            <div className={`fixed z-40 group transition-all duration-300 ease-in-out ${isMolStarActive ? (isMolStarSidebarExpanded ? 'bottom-20 right-[380px]' : 'bottom-20 right-[80px]') : `top-4 ${hasSequence ? 'right-[76px] md:right-[172px]' : 'right-[76px]'}`}`}>
                 <button
                     className={`h-10 px-4 rounded-full border shadow-lg backdrop-blur-md transition-all group-hover:bg-neutral-800 group-hover:text-white flex items-center gap-2 ${isLightMode ? 'bg-white/80 text-pink-600 border-black/10' : 'bg-neutral-900/80 text-pink-500 border-white/10'}`}
                 >
                     <Heart className={`w-4 h-4 ${isLightMode ? 'fill-pink-100' : 'fill-pink-900/30'}`} />
-                    <span className="text-xs font-bold hidden sm:block">Donate</span>
+                    <span className="text-sm font-medium hidden sm:block">Donate</span>
                 </button>
 
                 {/* Dropdown Menu - Upward or Downward depending on position */}
@@ -838,7 +838,7 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
                             <Heart className="w-4 h-4" />
                         </div>
                         <div className="flex flex-col">
-                            <span className="text-xs font-bold text-white">Buy Me a Coffee</span>
+                            <span className="text-sm font-bold text-white">Buy Me a Coffee</span>
                             <span className="text-[10px] text-neutral-400">Support widely</span>
                         </div>
                     </a>
@@ -848,7 +848,7 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
             {/* Trigger Button */}
             <button
                 onClick={() => setIsOpen(true)}
-                className={`fixed z-40 h-10 w-10 flex items-center justify-center rounded-full border shadow-lg backdrop-blur-md transition-all duration-300 ease-in-out hover:scale-105 group ${isMolStarActive ? (isMolStarSidebarExpanded ? 'bottom-20 right-[330px]' : 'bottom-20 right-[30px]') : `top-4 ${hasSequence ? 'right-[27px] md:right-[123px]' : 'right-[27px]'}`} ${isLightMode ? 'bg-white/80 text-neutral-600 hover:text-blue-600 border-black/10 hover:bg-white' : 'bg-neutral-900/80 text-neutral-400 hover:text-white border-white/10'}`}
+                className={`fixed z-40 h-10 w-10 flex items-center justify-center rounded-full border shadow-lg backdrop-blur-md transition-all duration-300 ease-in-out hover:scale-105 group ${isMolStarActive ? (isMolStarSidebarExpanded ? 'bottom-20 right-[330px]' : 'bottom-20 right-[30px]') : `top-4 ${hasSequence ? 'right-[24px] md:right-[120px]' : 'right-[24px]'}`} ${isLightMode ? 'bg-white/80 text-neutral-600 hover:text-blue-600 border-black/10 hover:bg-white' : 'bg-neutral-900/80 text-neutral-400 hover:text-white border-white/10'}`}
                 title="Viewer Controls & Help"
             >
                 <CircleHelp className="w-5 h-5 group-hover:rotate-12 transition-transform" />

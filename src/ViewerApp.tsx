@@ -2868,22 +2868,22 @@ function App() {
             <div className={`absolute top-4 z-50 flex items-center gap-3 transition-all duration-300 ease-in-out ${
               visualizerEngine === 'molstar' 
                 ? 'right-4 md:right-8' 
-                : (chains.length > 0 ? 'right-[270px]' : 'right-[175px]')
+                : (chains.length > 0 ? 'right-[192px] md:right-[288px]' : 'right-[192px]')
             }`}>
               <button
                 onClick={() => setIsNotebookOpen(!isNotebookOpen)}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-all border shadow-sm ${isNotebookOpen ? 'bg-blue-600 border-blue-500 text-white' : isLightMode ? 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50' : 'bg-neutral-800 border-neutral-700 text-white hover:bg-neutral-700'}`}
+                className={`flex items-center gap-2 h-10 px-4 rounded-full text-sm font-medium transition-all border shadow-lg backdrop-blur-md ${isNotebookOpen ? 'bg-blue-600/90 border-blue-500/50 text-white' : isLightMode ? 'bg-white/80 border-black/10 text-gray-700 hover:bg-white' : 'bg-neutral-900/80 border-white/10 text-neutral-300 hover:text-white hover:bg-neutral-800'}`}
               >
                 <NotebookPen className={`w-4 h-4 ${isNotebookOpen ? 'animate-pulse' : ''}`} />
                 <span className="hidden md:inline">Notebook</span>
               </button>
               {user ? (
-                <Link to="/dashboard" className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-colors border shadow-sm ${isLightMode ? 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50' : 'bg-neutral-800 border-neutral-700 text-white hover:bg-neutral-700'}`}>
+                <Link to="/dashboard" className={`flex items-center gap-2 h-10 px-4 rounded-full text-sm font-medium transition-colors border shadow-lg backdrop-blur-md ${isLightMode ? 'bg-white/80 border-black/10 text-gray-700 hover:bg-white' : 'bg-neutral-900/80 border-white/10 text-neutral-300 hover:text-white hover:bg-neutral-800'}`}>
                   <img src={user?.user_metadata?.avatar_url || `https://ui-avatars.com/api/?name=${user?.email || 'User'}&background=random`} alt="Profile" className="w-5 h-5 rounded-full" />
-                  <span>Dashboard</span>
+                  <span className="hidden sm:inline">Dashboard</span>
                 </Link>
               ) : (
-                <Link to="/auth" className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors border shadow-sm ${isLightMode ? 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50' : 'bg-neutral-800 border-neutral-700 text-white hover:bg-neutral-700'}`}>
+                <Link to="/auth" className={`flex items-center h-10 px-4 rounded-full text-sm font-medium transition-colors border shadow-lg backdrop-blur-md ${isLightMode ? 'bg-white/80 border-black/10 text-gray-700 hover:bg-white' : 'bg-neutral-900/80 border-white/10 text-neutral-300 hover:text-white hover:bg-neutral-800'}`}>
                   Log In
                 </Link>
               )}
