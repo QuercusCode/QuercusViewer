@@ -588,8 +588,9 @@ function StructureCard({
 
     return (
         <div
-            className={`group rounded-2xl transition-all duration-200 hover:shadow-xl hover:shadow-black/30 flex flex-col relative z-0 hover:z-50
-                ${selected ? 'shadow-blue-500/10 shadow-lg' : ''}`}
+            className={`structure-card group rounded-2xl transition-all duration-200 hover:shadow-xl hover:shadow-black/30 flex flex-col relative z-0 hover:z-50
+                ${selected ? 'shadow-blue-500/10 shadow-lg ring-2 ring-blue-500/50' : ''}`}
+            data-id={item.id}
             onClick={e => onSelect(e, item.id)}
             onDoubleClick={() => onDoubleClick?.(item.id)}
             onContextMenu={e => onContextMenu(e, 'structure', item)}
@@ -602,8 +603,19 @@ function StructureCard({
             {hovered && <HoverPreview item={item} />}
 
             {/* Inner clipping wrapper */}
-            <div className={`flex-1 flex flex-col bg-[var(--bg-header)] border rounded-2xl overflow-hidden transition-colors
+            <div className={`flex-1 flex flex-col bg-[var(--bg-header)] border rounded-2xl overflow-hidden transition-colors relative
                 ${selected ? 'border-blue-500/60' : 'border-[var(--border-main)] group-hover:border-neutral-600'}`}>
+
+                {/* Global Selection Checkbox */}
+                <div className={`absolute top-2 left-2 z-20 
+                    ${selected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} 
+                    transition-opacity duration-200`}>
+                    <button onClick={(e) => { e.stopPropagation(); onSelect(e, item.id); }}
+                        className={`p-1.5 rounded-md backdrop-blur-md border shadow-sm transition-all
+                            ${selected ? 'bg-blue-500/90 border-blue-400 text-white' : 'bg-black/40 border-white/20 text-[var(--text-secondary)] hover:bg-black/60 hover:text-[var(--text-primary)] hover:border-white/40'}`}>
+                        <CheckSquare className="w-4 h-4" />
+                    </button>
+                </div>
 
                 {/* Gradient strip or RCSB Thumbnail */}
                 {hasThumbnail ? (
@@ -617,26 +629,11 @@ function StructureCard({
                                 el.parentElement!.style.display = 'none';
                             }}
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-neutral-900/70 via-transparent to-transparent" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-neutral-900/70 via-transparent to-transparent pointer-events-none" />
                         <span className={`absolute top-2 right-2 text-[10px] font-bold px-2 py-0.5 rounded-md border backdrop-blur-sm ${badge}`}>{item.file_type}</span>
                     </div>
                 ) : (
-                    <div className={`h-1 w-full bg-gradient-to-r ${strip}`} >
-                        <div className={`absolute top-2 left-2 z-10 
-                ${selected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} 
-                transition-opacity duration-200`}>
-                            <button onClick={(e) => {
-                                e.stopPropagation();
-                                onSelect(e, item.id);
-                            }}
-                                className={`p-1.5 rounded-md backdrop-blur-md border shadow-sm transition-all
-                    ${selected
-                                        ? 'bg-blue-500/90 border-blue-400 text-white'
-                                        : 'bg-black/40 border-white/20 text-[var(--text-secondary)] hover:bg-black/60 hover:text-[var(--text-primary)] hover:border-white/40'}`}>
-                                <CheckSquare className="w-4 h-4" />
-                            </button>
-                        </div>
-                    </div>
+                    <div className={`h-1 w-full bg-gradient-to-r ${strip}`} />
                 )}
 
                 <div className={`p-5 flex flex-col flex-1`}>
@@ -966,9 +963,61 @@ export const MyStructures = () => {
     const [isWindowDragOver, setIsWindowDragOver] = useState(false);
     const [dragOverBreadcrumb, setDragOverBreadcrumb] = useState<string | null | undefined>(undefined);
 
-    // Selection
+    // Selection & Lasso
     const [selected, setSelected] = useState<Set<string>>(new Set());
     const [lastSelectedId, setLastSelectedId] = useState<string | null>(null);
+    const [lasso, setLasso] = useState<{ startX: number, startY: number, currX: number, currY: number } | null>(null);
+    const [lassoSelected, setLassoSelected] = useState<Set<string>>(new Set());
+    const gridRef = useRef<HTMLDivElement>(null);
+
+    // Lasso Engine Intersections
+    useEffect(() => {
+        if (!lasso || !gridRef.current) return;
+        const rect = {
+            left: Math.min(lasso.startX, lasso.currX),
+            right: Math.max(lasso.startX, lasso.currX),
+            top: Math.min(lasso.startY, lasso.currY),
+            bottom: Math.max(lasso.startY, lasso.currY)
+        };
+
+        const cards = gridRef.current.querySelectorAll('.structure-card');
+        const newLasso = new Set<string>();
+
+        cards.forEach(card => {
+            const cardRect = card.getBoundingClientRect();
+            // A simple overlap test
+            if (
+                rect.left < cardRect.right &&
+                rect.right > cardRect.left &&
+                rect.top < cardRect.bottom &&
+                rect.bottom > cardRect.top
+            ) {
+                const id = card.getAttribute('data-id');
+                if (id) newLasso.add(id);
+            }
+        });
+
+        // Only update if changed to prevent thrashing
+        setLassoSelected(prev => {
+            if (prev.size !== newLasso.size) return newLasso;
+            for (let id of newLasso) if (!prev.has(id)) return newLasso;
+            return prev;
+        });
+    }, [lasso?.currX, lasso?.currY, lasso?.startX, lasso?.startY]);
+
+    useEffect(() => {
+        const handlePointerUp = () => {
+            if (lasso) {
+                if (lassoSelected.size > 0) {
+                    setSelected(prev => new Set([...prev, ...lassoSelected]));
+                }
+                setLasso(null);
+                setLassoSelected(new Set());
+            }
+        };
+        window.addEventListener('pointerup', handlePointerUp);
+        return () => window.removeEventListener('pointerup', handlePointerUp);
+    }, [lasso, lassoSelected]);
 
     // Inspector Sidebar
     const [showInspector, setShowInspector] = useState(() => localStorage.getItem('quercus_show_inspector') === 'true');
@@ -1790,7 +1839,18 @@ export const MyStructures = () => {
 
                     {/* Grid */}
                     {!loading && viewMode === 'grid' && (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 lg:gap-4">
+                        <div 
+                            ref={gridRef}
+                            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 lg:gap-4 select-none touch-none"
+                            onPointerDown={e => {
+                                // Only activate lasso if clicking explicitly on the blank gaps
+                                if ((e.target as HTMLElement).closest('button, a, input, .structure-card')) return;
+                                setLasso({ startX: e.clientX, startY: e.clientY, currX: e.clientX, currY: e.clientY });
+                            }}
+                            onPointerMove={e => {
+                                if (lasso) setLasso(prev => ({ ...prev!, currX: e.clientX, currY: e.clientY }));
+                            }}
+                        >
                             {/* Render Subfolders */}
                             {activeSubfolders.map((sub: Collection) => (
                                 <FolderCard key={sub.id} collection={sub} count={collectionCounts[sub.id] || 0} onOpen={() => setActiveCollection(sub.id)} onDropStructure={handleDropMove} onContextMenu={handleContextMenu} previews={structures.filter(s => s.collection_id === sub.id).slice(0, 3)} />
@@ -1799,7 +1859,7 @@ export const MyStructures = () => {
                             {/* Render Structures */}
                             {filtered.map(item => (
                                 <StructureCard key={item.id} item={item}
-                                    selected={selected.has(item.id)} onSelect={toggleSelect}
+                                    selected={selected.has(item.id) || lassoSelected.has(item.id)} onSelect={toggleSelect}
                                     onToggleStar={handleToggleStar} onDelete={handleDelete}
                                     onRename={handleRename} onNotesChange={handleNotesChange}
                                     onTagsChange={handleTagsChange} onDuplicate={handleDuplicate}
@@ -1941,11 +2001,24 @@ export const MyStructures = () => {
                 />
             )}
 
+            {/* Lasso Drag Box (Overlay) */}
+            {lasso && (
+                <div 
+                    className="fixed z-[100] bg-blue-500/20 border border-blue-500/50 pointer-events-none"
+                    style={{
+                        left: Math.min(lasso.startX, lasso.currX),
+                        top: Math.min(lasso.startY, lasso.currY),
+                        width: Math.abs(lasso.currX - lasso.startX),
+                        height: Math.abs(lasso.currY - lasso.startY)
+                    }}
+                />
+            )}
+
             {/* Bulk action floating bar */}
             {selected.size > 0 && (
-                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-[var(--input-bg)] border border-neutral-600 rounded-2xl px-5 py-3 shadow-2xl shadow-black/50">
-                    <span className="text-sm font-medium text-[var(--text-primary)]">{selected.size} selected</span>
-                    <div className="w-px h-4 bg-neutral-600" />
+                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-[var(--input-bg)]/90 backdrop-blur-xl border border-white/10 rounded-full px-5 py-3 shadow-2xl shadow-black/50 animate-in slide-in-from-bottom-8 fade-in duration-300 ease-out">
+                    <span className="text-sm font-semibold text-[var(--text-primary)]">{selected.size} selected</span>
+                    <div className="w-px h-5 bg-white/10 mx-1" />
                     {activeCollection === '__trash__' ? (
                         <>
                             <button onClick={handleBulkRestore}
