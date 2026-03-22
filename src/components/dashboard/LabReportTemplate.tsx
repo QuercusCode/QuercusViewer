@@ -462,35 +462,39 @@ export const LabReportTemplate = React.forwardRef<HTMLDivElement, LabReportTempl
                 td: ({node, ...props}) => <td style={{border: '1px solid #e2e8f0', padding: '0.75rem', color: '#334155'}} {...props} />,
                 blockquote: ({node, ...props}) => <blockquote style={{borderLeft: '4px solid #e2e8f0', paddingLeft: '1rem', fontStyle: 'italic', color: '#64748b', marginBottom: '1rem'}} {...props} />,
                 code: ({node, inline, className, children, ...props}: any) => {
-                  const match = /language-(\w+)/.exec(className || '');
+                  const match = /language-([a-zA-Z0-9-]+)/.exec(className || '');
                   const lang = match ? match[1] : '';
-                  const content = String(children).replace(/\n$/, '');
+                  const content = Array.isArray(children) ? children.join('') : String(children);
+                  const cleanContent = content.replace(/\n$/, '');
 
                   if (!inline) {
                     if (lang === 'resizable-image') {
-                      return renderResizableImage(content, 0, false);
+                      return renderResizableImage(cleanContent, 0, false);
                     }
                     if (lang === 'python-kernel') {
-                      return renderCodeCell(content, 0);
+                      return renderCodeCell(cleanContent, 0);
                     }
                     if (lang === 'chemical-sketcher') {
-                      return renderSketcher(content, 0);
+                      return renderSketcher(cleanContent, 0);
                     }
                     if (lang === 'lab-calculator') {
-                      return renderCalculator(content, 0);
+                      return renderCalculator(cleanContent, 0);
                     }
                   }
 
                   return <code style={{backgroundColor: '#f1f5f9', padding: '0.2rem 0.4rem', borderRadius: '0.25rem', fontFamily: 'monospace', fontSize: '0.9em', color: '#e11d48'}} {...props}>{children}</code>;
                 },
                 pre: ({node, children, ...props}) => {
-                  // Check if the inner code block is one of our custom components
-                  const codeElement = React.Children.toArray(children)[0] as any;
-                  const className = codeElement?.props?.className || '';
-                  const isCustom = /language-(resizable-image|python-kernel|chemical-sketcher|lab-calculator)/.test(className);
+                  // Check if the inner child is one of our custom components
+                  const childrenArray = React.Children.toArray(children);
+                  const firstChild = childrenArray[0] as any;
+                  
+                  // If it's already rendered as a div (by our code component), it's custom
+                  const isCustom = firstChild?.type === 'div' || 
+                                  (firstChild?.props?.className && /language-(resizable-image|python-kernel|chemical-sketcher|lab-calculator)/.test(firstChild.props.className));
                   
                   if (isCustom) {
-                    return <>{children}</>; // Render without pre wrapping
+                    return <>{children}</>; 
                   }
                   
                   return <pre style={{backgroundColor: '#f8fafc', padding: '1rem', borderRadius: '0.5rem', overflow: 'auto', marginBottom: '1rem', border: '1px solid #e2e8f0'}} {...props}>{children}</pre>;
