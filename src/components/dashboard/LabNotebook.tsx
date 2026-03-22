@@ -38,6 +38,36 @@ export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false
 
     const activeNotebook = notebooks.find(n => n.id === activeId);
 
+    // Clean preview: strip markdown artifacts, code blocks, tables, etc.
+    const getCleanPreview = (content: string): string => {
+        if (!content) return '';
+        let text = content;
+        // Remove fenced code blocks (```...```) including python-kernel blocks
+        text = text.replace(/```[\s\S]*?```/g, '');
+        // Remove inline code
+        text = text.replace(/`[^`]+`/g, '');
+        // Remove table rows (lines with pipes)
+        text = text.replace(/^\|.*\|$/gm, '');
+        // Remove table separator rows
+        text = text.replace(/^[\s|:_-]+$/gm, '');
+        // Remove HTML tags
+        text = text.replace(/<[^>]+>/g, '');
+        // Remove markdown headers
+        text = text.replace(/^#{1,6}\s+/gm, '');
+        // Remove markdown bold/italic
+        text = text.replace(/\*{1,3}([^*]+)\*{1,3}/g, '$1');
+        text = text.replace(/_{1,3}([^_]+)_{1,3}/g, '$1');
+        // Remove markdown links [text](url)
+        text = text.replace(/\[([^\]]*)\]\([^)]*\)/g, '$1');
+        // Remove markdown images ![alt](url)
+        text = text.replace(/!\[([^\]]*)\]\([^)]*\)/g, '');
+        // Remove base64/encoded strings (long runs of alphanumeric+special chars)
+        text = text.replace(/[A-Za-z0-9+/=]{40,}/g, '');
+        // Collapse whitespace
+        text = text.replace(/\s+/g, ' ').trim();
+        return text.substring(0, 80) || '';
+    };
+
     useEffect(() => {
         if (!user) return;
         const fetchNotebooks = async () => {
@@ -312,7 +342,7 @@ export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false
                                         </button>
                                     </div>
                                     <p className="text-xs opacity-60 truncate">
-                                        {entry.content.substring(0, 60) || t.emptyEntry}
+                                        {getCleanPreview(entry.content) || t.emptyEntry}
                                     </p>
                                     <p className="text-[10px] opacity-40 mt-2 font-mono">
                                         {new Date(entry.updated_at).toLocaleDateString()}
