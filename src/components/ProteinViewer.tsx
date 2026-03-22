@@ -2975,21 +2975,16 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
         if (!stageRef.current) return;
         const stage = stageRef.current;
 
-        // NGL Stage Parameters for High Quality / Ambient Occlusion
+        // Map quality prop to NGL parameters
+        const isLow = quality === 'low';
+        const isHigh = quality === 'high';
+
         const params: any = {
             backgroundColor: backgroundColor,
-            quality: quality, // 'medium' or 'high'
-            lightIntensity: 1.0, // Standard key light
+            sampleLevel: isHigh ? (enableAmbientOcclusion ? 4 : 2) : (isLow ? -1 : 0),
+            lightIntensity: 1.0,
+            antialias: !isLow
         };
-
-        if (enableAmbientOcclusion) {
-            params.sampleLevel = 2; // -1/0 = off, 1 = low, 2 = medium, 4 = high
-            params.ambientColor = 0x202020; // Soft grey shadow rather than pitch black
-            params.ambientIntensity = 1.0;
-        } else {
-            params.sampleLevel = 0;
-            params.ambientIntensity = 0.0;
-        }
 
         try {
             stage.setParameters(params);

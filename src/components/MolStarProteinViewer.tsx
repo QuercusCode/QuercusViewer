@@ -123,13 +123,19 @@ export const MolStarProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerPr
         if (!pluginRef.current?.canvas3d) return;
 
         const dpr = typeof window !== 'undefined' ? window.devicePixelRatio : 1;
-        const pixelScale = props.quality === 'high' ? Math.max(2, dpr) : props.quality === 'low' ? 0.5 : 1;
+        
+        // Map quality to Mol* pixel scale
+        let pixelScale = 1.0;
+        if (props.quality === 'high') pixelScale = Math.max(1.5, dpr);
+        else if (props.quality === 'low') pixelScale = 0.5;
+
         const occlusionState = props.enableAmbientOcclusion ? 'on' : 'off';
 
         pluginRef.current.canvas3d.setProps({
             pixelScale: pixelScale,
             postprocessing: {
-                occlusion: { name: occlusionState as any, params: {} }
+                occlusion: { name: occlusionState as any, params: {} },
+                antialiasing: { name: props.quality === 'low' ? 'off' : 'smaa', params: {} }
             }
         } as any);
     }, [props.quality, props.enableAmbientOcclusion]);

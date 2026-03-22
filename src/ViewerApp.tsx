@@ -126,10 +126,27 @@ function App() {
 
   // GRAPHICS SETTINGS
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  
+  // Map performance_mode to internal quality levels
+  const getInitialQuality = () => {
+    const mode = user?.user_metadata?.performance_mode;
+    if (mode === 'highPerformance') return 'low';
+    if (mode === 'highQuality') return 'high';
+    return 'medium';
+  };
+
   const [settings, setSettings] = useState<{ quality: 'low' | 'medium' | 'high'; ssao: boolean }>({
-    quality: 'medium',
-    ssao: true
+    quality: getInitialQuality(),
+    ssao: user?.user_metadata?.performance_mode !== 'highPerformance'
   });
+
+  // Sync settings when user metadata changes (e.g. after login or settings update)
+  useEffect(() => {
+    setSettings({
+      quality: getInitialQuality(),
+      ssao: user?.user_metadata?.performance_mode !== 'highPerformance'
+    });
+  }, [user?.user_metadata?.performance_mode]);
 
   const updateSetting = (key: keyof typeof settings, value: any) => {
     setSettings(prev => ({ ...prev, [key]: value }));
@@ -275,11 +292,13 @@ function App() {
   const initialUrlState = useMemo(() => parseURLState(), []);
 
   // --- State: Multi-View Controllers (array of 4) ---
+  const defaultRep = user?.user_metadata?.default_rendering || 'cartoon';
+  
   const controllers = [
-    useStructureController(initialUrlState.viewports[0] || {}), // Viewport 0
-    useStructureController(initialUrlState.viewports[1] || {}), // Viewport 1
-    useStructureController(initialUrlState.viewports[2] || {}), // Viewport 2
-    useStructureController(initialUrlState.viewports[3] || {})  // Viewport 3
+    useStructureController({ representation: defaultRep, ...initialUrlState.viewports[0] }), // Viewport 0
+    useStructureController({ representation: defaultRep, ...initialUrlState.viewports[1] }), // Viewport 1
+    useStructureController({ representation: defaultRep, ...initialUrlState.viewports[2] }), // Viewport 2
+    useStructureController({ representation: defaultRep, ...initialUrlState.viewports[3] })  // Viewport 3
   ];
 
   // Dashboard "Open in Viewer" bridge — single structure
@@ -612,7 +631,13 @@ function App() {
           if (ref.current) {
             const factor = args?.factor || 1; // Quality factor from SnapshotModal
             const transparent = args?.transparent !== undefined ? args.transparent : true; // Default transparent
-            const blob = await ref.current.getSnapshotBlob(factor, transparent);
+            const showWatermark = user?.user_metadata?.show_watermark ?? true;
+            const blob = await ref.current.getSnapshotBlob(factor, transparent, {
+              watermark: {
+                show: showWatermark,
+                text: user?.user_metadata?.full_name ? `Captured by ${user.user_metadata.full_name}` : 'Powered by QuercusViewer'
+              }
+            });
             if (blob) {
               const url = URL.createObjectURL(blob);
               const newSnapshot: Snapshot = {
@@ -2750,7 +2775,13 @@ function App() {
           captureThumbnail={async () => {
             const viewer = viewerRef.current || viewerRefs[0].current;
             if (!viewer) return null;
-            const blob = await viewer.getSnapshotBlob();
+            const showWatermark = user?.user_metadata?.show_watermark ?? true;
+            const blob = await viewer.getSnapshotBlob(3, true, {
+              watermark: {
+                show: showWatermark,
+                text: user?.user_metadata?.full_name ? `Property of ${user.user_metadata.full_name}` : 'Quercus Viewer Research'
+              }
+            });
             if (!blob) return null;
             return new Promise<string>((resolve) => {
               const reader = new FileReader();
