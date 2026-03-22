@@ -3,6 +3,7 @@ import { ArrowRight, Upload, Play, BookOpen, Dna, Activity, Shuffle, Clock, Chev
 import clsx from 'clsx';
 import { FEATURED_MOLECULES } from '../data/featuredMolecules';
 import { getRecentStructures, type RecentStructure } from '../lib/recentStructures';
+import { useTranslation } from '../lib/i18n';
 
 interface LandingOverlayProps {
     isVisible: boolean;
@@ -13,6 +14,7 @@ interface LandingOverlayProps {
 }
 
 export const LandingOverlay: React.FC<LandingOverlayProps> = ({ isVisible, onDismiss, onUpload, onStartTour, onLoadPdb }) => {
+    const { t } = useTranslation();
     const [shouldRender, setShouldRender] = useState(isVisible);
     const [isFadingOut, setIsFadingOut] = useState(false);
     const [recentStructures, setRecentStructures] = useState<RecentStructure[]>([]);
@@ -71,11 +73,11 @@ export const LandingOverlay: React.FC<LandingOverlayProps> = ({ isVisible, onDis
 
     const timeAgo = (ts: number) => {
         const m = Math.floor((Date.now() - ts) / 60000);
-        if (m < 1) return 'just now';
-        if (m < 60) return `${m}m ago`;
+        if (m < 1) return t.justNow;
+        if (m < 60) return t.mAgo(m);
         const h = Math.floor(m / 60);
-        if (h < 24) return `${h}h ago`;
-        return `${Math.floor(h / 24)}d ago`;
+        if (h < 24) return t.hAgo(h);
+        return t.dAgo(Math.floor(h / 24));
     };
 
     return (
@@ -99,12 +101,12 @@ export const LandingOverlay: React.FC<LandingOverlayProps> = ({ isVisible, onDis
                 <div className="flex-1 text-center md:text-left pointer-events-auto space-y-6 max-w-2xl mt-12 md:mt-0">
 
                     <h1 className="text-5xl md:text-7xl font-bold text-white tracking-tight leading-none animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200">
-                        Visualize Life <br />
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">in 3D.</span>
+                        {t.visualizeLife} <br />
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">{t.in3D}</span>
                     </h1>
 
                     <p className="text-lg md:text-xl text-gray-300 max-w-lg mx-auto md:mx-0 leading-relaxed animate-in fade-in slide-in-from-bottom-8 duration-700 delay-300">
-                        Explore proteins, DNA, and molecular structures directly in your browser. Install as an app or use online.
+                        {t.exploreDesc}
                     </p>
 
                     <div className="flex flex-col sm:flex-row items-center justify-center md:justify-start gap-4 pt-4 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-400">
@@ -112,7 +114,7 @@ export const LandingOverlay: React.FC<LandingOverlayProps> = ({ isVisible, onDis
                             onClick={onDismiss}
                             className="group relative px-8 py-4 bg-white text-black rounded-full font-bold text-lg hover:scale-105 transition-all shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] hover:shadow-[0_0_60px_-10px_rgba(255,255,255,0.5)] flex items-center gap-2"
                         >
-                            Start Exploring
+                            {t.startExploring}
                             <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                         </button>
 
@@ -121,17 +123,17 @@ export const LandingOverlay: React.FC<LandingOverlayProps> = ({ isVisible, onDis
                             className="px-8 py-4 bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-full font-bold text-lg backdrop-blur-md transition-colors flex items-center gap-2"
                         >
                             <Play size={20} fill="currentColor" className="opacity-80" />
-                            Take Tour
+                            {t.takeTour}
                         </button>
                     </div>
 
                     <div className="pt-4 flex items-center justify-center md:justify-start gap-6 text-sm text-gray-500 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-500">
                         <button onClick={onUpload} className="hover:text-white transition-colors flex items-center gap-2">
-                            <Upload size={16} /> Upload File
+                            <Upload size={16} /> {t.uploadFile}
                         </button>
                         <span className="w-1 h-1 rounded-full bg-gray-700" />
                         <button onClick={() => onLoadPdb('2B3P')} className="hover:text-white transition-colors flex items-center gap-2">
-                            <Dna size={16} /> Load Example (2B3P)
+                            <Dna size={16} /> {t.loadExample}
                         </button>
                     </div>
 
@@ -140,7 +142,7 @@ export const LandingOverlay: React.FC<LandingOverlayProps> = ({ isVisible, onDis
                         <div className="pt-2 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-700">
                             <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
                                 <Clock size={12} />
-                                <span className="font-semibold uppercase tracking-wider">Recently Viewed</span>
+                                <span className="font-semibold uppercase tracking-wider">{t.recentlyViewed}</span>
                             </div>
                             <div className="flex flex-wrap gap-2">
                                 {recentStructures.map(r => (
@@ -170,7 +172,7 @@ export const LandingOverlay: React.FC<LandingOverlayProps> = ({ isVisible, onDis
                         <div className="flex items-center justify-between mb-6">
                             <h3 className="text-white font-bold flex items-center gap-2 text-lg">
                                 <Activity size={20} className="text-blue-400" />
-                                Molecule of the Day
+                                {t.moleculeOfTheDay}
                             </h3>
                             <div className="flex items-center gap-2">
                                 <span className="text-xs font-mono text-blue-400 px-2 py-1 rounded bg-blue-500/10 border border-blue-500/20">
@@ -182,7 +184,7 @@ export const LandingOverlay: React.FC<LandingOverlayProps> = ({ isVisible, onDis
                                         "p-1.5 rounded-full hover:bg-white/10 text-gray-400 hover:text-white transition-colors",
                                         isShuffling && "animate-spin text-blue-400"
                                     )}
-                                    title="Shuffle Molecule"
+                                    title={t.shuffleMolecule}
                                 >
                                     <Shuffle size={14} />
                                 </button>
@@ -226,7 +228,7 @@ export const LandingOverlay: React.FC<LandingOverlayProps> = ({ isVisible, onDis
                             className="w-full py-4 rounded-xl bg-white text-black font-bold text-sm transition-all flex items-center justify-center gap-2 hover:bg-gray-200 hover:scale-[1.02]"
                         >
                             <BookOpen size={18} />
-                            View Structure
+                            {t.viewStructure}
                         </button>
                     </div>
                 </div>

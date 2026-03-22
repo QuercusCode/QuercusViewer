@@ -71,6 +71,7 @@ import { useAuth } from './lib/AuthContext';
 import { Link } from 'react-router-dom';
 import { uploadStructure } from './lib/structuresService';
 import { addRecentStructure } from './lib/recentStructures';
+import { useTranslation } from './lib/i18n';
 
 const deepEqual = (a: any, b: any): boolean => {
   if (a === b) return true;
@@ -85,6 +86,8 @@ const deepEqual = (a: any, b: any): boolean => {
 };
 
 function App() {
+  const { t } = useTranslation();
+
   // Initialize Analytics
   useEffect(() => {
     initGA();
@@ -3165,9 +3168,9 @@ function App() {
                                       <Grid3X3 className="w-12 h-12 text-blue-500/50" />
                                     </div>
                                   </div>
-                                  <h2 className="text-2xl font-bold text-white tracking-tight">Ready to Visualize?</h2>
+                                  <h2 className="text-2xl font-bold text-white tracking-tight">{t.readyToVisualize}</h2>
                                   <p className="text-neutral-400">
-                                    Select a structure to begin exploring in 3D.
+                                    {t.selectStructureToBegin}
                                   </p>
                                 </>
                               )}
@@ -3176,7 +3179,7 @@ function App() {
                               {viewMode !== 'single' && (
                                 <div className="mb-2">
                                   <Grid3X3 className="w-8 h-8 text-neutral-600 mx-auto mb-2 opacity-50" />
-                                  <p className="text-[10px] text-neutral-500 font-medium uppercase tracking-wider">Empty Viewport</p>
+                                  <p className="text-[10px] text-neutral-500 font-medium uppercase tracking-wider">{t.emptyViewport}</p>
                                 </div>
                               )}
 
@@ -3189,14 +3192,14 @@ function App() {
                                   className={`flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-medium transition-all hover:scale-105 active:scale-95 shadow-lg shadow-blue-900/20 ${viewMode === 'single' ? 'px-5 py-2.5' : 'px-3 py-1.5 text-xs w-full sm:w-auto min-w-[100px]'}`}
                                 >
                                   <BookOpen className={viewMode === 'single' ? "w-4 h-4" : "w-3 h-3"} />
-                                  {viewMode === 'single' ? "Browse Library" : "Library"}
+                                  {viewMode === 'single' ? t.browseLibraryBtn : t.libraryBtn}
                                 </button>
                                 <label
                                   onClick={() => setActiveViewIndex(index)}
                                   className={`flex items-center justify-center gap-2 bg-neutral-800 hover:bg-neutral-700 text-white rounded-xl font-medium transition-all hover:scale-105 active:scale-95 cursor-pointer border border-white/10 hover:border-white/20 ${viewMode === 'single' ? 'px-5 py-2.5' : 'px-3 py-1.5 text-xs w-full sm:w-auto min-w-[100px]'}`}
                                 >
                                   <Upload className={viewMode === 'single' ? "w-4 h-4" : "w-3 h-3"} />
-                                  {viewMode === 'single' ? "Upload File" : "Upload"}
+                                  {viewMode === 'single' ? t.uploadFileBtn : t.upload}
                                   <input
                                     type="file"
                                     className="hidden"

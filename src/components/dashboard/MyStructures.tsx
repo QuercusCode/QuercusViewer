@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../lib/AuthContext';
+import { useTranslation } from '../../lib/i18n';
 import {
     listStructures, uploadStructure, toggleStar, deleteStructure,
     renameStructure, updateNotes, updateTags, importFromRCSB,
@@ -171,6 +172,7 @@ function SkeletonCard() {
 // ── Quick Look Modal ──────────────────────────────────────────────
 
 function QuickLookModal({ item, onClose, onOpen }: { item: Structure; onClose: () => void; onOpen: (s: Structure) => void }) {
+    const { t } = useTranslation();
     if (!item) return null;
     const badge = TYPE_BADGE[item.file_type] ?? 'bg-neutral-500/10 border-neutral-500/30 text-[var(--text-secondary)]';
     const rcsbId = item.name.match(/^[1-9][A-Z0-9]{3}$/i)?.[0]?.toUpperCase();
@@ -199,8 +201,8 @@ function QuickLookModal({ item, onClose, onOpen }: { item: Structure; onClose: (
                     ) : (
                         <div className="flex flex-col items-center justify-center text-[var(--text-muted)]">
                             <Dna className="w-24 h-24 mb-4 opacity-50" />
-                            <p className="text-lg font-medium text-[var(--text-muted)]">No Preview Available</p>
-                            <p className="text-sm">Cannot fetch RCSB thumbnail for this uploaded file.</p>
+                            <p className="text-lg font-medium text-[var(--text-muted)]">{t.noPreviewAvailable}</p>
+                            <p className="text-sm">{t.cannotFetchRCSBThumbnail}</p>
                         </div>
                     )}
 
@@ -208,7 +210,7 @@ function QuickLookModal({ item, onClose, onOpen }: { item: Structure; onClose: (
                     <div className="absolute bottom-6 left-0 right-0 flex justify-center">
                         <button onClick={() => onOpen(item)}
                             className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-full font-medium shadow-lg shadow-blue-500/20 active:scale-95 transition-all flex items-center gap-2">
-                            <ExternalLink className="w-4 h-4" /> Open in Viewer
+                            <ExternalLink className="w-4 h-4" /> {t.openInViewer}
                         </button>
                     </div>
                 </div>
@@ -220,38 +222,38 @@ function QuickLookModal({ item, onClose, onOpen }: { item: Structure; onClose: (
                             <h2 className="text-2xl font-bold text-[var(--text-primary)] leading-tight mb-2">{item.metadata?.title || item.name}</h2>
                             <div className="flex items-center gap-2 flex-wrap">
                                 <span className={`text-[11px] font-bold px-2 py-0.5 rounded-md border ${badge}`}>{item.file_type}</span>
-                                {item.starred && <span className="text-[11px] font-bold px-2 py-0.5 rounded-md border border-amber-500/30 bg-amber-500/10 text-amber-400 flex items-center gap-1"><Star className="w-3 h-3 fill-amber-400" /> Starred</span>}
-                                {(item.view_count ?? 0) > 0 && <span className="text-[11px] font-medium px-2 py-0.5 rounded border border-[var(--border-main)] bg-[var(--input-bg)] text-[var(--text-secondary)]"><Eye className="w-3 h-3 inline mr-1" />{item.view_count} views</span>}
+                                {item.starred && <span className="text-[11px] font-bold px-2 py-0.5 rounded-md border border-amber-500/30 bg-amber-500/10 text-amber-400 flex items-center gap-1"><Star className="w-3 h-3 fill-amber-400" /> {t.starred}</span>}
+                                {(item.view_count ?? 0) > 0 && <span className="text-[11px] font-medium px-2 py-0.5 rounded border border-[var(--border-main)] bg-[var(--input-bg)] text-[var(--text-secondary)]"><Eye className="w-3 h-3 inline mr-1" />{item.view_count} {t.views}</span>}
                             </div>
                         </div>
 
                         {/* Metadata Grid */}
                         <div className="space-y-4">
-                            <h3 className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Information</h3>
+                            <h3 className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">{t.information}</h3>
                             <div className="grid grid-cols-2 gap-y-4 gap-x-4">
                                 <div>
-                                    <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider mb-1">Size</p>
+                                    <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider mb-1">{t.colSize}</p>
                                     <p className="text-sm font-medium text-[var(--text-primary)]">{formatBytes(item.file_size)}</p>
                                 </div>
                                 <div>
-                                    <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider mb-1">Uploaded</p>
+                                    <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider mb-1">{t.colUploaded}</p>
                                     <p className="text-sm font-medium text-[var(--text-primary)]">{timeAgo(item.created_at)}</p>
                                 </div>
                                 {item.metadata?.resolution != null && (
                                     <div>
-                                        <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider mb-1">Resolution</p>
+                                        <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider mb-1">{t.colResolution}</p>
                                         <p className="text-sm font-medium text-[var(--text-primary)]">{item.metadata.resolution.toFixed(2)} Å</p>
                                     </div>
                                 )}
                                 {item.metadata?.method && (
                                     <div className="col-span-2">
-                                        <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider mb-1">Method</p>
+                                        <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider mb-1">{t.colMethod}</p>
                                         <p className="text-sm font-medium text-[var(--text-primary)]">{item.metadata.method}</p>
                                     </div>
                                 )}
                                 {item.metadata?.organism && (
                                     <div className="col-span-2">
-                                        <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider mb-1">Organism</p>
+                                        <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider mb-1">{t.colOrganism}</p>
                                         <p className="text-sm font-medium text-[var(--text-primary)]">{item.metadata.organism}</p>
                                     </div>
                                 )}
@@ -261,7 +263,7 @@ function QuickLookModal({ item, onClose, onOpen }: { item: Structure; onClose: (
                         {/* Tags */}
                         {(item.tags ?? []).length > 0 && (
                             <div className="space-y-3">
-                                <h3 className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Tags</h3>
+                                <h3 className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">{t.colTags}</h3>
                                 <div className="flex flex-wrap gap-1.5">
                                     {item.tags.map(t => (
                                         <span key={t} className={`text-xs font-medium px-2 py-1 rounded-md border ${tagColor(t)}`}>{t}</span>
@@ -273,7 +275,7 @@ function QuickLookModal({ item, onClose, onOpen }: { item: Structure; onClose: (
                         {/* Notes */}
                         {item.notes && (
                             <div className="space-y-3">
-                                <h3 className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Notes</h3>
+                                <h3 className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">{t.notes}</h3>
                                 <div className="p-3 bg-[var(--bg-header)] rounded-xl border border-[var(--border-main)] text-sm text-[var(--text-secondary)] whitespace-pre-wrap leading-relaxed">
                                     {item.notes}
                                 </div>
@@ -321,6 +323,7 @@ type ContextMenuPayload = {
 
 function FolderCard({ collection, count, onOpen, onDropStructure, onContextMenu, previews = [] }: { collection: Collection, count: number, onOpen: () => void, onDropStructure: (structureId: string, folderId: string) => void, onContextMenu: (e: React.MouseEvent, type: 'folder', item: any) => void, previews?: Structure[] }) {
     const [isDragOver, setIsDragOver] = useState(false);
+    const { t } = useTranslation();
 
     return (
         <button onClick={onOpen}
@@ -337,7 +340,7 @@ function FolderCard({ collection, count, onOpen, onDropStructure, onContextMenu,
             <div className={`h-1.5 w-full ${DOT[collection.color] ?? 'bg-blue-500'}`} />
             <div className="p-4 flex items-center gap-3">
                 <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 bg-[var(--input-bg)] group-hover:bg-[var(--input-bg)] transition-colors relative isolate">
-                    {collection.is_public && <div title="Public" className="absolute top-1 right-1 z-20 drop-shadow-md flex items-center justify-center"><Globe className="w-3.5 h-3.5 text-blue-400" /></div>}
+                    {collection.is_public && <div title={t.publicShareLinkEnabled} className="absolute top-1 right-1 z-20 drop-shadow-md flex items-center justify-center"><Globe className="w-3.5 h-3.5 text-blue-400" /></div>}
                     {previews.length > 0 ? (
                         <>
                             <Folder className={`w-6 h-6 absolute opacity-20 ${COLOR_CLASSES[collection.color]?.split(' ')[0] ?? 'text-blue-400'}`} />
@@ -355,7 +358,7 @@ function FolderCard({ collection, count, onOpen, onDropStructure, onContextMenu,
                 </div>
                 <div className="min-w-0 flex-1">
                     <h3 className="font-semibold text-[var(--text-primary)] text-sm truncate group-hover:text-[var(--text-primary)]">{collection.name}</h3>
-                    <p className="text-xs text-[var(--text-muted)]">{count} items</p>
+                    <p className="text-xs text-[var(--text-muted)]">{count} {t.items}</p>
                 </div>
             </div>
         </button>
@@ -377,6 +380,7 @@ export type ColumnId = typeof AVAILABLE_COLUMNS[number]['id'];
 
 function FolderRow({ collection, count, onOpen, onDropStructure, onContextMenu, visibleColumns }: { collection: Collection, count: number, onOpen: () => void, onDropStructure: (structureId: string, folderId: string) => void, onContextMenu: (e: React.MouseEvent, type: 'folder', item: any) => void, visibleColumns: Record<ColumnId, boolean> }) {
     const [isDragOver, setIsDragOver] = useState(false);
+    const { t } = useTranslation();
 
     return (
         <tr className={`group border-b transition-colors cursor-pointer ${isDragOver ? 'bg-blue-500/10 border-blue-500/50' : 'border-[var(--border-main)] hover:bg-[var(--input-bg)]'}`}
@@ -391,18 +395,18 @@ function FolderRow({ collection, count, onOpen, onDropStructure, onContextMenu, 
                 if (id) onDropStructure(id, collection.id);
             }}>
             <td className="px-4 py-3 w-8">
-                <div className="w-4 h-4" /> {/* Spacer for checkbox col */}
+                <div className="w-4 h-4" /> {/* {t.spacerForCheckboxCol} */}
             </td>
             <td className="px-3 py-3 relative">
                 <div className="flex items-center gap-3">
                     <Folder className={`w-4 h-4 ${COLOR_CLASSES[collection.color]?.split(' ')[0] ?? 'text-blue-400'} shrink-0`} />
                     <span className="text-sm font-medium text-[var(--text-primary)] group-hover:text-[var(--text-primary)] truncate">{collection.name}</span>
-                    {collection.is_public && <div title="Public Share Link Enabled" className="flex items-center shrink-0 ml-1"><Globe className="w-3.5 h-3.5 text-blue-400" /></div>}
+                    {collection.is_public && <div title={t.publicShareLinkEnabled} className="flex items-center shrink-0 ml-1"><Globe className="w-3.5 h-3.5 text-blue-400" /></div>}
                 </div>
             </td>
-            {visibleColumns.type && <td className="px-3 py-3"><span className="text-[10px] font-bold px-2 py-0.5 rounded-md border bg-[var(--input-bg)] text-[var(--text-secondary)] border-[var(--border-main)]">Folder</span></td>}
+            {visibleColumns.type && <td className="px-3 py-3"><span className="text-[10px] font-bold px-2 py-0.5 rounded-md border bg-[var(--input-bg)] text-[var(--text-secondary)] border-[var(--border-main)]">{t.folder}</span></td>}
             {visibleColumns.tags && <td className="px-3 py-3 text-xs text-[var(--text-muted)]">-</td>}
-            {visibleColumns.size && <td className="px-3 py-3 text-xs text-[var(--text-muted)]">{count === 1 ? '1 item' : `${count} items`}</td>}
+            {visibleColumns.size && <td className="px-3 py-3 text-xs text-[var(--text-muted)]">{count === 1 ? `1 ${t.item}` : `${count} ${t.items}`}</td>}
             {visibleColumns.uploaded && <td className="px-3 py-3 text-xs text-[var(--text-muted)]">-</td>}
             {visibleColumns.resolution && <td className="px-3 py-3 text-xs text-[var(--text-muted)]">-</td>}
             {visibleColumns.organism && <td className="px-3 py-3 text-xs text-[var(--text-muted)]">-</td>}
@@ -446,6 +450,7 @@ function StructureCard({
     const [copied, setCopied] = useState(false);
     const [downloading, setDownloading] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
+    const { t } = useTranslation();
 
     // Use a ref for the dropdown container to detect outside clicks
     const menuRef = useRef<HTMLDivElement>(null);
@@ -573,7 +578,7 @@ function StructureCard({
                             className="text-sm font-semibold text-[var(--text-primary)] bg-[var(--input-bg)] border border-blue-500/60 rounded-lg px-2.5 py-1 w-full outline-none focus:ring-1 focus:ring-blue-500 mb-1" />
                     ) : (
                         <button onClick={e => { e.stopPropagation(); setEditing(true); }}
-                            className="group/name flex items-center gap-1.5 text-left mb-1 w-full min-w-0" title="Click to rename">
+                            className="group/name flex items-center gap-1.5 text-left mb-1 w-full min-w-0" title={t.clickToRename}>
                             <span className="text-sm font-semibold text-[var(--text-primary)] truncate">{item.name}</span>
                             <Pencil className="w-3 h-3 text-[var(--text-muted)] opacity-0 group-hover/name:opacity-100 transition-all shrink-0" />
                         </button>
@@ -629,7 +634,7 @@ function StructureCard({
                         <button onClick={e => { e.stopPropagation(); setShowNotes(p => !p); }}
                             className="flex items-center gap-1.5 text-xs text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors mb-1.5">
                             <NotebookPen className="w-3 h-3" />
-                            {draftNotes ? 'Notes' : 'Add notes'}
+                            {draftNotes ? t.notes : t.addNotes}
                             {showNotes ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
                         </button>
                         {showNotes && (
@@ -637,7 +642,7 @@ function StructureCard({
                                 onChange={e => setDraftNotes(e.target.value)}
                                 onBlur={() => { if (draftNotes !== (item.notes ?? '')) onNotesChange(item.id, draftNotes); }}
                                 onClick={e => e.stopPropagation()}
-                                placeholder="Source, experiment notes, doi:10.1234/…"
+                                placeholder={t.notesPlaceholder}
                                 rows={3}
                                 className="w-full bg-[var(--input-bg)] border border-[var(--border-main)] rounded-lg px-3 py-2 text-xs text-[var(--text-secondary)] placeholder-neutral-600 resize-none focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500" />
                         )}
@@ -649,28 +654,28 @@ function StructureCard({
                         <button onClick={() => onOpen(item)} disabled={!!openingId}
                             className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-blue-600 text-white hover:bg-blue-500 text-sm font-semibold transition-all shadow-sm shadow-blue-900/20 disabled:opacity-50">
                             {openingId === item.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <ExternalLink className="w-4 h-4" />}
-                            Open in Viewer
+                            {t.openInViewer}
                         </button>
                         
                         {/* Secondary: Icon Actions */}
                         <div className="flex items-center justify-between border-t border-[var(--border-main)] pt-3 mt-3">
-                            <button onClick={handleDownload} disabled={downloading} title="Download"
+                            <button onClick={handleDownload} disabled={downloading} title={t.download}
                                 className="p-2 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--input-bg)] transition-colors disabled:opacity-50">
                                 {downloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
                             </button>
-                            <button onClick={handleShare} title="Copy link"
+                            <button onClick={handleShare} title={t.copyLink}
                                 className="p-2 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--input-bg)] transition-colors">
                                 {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Share2 className="w-4 h-4" />}
                             </button>
-                            <button onClick={() => onDuplicate(item)} disabled={duplicatingId === item.id} title="Duplicate"
+                            <button onClick={() => onDuplicate(item)} disabled={duplicatingId === item.id} title={t.duplicate}
                                 className="p-2 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--input-bg)] transition-colors disabled:opacity-50">
                                 {duplicatingId === item.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Copy className="w-4 h-4" />}
                             </button>
-                            <button onClick={() => onMove(item)} title="Move to folder"
+                            <button onClick={() => onMove(item)} title={t.moveToFolder}
                                 className="p-2 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--input-bg)] transition-colors">
                                 <FolderInput className="w-4 h-4" />
                             </button>
-                            <button onClick={() => onDelete(item)} title="Delete"
+                            <button onClick={() => onDelete(item)} title={t.delete}
                                 className="p-2 rounded-lg text-[var(--text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors">
                                 <Trash2 className="w-4 h-4" />
                             </button>
@@ -692,14 +697,15 @@ function StructureRow({ item, selected, onSelect, onToggleStar, onDelete, onRena
     const [draftName, setDraftName] = useState(item.name);
     const [downloading, setDownloading] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
+    const { t } = useTranslation();
 
     useEffect(() => { setDraftName(item.name); }, [item.name]);
     useEffect(() => { if (editing) inputRef.current?.select(); }, [editing]);
 
     const commitRename = () => {
         setEditing(false);
-        const t = draftName.trim();
-        if (t && t !== item.name) onRename(item.id, t);
+        const trimmedName = draftName.trim();
+        if (trimmedName && trimmedName !== item.name) onRename(item.id, trimmedName);
         else setDraftName(item.name);
     };
     const handleDownload = async () => {
@@ -766,22 +772,22 @@ function StructureRow({ item, selected, onSelect, onToggleStar, onDelete, onRena
             {visibleColumns?.method && <td className="px-3 py-3 text-xs text-[var(--text-muted)] truncate max-w-[120px]" title={item.metadata?.method || ''}>{item.metadata?.method || '-'}</td>}
             <td className="px-3 py-3">
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                    <button onClick={e => { e.stopPropagation(); onOpen(item); }} disabled={!!openingId} title="Open"
+                    <button onClick={e => { e.stopPropagation(); onOpen(item); }} disabled={!!openingId} title={t.open}
                         className="p-1.5 rounded-lg hover:bg-blue-500/20 text-[var(--text-muted)] hover:text-blue-400 transition-colors disabled:opacity-50">
                         {openingId === item.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ExternalLink className="w-3.5 h-3.5" />}
                     </button>
-                    <button onClick={e => { e.stopPropagation(); handleDownload(); }} disabled={downloading} title="Download"
+                    <button onClick={e => { e.stopPropagation(); handleDownload(); }} disabled={downloading} title={t.download}
                         className="p-1.5 rounded-lg hover:bg-[var(--input-bg)] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors disabled:opacity-50">
                         {downloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
                     </button>
                     <button onClick={e => { e.stopPropagation(); onToggleStar(item); }} className="p-1.5 rounded-lg hover:bg-[var(--input-bg)] transition-colors">
                         <Star className={`w-3.5 h-3.5 ${item.starred ? 'text-amber-400 fill-amber-400' : 'text-[var(--text-muted)] hover:text-amber-400'}`} />
                     </button>
-                    <button onClick={e => { e.stopPropagation(); onMove(item); }} title="Move to folder"
+                    <button onClick={e => { e.stopPropagation(); onMove(item); }} title={t.moveToFolder}
                         className="p-1.5 rounded-lg hover:bg-[var(--input-bg)] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors">
                         <FolderInput className="w-3.5 h-3.5" />
                     </button>
-                    <button onClick={e => { e.stopPropagation(); onDelete(item); }} title="Delete"
+                    <button onClick={e => { e.stopPropagation(); onDelete(item); }} title={t.delete}
                         className="p-1.5 rounded-lg hover:bg-red-500/10 text-[var(--text-muted)] hover:text-red-400 transition-colors">
                         <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -796,6 +802,7 @@ function StructureRow({ item, selected, onSelect, onToggleStar, onDelete, onRena
 function RCSBImport({ userId, onImported }: { userId: string; onImported: (s: Structure) => void }) {
     const [pdbId, setPdbId] = useState('');
     const [loading, setLoading] = useState(false);
+    const { t } = useTranslation();
 
     const handle = async (e: React.FormEvent) => {
         e.preventDefault(); setLoading(true);
@@ -810,9 +817,9 @@ function RCSBImport({ userId, onImported }: { userId: string; onImported: (s: St
         <form onSubmit={handle} className="flex items-center gap-1.5 bg-[var(--bg-header)] border border-[var(--border-main)] hover:border-neutral-600 focus-within:border-blue-500/50 rounded-lg px-2.5 py-1.5 transition-colors w-40 shrink-0">
             <Import className="w-3.5 h-3.5 text-[var(--text-muted)] shrink-0" />
             <input value={pdbId} onChange={e => setPdbId(e.target.value.toUpperCase())}
-                placeholder="PDB" maxLength={4}
+                placeholder={t.pdbPlaceholder} maxLength={4}
                 className="flex-1 min-w-0 bg-transparent text-sm text-[var(--text-primary)] placeholder-neutral-500 outline-none uppercase font-mono tracking-widest" />
-            <button type="submit" disabled={pdbId.length !== 4 || loading} title="Import from RCSB"
+            <button type="submit" disabled={pdbId.length !== 4 || loading} title={t.importFromRCSBTitle}
                 className="text-blue-400 hover:text-blue-300 disabled:opacity-50 transition-colors">
                 {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ChevronRight className="w-3.5 h-3.5" />}
             </button>
@@ -828,6 +835,7 @@ type ViewMode = 'grid' | 'list';
 // ── ZIP export progress ────────────────────────────────────────────
 function ExportZipButton({ structures }: { structures: Structure[] }) {
     const [exporting, setExporting] = useState(false);
+    const { t } = useTranslation();
     const handle = async () => {
         setExporting(true);
         try { await exportAllAsZip(structures); }
@@ -836,16 +844,17 @@ function ExportZipButton({ structures }: { structures: Structure[] }) {
     };
     return (
         <button onClick={handle} disabled={exporting || structures.length === 0}
-            title="Export all as ZIP"
+            title={t.exportAllAsZipTitle}
             className="flex items-center gap-2 px-3 py-2 text-sm text-[var(--text-secondary)] bg-[var(--bg-header)] border border-[var(--border-main)] rounded-lg hover:text-[var(--text-primary)] hover:border-neutral-600 disabled:opacity-50 transition-all">
             {exporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-            Export ZIP
+            {t.exportZip}
         </button>
     );
 }
 
 export const MyStructures = () => {
     const { user } = useAuth();
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -1151,7 +1160,7 @@ export const MyStructures = () => {
     const handleDelete = async (s: Structure) => {
         const isTrash = activeCollection === '__trash__';
         if (isTrash) {
-            if (!confirm(`Permanently delete "${s.name}"? This cannot be undone.`)) return;
+            if (!confirm(t.confirmPermanentDelete(s.name))) return;
             setStructures(prev => prev.filter(x => x.id !== s.id));
             try { await deleteStructure(s.id, s.file_path); }
             catch (ex: any) { setError(ex.message ?? 'Delete failed'); reload(); }
@@ -1248,7 +1257,7 @@ export const MyStructures = () => {
                 selectAll();
             } else if ((e.key === 'Delete' || e.key === 'Backspace') && selected.size > 0) {
                 e.preventDefault();
-                if (confirm(`Are you sure you want to delete ${selected.size} item(s)?`)) {
+                if (confirm(t.confirmDeleteSelected(selected.size))) {
                     const toDelete = structures.filter(s => selected.has(s.id));
                     Promise.all(toDelete.map(handleDelete));
                     deselectAll();
@@ -1270,14 +1279,14 @@ export const MyStructures = () => {
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [selected, structures, filtered, quickLookId]);
+    }, [selected, structures, filtered, quickLookId, t]);
 
     const handleBulkDelete = async () => {
         const ids = [...selected];
         const isTrash = activeCollection === '__trash__';
 
         if (isTrash) {
-            if (!confirm(`Permanently delete ${ids.length} structure${ids.length > 1 ? 's' : ''}? This cannot be undone.`)) return;
+            if (!confirm(t.confirmPermanentDeleteSelected(ids.length))) return;
             const toDelete = structures.filter(s => ids.includes(s.id));
             setStructures(prev => prev.filter(s => !ids.includes(s.id)));
             setSelected(new Set());
@@ -1312,7 +1321,7 @@ export const MyStructures = () => {
 
     const handleBulkRestore = async () => {
         const ids = [...selected];
-        if (!confirm(`Restore ${ids.length} structure${ids.length > 1 ? 's' : ''}?`)) return;
+        if (!confirm(t.confirmRestoreSelected(ids.length))) return;
         const toRestore = structures.filter(s => ids.includes(s.id));
         setStructures(prev => prev.map(x => {
             if (!ids.includes(x.id)) return x;
@@ -1422,13 +1431,6 @@ export const MyStructures = () => {
         });
     };
 
-    // Close context menu on click anywhere
-    useEffect(() => {
-        const handleClick = () => setContextMenu(null);
-        document.addEventListener('click', handleClick);
-        return () => document.removeEventListener('click', handleClick);
-    }, []);
-
 
     const sharedCardProps = { openingId, duplicatingId, onMove: setMovingStructure, onContextMenu: handleContextMenu };
 
@@ -1452,11 +1454,11 @@ export const MyStructures = () => {
                 <div className="absolute inset-x-2 inset-y-0 z-[200] max-h-[80vh] bg-blue-500/10 border-2 border-dashed border-blue-500 rounded-3xl flex flex-col items-center justify-center backdrop-blur-[2px]">
                     <div className="bg-[var(--bg-header)] border border-[var(--border-main)] shadow-2xl rounded-2xl p-8 flex flex-col items-center animate-in zoom-in duration-200">
                         <Upload className="w-12 h-12 text-blue-400 mb-4 animate-bounce" />
-                        <h2 className="text-xl font-bold text-[var(--text-primary)] mb-1">Drop files to upload</h2>
+                        <h2 className="text-xl font-bold text-[var(--text-primary)] mb-1">{t.dropFilesToUpload}</h2>
                         <p className="text-[var(--text-secondary)] text-sm">
                             {activeCollection && activeCollection !== '__none__'
-                                ? `Adding to: ${collections.find(c => c.id === activeCollection)?.name}`
-                                : 'Adding to Library root'}
+                                ? t.addingToCollection(collections.find(c => c.id === activeCollection)?.name || '')
+                                : t.addingToLibraryRoot}
                         </p>
                     </div>
                 </div>
@@ -1548,7 +1550,7 @@ export const MyStructures = () => {
                                             }
                                         }}
                                         className={`transition-colors px-1.5 py-0.5 rounded ${dragOverBreadcrumb === null ? 'bg-blue-500/20 text-blue-400 ring-1 ring-blue-500/50' : 'hover:text-white'}`}>
-                                        Projects
+                                        {t.projects}
                                     </button>
                                     {activeCollection && activeCollection !== '__none__' ? currentBreadcrumbs.map((crumb: Collection, idx: number) => (
                                         <React.Fragment key={crumb.id}>
@@ -1572,7 +1574,7 @@ export const MyStructures = () => {
                                     )) : activeCollection === '__none__' && (
                                         <>
                                             <span className="text-[var(--text-muted)]">/</span>
-                                            <span className="text-[var(--text-primary)]">Uncategorized</span>
+                                            <span className="text-[var(--text-primary)]">{t.uncategorized}</span>
                                         </>
                                     )}
                                 </div>
@@ -1584,7 +1586,7 @@ export const MyStructures = () => {
                             <button onClick={() => fileInputRef.current?.click()} disabled={uploading}
                                 className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 border border-blue-500 disabled:opacity-60 text-white px-3 py-1.5 rounded-lg text-sm transition-colors shadow-sm">
                                 {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
-                                Upload
+                                {t.upload}
                             </button>
                         </div>
                     </div>
