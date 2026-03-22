@@ -2,7 +2,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { useAuth } from '../../lib/AuthContext';
 import { useTranslation } from '../../lib/i18n';
 import { useNavigate } from 'react-router-dom';
-import { User, Mail, Shield, Loader2, Camera, Trash2, AlertTriangle, X, Check, HardDrive, Zap, Bell, Globe, Link2, Github, Settings2 } from 'lucide-react';
+import { User, Mail, Shield, Loader2, Camera, Trash2, AlertTriangle, X, Check, HardDrive, Zap, Bell, Globe, Link2, Github, Settings2, Copy, ExternalLink } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 
 // ─── Format Helpers ───────────────────────────────────────────────
@@ -252,7 +252,12 @@ export const AccountSettings = () => {
     const [language, setLanguage] = useState(user?.user_metadata?.language || 'English (US)');
     const [timezone, setTimezone] = useState(user?.user_metadata?.timezone || 'Coordinated Universal Time (UTC)');
     const [emailNotifs, setEmailNotifs] = useState(user?.user_metadata?.email_notifications ?? true);
+    const [notificationFrequency, setNotificationFrequency] = useState(user?.user_metadata?.notification_frequency || 'realtime');
+    const [productUpdates, setProductUpdates] = useState(user?.user_metadata?.product_updates ?? true);
+    const [securityAlerts, setSecurityAlerts] = useState(user?.user_metadata?.security_alerts ?? true);
     const [publicProfile, setPublicProfile] = useState(user?.user_metadata?.public_profile ?? false);
+    const [visibility, setVisibility] = useState(user?.user_metadata?.visibility || 'everyone');
+    const [copied, setCopied] = useState(false);
     
     // Connections
     const [ghConnected, setGhConnected] = useState(user?.user_metadata?.github_connected || false);
@@ -471,28 +476,127 @@ export const AccountSettings = () => {
                         </div>
                     </div>
 
-                    <div className="border-t border-[var(--border-main)] pt-5 space-y-4">
-                        {/* Toggles */}
-                        <label className="flex items-center justify-between cursor-pointer group">
-                            <div>
-                                <p className="text-sm font-medium text-[var(--text-primary)] flex items-center gap-2"><Bell className="w-4 h-4 text-cyan-500" /> {t.emailNotifs}</p>
-                                <p className="text-xs text-[var(--text-muted)] mt-0.5">{t.emailNotifsDesc}</p>
-                            </div>
-                            <div className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors ${emailNotifs ? 'bg-blue-600' : 'bg-neutral-600'}`}
-                                onClick={() => { const v = !emailNotifs; setEmailNotifs(v); updatePreference('email_notifications', v); }}>
-                                <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${emailNotifs ? 'translate-x-2' : '-translate-x-2'}`} />
-                            </div>
-                        </label>
-                        <label className="flex items-center justify-between cursor-pointer group">
-                            <div>
-                                <p className="text-sm font-medium text-[var(--text-primary)] flex items-center gap-2"><Globe className="w-4 h-4 text-emerald-500" /> {t.publicProfile}</p>
-                                <p className="text-xs text-[var(--text-muted)] mt-0.5">{t.publicProfileDesc}</p>
-                            </div>
-                            <div className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors ${publicProfile ? 'bg-blue-600' : 'bg-neutral-600'}`}
-                                onClick={() => { const v = !publicProfile; setPublicProfile(v); updatePreference('public_profile', v); }}>
-                                <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${publicProfile ? 'translate-x-2' : '-translate-x-2'}`} />
-                            </div>
-                        </label>
+                    <div className="border-t border-[var(--border-main)] pt-6 space-y-6">
+                        {/* Notification Center */}
+                        <div className="space-y-4">
+                            <label className="flex items-start justify-between cursor-pointer group">
+                                <div className="flex gap-3">
+                                    <div className={`p-2 rounded-lg shrink-0 ${emailNotifs ? 'bg-cyan-500/10 text-cyan-500' : 'bg-neutral-800 text-neutral-500'}`}>
+                                        <Bell className="w-5 h-5" />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-semibold text-[var(--text-primary)]">{t.emailNotifs}</p>
+                                        <p className="text-xs text-[var(--text-muted)] mt-0.5">{t.emailNotifsDesc}</p>
+                                    </div>
+                                </div>
+                                <div className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors ${emailNotifs ? 'bg-blue-600' : 'bg-neutral-600'}`}
+                                    onClick={() => { const v = !emailNotifs; setEmailNotifs(v); updatePreference('email_notifications', v); }}>
+                                    <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${emailNotifs ? 'translate-x-2' : '-translate-x-2'}`} />
+                                </div>
+                            </label>
+
+                            {emailNotifs && (
+                                <div className="ml-12 p-4 bg-[var(--input-bg)]/30 rounded-xl border border-[var(--border-main)] space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] mb-2">{t.notificationFrequency}</label>
+                                            <select 
+                                                value={notificationFrequency}
+                                                onChange={e => { setNotificationFrequency(e.target.value); updatePreference('notification_frequency', e.target.value); }}
+                                                className="w-full px-3 py-1.5 bg-[var(--bg-header)] border border-[var(--border-main)] rounded-lg text-xs text-[var(--text-primary)] outline-none focus:border-blue-500">
+                                                <option value="realtime">{t.realtime}</option>
+                                                <option value="daily">{t.dailyDigest}</option>
+                                                <option value="weekly">{t.weeklySummary}</option>
+                                            </select>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="block text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] mb-2">Categories</label>
+                                            <div className="flex flex-col gap-2">
+                                                <label className="flex items-center gap-2 cursor-pointer group">
+                                                    <input type="checkbox" checked={securityAlerts} 
+                                                        onChange={e => { setSecurityAlerts(e.target.checked); updatePreference('security_alerts', e.target.checked); }}
+                                                        className="w-3.5 h-3.5 rounded border-[var(--border-main)] bg-[var(--bg-header)] text-blue-600 focus:ring-offset-0 focus:ring-0" />
+                                                    <span className="text-xs text-[var(--text-secondary)] group-hover:text-[var(--text-primary)]">{t.securityAlerts}</span>
+                                                </label>
+                                                <label className="flex items-center gap-2 cursor-pointer group">
+                                                    <input type="checkbox" checked={productUpdates} 
+                                                        onChange={e => { setProductUpdates(e.target.checked); updatePreference('product_updates', e.target.checked); }}
+                                                        className="w-3.5 h-3.5 rounded border-[var(--border-main)] bg-[var(--bg-header)] text-blue-600 focus:ring-offset-0 focus:ring-0" />
+                                                    <span className="text-xs text-[var(--text-secondary)] group-hover:text-[var(--text-primary)]">{t.productUpdates}</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Privacy & Profile */}
+                        <div className="space-y-4">
+                            <label className="flex items-start justify-between cursor-pointer group">
+                                <div className="flex gap-3">
+                                    <div className={`p-2 rounded-lg shrink-0 ${publicProfile ? 'bg-emerald-500/10 text-emerald-500' : 'bg-neutral-800 text-neutral-500'}`}>
+                                        <Globe className="w-5 h-5" />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-semibold text-[var(--text-primary)]">{t.publicPresence}</p>
+                                        <p className="text-xs text-[var(--text-muted)] mt-0.5">{t.publicProfileDesc}</p>
+                                    </div>
+                                </div>
+                                <div className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors ${publicProfile ? 'bg-blue-600' : 'bg-neutral-600'}`}
+                                    onClick={() => { const v = !publicProfile; setPublicProfile(v); updatePreference('public_profile', v); }}>
+                                    <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${publicProfile ? 'translate-x-2' : '-translate-x-2'}`} />
+                                </div>
+                            </label>
+
+                            {publicProfile && (
+                                <div className="ml-12 p-4 bg-[var(--input-bg)]/30 rounded-xl border border-[var(--border-main)] space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="block text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] mb-2">{t.profileUrl}</label>
+                                            <div className="flex gap-2">
+                                                <div className="flex-1 px-3 py-1.5 bg-[var(--bg-header)] border border-[var(--border-main)] rounded-lg text-xs text-[var(--text-secondary)] font-mono truncate">
+                                                    viewer.quercus.com/u/{fullName?.toLowerCase().replace(/\s+/g, '.') || user?.email?.split('@')[0]}
+                                                </div>
+                                                <button 
+                                                    onClick={() => {
+                                                        const url = `viewer.quercus.com/u/${fullName?.toLowerCase().replace(/\s+/g, '.') || user?.email?.split('@')[0]}`;
+                                                        navigator.clipboard.writeText(url);
+                                                        setCopied(true);
+                                                        setTimeout(() => setCopied(false), 2000);
+                                                    }}
+                                                    className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-medium hover:bg-blue-500 transition-colors flex items-center gap-1.5 shrink-0 shadow-sm"
+                                                >
+                                                    {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                                                    {copied ? t.copied : t.copyProfileLink}
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center justify-between pt-2 border-t border-[var(--border-main)]/50">
+                                            <div className="flex items-center gap-4">
+                                                <div>
+                                                    <label className="block text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] mb-1">{t.visibility}</label>
+                                                    <select 
+                                                        value={visibility}
+                                                        onChange={e => { setVisibility(e.target.value); updatePreference('visibility', e.target.value); }}
+                                                        className="bg-transparent border-none p-0 text-xs text-blue-400 font-medium focus:ring-0 outline-none cursor-pointer hover:text-blue-300">
+                                                        <option value="everyone" className="bg-[var(--bg-header)]">{t.everyone}</option>
+                                                        <option value="onlyMe" className="bg-[var(--bg-header)]">{t.onlyMe}</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <a 
+                                                href={`#`} 
+                                                className="text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors flex items-center gap-1 font-medium"
+                                                onClick={e => e.preventDefault()}
+                                            >
+                                                {t.viewProfile} <ExternalLink className="w-3 h-3" />
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
