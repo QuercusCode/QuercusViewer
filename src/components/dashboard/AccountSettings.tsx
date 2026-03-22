@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useAuth } from '../../lib/AuthContext';
+import { useTranslation } from '../../lib/i18n';
 import { useNavigate } from 'react-router-dom';
 import { User, Mail, Shield, Loader2, Camera, Trash2, AlertTriangle, X, Check, HardDrive, Zap, Bell, Globe, Link2, Github, Settings2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
@@ -230,6 +231,7 @@ function AvatarUpload({ userId, currentUrl, onUpdated }: { userId: string; curre
 
 export const AccountSettings = () => {
     const { user, signOut } = useAuth();
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const [fullName, setFullName] = useState(user?.user_metadata?.full_name || '');
     const [avatarUrl, setAvatarUrl] = useState(
@@ -337,15 +339,15 @@ export const AccountSettings = () => {
     return (
         <div className="max-w-3xl mx-auto space-y-6">
             <div>
-                <h1 className="text-xl font-semibold text-[var(--text-primary)] tracking-tight">Account Settings</h1>
-                <p className="text-sm text-[var(--text-muted)] mt-0.5">Manage your profile, security, and account preferences.</p>
+                <h1 className="text-xl font-semibold text-[var(--text-primary)] tracking-tight">{t.accountSettings}</h1>
+                <p className="text-sm text-[var(--text-muted)] mt-0.5">{t.settingsDesc}</p>
             </div>
 
             {/* Profile Card */}
             <div className="bg-[var(--bg-header)] border border-[var(--border-main)] rounded-xl overflow-hidden">
                 <div className="px-6 py-4 border-b border-[var(--border-main)] flex items-center gap-2">
                     <User className="w-4 h-4 text-blue-400" />
-                    <h2 className="text-sm font-semibold text-[var(--text-primary)]">Profile Information</h2>
+                    <h2 className="text-sm font-semibold text-[var(--text-primary)]">{t.profileInfo}</h2>
                 </div>
                 <div className="p-6 space-y-6">
                     {/* Avatar Upload */}
@@ -360,20 +362,20 @@ export const AccountSettings = () => {
                     <div className="border-t border-[var(--border-main)] pt-5 space-y-4">
                         {/* Full Name */}
                         <div>
-                            <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">Display Name</label>
+                            <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">{t.displayName}</label>
                             <input
                                 type="text"
                                 value={fullName}
                                 onChange={e => setFullName(e.target.value)}
                                 onKeyDown={e => e.key === 'Enter' && handleSaveProfile()}
                                 className="w-full max-w-sm px-3 py-2.5 bg-[var(--bg-header)] border border-[var(--border-main)] rounded-lg text-sm text-[var(--text-primary)] placeholder-neutral-600 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                                placeholder="Enter your full name"
+                                placeholder={t.displayName as string}
                             />
                         </div>
 
                         {/* Email (readonly) */}
                         <div>
-                            <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">Email Address</label>
+                            <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">{t.emailAddress}</label>
                             <div className="relative max-w-sm">
                                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
                                 <input
@@ -383,7 +385,7 @@ export const AccountSettings = () => {
                                     className="w-full pl-9 pr-3 py-2.5 bg-[var(--bg-header)] border border-[var(--border-main)] rounded-lg text-sm text-[var(--text-muted)] cursor-not-allowed"
                                 />
                             </div>
-                            <p className="text-xs text-[var(--text-muted)] mt-1.5">Email cannot be changed.</p>
+                            <p className="text-xs text-[var(--text-muted)] mt-1.5">{t.emailFixed}</p>
                         </div>
 
                         {/* Member since */}
@@ -399,7 +401,7 @@ export const AccountSettings = () => {
                                 className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
                             >
                                 {isSaving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                                Save Changes
+                                {t.saveChanges}
                             </button>
                             {saveStatus === 'success' && <span className="text-sm text-green-400">✓ Saved!</span>}
                             {saveStatus === 'error' && <span className="text-sm text-red-400">Failed to save.</span>}
@@ -413,7 +415,7 @@ export const AccountSettings = () => {
                 <div className="px-6 py-4 border-b border-[var(--border-main)] flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         <HardDrive className="w-4 h-4 text-orange-400" />
-                        <h2 className="text-sm font-semibold text-[var(--text-primary)]">Storage Usage</h2>
+                        <h2 className="text-sm font-semibold text-[var(--text-primary)]">{t.storageUsage}</h2>
                     </div>
                     <span className="text-xs font-medium text-[var(--text-muted)]">{formatBytes(storageUsed)} / {formatBytes(STORAGE_QUOTA)}</span>
                 </div>
@@ -425,9 +427,9 @@ export const AccountSettings = () => {
                         />
                     </div>
                     <div className="flex items-center justify-between">
-                        <p className="text-xs text-[var(--text-secondary)]">You are currently using <strong>{((storageUsed / STORAGE_QUOTA) * 100).toFixed(1)}%</strong> of your free tier quota.</p>
+                        <p className="text-xs text-[var(--text-secondary)]"><strong>{((storageUsed / STORAGE_QUOTA) * 100).toFixed(1)}% / 100%</strong></p>
                         <button className="flex items-center gap-1.5 text-xs font-semibold text-orange-400 hover:text-orange-300 bg-orange-500/10 hover:bg-orange-500/20 px-3 py-1.5 rounded-lg border border-orange-500/20 hover:border-orange-500/40 transition-all">
-                            <Zap className="w-3.5 h-3.5" /> Upgrade Plan
+                            <Zap className="w-3.5 h-3.5" /> {t.upgradePlan}
                         </button>
                     </div>
                 </div>
@@ -437,13 +439,13 @@ export const AccountSettings = () => {
             <div className="bg-[var(--bg-header)] border border-[var(--border-main)] rounded-xl overflow-hidden">
                 <div className="px-6 py-4 border-b border-[var(--border-main)] flex items-center gap-2">
                     <Settings2 className="w-4 h-4 text-cyan-400" />
-                    <h2 className="text-sm font-semibold text-[var(--text-primary)]">Application Preferences</h2>
+                    <h2 className="text-sm font-semibold text-[var(--text-primary)]">{t.appPrefs}</h2>
                 </div>
                 <div className="p-6 space-y-5">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                         {/* Language */}
                         <div>
-                            <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">Language</label>
+                            <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">{t.language}</label>
                             <select 
                                 value={language} 
                                 onChange={e => { setLanguage(e.target.value); updatePreference('language', e.target.value); }}
@@ -456,7 +458,7 @@ export const AccountSettings = () => {
                         </div>
                         {/* Timezone */}
                         <div>
-                            <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">Timezone</label>
+                            <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">{t.timezone}</label>
                             <select 
                                 value={timezone} 
                                 onChange={e => { setTimezone(e.target.value); updatePreference('timezone', e.target.value); }}
@@ -473,8 +475,8 @@ export const AccountSettings = () => {
                         {/* Toggles */}
                         <label className="flex items-center justify-between cursor-pointer group">
                             <div>
-                                <p className="text-sm font-medium text-[var(--text-primary)] flex items-center gap-2"><Bell className="w-4 h-4 text-cyan-500" /> Email Notifications</p>
-                                <p className="text-xs text-[var(--text-muted)] mt-0.5">Receive product updates and weekly digests.</p>
+                                <p className="text-sm font-medium text-[var(--text-primary)] flex items-center gap-2"><Bell className="w-4 h-4 text-cyan-500" /> {t.emailNotifs}</p>
+                                <p className="text-xs text-[var(--text-muted)] mt-0.5">{t.emailNotifsDesc}</p>
                             </div>
                             <div className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors ${emailNotifs ? 'bg-blue-600' : 'bg-neutral-600'}`}
                                 onClick={() => { const v = !emailNotifs; setEmailNotifs(v); updatePreference('email_notifications', v); }}>
@@ -483,8 +485,8 @@ export const AccountSettings = () => {
                         </label>
                         <label className="flex items-center justify-between cursor-pointer group">
                             <div>
-                                <p className="text-sm font-medium text-[var(--text-primary)] flex items-center gap-2"><Globe className="w-4 h-4 text-emerald-500" /> Public Profile Discovery</p>
-                                <p className="text-xs text-[var(--text-muted)] mt-0.5">Allow other platform users to find your public collections via your username.</p>
+                                <p className="text-sm font-medium text-[var(--text-primary)] flex items-center gap-2"><Globe className="w-4 h-4 text-emerald-500" /> {t.publicProfile}</p>
+                                <p className="text-xs text-[var(--text-muted)] mt-0.5">{t.publicProfileDesc}</p>
                             </div>
                             <div className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors ${publicProfile ? 'bg-blue-600' : 'bg-neutral-600'}`}
                                 onClick={() => { const v = !publicProfile; setPublicProfile(v); updatePreference('public_profile', v); }}>
@@ -499,7 +501,7 @@ export const AccountSettings = () => {
             <div className="bg-[var(--bg-header)] border border-[var(--border-main)] rounded-xl overflow-hidden">
                 <div className="px-6 py-4 border-b border-[var(--border-main)] flex items-center gap-2">
                     <Link2 className="w-4 h-4 text-emerald-400" />
-                    <h2 className="text-sm font-semibold text-[var(--text-primary)]">Connected Integrations</h2>
+                    <h2 className="text-sm font-semibold text-[var(--text-primary)]">{t.connectedIntegrations}</h2>
                 </div>
                 <div className="divide-y divide-[var(--border-main)]">
                     {/* Google */}
@@ -562,18 +564,18 @@ export const AccountSettings = () => {
             <div className="bg-[var(--bg-header)] border border-[var(--border-main)] rounded-xl overflow-hidden">
                 <div className="px-6 py-4 border-b border-[var(--border-main)] flex items-center gap-2">
                     <Shield className="w-4 h-4 text-green-400" />
-                    <h2 className="text-sm font-semibold text-[var(--text-primary)]">Security</h2>
+                    <h2 className="text-sm font-semibold text-[var(--text-primary)]">{t.security}</h2>
                 </div>
                 <div className="p-6 space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">New Password</label>
+                        <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">{t.newPassword}</label>
                         <input
                             type="password"
                             value={newPassword}
                             onChange={e => setNewPassword(e.target.value)}
                             onKeyDown={e => e.key === 'Enter' && handleChangePassword()}
                             className="w-full max-w-sm px-3 py-2.5 bg-[var(--bg-header)] border border-[var(--border-main)] rounded-lg text-sm text-[var(--text-primary)] placeholder-neutral-600 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                            placeholder="Enter new password (min 6 chars)"
+                            placeholder={t.newPassword as string}
                         />
                     </div>
                     <div className="flex items-center gap-3 pt-1">
@@ -583,7 +585,7 @@ export const AccountSettings = () => {
                             className="flex items-center gap-2 border border-[var(--border-main)] hover:border-neutral-500 hover:bg-[var(--input-bg)] text-[var(--text-secondary)] px-4 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-40"
                         >
                             {isChangingPassword && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                            Change Password
+                            {t.changePwd}
                         </button>
                         {passwordStatus === 'success' && <span className="text-sm text-green-400">✓ Password updated!</span>}
                         {passwordStatus === 'error' && <span className="text-sm text-red-400">Failed to update password.</span>}
@@ -595,15 +597,15 @@ export const AccountSettings = () => {
             <div className="bg-[var(--bg-header)] border border-red-500/25 rounded-xl overflow-hidden">
                 <div className="px-6 py-4 border-b border-red-500/20 flex items-center gap-2">
                     <AlertTriangle className="w-4 h-4 text-red-400" />
-                    <h2 className="text-sm font-semibold text-red-400">Danger Zone</h2>
+                    <h2 className="text-sm font-semibold text-red-400">{t.dangerZone}</h2>
                 </div>
                 <div className="divide-y divide-red-500/10">
                     {/* Clear all data */}
                     <div className="p-6 flex items-center justify-between gap-4">
                         <div>
-                            <p className="text-sm font-medium text-[var(--text-primary)]">Clear All Data</p>
+                            <p className="text-sm font-medium text-[var(--text-primary)]">{t.clearData}</p>
                             <p className="text-xs text-[var(--text-muted)] mt-0.5 max-w-xs">
-                                Delete all your uploaded structures, files, collections, and activity logs. Your account remains active.
+                                {t.clearDataDesc}
                             </p>
                         </div>
                         <button
@@ -611,16 +613,16 @@ export const AccountSettings = () => {
                             className="shrink-0 flex items-center gap-2 border border-red-500/40 text-red-400 hover:bg-red-500/10 hover:border-red-400 px-4 py-2 rounded-lg text-sm font-medium transition-all"
                         >
                             <Trash2 className="w-3.5 h-3.5" />
-                            Clear Data
+                            {t.clearData}
                         </button>
                     </div>
 
                     {/* Delete account */}
                     <div className="p-6 flex items-center justify-between gap-4">
                         <div>
-                            <p className="text-sm font-medium text-[var(--text-primary)]">Delete Account</p>
+                            <p className="text-sm font-medium text-[var(--text-primary)]">{t.deleteAccount}</p>
                             <p className="text-xs text-[var(--text-muted)] mt-0.5 max-w-xs">
-                                Permanently remove all your data and sign you out. This action is irreversible.
+                                {t.deleteAccountDesc}
                             </p>
                         </div>
                         <button
@@ -628,7 +630,7 @@ export const AccountSettings = () => {
                             className="shrink-0 flex items-center gap-2 bg-red-600/15 border border-red-500/40 text-red-400 hover:bg-red-500/25 hover:border-red-400 px-4 py-2 rounded-lg text-sm font-medium transition-all"
                         >
                             <X className="w-3.5 h-3.5" />
-                            Delete Account
+                            {t.deleteAccount}
                         </button>
                     </div>
                 </div>

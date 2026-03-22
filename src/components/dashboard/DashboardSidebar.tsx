@@ -5,6 +5,7 @@ import {
     Atom, BarChart2, NotebookPen, PanelLeftClose, PanelLeftOpen 
 } from 'lucide-react';
 import { useAuth } from '../../lib/AuthContext';
+import { useTranslation } from '../../lib/i18n';
 
 interface DashboardSidebarProps {
     isCollapsed: boolean;
@@ -17,6 +18,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isCollapsed,
     const { pathname } = useLocation();
     const { signOut, user } = useAuth();
     const navigate = useNavigate();
+    const { t } = useTranslation();
 
     const handleSignOut = async () => {
         await signOut();
@@ -24,11 +26,11 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isCollapsed,
     };
 
     const navItems = [
-        { label: 'My Structures', path: '/dashboard/structures', icon: FolderOpen },
-        { label: 'Lab Notebook', path: '/dashboard/notebook', icon: NotebookPen },
-        { label: 'Studio Drafts', path: '/dashboard/drafts', icon: Video },
-        { label: 'Activity', path: '/dashboard/activity', icon: BarChart2 },
-        { label: 'Account Settings', path: '/dashboard/settings', icon: Settings },
+        { label: t.myStructures, path: '/dashboard/structures', icon: FolderOpen },
+        { label: t.labNotebook, path: '/dashboard/notebook', icon: NotebookPen },
+        { label: t.studioDrafts, path: '/dashboard/drafts', icon: Video },
+        { label: t.activity, path: '/dashboard/activity', icon: BarChart2 },
+        { label: t.accountSettings, path: '/dashboard/settings', icon: Settings },
     ];
 
     return (
@@ -80,7 +82,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isCollapsed,
 
             {/* Nav */}
             <div className="p-3 flex-1 overflow-y-auto custom-scrollbar">
-                {!isCollapsed && <p className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-[0.2em] mb-4 px-2 mt-2">Navigation</p>}
+                {!isCollapsed && <p className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-[0.2em] mb-4 px-2 mt-2">{t.nav}</p>}
                 <nav className="space-y-1">
                     {navItems.map((item) => {
                         const isActive = pathname.startsWith(item.path);
@@ -103,14 +105,14 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isCollapsed,
                 </nav>
 
                 <div className="mt-6 pt-6 border-t border-[var(--border-main)]">
-                    {!isCollapsed && <p className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-[0.2em] mb-4 px-2">App</p>}
+                    {!isCollapsed && <p className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-[0.2em] mb-4 px-2">{t.app}</p>}
                     <Link
                         to="/"
-                        title={isCollapsed ? "Back to Viewer" : undefined}
+                        title={isCollapsed ? (t.backToViewer as string) : undefined}
                         className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-[var(--text-secondary)] hover:bg-[var(--input-bg)] hover:text-[var(--text-primary)] transition-all border border-transparent group ${isCollapsed ? 'justify-center px-0' : ''}`}
                     >
                         <ChevronLeft className={`w-5 h-5 transition-colors ${isCollapsed ? 'text-[var(--text-muted)]' : 'text-[var(--text-muted)] group-hover:text-[var(--text-primary)]'} shrink-0`} />
-                        {!isCollapsed && <span className="whitespace-nowrap">Back to Viewer</span>}
+                        {!isCollapsed && <span className="whitespace-nowrap">{t.backToViewer}</span>}
                     </Link>
                 </div>
             </div>
@@ -132,11 +134,11 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isCollapsed,
                 </div>
                 <button
                     onClick={handleSignOut}
-                    title={isCollapsed ? "Sign Out" : undefined}
+                    title={isCollapsed ? (t.signOut as string) : undefined}
                     className={`flex items-center gap-3 px-3 py-3 w-full rounded-xl text-sm font-medium text-[var(--text-secondary)] hover:bg-red-500/10 hover:text-red-400 transition-all border border-transparent group ${isCollapsed ? 'justify-center px-0' : ''}`}
                 >
                     <LogOut className="w-5 h-5 shrink-0 transition-colors group-hover:text-red-400" />
-                    {!isCollapsed && <span className="whitespace-nowrap">Sign Out</span>}
+                    {!isCollapsed && <span className="whitespace-nowrap">{t.signOut}</span>}
                 </button>
             </div>
         </aside>
