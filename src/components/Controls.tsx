@@ -324,8 +324,7 @@ interface ControlsProps {
     isLightMode: boolean;
     highlightedResidue: { chain: string; resNo: number; resName?: string } | null;
     onResidueClick: (chain: string, resNo: number, resName?: string) => void;
-    // onToggleAISidebar: () => void;
-    // isAISidebarOpen: boolean;
+
     onToggleLibrary: () => void;
     showSurface: boolean;
     setShowSurface: (show: boolean) => void;
@@ -474,8 +473,7 @@ export const Controls: React.FC<ControlsProps> = ({
     movies,
     isDyslexicFont,
     setIsDyslexicFont,
-    // onToggleAISidebar,
-    // isAISidebarOpen,
+
     onToggleLibrary,
     onToggleShare,
     customBackgroundColor,

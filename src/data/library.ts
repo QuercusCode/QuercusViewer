@@ -3,7 +3,7 @@ export interface LibraryEntry {
     title: string;
     category: 'Enzymes' | 'Structural' | 'Transport' | 'Signaling' | 'Viral' | 'DNA/RNA' | 'Toxins' | 'Synthetic' | 'Immune' | 'Chaperone' | 'Energy';
     description: string;
-    details: string; // Rich context for Dr. AI
+    details: string;
     method?: string;
     resolution?: string;
     organism?: string;

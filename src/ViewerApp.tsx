@@ -6,7 +6,7 @@ import { MolStarProteinViewer } from './components/MolStarProteinViewer'; // ENG
 import { LandingOverlay } from './components/LandingOverlay';
 import { Controls } from './components/Controls';
 import { ContactMap } from './components/ContactMap';
-import { AISidebar, type AIAction } from './components/AISidebar';
+
 import { HelpGuide } from './components/HelpGuide';
 import { parseURLState, getShareableURL } from './utils/urlManager';
 
@@ -933,7 +933,7 @@ function App() {
   // isSpinning extracted to hook
   const [isCleanMode, setIsCleanMode] = useState(false);
   const [showContactMap, setShowContactMap] = useState(false);
-  const [isAISidebarOpen, setIsAISidebarOpen] = useState(false);
+
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
   const [embedOrientation, setEmbedOrientation] = useState<any>(null);
 
@@ -1402,22 +1402,7 @@ function App() {
     return () => window.removeEventListener('keydown', handleKeyDown, true);
   }, [undo, redo, canUndo, canRedo, isPublicationMode, togglePublicationMode]);
 
-  // --- DERIVED STATE (Dr. AI V4) ---
-  const structureStats = useMemo(() => {
-    const chainCount = chains.length;
-    const ligandCount = ligands.length;
-    let residueCount = 0;
 
-    chains.forEach(chain => {
-      if (chain.sequence) {
-        residueCount += chain.sequence.length;
-      } else if (chain.max && chain.min) {
-        residueCount += (chain.max - chain.min + 1);
-      }
-    });
-
-    return { chainCount, residueCount, ligandCount };
-  }, [chains, ligands]);
 
   const handleAtomClick = (
     info: { chain: string; resNo: number; resName: string; atomIndex?: number; position?: { x: number; y: number; z: number } } | null,
@@ -2102,36 +2087,7 @@ function App() {
 
 
 
-  // --- AI ACTION HANDLER (Dr. AI V3) ---
-  const handleAIAction = (action: AIAction) => {
-    switch (action.type) {
-      case 'SET_COLORING':
-        setColoring(action.value);
-        break;
-      case 'SET_REPRESENTATION':
-        setRepresentation(action.value);
-        break;
-      case 'TOGGLE_SURFACE':
-        setShowSurface(action.value);
-        break;
-      case 'RESET_VIEW':
-        handleResetView();
-        if (viewerRef.current) viewerRef.current.resetCamera();
-        break;
-      case 'HIGHLIGHT_REGION':
-        if (viewerRef.current) {
-          viewerRef.current.highlightRegion(action.selection, action.label);
-        }
-        break;
-      case 'SET_CUSTOM_COLOR':
-        // Add to the list of custom colors
-        setCustomColors((prev: any) => [
-          ...prev,
-          { selection: action.selection, color: action.color }
-        ]);
-        break;
-    }
-  };
+
 
   // Drag and Drop State
   const [isDragging, setIsDragging] = useState(false);
@@ -2745,18 +2701,7 @@ function App() {
       />
 
 
-      {!isEmbedMode && (
-        <AISidebar
-          isOpen={isAISidebarOpen}
-          onClose={() => setIsAISidebarOpen(false)}
-          pdbId={pdbId}
-          proteinTitle={proteinTitle}
-          highlightedResidue={highlightedResidue}
-          stats={structureStats}
-          chains={chains}
-          onAction={handleAIAction}
-        />
-      )}
+
       {/* HUD - Positioned at bottom to avoid viewport interference */}
       {/* Proteinvier and UI */}
       {/* Click-to-Interact Overlay */}
