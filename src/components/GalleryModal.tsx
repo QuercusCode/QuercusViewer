@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import clsx from 'clsx';
 import type { Snapshot, Movie } from '../types';
+import { useTimezone, formatDate, formatDateTime } from '../lib/timezoneUtils';
 
 interface GalleryModalProps {
     isOpen: boolean;
@@ -40,6 +41,7 @@ export const GalleryModal: React.FC<GalleryModalProps> = ({
     onDownloadMovie,
     isLightMode
 }) => {
+    const timezone = useTimezone();
     const [activeTab, setActiveTab] = useState<'all' | 'snapshots' | 'movies'>('all');
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
@@ -183,7 +185,7 @@ export const GalleryModal: React.FC<GalleryModalProps> = ({
                                         {/* Overlay Info */}
                                         <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/80 via-black/40 to-transparent text-white opacity-0 group-hover:opacity-100 transition-opacity">
                                             <p className="text-xs font-bold truncate">{item.pdbId || 'Structure'}</p>
-                                            <p className="text-[10px] opacity-80">{new Date(item.timestamp).toLocaleDateString()}</p>
+                                            <p className="text-[10px] opacity-80">{formatDate(new Date(item.timestamp), timezone)}</p>
                                         </div>
                                     </div>
                                 ))}
@@ -249,7 +251,7 @@ export const GalleryModal: React.FC<GalleryModalProps> = ({
                                         <div className="flex items-center gap-3">
                                             <Calendar className="w-4 h-4 text-purple-500" />
                                             <p className={clsx("text-xs", isLightMode ? "text-neutral-700" : "text-neutral-300")}>
-                                                {new Date(selectedItem.timestamp).toLocaleString()}
+                                                {formatDateTime(new Date(selectedItem.timestamp), timezone)}
                                             </p>
                                         </div>
                                         {selectedItem.type === 'snapshot' && (

@@ -4,6 +4,7 @@ import type { Favorite } from '../hooks/useFavorites';
 import type { HistoryItem } from '../hooks/useHistory';
 
 import { type DataSource } from '../utils/pdbUtils';
+import { useTimezone, formatDate } from '../lib/timezoneUtils';
 
 interface FavoritesPanelProps {
     favorites: Favorite[];
@@ -31,6 +32,7 @@ export const FavoritesPanel: React.FC<FavoritesPanelProps> = ({
     showTabs = true,
 }) => {
     const [activeTab, setActiveTab] = useState<'favorites' | 'history'>(initialTab);
+    const timezone = useTimezone();
 
     // Sync active tab with prop (for external switching)
     React.useEffect(() => {
@@ -137,7 +139,7 @@ export const FavoritesPanel: React.FC<FavoritesPanelProps> = ({
                                                 <div className={`text-sm ${subtleText}`}>
                                                     {fav.dataSource === 'pdb' ? 'PDB' : fav.dataSource === 'alphafold' ? 'AlphaFold' : 'PubChem'}: {fav.id}
                                                     {' • '}
-                                                    {new Date(fav.addedAt).toLocaleDateString()}
+                                                    {formatDate(new Date(fav.addedAt), timezone)}
                                                 </div>
                                             </div>
                                         </button>
@@ -183,7 +185,7 @@ export const FavoritesPanel: React.FC<FavoritesPanelProps> = ({
                                                     <span className={`px-1.5 rounded ${isLightMode ? 'bg-neutral-200' : 'bg-neutral-800'}`}>
                                                         {item.dataSource === 'pdb' ? 'PDB' : item.dataSource === 'alphafold' ? 'AF DB' : 'CHEM'}
                                                     </span>
-                                                    {new Date(item.timestamp).toLocaleTimeString()}
+                                                    {new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                 </div>
                                             </div>
                                         </button>

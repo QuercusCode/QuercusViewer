@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../lib/AuthContext';
 import { getActivityLog, type ActivityLog, type ActivityAction } from '../../lib/structuresService';
+import { useTimezone, formatTime } from '../../lib/timezoneUtils';
 
 // ─── Helpers ──────────────────────────────────────────────────────
 
@@ -27,19 +28,22 @@ const ACTION_CONFIG: Record<ActivityAction, { label: string; icon: React.Element
     duplicate: { label: 'Duplicated', icon: Copy, color: 'text-pink-400', bg: 'bg-pink-500/10 border-pink-500/20' },
 };
 
-// Group consecutive logs by date
-function groupByDate(logs: ActivityLog[]) {
+// Group consecutive logs by date (timezone-aware)
+function groupByDate(logs: ActivityLog[], timezone: string) {
     const groups: { date: string; items: ActivityLog[] }[] = [];
+
+    const todayLabel = new Date().toLocaleDateString(undefined, { timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit' });
+    const yesterdayDate = new Date(Date.now() - 86400000);
+    const yesterdayLabel = yesterdayDate.toLocaleDateString(undefined, { timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit' });
+
     for (const log of logs) {
         const d = new Date(log.created_at);
-        const today = new Date();
-        const yesterday = new Date(today);
-        yesterday.setDate(today.getDate() - 1);
+        const dLabel = d.toLocaleDateString(undefined, { timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit' });
 
         let label: string;
-        if (d.toDateString() === today.toDateString()) label = 'Today';
-        else if (d.toDateString() === yesterday.toDateString()) label = 'Yesterday';
-        else label = d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+        if (dLabel === todayLabel) label = 'Today';
+        else if (dLabel === yesterdayLabel) label = 'Yesterday';
+        else label = d.toLocaleDateString(undefined, { timeZone: timezone, weekday: 'short', month: 'short', day: 'numeric' });
 
         const last = groups[groups.length - 1];
         if (last && last.date === label) last.items.push(log);
@@ -84,6 +88,7 @@ function StatsBar({ logs }: { logs: ActivityLog[] }) {
 
 export const ActivityTimeline = () => {
     const { user } = useAuth();
+    const timezone = useTimezone();
     const [logs, setLogs] = useState<ActivityLog[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -105,7 +110,7 @@ export const ActivityTimeline = () => {
     useEffect(() => { load(); }, [load]);
 
     const visible = filter === 'all' ? logs : logs.filter(l => l.action === filter);
-    const grouped = groupByDate(visible);
+    const grouped = groupByDate(visible, timezone);
 
     const FILTERS: { key: ActivityAction | 'all'; label: string }[] = [
         { key: 'all', label: 'All' },
@@ -212,7 +217,10 @@ export const ActivityTimeline = () => {
                                     </div>
 
                                     {/* Time */}
-                                    <span className="text-xs text-[var(--text-muted)] group-hover:text-[var(--text-muted)] transition-colors whitespace-nowrap shrink-0">
+                                    <span
+                                        className="text-xs text-[var(--text-muted)] group-hover:text-[var(--text-muted)] transition-colors whitespace-nowrap shrink-0"
+                                        title={formatTime(log.created_at, timezone)}
+                                    >
                                         {timeAgo(log.created_at)}
                                     </span>
                                 </div>

@@ -9,6 +9,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../lib/AuthContext';
 import { useTranslation } from '../../lib/i18n';
+import { timeAgo } from '../../lib/timezoneUtils';
 import {
     listStructures, uploadStructure, toggleStar, deleteStructure,
     renameStructure, updateNotes, updateTags, importFromRCSB,
@@ -55,15 +56,6 @@ function formatBytes(bytes: number | null): string {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-function timeAgo(iso: string): string {
-    const d = Date.now() - new Date(iso).getTime(), m = Math.floor(d / 60000);
-    if (m < 1) return 'just now';
-    if (m < 60) return `${m}m ago`;
-    const h = Math.floor(m / 60);
-    if (h < 24) return `${h}h ago`;
-    const dy = Math.floor(h / 24);
-    return dy < 7 ? `${dy}d ago` : new Date(iso).toLocaleDateString();
 }
 
 // ── Tag system ────────────────────────────────────────────────────

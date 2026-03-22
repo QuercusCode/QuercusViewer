@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../lib/AuthContext';
 import { listStructures, getActivityLog, type Structure, type ActivityLog, type ActivityAction } from '../../lib/structuresService';
+import { useTimezone, formatTime } from '../../lib/timezoneUtils';
 
 // ─── Helpers ──────────────────────────────────────────────────────
 
@@ -164,7 +165,7 @@ function TopStructures({ structures }: { structures: Structure[] }) {
 
 // ─── Recent Activity Feed ─────────────────────────────────────────
 
-function RecentFeed({ logs }: { logs: ActivityLog[] }) {
+function RecentFeed({ logs, timezone }: { logs: ActivityLog[], timezone: string }) {
     const recent = logs.slice(0, 7);
     if (recent.length === 0) return null;
 
@@ -191,7 +192,10 @@ function RecentFeed({ logs }: { logs: ActivityLog[] }) {
                                     <span className="text-xs text-neutral-300 font-medium truncate">{log.structure_name}</span>
                                 )}
                             </div>
-                            <span className="text-xs text-neutral-700 shrink-0">{timeAgo(log.created_at)}</span>
+                            <span
+                                className="text-xs text-neutral-700 shrink-0"
+                                title={formatTime(log.created_at, timezone)}
+                            >{timeAgo(log.created_at)}</span>
                         </div>
                     );
                 })}
@@ -231,6 +235,7 @@ function StarredRow({ structures }: { structures: Structure[] }) {
 
 export const DashboardHome = () => {
     const { user } = useAuth();
+    const timezone = useTimezone();
     const [structures, setStructures] = useState<Structure[]>([]);
     const [logs, setLogs] = useState<ActivityLog[]>([]);
     const [loading, setLoading] = useState(true);
@@ -254,9 +259,10 @@ export const DashboardHome = () => {
     }).length;
 
     const greeting = () => {
-        const h = new Date().getHours();
-        if (h < 12) return 'Good morning';
-        if (h < 18) return 'Good afternoon';
+        const h = new Date().toLocaleString('en-US', { timeZone: timezone, hour: 'numeric', hour12: false });
+        const hour = parseInt(h, 10);
+        if (hour < 12) return 'Good morning';
+        if (hour < 18) return 'Good afternoon';
         return 'Good evening';
     };
 
@@ -327,7 +333,7 @@ export const DashboardHome = () => {
                 <div className="lg:col-span-2 space-y-4">
                     <StarredRow structures={structures} />
                     <TopStructures structures={structures} />
-                    <RecentFeed logs={logs} />
+                    <RecentFeed logs={logs} timezone={timezone} />
 
                     {/* Empty state */}
                     {structures.length === 0 && (
