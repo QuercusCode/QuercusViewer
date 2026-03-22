@@ -796,15 +796,26 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
                                 Quercus Viewer is an open-source project. If you find it useful for your research or education, consider supporting its continued development.
                             </p>
 
-                            <a
-                                href="https://buymeacoffee.com/amirmcheraghali"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-2 px-4 py-2 bg-[#FFDD00] hover:bg-[#FFDD00]/90 text-black text-xs font-bold rounded-lg shadow-lg shadow-yellow-900/10 transition-all hover:scale-105"
-                            >
-                                <Heart className="w-3.5 h-3.5 fill-black/20" />
-                                Buy Me a Coffee
-                            </a>
+                            <div className="flex flex-wrap gap-3">
+                                <a
+                                    href="https://buymeacoffee.com/amirmcheraghali"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-2 px-4 py-2 bg-[#FFDD00] hover:bg-[#FFDD00]/90 text-black text-xs font-bold rounded-lg shadow-lg shadow-yellow-900/10 transition-all hover:scale-105"
+                                >
+                                    <Heart className="w-3.5 h-3.5 fill-black/20" />
+                                    Buy Me a Coffee
+                                </a>
+                                <a
+                                    href="https://github.com/sponsors/QuercusCode"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-2 px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-white text-xs font-bold rounded-lg border border-neutral-600 shadow-lg transition-all hover:scale-105"
+                                >
+                                    <Github className="w-3.5 h-3.5" />
+                                    GitHub Sponsors
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -840,6 +851,21 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
                         <div className="flex flex-col">
                             <span className="text-sm font-bold text-white">Buy Me a Coffee</span>
                             <span className="text-[10px] text-neutral-400">Support widely</span>
+                        </div>
+                    </a>
+                    {/* GitHub Sponsors */}
+                    <a
+                        href="https://github.com/sponsors/QuercusCode"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-3 px-4 py-3 hover:bg-white/10 transition-colors"
+                    >
+                        <div className="p-1.5 bg-purple-500/20 rounded-lg text-purple-400">
+                            <Github className="w-4 h-4" />
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="text-sm font-bold text-white">GitHub Sponsors</span>
+                            <span className="text-[10px] text-neutral-400">Monthly support</span>
                         </div>
                     </a>
                 </div>
