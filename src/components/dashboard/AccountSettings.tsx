@@ -246,9 +246,29 @@ export const AccountSettings = () => {
     const [storageUsed, setStorageUsed] = useState<number>(0);
     const STORAGE_QUOTA = 5 * 1024 * 1024 * 1024; // 5 GB default quota
 
-    // UI Toggles
-    const [emailNotifs, setEmailNotifs] = useState(true);
-    const [publicProfile, setPublicProfile] = useState(false);
+    // UI Toggles & Prefs
+    const [language, setLanguage] = useState(user?.user_metadata?.language || 'English (US)');
+    const [timezone, setTimezone] = useState(user?.user_metadata?.timezone || 'Coordinated Universal Time (UTC)');
+    const [emailNotifs, setEmailNotifs] = useState(user?.user_metadata?.email_notifications ?? true);
+    const [publicProfile, setPublicProfile] = useState(user?.user_metadata?.public_profile ?? false);
+    
+    // Connections
+    const [ghConnected, setGhConnected] = useState(user?.user_metadata?.github_connected || false);
+    const [orcidConnected, setOrcidConnected] = useState(user?.user_metadata?.orcid_connected || false);
+    const [connectingTo, setConnectingTo] = useState<string | null>(null);
+
+    const updatePreference = async (key: string, value: any) => {
+        await supabase.auth.updateUser({ data: { [key]: value } });
+    };
+
+    const handleConnect = async (provider: string) => {
+        setConnectingTo(provider);
+        await new Promise(r => setTimeout(r, 800)); // Simulate OAuth handoff
+        await updatePreference(`${provider}_connected`, true);
+        if (provider === 'github') setGhConnected(true);
+        if (provider === 'orcid') setOrcidConnected(true);
+        setConnectingTo(null);
+    };
 
     // Fetch storage
     useEffect(() => {
@@ -424,7 +444,10 @@ export const AccountSettings = () => {
                         {/* Language */}
                         <div>
                             <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">Language</label>
-                            <select className="w-full px-3 py-2 bg-[var(--bg-header)] border border-[var(--border-main)] rounded-lg text-sm text-[var(--text-primary)] outline-none focus:border-blue-500">
+                            <select 
+                                value={language} 
+                                onChange={e => { setLanguage(e.target.value); updatePreference('language', e.target.value); }}
+                                className="w-full px-3 py-2 bg-[var(--bg-header)] border border-[var(--border-main)] rounded-lg text-sm text-[var(--text-primary)] outline-none focus:border-blue-500">
                                 <option>English (US)</option>
                                 <option>Spanish (ES)</option>
                                 <option>French (FR)</option>
@@ -434,7 +457,10 @@ export const AccountSettings = () => {
                         {/* Timezone */}
                         <div>
                             <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">Timezone</label>
-                            <select className="w-full px-3 py-2 bg-[var(--bg-header)] border border-[var(--border-main)] rounded-lg text-sm text-[var(--text-primary)] outline-none focus:border-blue-500">
+                            <select 
+                                value={timezone} 
+                                onChange={e => { setTimezone(e.target.value); updatePreference('timezone', e.target.value); }}
+                                className="w-full px-3 py-2 bg-[var(--bg-header)] border border-[var(--border-main)] rounded-lg text-sm text-[var(--text-primary)] outline-none focus:border-blue-500">
                                 <option>Pacific Time (PT)</option>
                                 <option>Eastern Time (ET)</option>
                                 <option>Central European Time (CET)</option>
@@ -451,7 +477,7 @@ export const AccountSettings = () => {
                                 <p className="text-xs text-[var(--text-muted)] mt-0.5">Receive product updates and weekly digests.</p>
                             </div>
                             <div className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors ${emailNotifs ? 'bg-blue-600' : 'bg-neutral-600'}`}
-                                onClick={() => setEmailNotifs(!emailNotifs)}>
+                                onClick={() => { const v = !emailNotifs; setEmailNotifs(v); updatePreference('email_notifications', v); }}>
                                 <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${emailNotifs ? 'translate-x-2' : '-translate-x-2'}`} />
                             </div>
                         </label>
@@ -461,7 +487,7 @@ export const AccountSettings = () => {
                                 <p className="text-xs text-[var(--text-muted)] mt-0.5">Allow other platform users to find your public collections via your username.</p>
                             </div>
                             <div className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors ${publicProfile ? 'bg-blue-600' : 'bg-neutral-600'}`}
-                                onClick={() => setPublicProfile(!publicProfile)}>
+                                onClick={() => { const v = !publicProfile; setPublicProfile(v); updatePreference('public_profile', v); }}>
                                 <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${publicProfile ? 'translate-x-2' : '-translate-x-2'}`} />
                             </div>
                         </label>
@@ -500,7 +526,14 @@ export const AccountSettings = () => {
                                 <p className="text-xs text-[var(--text-muted)]">Import repositories and scripts</p>
                             </div>
                         </div>
-                        <button className="text-xs font-medium px-4 py-1.5 bg-[var(--input-bg)] text-[var(--text-primary)] border border-[var(--border-main)] hover:bg-[var(--border-main)] rounded-md transition-colors">Connect</button>
+                        {ghConnected ? (
+                            <span className="text-xs font-medium px-2.5 py-1 bg-green-500/10 text-green-400 border border-green-500/20 rounded-md">Connected</span>
+                        ) : (
+                            <button onClick={() => handleConnect('github')} disabled={connectingTo === 'github'}
+                                className="text-xs font-medium px-4 py-1.5 bg-[var(--input-bg)] text-[var(--text-primary)] border border-[var(--border-main)] hover:bg-[var(--border-main)] rounded-md transition-colors disabled:opacity-50 flex items-center gap-1.5">
+                                {connectingTo === 'github' && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Connect
+                            </button>
+                        )}
                     </div>
                     {/* ORCID */}
                     <div className="flex items-center justify-between p-5 hover:bg-[var(--input-bg)]/50 transition-colors">
@@ -513,7 +546,14 @@ export const AccountSettings = () => {
                                 <p className="text-xs text-[var(--text-muted)]">Link researcher identity</p>
                             </div>
                         </div>
-                        <button className="text-xs font-medium px-4 py-1.5 bg-[var(--input-bg)] text-[var(--text-primary)] border border-[var(--border-main)] hover:bg-[var(--border-main)] rounded-md transition-colors">Connect</button>
+                        {orcidConnected ? (
+                            <span className="text-xs font-medium px-2.5 py-1 bg-green-500/10 text-green-400 border border-green-500/20 rounded-md">Connected</span>
+                        ) : (
+                            <button onClick={() => handleConnect('orcid')} disabled={connectingTo === 'orcid'}
+                                className="text-xs font-medium px-4 py-1.5 bg-[var(--input-bg)] text-[var(--text-primary)] border border-[var(--border-main)] hover:bg-[var(--border-main)] rounded-md transition-colors disabled:opacity-50 flex items-center gap-1.5">
+                                {connectingTo === 'orcid' && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Connect
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>
