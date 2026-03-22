@@ -46,6 +46,7 @@ import type { MotifMatch } from '../utils/searchUtils';
 import { MOTIF_LIBRARY } from '../data/motifLibrary';
 import { HexColorPicker } from 'react-colorful';
 import { useTheme } from '../lib/ThemeContext';
+import { useTranslation } from '../lib/i18n';
 
 // Reusable Sidebar Section Component - Defined outside to prevent re-renders losing focus
 const SidebarSection = ({ title, icon: Icon, children, isOpen, onToggle, isLightMode, id }: { title: string, icon: any, children: React.ReactNode, isOpen: boolean, onToggle: () => void, isLightMode: boolean, id?: string }) => {
@@ -508,6 +509,9 @@ export const Controls: React.FC<ControlsProps> = ({
     onQuickSave,
     quickSaving = false,
 }) => {
+    // i18n
+    const { t } = useTranslation();
+
     // Motif Search State
     const [searchPattern, setSearchPattern] = useState('');
     const [searchResults, setSearchResults] = useState<MotifMatch[]>([]);
@@ -739,7 +743,7 @@ export const Controls: React.FC<ControlsProps> = ({
             <button
                 onClick={() => setIsCleanMode(false)}
                 className={`absolute bottom-6 right-6 z-50 p-3 rounded-full shadow-lg transition-transform hover:scale-110 ${isLightMode ? 'bg-white text-neutral-800' : 'bg-neutral-800 text-white'}`}
-                title="Exit Presentation Mode"
+                title={t.exitPresentationMode as string}
             >
                 <Minimize className="w-5 h-5" />
             </button>
@@ -784,7 +788,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                 alt="Quercus Viewer"
                                 className="h-20 w-auto mb-2 object-contain"
                             />
-                            <p className={`text-xs ${subtleText} tracking-wider`}>Visualize 3D structures</p>
+                            <p className={`text-xs ${subtleText} tracking-wider`}>{t.visualize3DStructures as string}</p>
                         </div>
 
                         <div className="flex items-center justify-between w-full px-2 gap-2">
@@ -825,7 +829,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                     <button
                                         onClick={onOpenFavorites}
                                         className={`p-2 rounded-lg transition-colors ${isLightMode ? 'text-neutral-600 hover:bg-neutral-100' : 'text-neutral-400 hover:bg-neutral-800'}`}
-                                        title="Favorites"
+                                        title={t.favoritesTitle as string}
                                     >
                                         <Star className="w-4 h-4" />
                                     </button>
@@ -834,7 +838,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                     <button
                                         onClick={onOpenHistory}
                                         className={`p-2 rounded-lg transition-colors ${isLightMode ? 'text-neutral-600 hover:bg-neutral-100' : 'text-neutral-400 hover:bg-neutral-800'}`}
-                                        title="Recent History"
+                                        title={t.recentHistory as string}
                                     >
                                         <Clock className="w-4 h-4" />
                                     </button>
@@ -842,7 +846,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                 <button
                                     onClick={onToggleLibrary}
                                     className={`p-2 rounded-lg transition-colors ${isLightMode ? 'text-neutral-600 hover:bg-neutral-100' : 'text-neutral-400 hover:bg-neutral-800'}`}
-                                    title="Offline Library"
+                                    title={t.offlineLibrary as string}
                                 >
                                     <BookOpen className="w-4 h-4" />
                                 </button>
@@ -859,7 +863,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                         ? 'border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50 shadow-sm'
                                         : 'border-white/10 bg-neutral-800/50 text-neutral-400 hover:bg-neutral-800 hover:text-white hover:border-white/20'
                                         }`}
-                                    title="Interactive Tour"
+                                    title={t.interactiveTour as string}
                                     id="help-button"
                                 >
                                     <HelpCircle className="w-4 h-4" />
@@ -985,7 +989,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                     </button>
                                 )}
                                 <button type="submit" className="px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors font-medium">
-                                    Load
+                                    {t.loadBtn as string}
                                 </button>
                             </div>
                         </form>
@@ -996,7 +1000,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                 className={`w-full flex items-center justify-center gap-2 border py-2 rounded-lg transition-all group ${cardBg} hover:opacity-80`}
                             >
                                 <Upload className="w-3.5 h-3.5 group-hover:text-blue-500 transition-colors" />
-                                <span className="text-xs font-medium">Upload File</span>
+                                <span className="text-xs font-medium">{t.uploadFile as string}</span>
                             </button>
                             <input
                                 id="file-upload-input"
@@ -1014,7 +1018,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                 className={`w-full flex items-center justify-center gap-2 border py-2 rounded-lg transition-all group ${cardBg} hover:opacity-80`}
                             >
                                 <BookOpen className="w-3.5 h-3.5 group-hover:text-purple-500 transition-colors" />
-                                <span className="text-xs font-medium">Library</span>
+                                <span className="text-xs font-medium">{t.libraryBtn as string}</span>
                             </button>
 
 
@@ -1031,7 +1035,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                     ? <svg className="animate-spin w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" /></svg>
                                     : <svg className="w-3.5 h-3.5 group-hover:text-blue-500 transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" /><polyline points="17,21 17,13 7,13 7,21" /><polyline points="7,3 7,8 15,8" /></svg>
                                 }
-                                <span className="text-xs font-medium">{quickSaving ? 'Saving…' : 'Save to Library'}</span>
+                                <span className="text-xs font-medium">{quickSaving ? (t.savingToLibrary as string) : (t.saveToLibrary as string)}</span>
                             </button>
                         )}
                     </div>
@@ -1042,10 +1046,10 @@ export const Controls: React.FC<ControlsProps> = ({
                             {proteinTitle && (
                                 <div className="mb-2">
                                     <div className="flex items-center justify-between mb-0.5">
-                                        <h3 className={`text-[10px] font-bold uppercase tracking-wider ${subtleText}`}>Structure</h3>
+                                        <h3 className={`text-[10px] font-bold uppercase tracking-wider ${subtleText}`}>{t.structureLabel as string}</h3>
                                         <button
                                             onClick={onDownloadPDB}
-                                            title="Download PDB Structure"
+                                            title={t.downloadPDBTitle as string}
                                             className={`p-1 rounded-md transition-colors ${isLightMode ? 'hover:bg-neutral-200 text-neutral-500 hover:text-black' : 'hover:bg-white/10 text-neutral-400 hover:text-white'}`}
                                         >
                                             <Download className="w-3.5 h-3.5" />
@@ -1061,7 +1065,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                 {!isChemical && (
                                     <>
                                         <div>
-                                            <span className={`text-[9px] font-bold uppercase tracking-wider block ${subtleText}`}>Residues</span>
+                                            <span className={`text-[9px] font-bold uppercase tracking-wider block ${subtleText}`}>{t.residuesLabel as string}</span>
                                             <span className={`text-sm font-mono font-bold ${isLightMode ? 'text-neutral-700' : 'text-neutral-300'}`}>
                                                 {chains.reduce((acc, chain) => {
                                                     if (chain.sequence) return acc + chain.sequence.length;
@@ -1071,7 +1075,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                             </span>
                                         </div>
                                         <div className="pl-2 border-l border-neutral-200 dark:border-neutral-800">
-                                            <span className={`text-[9px] font-bold uppercase tracking-wider block ${subtleText}`}>Chains</span>
+                                            <span className={`text-[9px] font-bold uppercase tracking-wider block ${subtleText}`}>{t.chainsLabel as string}</span>
                                             <span className={`text-sm font-mono font-bold ${isLightMode ? 'text-neutral-700' : 'text-neutral-300'}`}>
                                                 {chains.length}
                                             </span>
@@ -1083,13 +1087,13 @@ export const Controls: React.FC<ControlsProps> = ({
                                 {pdbMetadata && !isChemical && (
                                     <>
                                         <div>
-                                            <span className={`text-[9px] font-bold uppercase tracking-wider block ${subtleText}`}>Method</span>
+                                            <span className={`text-[9px] font-bold uppercase tracking-wider block ${subtleText}`}>{t.methodLabel as string}</span>
                                             <span className={`text-[10px] font-medium leading-tight block ${isLightMode ? 'text-neutral-800' : 'text-neutral-200'}`}>
                                                 {pdbMetadata.method.length > 20 ? pdbMetadata.method.substring(0, 18) + '...' : pdbMetadata.method}
                                             </span>
                                         </div>
                                         <div className="pl-2 border-l border-neutral-200 dark:border-neutral-800">
-                                            <span className={`text-[9px] font-bold uppercase tracking-wider block ${subtleText}`}>Resolution</span>
+                                            <span className={`text-[9px] font-bold uppercase tracking-wider block ${subtleText}`}>{t.resolutionLabel as string}</span>
                                             <span className={`text-[10px] font-medium block ${isLightMode ? 'text-neutral-800' : 'text-neutral-200'}`}>
                                                 {pdbMetadata.resolution}
                                             </span>
@@ -1097,7 +1101,7 @@ export const Controls: React.FC<ControlsProps> = ({
 
                                         {pdbMetadata.organism && pdbMetadata.organism !== 'Unknown source' && (
                                             <div className="pt-1 border-t border-neutral-200 dark:border-neutral-800" style={{ borderTopStyle: 'dashed' }}>
-                                                <span className={`text-[9px] font-bold uppercase tracking-wider block ${subtleText}`}>Organism</span>
+                                                <span className={`text-[9px] font-bold uppercase tracking-wider block ${subtleText}`}>{t.organismLabel as string}</span>
                                                 <span className={`text-[10px] font-medium leading-tight block ${isLightMode ? 'text-neutral-800' : 'text-neutral-200'}`}>
                                                     {pdbMetadata.organism}
                                                 </span>
@@ -1108,7 +1112,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                             className={`pt-1 border-t border-neutral-200 dark:border-neutral-800 ${pdbMetadata.organism && pdbMetadata.organism !== 'Unknown source' ? 'pl-2 border-l' : ''}`}
                                             style={{ borderTopStyle: 'dashed' }}
                                         >
-                                            <span className={`text-[9px] font-bold uppercase tracking-wider block ${subtleText}`}>Deposited</span>
+                                            <span className={`text-[9px] font-bold uppercase tracking-wider block ${subtleText}`}>{t.depositedLabel as string}</span>
                                             <span className={`text-[10px] font-medium block ${isLightMode ? 'text-neutral-800' : 'text-neutral-200'}`}>
                                                 {pdbMetadata.depositionDate}
                                             </span>
@@ -1121,7 +1125,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                     <>
                                         {pdbMetadata.formula && (
                                             <div>
-                                                <span className={`text-[9px] font-bold uppercase tracking-wider block ${subtleText}`}>Formula</span>
+                                                <span className={`text-[9px] font-bold uppercase tracking-wider block ${subtleText}`}>{t.formulaLabel as string}</span>
                                                 <span className={`text-[10px] font-medium leading-tight block ${isLightMode ? 'text-neutral-800' : 'text-neutral-200'}`}>
                                                     {pdbMetadata.formula}
                                                 </span>
@@ -1129,7 +1133,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                         )}
                                         {pdbMetadata.molecularWeight && (
                                             <div className="pl-2 border-l border-neutral-200 dark:border-neutral-800">
-                                                <span className={`text-[9px] font-bold uppercase tracking-wider block ${subtleText}`}>Mol. Weight</span>
+                                                <span className={`text-[9px] font-bold uppercase tracking-wider block ${subtleText}`}>{t.molWeightLabel as string}</span>
                                                 <span className={`text-[10px] font-medium block ${isLightMode ? 'text-neutral-800' : 'text-neutral-200'}`}>
                                                     {pdbMetadata.molecularWeight.toFixed(2)} g/mol
                                                 </span>
@@ -1164,7 +1168,7 @@ export const Controls: React.FC<ControlsProps> = ({
 
                     {/* ACCORDION 1: APPEARANCE */}
                     <SidebarSection
-                        title="Appearance"
+                        title={t.sectionAppearance as string}
                         icon={Eye}
                         isOpen={openSections['appearance']}
                         onToggle={() => toggleSection('appearance')}
@@ -1174,7 +1178,7 @@ export const Controls: React.FC<ControlsProps> = ({
                         <div className="space-y-3">
                             {/* Visual Style */}
                             <div className="space-y-2">
-                                <label className={`text-[10px] font-bold uppercase tracking-wider block ${subtleText}`}>Visualization</label>
+                                <label className={`text-[10px] font-bold uppercase tracking-wider block ${subtleText}`}>{t.visualizationLabel as string}</label>
                                 <div className="space-y-3">
                                     {/* Consolidated Visualization & Layout Grid - 4 Columns */}
                                     <div className="grid grid-cols-4 gap-2">
@@ -1184,7 +1188,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                             className={`flex flex-col items-center justify-center gap-1 px-1 py-2 rounded-lg border transition-all ${showSurface ? 'bg-blue-500/10 border-blue-500 text-blue-500' : `${cardBg} opacity-80 hover:opacity-100`}`}
                                         >
                                             <Layers className="w-3.5 h-3.5" />
-                                            <span className="text-[10px] font-medium">Surface</span>
+                                            <span className="text-[10px] font-medium">{t.surfaceLabel as string}</span>
                                             <div className={`w-1 h-1 rounded-full mt-0.5 ${showSurface ? 'bg-blue-500' : 'bg-neutral-500'}`} />
                                         </button>
                                         <button
@@ -1195,7 +1199,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                             className={`flex flex-col items-center justify-center gap-1 px-1 py-2 rounded-lg border transition-all ${isSpinning ? 'bg-blue-500/10 border-blue-500 text-blue-500' : `${cardBg} opacity-80 hover:opacity-100`}`}
                                         >
                                             <RefreshCw className={`w-3.5 h-3.5 ${isSpinning ? 'animate-spin' : ''}`} />
-                                            <span className="text-[10px] font-medium">Spin</span>
+                                            <span className="text-[10px] font-medium">{t.spinLabel as string}</span>
                                             <div className={`w-1 h-1 rounded-full mt-0.5 ${isSpinning ? 'bg-blue-500' : 'bg-neutral-500'}`} />
                                         </button>
                                         <button
@@ -1207,7 +1211,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                             title="Rock rotation (oscillate)"
                                         >
                                             <MoveHorizontal className="w-3.5 h-3.5" />
-                                            <span className="text-[10px] font-medium">Rock</span>
+                                            <span className="text-[10px] font-medium">{t.rockLabel as string}</span>
                                             <div className={`w-1 h-1 rounded-full mt-0.5 ${isRocking ? 'bg-blue-500' : 'bg-neutral-500'}`} />
                                         </button>
                                         <button
@@ -1215,7 +1219,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                             className={`flex flex-col items-center justify-center gap-1 px-1 py-2 rounded-lg border transition-all ${isDyslexicFont ? 'bg-blue-500/10 border-blue-500 text-blue-500' : `${cardBg} opacity-80 hover:opacity-100`}`}
                                         >
                                             <span className="text-lg leading-none font-serif">Aa</span>
-                                            <span className="text-[10px] font-medium">Dyslexic</span>
+                                            <span className="text-[10px] font-medium">{t.dyslexicLabel as string}</span>
                                             <div className={`w-1 h-1 rounded-full mt-0.5 ${isDyslexicFont ? 'bg-blue-500' : 'bg-neutral-500'}`} />
                                         </button>
 
@@ -1245,7 +1249,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                             title={visualizerEngine === 'ngl' ? "Toggle Smooth Cartoon Sheets" : "Only available in NGL Viewer"}
                                         >
                                             <Activity className="w-3.5 h-3.5" />
-                                            <span className="text-[10px] font-bold">Smooth</span>
+                                            <span className="text-[10px] font-bold">{t.smoothLabel as string}</span>
                                         </button>
 
                                         {onResetCamera && (
@@ -1255,7 +1259,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                 title="Reset camera to default view"
                                             >
                                                 <RotateCcw className="w-3.5 h-3.5" />
-                                                <span className="text-[10px] font-medium">Reset</span>
+                                                <span className="text-[10px] font-medium">{t.resetLabel as string}</span>
                                             </button>
                                         )}
 
@@ -1267,7 +1271,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                     className={`h-12 flex flex-col items-center justify-center gap-1 rounded-lg border transition-all ${viewMode === 'single' ? 'bg-indigo-600/20 border-indigo-500 text-indigo-400' : `${cardBg} border-neutral-700/50 opacity-70 hover:opacity-100 hover:border-neutral-600`}`}
                                                 >
                                                     <div className="w-4 h-4 border-2 rounded" />
-                                                    <span className="text-[9px] font-bold">Single</span>
+                                                    <span className="text-[9px] font-bold">{t.singleLabel as string}</span>
                                                 </button>
                                                 <button
                                                     onClick={() => onSetViewMode('dual')}
@@ -1277,7 +1281,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                         <div className="w-1.5 h-3 border-2 rounded" />
                                                         <div className="w-1.5 h-3 border-2 rounded" />
                                                     </div>
-                                                    <span className="text-[9px] font-bold">Dual</span>
+                                                    <span className="text-[9px] font-bold">{t.dualLabel as string}</span>
                                                 </button>
                                                 <button
                                                     onClick={() => onSetViewMode('triple')}
@@ -1288,7 +1292,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                         <div className="w-1.5 h-3 border-2 rounded" />
                                                         <div className="w-1.5 h-3 border-2 rounded" />
                                                     </div>
-                                                    <span className="text-[9px] font-bold">Triple</span>
+                                                    <span className="text-[9px] font-bold">{t.tripleLabel as string}</span>
                                                 </button>
                                                 <button
                                                     onClick={() => onSetViewMode('quad')}
@@ -1300,7 +1304,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                         <div className="w-1.5 h-1.5 border-2 rounded" />
                                                         <div className="w-1.5 h-1.5 border-2 rounded" />
                                                     </div>
-                                                    <span className="text-[9px] font-bold">Quad</span>
+                                                    <span className="text-[9px] font-bold">{t.quadLabel as string}</span>
                                                 </button>
                                             </>
                                         )}
@@ -1314,7 +1318,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                 <div className="space-y-2">
                                     <div className="grid grid-cols-2 gap-2">
                                         <div>
-                                            <label className={`text-[10px] font-bold uppercase tracking-wider mb-1 block ${subtleText}`}>Style</label>
+                                            <label className={`text-[10px] font-bold uppercase tracking-wider mb-1 block ${subtleText}`}>{t.styleLabel as string}</label>
                                             <select
                                                 value={representation}
                                                 onChange={(e) => setRepresentation(e.target.value as RepresentationType)}
@@ -1330,7 +1334,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                             </select>
                                         </div>
                                         <div>
-                                            <label className={`text-[10px] font-bold uppercase tracking-wider mb-1 block ${subtleText}`}>Colors</label>
+                                            <label className={`text-[10px] font-bold uppercase tracking-wider mb-1 block ${subtleText}`}>{t.colorsLabel as string}</label>
                                             <select
                                                 value={coloring}
                                                 onChange={(e) => setColoring(e.target.value as ColoringType)}
@@ -1361,7 +1365,7 @@ export const Controls: React.FC<ControlsProps> = ({
 
                                         {/* Background Controls */}
                                         <div className="col-span-2 space-y-2 pt-2 border-t border-white/5">
-                                            <label className={`text-[10px] font-bold uppercase tracking-wider block ${subtleText}`}>Background</label>
+                                            <label className={`text-[10px] font-bold uppercase tracking-wider block ${subtleText}`}>{t.backgroundLabel as string}</label>
 
                                             {/* Row 1: Presets - Spread full width */}
                                             <div className="grid grid-cols-6 gap-1.5">
@@ -1406,7 +1410,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                                 <span className="text-[10px] font-mono uppercase">{customBackgroundColor}</span>
                                                             </>
                                                         ) : (
-                                                            <span className="text-[10px] font-bold opacity-70">Auto (Default)</span>
+                                                            <span className="text-[10px] font-bold opacity-70">{t.autoDefault as string}</span>
                                                         )}
                                                     </button>
 
@@ -1449,7 +1453,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                             <div className="col-span-2 pt-2 border-t border-white/5 space-y-2">
                                                 <div className="flex items-center justify-between mb-1">
                                                     <div className={`text-[10px] font-bold uppercase tracking-wider ${subtleText} opacity-80`}>
-                                                        Advanced Colors
+                                                        {t.advancedColors as string}
                                                     </div>
                                                     {/* Mode Toggle */}
                                                     <div className={`flex p-0.5 rounded-lg border ${isLightMode ? 'bg-neutral-100 border-neutral-200' : 'bg-black/20 border-white/5'}`}>
@@ -1479,7 +1483,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                         <>
                                                             <div className="flex gap-2">
                                                                 <div className="w-1/3">
-                                                                    <label className={`text-[9px] font-bold uppercase tracking-wider mb-1 block ${subtleText} opacity-70`}>Chain</label>
+                                                                    <label className={`text-[9px] font-bold uppercase tracking-wider mb-1 block ${subtleText} opacity-70`}>{t.chainLabel as string}</label>
                                                                     <div className={`relative flex items-center rounded-lg border transition-all ${inputBg}`}>
                                                                         <select
                                                                             value={customChain}
@@ -1500,7 +1504,7 @@ export const Controls: React.FC<ControlsProps> = ({
 
                                                                 {/* Color Picker */}
                                                                 <div className="flex-1">
-                                                                    <label className={`text-[9px] font-bold uppercase tracking-wider mb-1 block ${subtleText} opacity-70`}>Color</label>
+                                                                    <label className={`text-[9px] font-bold uppercase tracking-wider mb-1 block ${subtleText} opacity-70`}>{t.colorLabel as string}</label>
                                                                     <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all ${inputBg}`}>
                                                                         <div className="relative w-4 h-4 rounded-full overflow-hidden border border-white/10 ring-1 ring-black/5 shrink-0 shadow-sm">
                                                                             <input
@@ -1522,7 +1526,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                                     disabled={customChain === '__none__'}
                                                                     className="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg text-xs font-bold transition-all shadow-sm active:scale-95 flex items-center justify-center gap-1.5"
                                                                 >
-                                                                    Set
+                                                                    {t.setBtn as string}
                                                                 </button>
                                                             </div>
                                                         </>
@@ -1533,7 +1537,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                         <>
                                                             <div className="flex gap-2">
                                                                 <div className="w-24 shrink-0">
-                                                                    <label className={`text-[9px] font-bold uppercase tracking-wider mb-1 block ${subtleText} opacity-70`}>Chain</label>
+                                                                    <label className={`text-[9px] font-bold uppercase tracking-wider mb-1 block ${subtleText} opacity-70`}>{t.chainLabel as string}</label>
                                                                     <div className={`relative flex items-center rounded-lg border transition-all ${inputBg}`}>
                                                                         <select
                                                                             value={customChain}
@@ -1570,7 +1574,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                             </div>
 
                                                             <div>
-                                                                <label className={`text-[9px] font-bold uppercase tracking-wider mb-1 block ${subtleText} opacity-70`}>Color & Action</label>
+                                                                <label className={`text-[9px] font-bold uppercase tracking-wider mb-1 block ${subtleText} opacity-70`}>{t.colorAndAction as string}</label>
                                                                 <div className="flex gap-2 h-9">
                                                                     {/* Color Picker */}
                                                                     <div className={`flex-1 flex items-center gap-2 px-3 rounded-lg border transition-all ${inputBg}`}>
@@ -1594,7 +1598,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                                         className="px-6 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg text-xs font-bold transition-all shadow-sm active:scale-95 flex items-center justify-center gap-1.5"
                                                                     >
                                                                         <Plus className="w-3.5 h-3.5" />
-                                                                        <span>Add</span>
+                                                                        <span>{t.addBtn as string}</span>
                                                                     </button>
                                                                 </div>
                                                             </div>
@@ -1605,7 +1609,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                     {customColors && customColors.length > 0 && (
                                                         <div className="space-y-1 pt-2 border-t border-dashed border-neutral-200 dark:border-neutral-800">
                                                             <div className="flex justify-between items-center mb-2">
-                                                                <span className={`text-[9px] font-bold uppercase tracking-wider ${subtleText}`}>Active Rules ({customColors.length})</span>
+                                                                <span className={`text-[9px] font-bold uppercase tracking-wider ${subtleText}`}>{t.activeRules as string} ({customColors.length})</span>
                                                             </div>
                                                             <div className="space-y-1.5 max-h-32 overflow-y-auto pr-1 scrollbar-thin">
                                                                 {customColors.map((rule, idx) => (
@@ -1639,7 +1643,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                             <div className="col-span-2 pt-2 border-t border-white/5 space-y-2">
                                                 <div className="flex items-center justify-between mb-1">
                                                     <div className={`text-[10px] font-bold uppercase tracking-wider ${subtleText} opacity-80`}>
-                                                        Transparency
+                                                        {t.transparencyLabel as string}
                                                     </div>
                                                     <div className={`flex p-0.5 rounded-lg border ${isLightMode ? 'bg-neutral-100 border-neutral-200' : 'bg-black/20 border-white/5'}`}>
                                                         <button
@@ -1666,7 +1670,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                     {/* Chain Selection */}
                                                     {transparencyMode === 'chain' && (
                                                         <div className="space-y-2">
-                                                            <label className={`text-[9px] font-bold uppercase tracking-wider block ${subtleText} opacity-70`}>Chain</label>
+                                                            <label className={`text-[9px] font-bold uppercase tracking-wider block ${subtleText} opacity-70`}>{t.chainLabel as string}</label>
                                                             <div className={`relative flex items-center rounded-lg border transition-all ${inputBg}`}>
                                                                 <select
                                                                     value={transparencyChain}
@@ -1688,7 +1692,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                     {transparencyMode === 'residue' && (
                                                         <div className="flex gap-2">
                                                             <div className="w-[80px]">
-                                                                <label className={`text-[9px] font-bold uppercase tracking-wider mb-1 block ${subtleText} opacity-70`}>Chain</label>
+                                                                <label className={`text-[9px] font-bold uppercase tracking-wider mb-1 block ${subtleText} opacity-70`}>{t.chainLabel as string}</label>
                                                                 <div className={`relative flex items-center rounded-lg border transition-all ${inputBg}`}>
                                                                     <select
                                                                         value={transparencyChain}
@@ -1721,7 +1725,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                     {/* Opacity Slider */}
                                                     <div className="space-y-1">
                                                         <div className="flex justify-between">
-                                                            <label className={`text-[9px] font-bold uppercase tracking-wider block ${subtleText} opacity-70`}>Opacity</label>
+                                                            <label className={`text-[9px] font-bold uppercase tracking-wider block ${subtleText} opacity-70`}>{t.opacityLabel as string}</label>
                                                             <span className="text-[9px] font-mono">{transparencyValue}%</span>
                                                         </div>
                                                         <input
@@ -1740,13 +1744,13 @@ export const Controls: React.FC<ControlsProps> = ({
                                                         className="w-full py-1.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg text-xs font-bold transition-all shadow-sm active:scale-95 flex items-center justify-center"
                                                     >
                                                         <Plus size={14} className="mr-1" />
-                                                        Add Rule
+                                                        {t.addRule as string}
                                                     </button>
 
                                                     {/* Active Rules */}
                                                     {customTransparency && customTransparency.length > 0 && (
                                                         <div className="space-y-1 pt-2 border-t border-dashed border-gray-200 dark:border-gray-700">
-                                                            <div className={`text-[9px] font-bold uppercase tracking-wider ${subtleText} opacity-70`}>Active Rules</div>
+                                                            <div className={`text-[9px] font-bold uppercase tracking-wider ${subtleText} opacity-70`}>{t.activeRules as string}</div>
                                                             <div className="space-y-1 max-h-[100px] overflow-y-auto custom-scrollbar">
                                                                 {customTransparency.map((rule) => (
                                                                     <div key={rule.id} className={`flex items-center justify-between p-2 rounded border ${isLightMode ? 'bg-white border-neutral-200' : 'bg-neutral-800 border-white/5'}`}>
@@ -1779,7 +1783,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                             <div className="col-span-2 pt-2 border-t border-white/5 space-y-2">
                                                 <div className="flex items-center justify-between mb-1">
                                                     <div className={`text-[10px] font-bold uppercase tracking-wider ${subtleText} opacity-80`}>
-                                                        Advanced Styles
+                                                        {t.advancedStyles as string}
                                                     </div>
                                                     {/* Mode Toggle */}
                                                     <div className={`flex p-0.5 rounded-lg border ${isLightMode ? 'bg-neutral-100 border-neutral-200' : 'bg-black/20 border-white/5'}`}>
@@ -1809,7 +1813,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                         <>
                                                             <div className="flex gap-2">
                                                                 <div className="w-1/3">
-                                                                    <label className={`text-[9px] font-bold uppercase tracking-wider mb-1 block ${subtleText} opacity-70`}>Chain</label>
+                                                                    <label className={`text-[9px] font-bold uppercase tracking-wider mb-1 block ${subtleText} opacity-70`}>{t.chainLabel as string}</label>
                                                                     <div className={`relative flex items-center rounded-lg border transition-all ${inputBg}`}>
                                                                         <select
                                                                             value={selectedChainForStyle}
@@ -1825,7 +1829,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                                     </div>
                                                                 </div>
                                                                 <div className="flex-1">
-                                                                    <label className={`text-[9px] font-bold uppercase tracking-wider mb-1 block ${subtleText} opacity-70`}>Style</label>
+                                                                    <label className={`text-[9px] font-bold uppercase tracking-wider mb-1 block ${subtleText} opacity-70`}>{t.styleLabel as string}</label>
                                                                     <div className="flex gap-2">
                                                                         <div className={`relative flex-1 flex items-center rounded-lg border transition-all ${inputBg}`}>
                                                                             <select
@@ -1852,7 +1856,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                                             disabled={selectedChainForStyle === '__none__'}
                                                                             className="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg text-xs font-bold transition-all shadow-sm active:scale-95 flex items-center justify-center gap-1.5 shrink-0"
                                                                         >
-                                                                            Set
+                                                                            {t.setBtn as string}
                                                                         </button>
                                                                     </div>
                                                                 </div>
@@ -1861,7 +1865,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                             {/* Active Chain Styles List */}
                                                             {Object.keys(chainStyles).length > 0 && (
                                                                 <div className="space-y-1 pt-1">
-                                                                    <div className={`text-[9px] font-bold uppercase tracking-wider ${subtleText} opacity-70`}>Active Rules</div>
+                                                                    <div className={`text-[9px] font-bold uppercase tracking-wider ${subtleText} opacity-70`}>{t.activeRules as string}</div>
                                                                     <div className="space-y-1">
                                                                         {Object.entries(chainStyles).map(([chain, style]) => (
                                                                             <div key={chain} className={`flex items-center justify-between p-2 rounded border ${isLightMode ? 'bg-white border-neutral-200' : 'bg-neutral-800 border-white/5'}`}>
@@ -1888,7 +1892,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                         <>
                                                             <div className="flex gap-2">
                                                                 <div className="w-[80px]">
-                                                                    <label className={`text-[9px] font-bold uppercase tracking-wider mb-1 block ${subtleText} opacity-70`}>Chain</label>
+                                                                    <label className={`text-[9px] font-bold uppercase tracking-wider mb-1 block ${subtleText} opacity-70`}>{t.chainLabel as string}</label>
                                                                     <div className={`relative flex items-center rounded-lg border transition-all ${inputBg}`}>
                                                                         <select
                                                                             value={customResStyleChain}
@@ -1926,7 +1930,7 @@ export const Controls: React.FC<ControlsProps> = ({
 
                                                             <div className="flex gap-2 items-end">
                                                                 <div className="flex-1">
-                                                                    <label className={`text-[9px] font-bold uppercase tracking-wider mb-1 block ${subtleText} opacity-70`}>Style</label>
+                                                                    <label className={`text-[9px] font-bold uppercase tracking-wider mb-1 block ${subtleText} opacity-70`}>{t.styleLabel as string}</label>
                                                                     <div className={`relative flex items-center rounded-lg border transition-all ${inputBg}`}>
                                                                         <select
                                                                             value={customResStyleType}
@@ -1950,14 +1954,14 @@ export const Controls: React.FC<ControlsProps> = ({
                                                                     className="h-[30px] px-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg text-xs font-bold transition-all shadow-sm active:scale-95 flex items-center justify-center shrink-0"
                                                                 >
                                                                     <Plus size={14} className="mr-1" />
-                                                                    Add
+                                                                    {t.addBtn as string}
                                                                 </button>
                                                             </div>
 
                                                             {/* Active Custom Styles List */}
                                                             {customStyles.length > 0 && (
                                                                 <div className="space-y-1 pt-1">
-                                                                    <div className={`text-[9px] font-bold uppercase tracking-wider ${subtleText} opacity-70`}>Active Rules</div>
+                                                                    <div className={`text-[9px] font-bold uppercase tracking-wider ${subtleText} opacity-70`}>{t.activeRules as string}</div>
                                                                     <div className="space-y-1 max-h-[100px] overflow-y-auto custom-scrollbar">
                                                                         {customStyles.map((rule: CustomStyleRule) => (
                                                                             <div key={rule.id} className={`flex items-center justify-between p-2 rounded border ${isLightMode ? 'bg-white border-neutral-200' : 'bg-neutral-800 border-white/5'}`}>
@@ -2005,7 +2009,7 @@ export const Controls: React.FC<ControlsProps> = ({
                     {/* ACCORDION X: JOINT MEASUREMENTS - Only in Shared Session */}
                     {isSharedSession && (
                         <SidebarSection
-                            title="Joint Measurements"
+                            title={t.sectionMeasurements as string}
                             icon={Ruler}
                             isOpen={openSections['measurements']}
                             onToggle={() => toggleSection('measurements')}
@@ -2022,7 +2026,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                     onClick={onClearMeasurements}
                                     className="text-[10px] text-red-500 hover:underline flex items-center gap-1"
                                 >
-                                    <Trash2 className="w-3 h-3" /> Clear All
+                                    <Trash2 className="w-3 h-3" /> {t.clearAll as string}
                                 </button>
                             </div>
                         </SidebarSection>
@@ -2030,7 +2034,7 @@ export const Controls: React.FC<ControlsProps> = ({
                     )}
                     {/* ACCORDION 2: ANALYSIS */}
                     <SidebarSection
-                        title="Analysis"
+                        title={t.sectionAnalysis as string}
                         icon={Activity}
                         isOpen={openSections['analysis']}
                         onToggle={() => toggleSection('analysis')}
@@ -2062,7 +2066,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                 }`}
                                         >
                                             <span className={`w-1.5 h-1.5 rounded-full ${showLigands ? 'bg-blue-500' : 'bg-neutral-400'}`} />
-                                            {showLigands ? 'Ligands On' : 'Ligands Off'}
+                                            {showLigands ? (t.ligandsOn as string) : (t.ligandsOff as string)}
                                         </button>
                                         <button
                                             onClick={() => setShowIons && setShowIons(!showIons)}
@@ -2073,7 +2077,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                 }`}
                                         >
                                             <span className={`w-1.5 h-1.5 rounded-full ${showIons ? 'bg-purple-500' : 'bg-neutral-400'}`} />
-                                            {showIons ? 'Ions On' : 'Ions Off'}
+                                            {showIons ? (t.ionsOn as string) : (t.ionsOff as string)}
                                         </button>
                                     </div>
                                     <div className="flex flex-wrap gap-1">
@@ -2096,7 +2100,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                 }}
                                 className={`flex items-center justify-between px-3 py-2 rounded-lg border transition-all ${isMeasurementMode ? 'bg-amber-500/10 border-amber-500 text-amber-500' : `${cardBg} hover:opacity-80`} ${isChemical ? 'col-span-2' : ''}`}
                             >
-                                <span className="text-xs font-medium">Measure</span>
+                                <span className="text-xs font-medium">{t.measureLabel as string}</span>
                                 <Ruler className="w-3.5 h-3.5" />
                             </button>
                             {/* Contact Map - Only for Proteins */}
@@ -2105,7 +2109,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                     onClick={onToggleContactMap}
                                     className={`flex items-center justify-between px-3 py-2 rounded-lg border transition-all ${cardBg} hover:opacity-80`}
                                 >
-                                    <span className="text-xs font-medium">Contact Map</span>
+                                    <span className="text-xs font-medium">{t.contactMap as string}</span>
                                     <Grid3X3 className="w-3.5 h-3.5" />
                                 </button>
                             )}
@@ -2116,7 +2120,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                     onClick={onOpenSuperposition}
                                     className={`flex items-center justify-between px-3 py-2 rounded-lg border transition-all ${cardBg} hover:opacity-80`}
                                 >
-                                    <span className="text-xs font-medium">Superpose</span>
+                                    <span className="text-xs font-medium">{t.superpose as string}</span>
                                     <Layers className="w-3.5 h-3.5" />
                                 </button>
                             )}
@@ -2127,7 +2131,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                     className={`col-span-2 flex items-center justify-center gap-2 px-3 py-2 rounded-lg border transition-all ${cardBg} hover:text-red-500 hover:border-red-500`}
                                 >
                                     <Trash2 className="w-3.5 h-3.5" />
-                                    <span className="text-xs font-medium">Clear Measurements</span>
+                                    <span className="text-xs font-medium">{t.clearMeasurements as string}</span>
                                 </button>
                             )}
 
@@ -2143,7 +2147,7 @@ export const Controls: React.FC<ControlsProps> = ({
                             <div className={`p-2 rounded-lg border flex flex-col ${cardBg}`}>
                                 <div className="flex items-center justify-between mb-2">
                                     <div className="flex items-center gap-2">
-                                        <span className={`text-xs font-bold ${subtleText}`}>Sequence</span>
+                                        <span className={`text-xs font-bold ${subtleText}`}>{t.sequenceLabel as string}</span>
                                         <button
                                             onClick={onDownloadSequence}
                                             title="Download FASTA Sequence"
@@ -2157,12 +2161,12 @@ export const Controls: React.FC<ControlsProps> = ({
                                         onChange={(e) => setViewSequenceChain(e.target.value)}
                                         className={`bg-transparent border-none text-[10px] outline-none cursor-pointer text-right ${subtleText}`}
                                     >
-                                        <option value="All">All Chains</option>
+                                        <option value="All">{t.allChains as string}</option>
                                         {chains.map(c => <option key={c.name} value={c.name}>{c.name ? `Chain ${c.name}` : 'Molecule'}</option>)}
                                     </select>
                                 </div>
                                 <div className={`h-24 p-1 overflow-y-auto scrollbar-thin ${isLightMode ? 'bg-neutral-50' : 'bg-neutral-800'} rounded`} ref={sequenceContainerRef}>
-                                    {chains.length === 0 ? <p className={`italic text-[10px] ${subtleText}`}>No sequence data</p> : (
+                                    {chains.length === 0 ? <p className={`italic text-[10px] ${subtleText}`}>{t.noSequenceData as string}</p> : (
                                         chains.filter(c => viewSequenceChain && viewSequenceChain !== 'All' ? c.name === viewSequenceChain : true).map(c => (
                                             <div key={c.name} className="mb-3 relative">
                                                 <div className={`sticky top-0 z-10 py-1 px-1 mb-1 text-[10px] font-extrabold uppercase tracking-widest border-b shadow-sm ${isLightMode ? 'bg-neutral-100 border-neutral-200 text-neutral-800' : 'bg-neutral-800 border-neutral-700 text-white'}`}>
@@ -2197,7 +2201,7 @@ export const Controls: React.FC<ControlsProps> = ({
                     {
                         !isChemical && (
                             <SidebarSection
-                                title="Motif Search"
+                                title={t.sectionMotifSearch as string}
                                 icon={ScanSearch}
                                 isOpen={openSections['motif-search']}
                                 onToggle={() => toggleSection('motif-search')}
@@ -2206,7 +2210,7 @@ export const Controls: React.FC<ControlsProps> = ({
                             >
                                 <div className="space-y-3">
                                     <div className="space-y-1">
-                                        <label className="text-[10px] uppercase tracking-wider opacity-60 font-bold">Sequence Pattern</label>
+                                        <label className="text-[10px] uppercase tracking-wider opacity-60 font-bold">{t.sequencePattern as string}</label>
                                         <select
                                             onChange={(e) => {
                                                 if (e.target.value) setSearchPattern(e.target.value);
@@ -2243,7 +2247,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                 {isSearching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
                                             </button>
                                         </div>
-                                        <p className="text-[9px] opacity-50">Use 'x' as wildcard. Dashes ignored.</p>
+                                        <p className="text-[9px] opacity-50">{t.motifWildcard as string}</p>
 
                                         {/* Loading Skeletons */}
                                         {isSearching && (
@@ -2261,7 +2265,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                     {searchResults.length > 0 && (
                                         <div className="max-h-40 overflow-y-auto space-y-1 scrollbar-thin scrollbar-thumb-white/10">
                                             <div className="flex justify-between items-center pb-1 border-b border-white/5">
-                                                <span className="text-[10px] font-bold opacity-70">{searchResults.length} Matches</span>
+                                                <span className="text-[10px] font-bold opacity-70">{(t.matchesLabel as (n: number) => string)(searchResults.length)}</span>
                                                 <button onClick={() => setSearchResults([])} className="p-1 hover:text-red-400"><Trash2 className="w-3 h-3" /></button>
                                             </div>
                                             {searchResults.map((match, idx) => (
@@ -2288,7 +2292,7 @@ export const Controls: React.FC<ControlsProps> = ({
 
                     {/* ACCORDION 3: TOOLS */}
                     <SidebarSection
-                        title="Tools"
+                        title={t.sectionTools as string}
                         icon={Wrench}
                         isOpen={openSections['tools']}
                         onToggle={() => toggleSection('tools')}
@@ -2305,13 +2309,13 @@ export const Controls: React.FC<ControlsProps> = ({
 
                             {/* Session Controls */}
                             <div>
-                                <label className={`text-[10px] font-bold uppercase tracking-wider block mb-2 ${subtleText}`}>Session</label>
+                                <label className={`text-[10px] font-bold uppercase tracking-wider block mb-2 ${subtleText}`}>{t.sessionLabel as string}</label>
                                 <div className="flex gap-2">
                                     <button onClick={onSaveSession} className={`flex-1 flex items-center justify-center gap-2 border py-1.5 rounded-lg transition-all text-xs font-medium ${cardBg} hover:bg-neutral-100 dark:hover:bg-neutral-800`}>
-                                        <Download className="w-3.5 h-3.5" /> Save
+                                        <Download className="w-3.5 h-3.5" /> {t.saveBtn as string}
                                     </button>
                                     <button onClick={() => sessionInputRef.current?.click()} className={`flex-1 flex items-center justify-center gap-2 border py-1.5 rounded-lg transition-all text-xs font-medium ${cardBg} hover:bg-neutral-100 dark:hover:bg-neutral-800`}>
-                                        <Upload className="w-3.5 h-3.5" /> Load
+                                        <Upload className="w-3.5 h-3.5" /> {t.loadBtn as string}
                                     </button>
 
                                     <input type="file" accept=".json" className="hidden" ref={sessionInputRef} onChange={(e) => e.target.files?.[0] && onLoadSession(e.target.files[0])} />
@@ -2320,14 +2324,14 @@ export const Controls: React.FC<ControlsProps> = ({
 
                             {/* Actions & Recording */}
                             <div>
-                                <label className={`text-[10px] font-bold uppercase tracking-wider block mb-2 ${subtleText}`}>Actions & Recording</label>
+                                <label className={`text-[10px] font-bold uppercase tracking-wider block mb-2 ${subtleText}`}>{t.actionsAndRecording as string}</label>
                                 <div className="space-y-2">
                                     <div className="flex gap-2">
                                         <button onClick={onToggleShare} className={`flex-1 flex items-center justify-center gap-2 border py-2 rounded-lg transition-all ${cardBg} hover:text-green-500 hover:border-green-500/50`}>
-                                            <Share2 className="w-3.5 h-3.5" /> <span className="text-xs">Live Session</span>
+                                            <Share2 className="w-3.5 h-3.5" /> <span className="text-xs">{t.liveSession as string}</span>
                                         </button>
                                         <button onClick={onTakeSnapshot} className={`flex-1 flex items-center justify-center gap-1 border py-2 rounded-lg transition-all ${cardBg} hover:text-blue-500 hover:border-blue-500/50`}>
-                                            <Camera className="w-3.5 h-3.5" /> <span className="text-xs">Snapshot</span>
+                                            <Camera className="w-3.5 h-3.5" /> <span className="text-xs">{t.snapshotBtn as string}</span>
                                         </button>
                                     </div>
 
@@ -2350,7 +2354,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                             className={`flex-1 flex items-center justify-center gap-2 border py-1.5 rounded-lg transition-all text-xs font-medium ${isRecording ? 'bg-red-500 text-white border-red-500' : `${cardBg} hover:text-red-500 hover:border-red-500/50`}`}
                                         >
                                             {isRecording ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Video className="w-3.5 h-3.5" />}
-                                            {isRecording ? 'Recording...' : 'Record'}
+                                            {isRecording ? (t.recordingBtn as string) : (t.recordBtn as string)}
                                         </button>
                                     </div>
                                 </div>
@@ -2369,8 +2373,8 @@ export const Controls: React.FC<ControlsProps> = ({
                                             <ImageIcon className="w-4 h-4" />
                                         </div>
                                         <div className="text-left">
-                                            <div className={`text-xs font-bold ${isLightMode ? 'text-neutral-900' : 'text-white'}`}>Media Gallery</div>
-                                            <div className={`text-[9px] ${subtleText}`}>{snapshots.length} images • {movies.length} videos</div>
+                                            <div className={`text-xs font-bold ${isLightMode ? 'text-neutral-900' : 'text-white'}`}>{t.mediaGallery as string}</div>
+                                            <div className={`text-[9px] ${subtleText}`}>{(t.imagesVideos as (imgs: number, vids: number) => string)(snapshots.length, movies.length)}</div>
                                         </div>
                                     </div>
                                     <ChevronDown className="-rotate-90 w-3 h-3 opacity-50 group-hover:opacity-100 transition-opacity" />
