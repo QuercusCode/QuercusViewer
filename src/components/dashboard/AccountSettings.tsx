@@ -2,7 +2,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { useAuth } from '../../lib/AuthContext';
 import { useTranslation } from '../../lib/i18n';
 import { useNavigate } from 'react-router-dom';
-import { User, Mail, Shield, Loader2, Camera, Trash2, AlertTriangle, X, Check, HardDrive, Zap, Bell, Link2, Github, Settings2, Box, Monitor, Image } from 'lucide-react';
+import { User, Mail, Shield, Loader2, Camera, Trash2, AlertTriangle, X, Check, HardDrive, Zap, Bell, Link2, Github, Settings2, Eye, Monitor, Image } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 
 // ─── Format Helpers ───────────────────────────────────────────────
@@ -256,8 +256,7 @@ export const AccountSettings = () => {
     const [productUpdates, setProductUpdates] = useState(user?.user_metadata?.product_updates ?? true);
     const [securityAlerts, setSecurityAlerts] = useState(user?.user_metadata?.security_alerts ?? true);
     const [viewerPrefsEnabled, setViewerPrefsEnabled] = useState(user?.user_metadata?.viewer_prefs_enabled ?? true);
-    const [defaultRendering, setDefaultRendering] = useState(user?.user_metadata?.default_rendering || 'cartoon');
-    const [performanceMode, setPerformanceMode] = useState(user?.user_metadata?.performance_mode || 'balanced');
+    const [visualAccessibility, setVisualAccessibility] = useState(user?.user_metadata?.visual_accessibility || 'none');
     const [showWatermark, setShowWatermark] = useState(user?.user_metadata?.show_watermark ?? true);
     
     // Connections
@@ -556,33 +555,18 @@ export const AccountSettings = () => {
                                         <div className="space-y-4">
                                             <div>
                                                 <label className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] mb-2">
-                                                    <Box className="w-3 h-3" /> {t.defaultRendering}
+                                                    <Eye className="w-3 h-3" /> {t.visualAccessibility}
                                                 </label>
                                                 <select 
-                                                    value={defaultRendering}
-                                                    onChange={e => { setDefaultRendering(e.target.value); updatePreference('default_rendering', e.target.value); }}
+                                                    value={visualAccessibility}
+                                                    onChange={e => { setVisualAccessibility(e.target.value); updatePreference('visual_accessibility', e.target.value); }}
                                                     className="w-full px-3 py-1.5 bg-[var(--bg-header)] border border-[var(--border-main)] rounded-lg text-xs text-[var(--text-primary)] outline-none focus:border-blue-500">
-                                                    <option value="cartoon">{t.cartoon}</option>
-                                                    <option value="ball-stick">{t.ballAndStick}</option>
-                                                    <option value="ribbon">{t.ribbon}</option>
-                                                    <option value="surface">{t.surface}</option>
+                                                    <option value="none">{t.none}</option>
+                                                    <option value="protanopia">{t.protanopia}</option>
+                                                    <option value="deuteranopia">{t.deuteranopia}</option>
+                                                    <option value="tritanopia">{t.tritanopia}</option>
+                                                    <option value="achromatopsia">{t.achromatopsia}</option>
                                                 </select>
-                                            </div>
-                                            <div>
-                                                <label className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] mb-2">
-                                                    <Zap className="w-3 h-3" /> {t.performanceMode}
-                                                </label>
-                                                <div className="flex p-1 bg-[var(--bg-header)] border border-[var(--border-main)] rounded-lg">
-                                                    {['highPerformance', 'balanced', 'highQuality'].map((mode) => (
-                                                        <button
-                                                            key={mode}
-                                                            onClick={() => { setPerformanceMode(mode); updatePreference('performance_mode', mode); }}
-                                                            className={`flex-1 py-1.5 text-[10px] font-bold rounded-md transition-all ${performanceMode === mode ? 'bg-blue-600 text-white shadow-sm' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}
-                                                        >
-                                                            {(t as any)[mode]}
-                                                        </button>
-                                                    ))}
-                                                </div>
                                             </div>
                                         </div>
                                         <div className="space-y-4 flex flex-col justify-end">

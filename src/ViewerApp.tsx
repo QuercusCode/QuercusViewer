@@ -127,26 +127,14 @@ function App() {
   // GRAPHICS SETTINGS
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   
-  // Map performance_mode to internal quality levels
-  const getInitialQuality = () => {
-    const mode = user?.user_metadata?.performance_mode;
-    if (mode === 'highPerformance') return 'low';
-    if (mode === 'highQuality') return 'high';
-    return 'medium';
-  };
-
+  // Map performance_mode to internal quality levels (Legacy: switched to Visual Accessibility)
   const [settings, setSettings] = useState<{ quality: 'low' | 'medium' | 'high'; ssao: boolean }>({
-    quality: getInitialQuality(),
-    ssao: user?.user_metadata?.performance_mode !== 'highPerformance'
+    quality: 'medium',
+    ssao: true
   });
 
-  // Sync settings when user metadata changes (e.g. after login or settings update)
-  useEffect(() => {
-    setSettings({
-      quality: getInitialQuality(),
-      ssao: user?.user_metadata?.performance_mode !== 'highPerformance'
-    });
-  }, [user?.user_metadata?.performance_mode]);
+  // Sync settings when user metadata changes (Legacy: switched to Visual Accessibility)
+  const visualAccessibility = user?.user_metadata?.visual_accessibility || 'none';
 
   const updateSetting = (key: keyof typeof settings, value: any) => {
     setSettings(prev => ({ ...prev, [key]: value }));
@@ -2588,6 +2576,33 @@ function App() {
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
+
+      {/* Visual Accessibility Filters (SVG Definitions) */}
+      <svg style={{ position: 'absolute', width: 0, height: 0 }} aria-hidden="true" focusable="false">
+        <defs>
+          <filter id="protanopia">
+            <feColorMatrix type="matrix" values="0.567, 0.433, 0, 0, 0, 0.558, 0.442, 0, 0, 0, 0, 0.242, 0.758, 0, 0, 0, 0, 0, 1, 0" />
+          </filter>
+          <filter id="deuteranopia">
+            <feColorMatrix type="matrix" values="0.625, 0.375, 0, 0, 0, 0.7, 0.3, 0, 0, 0, 0, 0.3, 0.7, 0, 0, 0, 0, 0, 1, 0" />
+          </filter>
+          <filter id="tritanopia">
+            <feColorMatrix type="matrix" values="0.95, 0.05, 0, 0, 0, 0, 0.433, 0.567, 0, 0, 0, 0.475, 0.525, 0, 0, 0, 0, 0, 1, 0" />
+          </filter>
+        </defs>
+      </svg>
+
+      {/* Main Content Wrapper with Accessibility Filter */}
+      <div 
+        className="w-full h-full flex flex-col relative"
+        style={{
+          filter: visualAccessibility === 'achromatopsia' 
+            ? 'grayscale(100%)' 
+            : visualAccessibility !== 'none' 
+              ? `url(#${visualAccessibility})` 
+              : 'none'
+        }}
+      >
       {/* Interaction Blocker for Static Embeds */}
       {!isInteractionEnabled && <div className="absolute inset-0 z-50 bg-transparent cursor-default" />}
 
@@ -3666,8 +3681,8 @@ function App() {
         )
       }
 
-      {/* Background Gradient */}
       <div className={`absolute inset-0 pointer-events-none transition-opacity duration-300 ${isLightMode ? 'opacity-0' : 'opacity-100 bg-[radial-gradient(circle_at_50%_50%,rgba(50,50,80,0.2),rgba(0,0,0,0))]'}`} />
+      </div>
     </main >
   );
 }
