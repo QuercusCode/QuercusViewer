@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { forwardRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
 import type { Structure } from '../../lib/structuresService';
 
 interface LabReportTemplateProps {
@@ -225,10 +226,17 @@ const renderResizableImage = (payload: string, key: any, forceBase64 = false) =>
     const jsonStr = isBase64 
       ? decodeURIComponent(escape(atob(payload.trim())))
       : payload.trim();
-    const { src, width, height, alt } = JSON.parse(jsonStr);
+    const { src, width, height, alt, textAlign } = JSON.parse(jsonStr);
     
     return (
-      <div key={key} style={{ margin: '1.5rem 0', display: 'flex', justifyContent: 'center' }}>
+      <div 
+        key={key} 
+        style={{ 
+          margin: '1.5rem 0', 
+          display: 'flex', 
+          justifyContent: textAlign === 'center' ? 'center' : textAlign === 'right' ? 'flex-end' : 'flex-start' 
+        }}
+      >
         <img 
           src={src} 
           alt={alt || "Notebook Image"} 
@@ -251,7 +259,7 @@ const renderResizableImage = (payload: string, key: any, forceBase64 = false) =>
 /**
  * LabReportTemplate component for multi-page PDF generation.
  */
-export const LabReportTemplate = React.forwardRef<HTMLDivElement, LabReportTemplateProps>(
+export const LabReportTemplate = forwardRef<HTMLDivElement, LabReportTemplateProps>(
   ({ title, content, date, author, id, allStructures = [] }, ref) => {
     return (
       <div 
@@ -387,11 +395,12 @@ export const LabReportTemplate = React.forwardRef<HTMLDivElement, LabReportTempl
           <div style={{ color: '#334155' }}>
             <ReactMarkdown 
               remarkPlugins={[remarkGfm]}
+              rehypePlugins={[rehypeRaw]}
               components={{
-                h1: ({node, ...props}) => <h1 style={{fontSize: '1.875rem', fontWeight: 'bold', color: '#0f172a', marginBottom: '1rem', marginTop: '1rem'}} {...props} />,
-                h2: ({node, ...props}) => <h2 style={{fontSize: '1.5rem', fontWeight: 'bold', color: '#0f172a', marginTop: '2rem', marginBottom: '0.75rem'}} {...props} />,
-                h3: ({node, ...props}) => <h3 style={{fontSize: '1.25rem', fontWeight: 'bold', color: '#0f172a', marginTop: '1.5rem', marginBottom: '0.5rem'}} {...props} />,
-                p: ({children}) => {
+                h1: ({node, style, ...props}) => <h1 style={{fontSize: '1.875rem', fontWeight: 'bold', color: '#0f172a', marginBottom: '1rem', marginTop: '1rem', ...style}} {...props} />,
+                h2: ({node, style, ...props}) => <h2 style={{fontSize: '1.5rem', fontWeight: 'bold', color: '#0f172a', marginTop: '2rem', marginBottom: '0.75rem', ...style}} {...props} />,
+                h3: ({node, style, ...props}) => <h3 style={{fontSize: '1.25rem', fontWeight: 'bold', color: '#0f172a', marginTop: '1.5rem', marginBottom: '0.5rem', ...style}} {...props} />,
+                p: ({children, style}: any) => {
                   const processed = React.Children.map(children, child => {
                     if (typeof child === 'string') {
                       // Combined split for all custom nodes (legacy support for [[tag:base64]])
@@ -446,13 +455,13 @@ export const LabReportTemplate = React.forwardRef<HTMLDivElement, LabReportTempl
                         if (resizableMatch) {
                           return renderResizableImage(resizableMatch[1], i, true);
                         }
-                        
+                        // Final fallback for normal text
                         return part;
                       });
                     }
                     return child;
                   });
-                  return <p style={{marginBottom: '1rem', lineHeight: '1.6'}}>{processed}</p>;
+                  return <p style={{ fontSize: '11pt', lineHeight: '1.6', marginBottom: '1rem', color: '#334155', ...style }}>{processed}</p>;
                 },
                 ul: ({node, ...props}) => <ul style={{listStyleType: 'disc', paddingLeft: '1.5rem', marginBottom: '1rem'}} {...props} />,
                 ol: ({node, ...props}) => <ol style={{listStyleType: 'decimal', paddingLeft: '1.5rem', marginBottom: '1rem'}} {...props} />,

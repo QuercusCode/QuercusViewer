@@ -36,7 +36,8 @@ import {
   Type, ChevronDown, MoreHorizontal,
   Subscript as SubscriptIcon, Superscript as SuperscriptIcon,
   Highlighter, Eraser, FlaskConical, Clock, FileText,
-  Table as TableIcon, Activity, Beaker, Calculator, Image as ImageIcon
+  Table as TableIcon, Activity, Beaker, Calculator, Image as ImageIcon,
+  AlignLeft, AlignCenter, AlignRight
 } from 'lucide-react';
 import type { Structure } from '../../lib/structuresService';
 
@@ -226,7 +227,7 @@ export const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>
         placeholder,
       }),
       TextAlign.configure({
-        types: ['heading', 'paragraph', 'tableCell'],
+        types: ['heading', 'paragraph', 'tableCell', 'resizableImage'],
       }),
       SpreadsheetTable.configure({
         resizable: true,
@@ -245,7 +246,7 @@ export const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>
       TableHeader,
       TableCell,
       Markdown.configure({
-        html: false,
+        html: true,
         tightLists: true,
       }),
       Mention.configure({
@@ -634,6 +635,33 @@ export const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>
               </button>
             </div>
           </Dropdown>
+        </div>
+
+        <ToolbarDivider />
+
+        {/* Alignment */}
+        <div className="flex items-center">
+          <ToolbarButton 
+            onClick={() => editor.chain().focus().setTextAlign('left').run()} 
+            isActive={editor.isActive({ textAlign: 'left' })}
+            title="Align Left"
+          >
+            <AlignLeft className="w-4 h-4" />
+          </ToolbarButton>
+          <ToolbarButton 
+            onClick={() => editor.chain().focus().setTextAlign('center').run()} 
+            isActive={editor.isActive({ textAlign: 'center' })}
+            title="Align Center"
+          >
+            <AlignCenter className="w-4 h-4" />
+          </ToolbarButton>
+          <ToolbarButton 
+            onClick={() => editor.chain().focus().setTextAlign('right').run()} 
+            isActive={editor.isActive({ textAlign: 'right' })}
+            title="Align Right"
+          >
+            <AlignRight className="w-4 h-4" />
+          </ToolbarButton>
         </div>
 
         <ToolbarDivider />

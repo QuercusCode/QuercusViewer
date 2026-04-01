@@ -48,8 +48,13 @@ const ResizableImageComponent: React.FC<NodeViewProps> = ({ node, updateAttribut
     window.addEventListener('mouseup', onMouseUp);
   };
 
+  const textAlign = node.attrs.textAlign || 'left';
+
   return (
-    <NodeViewWrapper className={`inline-block relative group my-4 ${selected ? 'outline outline-2 outline-blue-500 rounded-lg' : ''}`}>
+    <NodeViewWrapper 
+      className={`w-full flex relative group my-4 ${selected ? 'outline outline-2 outline-blue-500 rounded-lg' : ''}`}
+      style={{ justifyContent: textAlign === 'center' ? 'center' : textAlign === 'right' ? 'flex-end' : 'flex-start' }}
+    >
       <div 
         ref={containerRef}
         className="relative"

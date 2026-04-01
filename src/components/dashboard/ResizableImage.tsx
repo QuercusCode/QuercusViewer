@@ -50,6 +50,14 @@ export const ResizableImage = Node.create<ResizableImageOptions>({
           height: attributes.height,
         }),
       },
+      textAlign: {
+        default: 'left',
+        parseHTML: element => element.style.textAlign || 'left',
+        renderHTML: attributes => {
+          if (attributes.textAlign === 'left') return {};
+          return { style: `text-align: ${attributes.textAlign}` };
+        },
+      },
       style: {
         default: null,
       }
@@ -76,10 +84,10 @@ export const ResizableImage = Node.create<ResizableImageOptions>({
     return {
       markdown: {
         serialize: (state: any, node: any) => {
-          const { src, width, height, alt, title } = node.attrs;
+          const { src, width, height, alt, title, textAlign } = node.attrs;
           // Use a simple format that doesn't crash on large strings
           state.write(`\n\`\`\`resizable-image\n`);
-          state.write(JSON.stringify({ src, width, height, alt, title }));
+          state.write(JSON.stringify({ src, width, height, alt, title, textAlign }));
           state.write(`\n\`\`\`\n`);
           state.closeBlock(node);
         },
@@ -95,7 +103,8 @@ export const ResizableImage = Node.create<ResizableImageOptions>({
                 if (token.info === 'resizable-image') {
                   try {
                     const attrs = JSON.parse(token.content.trim());
-                    return `<img src="${attrs.src}" width="${attrs.width || '100%'}" height="${attrs.height || 'auto'}" alt="${attrs.alt || ''}" title="${attrs.title || ''}" class="resizable-image-node" />`;
+                    const alignStyle = attrs.textAlign ? `text-align: ${attrs.textAlign}` : '';
+                    return `<img src="${attrs.src}" width="${attrs.width || '100%'}" height="${attrs.height || 'auto'}" alt="${attrs.alt || ''}" title="${attrs.title || ''}" style="${alignStyle}" class="resizable-image-node" />`;
                   } catch (e) {
                     return defaultRender(tokens, idx, options, _env, self);
                   }

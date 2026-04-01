@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
     CircleHelp, X, MousePointer2, Keyboard, Sparkles,
-    BookOpen, Layers, Activity, Share2, FileUp, ArrowLeft, Wrench, Palette, Mail, Github, MessageSquare, ExternalLink, Linkedin, Heart, Users, Video, Ghost, Shapes
+    BookOpen, Layers, Activity, Share2, FileUp, ArrowLeft, Wrench, Palette, Mail, Github, MessageSquare, ExternalLink, Linkedin, Heart, Users, Video, Ghost, Shapes, LayoutDashboard
 } from 'lucide-react';
 
 type FeatureSection = {
@@ -122,6 +122,52 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
                         </p>
                     </div>
                 </div >
+            )
+        },
+        {
+            id: 'dashboard',
+            title: 'Dashboard & Lab Notebook',
+            icon: LayoutDashboard,
+            description: 'Manage workspaces, drafts, and lab reports.',
+            content: (
+                <div className="space-y-6">
+                    <div className="bg-gradient-to-br from-cyan-500/10 to-teal-500/10 border border-cyan-500/20 p-4 rounded-xl">
+                        <h4 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
+                            <LayoutDashboard className="w-4 h-4 text-cyan-400" /> Integrated Dashboard
+                        </h4>
+                        <p className="text-xs text-neutral-300 mb-4 leading-relaxed">
+                            Access all your saved sessions, studio drafts, and comprehensive lab notebook entries in one unified space.
+                        </p>
+                        
+                        <div className="space-y-4">
+                            <div className="bg-black/20 p-3 rounded-lg border border-white/5">
+                                <strong className="text-white text-xs block mb-1">Workspaces</strong>
+                                <p className="text-[11px] text-neutral-400">
+                                    Organize your sessions and structures into private workspaces. Easily search and load previous saves.
+                                </p>
+                            </div>
+                            <div className="bg-black/20 p-3 rounded-lg border border-white/5">
+                                <strong className="text-white text-xs block mb-1">Studio Drafts</strong>
+                                <p className="text-[11px] text-neutral-400">
+                                    Manage your saved Studio Mode animations. Resume editing your keyframes or export completed videos directly.
+                                </p>
+                            </div>
+                            <div className="bg-black/20 p-3 rounded-lg border border-white/5">
+                                <strong className="text-white text-xs block mb-1">Lab Notebook</strong>
+                                <p className="text-[11px] text-neutral-400">
+                                    Maintain comprehensive rich-text notes with embedded structure views, interactive chemical sketchers, and Python kernels. Export directly to publication-ready PDF reports.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="mt-4 p-3 bg-cyan-500/10 border border-cyan-500/20 rounded-lg">
+                        <strong className="text-cyan-400 text-xs block mb-1">Pro Tip: Quick Navigation</strong>
+                        <p className="text-[11px] text-neutral-400">
+                            Click your user avatar in the top right to instantly access the Dashboard, User Settings, and Subscription management.
+                        </p>
+                    </div>
+                </div>
             )
         },
         {
