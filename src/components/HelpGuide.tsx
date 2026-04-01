@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
     CircleHelp, X, MousePointer2, Keyboard, Sparkles,
-    BookOpen, Layers, Activity, Share2, FileUp, ArrowLeft, Wrench, Palette, Mail, Github, MessageSquare, ExternalLink, Linkedin, Heart, Users, Video, Ghost, Shapes, LayoutDashboard
+    BookOpen, Layers, Activity, Share2, FileUp, ArrowLeft, Wrench, Palette, Mail, Github, MessageSquare, ExternalLink, Linkedin, Heart, Users, Video, Ghost, Shapes, LayoutDashboard, PenTool
 } from 'lucide-react';
 
 type FeatureSection = {
@@ -126,17 +126,17 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
         },
         {
             id: 'dashboard',
-            title: 'Dashboard & Lab Notebook',
+            title: 'Integrated Dashboard',
             icon: LayoutDashboard,
-            description: 'Manage workspaces, drafts, and lab reports.',
+            description: 'Manage workspaces and drafts.',
             content: (
                 <div className="space-y-6">
                     <div className="bg-gradient-to-br from-cyan-500/10 to-teal-500/10 border border-cyan-500/20 p-4 rounded-xl">
                         <h4 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
-                            <LayoutDashboard className="w-4 h-4 text-cyan-400" /> Integrated Dashboard
+                            <LayoutDashboard className="w-4 h-4 text-cyan-400" /> Workspaces & Drafts
                         </h4>
                         <p className="text-xs text-neutral-300 mb-4 leading-relaxed">
-                            Access all your saved sessions, studio drafts, and comprehensive lab notebook entries in one unified space.
+                            Access all your saved sessions and studio drafts in one unified space.
                         </p>
                         
                         <div className="space-y-4">
@@ -152,12 +152,6 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
                                     Manage your saved Studio Mode animations. Resume editing your keyframes or export completed videos directly.
                                 </p>
                             </div>
-                            <div className="bg-black/20 p-3 rounded-lg border border-white/5">
-                                <strong className="text-white text-xs block mb-1">Lab Notebook</strong>
-                                <p className="text-[11px] text-neutral-400">
-                                    Maintain comprehensive rich-text notes with embedded structure views, interactive chemical sketchers, and Python kernels. Export directly to publication-ready PDF reports.
-                                </p>
-                            </div>
                         </div>
                     </div>
 
@@ -165,6 +159,52 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
                         <strong className="text-cyan-400 text-xs block mb-1">Pro Tip: Quick Navigation</strong>
                         <p className="text-[11px] text-neutral-400">
                             Click your user avatar in the top right to instantly access the Dashboard, User Settings, and Subscription management.
+                        </p>
+                    </div>
+                </div>
+            )
+        },
+        {
+            id: 'lab-notebook',
+            title: 'Lab Notebook',
+            icon: PenTool,
+            description: 'Comprehensive rich-text notes.',
+            content: (
+                <div className="space-y-6">
+                    <div className="bg-gradient-to-br from-amber-500/10 to-orange-500/10 border border-amber-500/20 p-4 rounded-xl">
+                        <h4 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
+                            <PenTool className="w-4 h-4 text-amber-400" /> Digital Lab Notebook
+                        </h4>
+                        <p className="text-xs text-neutral-300 mb-4 leading-relaxed">
+                            Maintain detailed documentation alongside your visualization work, keeping your research organized.
+                        </p>
+                        
+                        <div className="space-y-4">
+                            <div className="bg-black/20 p-3 rounded-lg border border-white/5">
+                                <strong className="text-white text-xs block mb-1">Rich Content</strong>
+                                <p className="text-[11px] text-neutral-400">
+                                    Embed interactive structure views, molecular sketches, inline Python math kernels, and tables directly into your notes.
+                                </p>
+                            </div>
+                            <div className="bg-black/20 p-3 rounded-lg border border-white/5">
+                                <strong className="text-white text-xs block mb-1">PDF Export</strong>
+                                <p className="text-[11px] text-neutral-400">
+                                    Generate clean, publication-ready PDF reports from your notebook entries with one click.
+                                </p>
+                            </div>
+                            <div className="bg-black/20 p-3 rounded-lg border border-white/5">
+                                <strong className="text-white text-xs block mb-1">Collaboration</strong>
+                                <p className="text-[11px] text-neutral-400">
+                                    See real-time cursors of other users viewing or editing the same notebook entry during collaborative sessions.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="mt-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+                        <strong className="text-amber-400 text-xs block mb-1">Pro Tip: Formatting</strong>
+                        <p className="text-[11px] text-neutral-400">
+                            Highlight text to access formatting options instantly, or try alignment tools for images and paragraphs.
                         </p>
                     </div>
                 </div>
