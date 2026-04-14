@@ -171,25 +171,27 @@ export function HUD({ hoveredResidue, pdbMetadata, pdbId, isLightMode, isEmbedMo
                 )}
 
                 {/* Main Control Pill */}
-                {peerSession?.isConnected && (
+                {(peerSession?.isConnected || onToggleAiChat) && (
                     <div className={`pointer-events-auto backdrop-blur-md rounded-full border ${borderColor} ${bgColor} shadow-lg px-4 py-2 flex items-center justify-center gap-2 animate-in slide-in-from-bottom-2 mx-auto`}>
 
                         {/* Desktop: Reactions Inline */}
-                        <div className="hidden md:flex items-center gap-1 border-r border-gray-500/20 pr-2">
-                            {['👍', '👎', '❤️', '👏', '🎉'].map(emoji => (
-                                <button
-                                    key={emoji}
-                                    onClick={() => peerSession.broadcastReaction?.(emoji, userName || 'Guest')}
-                                    className={`w-6 h-6 flex items-center justify-center rounded-full text-sm hover:scale-125 transition-transform active:scale-90 ${isLightMode ? 'hover:bg-neutral-100' : 'hover:bg-white/10'}`}
-                                >
-                                    {emoji}
-                                </button>
-                            ))}
-                        </div>
+                        {peerSession?.isConnected && (
+                            <div className="hidden md:flex items-center gap-1 border-r border-gray-500/20 pr-2">
+                                {['👍', '👎', '❤️', '👏', '🎉'].map(emoji => (
+                                    <button
+                                        key={emoji}
+                                        onClick={() => peerSession.broadcastReaction?.(emoji, userName || 'Guest')}
+                                        className={`w-6 h-6 flex items-center justify-center rounded-full text-sm hover:scale-125 transition-transform active:scale-90 ${isLightMode ? 'hover:bg-neutral-100' : 'hover:bg-white/10'}`}
+                                    >
+                                        {emoji}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
 
                         {/* Chat Toggles */}
                         {(onToggleChat || onToggleAiChat) && (
-                            <div className="flex items-center gap-2 border-r border-gray-500/20 pr-2">
+                            <div className={`flex items-center gap-2 ${peerSession?.isConnected ? 'border-r border-gray-500/20 pr-2' : ''}`}>
                                 {onToggleChat && (
                                     <button
                                         onClick={onToggleChat}
@@ -224,43 +226,45 @@ export function HUD({ hoveredResidue, pdbMetadata, pdbId, isLightMode, isEmbedMo
                         )}
 
                         {/* Audio Controls */}
-                        <div className={`flex items-center gap-2 shrink-0 ${!isHost && onToggleCameraSync ? 'md:pr-2 md:border-r md:border-gray-500/20' : ''}`}>
-                            {!peerSession.isAudioConnected ? (
-                                <button
-                                    onClick={() => peerSession.joinAudio?.()}
-                                    className={`text-[10px] font-bold px-4 py-1.5 md:px-2 md:py-1 rounded-full flex items-center gap-2 transition-colors ${isLightMode
-                                        ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                                        : 'bg-blue-500/20 text-blue-300 hover:bg-blue-500/30'
-                                        }`}
-                                >
-                                    <div className="w-1.5 h-1.5 rounded-full bg-current" />
-                                    JOIN VOICE
-                                </button>
-                            ) : (
-                                <>
+                        {peerSession?.isConnected && (
+                            <div className={`flex items-center gap-2 shrink-0 ${!isHost && onToggleCameraSync ? 'md:pr-2 md:border-r md:border-gray-500/20' : ''}`}>
+                                {!peerSession.isAudioConnected ? (
                                     <button
-                                        onClick={() => peerSession.toggleMute?.()}
-                                        className={`p-2 md:p-1.5 rounded-full transition-colors ${peerSession.isMuted
-                                            ? 'bg-red-500 text-white hover:bg-red-600'
-                                            : (isLightMode ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' : 'bg-white/10 text-white hover:bg-white/20')
+                                        onClick={() => peerSession.joinAudio?.()}
+                                        className={`text-[10px] font-bold px-4 py-1.5 md:px-2 md:py-1 rounded-full flex items-center gap-2 transition-colors ${isLightMode
+                                            ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                                            : 'bg-blue-500/20 text-blue-300 hover:bg-blue-500/30'
                                             }`}
-                                        title={peerSession.isMuted ? "Unmute" : "Mute"}
                                     >
-                                        {peerSession.isMuted ? <MicOff className="w-4 h-4 md:w-3 md:h-3" /> : <Mic className="w-4 h-4 md:w-3 md:h-3" />}
+                                        <div className="w-1.5 h-1.5 rounded-full bg-current" />
+                                        JOIN VOICE
                                     </button>
-                                    <button
-                                        onClick={() => peerSession.leaveAudio?.()}
-                                        className="p-2 md:p-1.5 rounded-full bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-colors"
-                                        title="Leave Voice"
-                                    >
-                                        <PhoneOff className="w-4 h-4 md:w-3 md:h-3" />
-                                    </button>
-                                </>
-                            )}
-                        </div>
+                                ) : (
+                                    <>
+                                        <button
+                                            onClick={() => peerSession.toggleMute?.()}
+                                            className={`p-2 md:p-1.5 rounded-full transition-colors ${peerSession.isMuted
+                                                ? 'bg-red-500 text-white hover:bg-red-600'
+                                                : (isLightMode ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' : 'bg-white/10 text-white hover:bg-white/20')
+                                                }`}
+                                            title={peerSession.isMuted ? "Unmute" : "Mute"}
+                                        >
+                                            {peerSession.isMuted ? <MicOff className="w-4 h-4 md:w-3 md:h-3" /> : <Mic className="w-4 h-4 md:w-3 md:h-3" />}
+                                        </button>
+                                        <button
+                                            onClick={() => peerSession.leaveAudio?.()}
+                                            className="p-2 md:p-1.5 rounded-full bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-colors"
+                                            title="Leave Voice"
+                                        >
+                                            <PhoneOff className="w-4 h-4 md:w-3 md:h-3" />
+                                        </button>
+                                    </>
+                                )}
+                            </div>
+                        )}
 
                         {/* View/Edit Toggle for Guests */}
-                        {!isHost && onToggleCameraSync && (
+                        {peerSession?.isConnected && !isHost && onToggleCameraSync && (
                             <div className="">
                                 <button
                                     onClick={onToggleCameraSync}
