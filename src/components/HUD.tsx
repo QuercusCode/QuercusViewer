@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from 'react';
 import type { ResidueInfo, PDBMetadata } from '../types';
 import type { PeerSession } from '../hooks/usePeerSession';
-import { Eye, Wrench, Lock, Unlock, Mic, MicOff, PhoneOff, MessageSquare } from 'lucide-react';
+import { Eye, Wrench, Lock, Unlock, Mic, MicOff, PhoneOff, MessageSquare, Sparkles } from 'lucide-react';
 
 interface HUDProps {
     hoveredResidue: ResidueInfo | null;
@@ -22,10 +22,12 @@ interface HUDProps {
     unreadCount?: number;
     isChatOpen?: boolean;
     onToggleChat?: () => void;
+    isAiChatOpen?: boolean;
+    onToggleAiChat?: () => void;
     onOpenSettings?: () => void;
 }
 
-export function HUD({ hoveredResidue, pdbMetadata, pdbId, isLightMode, isEmbedMode = false, peerSession, remoteHoveredResidue, isHost, remoteUserName, peerNames = {}, controllerId, isCameraSynced, onToggleCameraSync, userName, unreadCount = 0, isChatOpen = false, onToggleChat, onOpenSettings }: HUDProps) {
+export function HUD({ hoveredResidue, pdbMetadata, pdbId, isLightMode, isEmbedMode = false, peerSession, remoteHoveredResidue, isHost, remoteUserName, peerNames = {}, controllerId, isCameraSynced, onToggleCameraSync, userName, unreadCount = 0, isChatOpen = false, onToggleChat, isAiChatOpen = false, onToggleAiChat, onOpenSettings }: HUDProps) {
     const textColor = isLightMode ? 'text-gray-800' : 'text-gray-200';
     const bgColor = isLightMode ? 'bg-white/80' : 'bg-black/80';
     const borderColor = isLightMode ? 'border-gray-200' : 'border-neutral-800';
@@ -185,24 +187,39 @@ export function HUD({ hoveredResidue, pdbMetadata, pdbId, isLightMode, isEmbedMo
                             ))}
                         </div>
 
-                        {/* Chat Toggle */}
-                        {onToggleChat && (
-                            <div className="flex items-center border-r border-gray-500/20 pr-2">
-                                <button
-                                    onClick={onToggleChat}
-                                    className={`relative text-[10px] font-bold px-4 py-1.5 md:px-2 md:py-1 rounded-full flex items-center gap-2 transition-colors ${isChatOpen
-                                        ? 'bg-blue-600 text-white shadow-md'
-                                        : (isLightMode ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' : 'bg-blue-500/20 text-blue-300 hover:bg-blue-500/30')
-                                        }`}
-                                >
-                                    <MessageSquare className="w-4 h-4 md:w-3 md:h-3" />
-                                    CHAT
-                                    {unreadCount > 0 && (
-                                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-bold w-4 h-4 flex items-center justify-center rounded-full border-2 border-white dark:border-black">
-                                            {unreadCount}
-                                        </span>
-                                    )}
-                                </button>
+                        {/* Chat Toggles */}
+                        {(onToggleChat || onToggleAiChat) && (
+                            <div className="flex items-center gap-2 border-r border-gray-500/20 pr-2">
+                                {onToggleChat && (
+                                    <button
+                                        onClick={onToggleChat}
+                                        className={`relative text-[10px] font-bold px-4 py-1.5 md:px-2 md:py-1 rounded-full flex items-center gap-2 transition-colors ${isChatOpen
+                                            ? 'bg-blue-600 text-white shadow-md'
+                                            : (isLightMode ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' : 'bg-blue-500/20 text-blue-300 hover:bg-blue-500/30')
+                                            }`}
+                                    >
+                                        <MessageSquare className="w-4 h-4 md:w-3 md:h-3" />
+                                        CHAT
+                                        {unreadCount > 0 && (
+                                            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-bold w-4 h-4 flex items-center justify-center rounded-full border-2 border-white dark:border-black">
+                                                {unreadCount}
+                                            </span>
+                                        )}
+                                    </button>
+                                )}
+                                {onToggleAiChat && (
+                                    <button
+                                        onClick={onToggleAiChat}
+                                        className={`relative text-[10px] font-bold px-4 py-1.5 md:px-2 md:py-1 rounded-full flex items-center gap-2 transition-colors shadow-sm ${isAiChatOpen
+                                            ? 'bg-indigo-600 text-white shadow-md'
+                                            : (isLightMode ? 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200' : 'bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30')
+                                            }`}
+                                        title="Quercus AI"
+                                    >
+                                        <Sparkles className="w-4 h-4 md:w-3 md:h-3" />
+                                        AI
+                                    </button>
+                                )}
                             </div>
                         )}
 

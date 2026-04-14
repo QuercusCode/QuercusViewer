@@ -24,6 +24,7 @@ import { SuperpositionModal } from './components/SuperpositionModal';
 import { IdentityModal } from './components/IdentityModal';
 import { Settings } from './components/Settings';
 import { SessionChat } from './components/SessionChat';
+import { AIChatSidebar } from './components/AIChatSidebar';
 import { OFFLINE_LIBRARY } from './data/library';
 import { fetchPubChemMetadata } from './utils/pdbUtils';
 import { useTheme } from './lib/ThemeContext';
@@ -161,6 +162,7 @@ function App() {
   // Chat State
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isAiChatOpen, setIsAiChatOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
   // Clear unread on open
@@ -2774,8 +2776,12 @@ function App() {
             unreadCount={unreadCount}
             isChatOpen={isChatOpen}
             onToggleChat={() => setIsChatOpen(!isChatOpen)}
+            isAiChatOpen={isAiChatOpen}
+            onToggleAiChat={() => setIsAiChatOpen(!isAiChatOpen)}
             onOpenSettings={() => setIsSettingsOpen(true)}
           />
+
+          <AIChatSidebar isOpen={isAiChatOpen} onClose={() => setIsAiChatOpen(false)} />
 
           <IdentityModal
             isOpen={isIdentityModalOpen}
