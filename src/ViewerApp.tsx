@@ -25,6 +25,7 @@ import { IdentityModal } from './components/IdentityModal';
 import { Settings } from './components/Settings';
 import { SessionChat } from './components/SessionChat';
 import { AIChatSidebar } from './components/AIChatSidebar';
+import { NotesPanel } from './components/NotesPanel';
 import { OFFLINE_LIBRARY } from './data/library';
 import { fetchPubChemMetadata } from './utils/pdbUtils';
 import { useTheme } from './lib/ThemeContext';
@@ -163,6 +164,7 @@ function App() {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isAiChatOpen, setIsAiChatOpen] = useState(false);
+  const [isNotesOpen, setIsNotesOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
   // Clear unread on open
@@ -2777,11 +2779,14 @@ function App() {
             isChatOpen={isChatOpen}
             onToggleChat={() => setIsChatOpen(!isChatOpen)}
             isAiChatOpen={isAiChatOpen}
-            onToggleAiChat={() => setIsAiChatOpen(!isAiChatOpen)}
+            onToggleAiChat={user ? () => setIsAiChatOpen(!isAiChatOpen) : undefined}
+            isNotesOpen={isNotesOpen}
+            onToggleNotes={() => setIsNotesOpen(!isNotesOpen)}
             onOpenSettings={() => setIsSettingsOpen(true)}
           />
 
           <AIChatSidebar isOpen={isAiChatOpen} onClose={() => setIsAiChatOpen(false)} pdbId={pdbId} pdbMetadata={pdbMetadata} />
+          <NotesPanel isOpen={isNotesOpen} onClose={() => setIsNotesOpen(false)} />
 
           <IdentityModal
             isOpen={isIdentityModalOpen}

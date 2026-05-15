@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from 'react';
 import type { ResidueInfo, PDBMetadata } from '../types';
 import type { PeerSession } from '../hooks/usePeerSession';
-import { Eye, Wrench, Lock, Unlock, Mic, MicOff, PhoneOff, MessageSquare, Sparkles } from 'lucide-react';
+import { Eye, Wrench, Lock, Unlock, Mic, MicOff, PhoneOff, MessageSquare, Sparkles, StickyNote } from 'lucide-react';
 
 interface HUDProps {
     hoveredResidue: ResidueInfo | null;
@@ -24,10 +24,12 @@ interface HUDProps {
     onToggleChat?: () => void;
     isAiChatOpen?: boolean;
     onToggleAiChat?: () => void;
+    isNotesOpen?: boolean;
+    onToggleNotes?: () => void;
     onOpenSettings?: () => void;
 }
 
-export function HUD({ hoveredResidue, pdbMetadata, pdbId, isLightMode, isEmbedMode = false, peerSession, remoteHoveredResidue, isHost, remoteUserName, peerNames = {}, controllerId, isCameraSynced, onToggleCameraSync, userName, unreadCount = 0, isChatOpen = false, onToggleChat, isAiChatOpen = false, onToggleAiChat, onOpenSettings }: HUDProps) {
+export function HUD({ hoveredResidue, pdbMetadata, pdbId, isLightMode, isEmbedMode = false, peerSession, remoteHoveredResidue, isHost, remoteUserName, peerNames = {}, controllerId, isCameraSynced, onToggleCameraSync, userName, unreadCount = 0, isChatOpen = false, onToggleChat, isAiChatOpen = false, onToggleAiChat, isNotesOpen = false, onToggleNotes, onOpenSettings }: HUDProps) {
     const textColor = isLightMode ? 'text-gray-800' : 'text-gray-200';
     const bgColor = isLightMode ? 'bg-white/80' : 'bg-black/80';
     const borderColor = isLightMode ? 'border-gray-200' : 'border-neutral-800';
@@ -171,7 +173,7 @@ export function HUD({ hoveredResidue, pdbMetadata, pdbId, isLightMode, isEmbedMo
                 )}
 
                 {/* Main Control Pill */}
-                {(peerSession?.isConnected || onToggleAiChat) && (
+                {(peerSession?.isConnected || onToggleAiChat || onToggleNotes) && (
                     <div className={`pointer-events-auto backdrop-blur-md rounded-full border ${borderColor} ${bgColor} shadow-lg px-4 py-2 flex items-center justify-center gap-2 animate-in slide-in-from-bottom-2 mx-auto`}>
 
                         {/* Desktop: Reactions Inline */}
@@ -190,8 +192,21 @@ export function HUD({ hoveredResidue, pdbMetadata, pdbId, isLightMode, isEmbedMo
                         )}
 
                         {/* Chat Toggles */}
-                        {(onToggleChat || onToggleAiChat) && (
+                        {(onToggleChat || onToggleAiChat || onToggleNotes) && (
                             <div className={`flex items-center gap-2 ${peerSession?.isConnected ? 'border-r border-gray-500/20 pr-2' : ''}`}>
+                                {onToggleNotes && (
+                                    <button
+                                        onClick={onToggleNotes}
+                                        className={`relative text-[10px] font-bold px-4 py-1.5 md:px-2 md:py-1 rounded-full flex items-center gap-2 transition-colors shadow-sm ${isNotesOpen
+                                            ? 'bg-amber-500 text-white shadow-md'
+                                            : (isLightMode ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' : 'bg-amber-500/20 text-amber-300 hover:bg-amber-500/30')
+                                            }`}
+                                        title="Quick Notes"
+                                    >
+                                        <StickyNote className="w-4 h-4 md:w-3 md:h-3" />
+                                        NOTES
+                                    </button>
+                                )}
                                 {onToggleChat && (
                                     <button
                                         onClick={onToggleChat}
