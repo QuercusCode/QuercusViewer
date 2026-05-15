@@ -5,7 +5,7 @@ export interface ChatMessageRequest {
     content: string;
 }
 
-export async function sendChatMessage(query: string, messages: ChatMessageRequest[], match_count: number = 5) {
+export async function sendChatMessage(query: string, messages: ChatMessageRequest[], match_count: number = 5, viewerContext?: string) {
     const { data: session } = await supabase.auth.getSession();
     if (!session.session) throw new Error('User not authenticated');
 
@@ -27,7 +27,8 @@ export async function sendChatMessage(query: string, messages: ChatMessageReques
         body: JSON.stringify({
             query,
             messages,
-            match_count
+            match_count,
+            viewerContext
         })
     });
 

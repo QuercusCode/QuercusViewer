@@ -2781,7 +2781,7 @@ function App() {
             onOpenSettings={() => setIsSettingsOpen(true)}
           />
 
-          <AIChatSidebar isOpen={isAiChatOpen} onClose={() => setIsAiChatOpen(false)} />
+          <AIChatSidebar isOpen={isAiChatOpen} onClose={() => setIsAiChatOpen(false)} pdbId={pdbId} pdbMetadata={pdbMetadata} />
 
           <IdentityModal
             isOpen={isIdentityModalOpen}

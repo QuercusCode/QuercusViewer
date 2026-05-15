@@ -1,6 +1,6 @@
-import { serve } from "https://deno.land/std@0.177.0/http/server.ts"
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.48.1"
-import Anthropic from "https://esm.sh/@anthropic-ai/sdk@0.36.0"
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts"
+import { createClient } from "npm:@supabase/supabase-js@2"
+import Anthropic from "npm:@anthropic-ai/sdk"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -13,7 +13,7 @@ serve(async (req) => {
   }
 
   try {
-    const { query, messages, match_count = 5 } = await req.json()
+    const { query, messages, match_count = 5, viewerContext } = await req.json()
     
     // Auth Check
     const authHeader = req.headers.get('Authorization')
@@ -61,13 +61,19 @@ serve(async (req) => {
     if (matchError) throw matchError
 
     let contextText = "";
+
+    // Always include the currently loaded structure if provided
+    if (viewerContext) {
+      contextText += `${viewerContext}\n\n`;
+    }
+
     if (matchedStructures && matchedStructures.length > 0) {
-      contextText = "Here is some information about the user's uploaded molecular structures from their repository that matched the query:\n\n";
+      contextText += "Additionally, here are related structures from the user's saved library:\n\n";
       matchedStructures.forEach((s: any) => {
          contextText += `---\nStructure Information:\n${s.content}\n---\n`;
       })
-    } else {
-      contextText = "No specific molecular structures from the user's repository were found matching this query.";
+    } else if (!viewerContext) {
+      contextText = "No specific molecular structures were found matching this query.";
     }
 
     // Anthropic Chat
@@ -85,8 +91,13 @@ serve(async (req) => {
         { role: 'user', content: augmentedContent }
     ]
 
+    // Anthropic requires the first message to have role 'user' — drop any leading assistant messages
+    while (augmentedMessages.length > 0 && augmentedMessages[0].role !== 'user') {
+      augmentedMessages.shift();
+    }
+
     const stream = await anthropic.messages.create({
-      model: "claude-3-haiku-20240307",
+      model: "claude-haiku-4-5-20251001",
       max_tokens: 1024,
       system: "You are Quercus AI, a helpful assistant expert in structural biology and chemistry. You help the user analyze their 3D structures.",
       messages: augmentedMessages,

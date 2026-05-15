@@ -1,13 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, X, Bot, User, Sparkles, Loader2 } from 'lucide-react';
 import { sendChatMessage, type ChatMessageRequest } from '../services/aiService';
+import type { PDBMetadata } from '../types';
 
 interface AIChatSidebarProps {
     isOpen: boolean;
     onClose: () => void;
+    pdbId?: string | null;
+    pdbMetadata?: PDBMetadata | null;
 }
 
-export const AIChatSidebar: React.FC<AIChatSidebarProps> = ({ isOpen, onClose }) => {
+export const AIChatSidebar: React.FC<AIChatSidebarProps> = ({ isOpen, onClose, pdbId, pdbMetadata }) => {
     const [messages, setMessages] = useState<ChatMessageRequest[]>([
         { role: 'assistant', content: "Hello! I am Quercus AI. I can search through your molecular structures and answer questions about biology and chemistry. How can I help you today?" }
     ]);
@@ -35,7 +38,24 @@ export const AIChatSidebar: React.FC<AIChatSidebarProps> = ({ isOpen, onClose })
         setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
 
         try {
-            const stream = await sendChatMessage(userMsg.content, [...messages, userMsg]);
+            // Build context about the currently loaded structure
+            let viewerContext: string | undefined;
+            if (pdbId || pdbMetadata) {
+                const parts: string[] = ['The user currently has a 3D structure loaded in the viewer:'];
+                if (pdbId) parts.push(`PDB/ID: ${pdbId.toUpperCase()}`);
+                if (pdbMetadata?.title) parts.push(`Name: ${pdbMetadata.title}`);
+                if (pdbMetadata?.organism) parts.push(`Organism: ${pdbMetadata.organism}`);
+                if (pdbMetadata?.method) parts.push(`Method: ${pdbMetadata.method}`);
+                if (pdbMetadata?.resolution) parts.push(`Resolution: ${pdbMetadata.resolution}`);
+                if (pdbMetadata?.depositionDate) parts.push(`Deposited: ${pdbMetadata.depositionDate}`);
+                if (pdbMetadata?.formula) parts.push(`Formula: ${pdbMetadata.formula}`);
+                if (pdbMetadata?.molecularWeight) parts.push(`Molecular Weight: ${pdbMetadata.molecularWeight}`);
+                viewerContext = parts.join('\n');
+            }
+
+            // Exclude the UI-only greeting (index 0) — Anthropic requires messages to start with 'user' role
+            const conversationHistory = messages.slice(1);
+            const stream = await sendChatMessage(userMsg.content, [...conversationHistory, userMsg], 5, viewerContext);
             
             const reader = stream.pipeThrough(new TextDecoderStream()).getReader();
             
@@ -48,21 +68,23 @@ export const AIChatSidebar: React.FC<AIChatSidebarProps> = ({ isOpen, onClose })
                 // value might contain multiple JSON lines
                 const lines = value.split('\n').filter(line => line.trim() !== '');
                 for (const line of lines) {
+                    let parsed: any;
                     try {
-                        const parsed = JSON.parse(line);
-                        if (parsed.error) {
-                            throw new Error(parsed.error);
-                        }
-                        if (parsed.text) {
-                            assistantMessage += parsed.text;
-                            setMessages(prev => {
-                                const copy = [...prev];
-                                copy[copy.length - 1] = { role: 'assistant', content: assistantMessage };
-                                return copy;
-                            });
-                        }
-                    } catch (e) {
-                        console.error("Could not parse stream chunk", line, e);
+                        parsed = JSON.parse(line);
+                    } catch {
+                        console.error("Could not parse stream chunk", line);
+                        continue;
+                    }
+                    if (parsed.error) {
+                        throw new Error(parsed.error);
+                    }
+                    if (parsed.text) {
+                        assistantMessage += parsed.text;
+                        setMessages(prev => {
+                            const copy = [...prev];
+                            copy[copy.length - 1] = { role: 'assistant', content: assistantMessage };
+                            return copy;
+                        });
                     }
                 }
             }
