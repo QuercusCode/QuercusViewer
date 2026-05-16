@@ -2777,7 +2777,7 @@ function App() {
             // Chat Integration
             unreadCount={unreadCount}
             isChatOpen={isChatOpen}
-            onToggleChat={() => setIsChatOpen(!isChatOpen)}
+            onToggleChat={peerSession.isConnected ? () => setIsChatOpen(!isChatOpen) : undefined}
             isAiChatOpen={isAiChatOpen}
             onToggleAiChat={user ? () => setIsAiChatOpen(!isAiChatOpen) : undefined}
             isNotesOpen={isNotesOpen}
