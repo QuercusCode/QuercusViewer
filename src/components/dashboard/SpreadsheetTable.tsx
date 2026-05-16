@@ -1,7 +1,7 @@
 import { NodeViewContent, NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap/react'
 import type { NodeViewProps } from '@tiptap/react'
 import { Table } from '@tiptap/extension-table'
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react'
 import { 
   Trash2, Download, Maximize2, Settings, 
   Bold, Italic, Underline as UnderlineIcon, Strikethrough, 
@@ -15,6 +15,13 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode, updateAtt
   const [activeCell, setActiveCell] = useState<string | null>(null);
   const [cellValue, setCellValue] = useState("");
   const [showChartPreview, setShowChartPreview] = useState(false);
+  const [showFontMenu, setShowFontMenu] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [showStatsPanel, setShowStatsPanel] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [copiedCSV, setCopiedCSV] = useState(false);
+  const fontMenuRef = useRef<HTMLDivElement>(null);
+  const settingsRef = useRef<HTMLDivElement>(null);
   const [chartConfig, setChartConfig] = useState<{
     type: 'line' | 'bar', 
     xCol: number, 
@@ -410,6 +417,85 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode, updateAtt
     setShowChartPreview(!showChartPreview);
   };
 
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (fontMenuRef.current && !fontMenuRef.current.contains(e.target as Node)) setShowFontMenu(false);
+      if (settingsRef.current && !settingsRef.current.contains(e.target as Node)) setShowSettings(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const getTableRows = useCallback((): string[][] => {
+    const result: string[][] = [];
+    for (let r = 0; r < node.childCount; r++) {
+      const row = node.child(r);
+      const cells: string[] = [];
+      for (let c = 0; c < row.childCount; c++) {
+        cells.push(row.child(c).textContent.trim());
+      }
+      result.push(cells);
+    }
+    return result;
+  }, [node]);
+
+  const downloadCSV = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const tableRows = getTableRows();
+    const csv = tableRows.map(row =>
+      row.map(v => (v.includes(',') || v.includes('"') || v.includes('\n'))
+        ? `"${v.replace(/"/g, '""')}"` : v
+      ).join(',')
+    ).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'table.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    setCopiedCSV(true);
+    setTimeout(() => setCopiedCSV(false), 1500);
+  };
+
+  const columnStats = useMemo(() => {
+    const tableRows = getTableRows();
+    if (tableRows.length < 2) return [];
+    const headers = tableRows[0];
+    return headers.map((header, ci) => {
+      const vals = tableRows.slice(1)
+        .map(r => parseFloat(r[ci]))
+        .filter(v => !isNaN(v));
+      if (vals.length === 0) return null;
+      const sum = vals.reduce((a, b) => a + b, 0);
+      const mean = sum / vals.length;
+      const stdev = Math.sqrt(vals.reduce((a, b) => a + (b - mean) ** 2, 0) / vals.length);
+      return { header: header || letters[ci] || `Col ${ci + 1}`, min: Math.min(...vals), max: Math.max(...vals), mean, stdev, n: vals.length };
+    }).filter(Boolean);
+  }, [getTableRows, letters]);
+
+  const applyFontSize = (e: React.MouseEvent, size: string) => {
+    e.preventDefault();
+    (editor as any).chain().focus().setFontSize(size).run();
+    setShowFontMenu(false);
+  };
+
+  const tableOp = (e: React.MouseEvent, op: string) => {
+    e.preventDefault();
+    const chain = (editor as any).chain().focus();
+    switch (op) {
+      case 'addColAfter': chain.addColumnAfter().run(); break;
+      case 'addColBefore': chain.addColumnBefore().run(); break;
+      case 'deleteCol': chain.deleteColumn().run(); break;
+      case 'addRowAfter': chain.addRowAfter().run(); break;
+      case 'deleteRow': chain.deleteRow().run(); break;
+    }
+    setShowSettings(false);
+  };
+
   return (
     <NodeViewWrapper className="spreadsheet-premium-wrapper my-12 group/spreadsheet relative z-30">
       <div className="bg-white border border-neutral-200 rounded-xl shadow-2xl transition-all group-hover/spreadsheet:border-neutral-300 relative">
@@ -424,13 +510,31 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode, updateAtt
             />
           </div>
           <div className="flex items-center gap-1">
-            <button onMouseDown={(e) => e.preventDefault()} className="p-1.5 hover:bg-neutral-100 text-neutral-500 rounded transition-colors" title="Download CSV"><Download className="w-3.5 h-3.5" /></button>
-            <button onMouseDown={(e) => e.preventDefault()} className="p-1.5 hover:bg-neutral-100 text-neutral-500 rounded transition-colors" title="Export PDF"><Activity className="w-3.5 h-3.5" /></button>
-            <button onMouseDown={(e) => e.preventDefault()} className="p-1.5 hover:bg-neutral-100 text-neutral-500 rounded transition-colors" title="Expand"><Maximize2 className="w-3.5 h-3.5" /></button>
+            <button
+              onMouseDown={downloadCSV}
+              className={`p-1.5 rounded transition-colors ${copiedCSV ? 'bg-green-100 text-green-600' : 'hover:bg-neutral-100 text-neutral-500'}`}
+              title="Download CSV"
+            >
+              <Download className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onMouseDown={(e) => { e.preventDefault(); setShowStatsPanel(s => !s); }}
+              className={`p-1.5 rounded transition-colors ${showStatsPanel ? 'bg-blue-100 text-blue-600' : 'hover:bg-neutral-100 text-neutral-500'}`}
+              title="Column Statistics"
+            >
+              <Activity className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onMouseDown={(e) => { e.preventDefault(); setIsExpanded(true); }}
+              className="p-1.5 hover:bg-neutral-100 text-neutral-500 rounded transition-colors"
+              title="Expand Table"
+            >
+              <Maximize2 className="w-3.5 h-3.5" />
+            </button>
             <ToolbarDivider />
-            <button 
+            <button
               onClick={(e) => { e.preventDefault(); deleteNode(); }}
-              className="p-1.5 hover:bg-red-50 text-neutral-400 hover:text-red-500 rounded transition-colors" 
+              className="p-1.5 hover:bg-red-50 text-neutral-400 hover:text-red-500 rounded transition-colors"
               title="Remove Spreadsheet"
             >
               <Trash2 className="w-3.5 h-3.5" />
@@ -448,11 +552,28 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode, updateAtt
             <button onMouseDown={(e) => e.preventDefault()} className="p-1.5 hover:bg-neutral-200 text-neutral-700 rounded transition-colors"><LinkIcon className="w-3.5 h-3.5" /></button>
           </div>
 
-          <div className="flex items-center gap-0.5 px-2 border-r border-neutral-200">
-            <button onMouseDown={(e) => e.preventDefault()} className="flex items-center gap-1 pl-1.5 pr-1 py-1 hover:bg-neutral-200 text-neutral-700 rounded transition-colors">
+          <div className="flex items-center gap-0.5 px-2 border-r border-neutral-200 relative" ref={fontMenuRef}>
+            <button
+              onMouseDown={(e) => { e.preventDefault(); setShowFontMenu(s => !s); setShowSettings(false); }}
+              className={`flex items-center gap-1 pl-1.5 pr-1 py-1 rounded transition-colors ${showFontMenu ? 'bg-neutral-200 text-neutral-900' : 'hover:bg-neutral-200 text-neutral-700'}`}
+              title="Font Size"
+            >
               <Type className="w-3.5 h-3.5" />
               <ChevronDown className="w-2.5 h-2.5 opacity-50" />
             </button>
+            {showFontMenu && (
+              <div className="absolute top-full left-0 mt-1 w-32 bg-white border border-neutral-200 rounded-lg shadow-xl z-[10000] py-1 animate-in fade-in zoom-in-95 duration-100">
+                {['10px', '12px', '14px', '16px', '18px', '20px'].map(size => (
+                  <button
+                    key={size}
+                    onMouseDown={(e) => applyFontSize(e, size)}
+                    className="w-full text-left px-3 py-1.5 text-xs text-neutral-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                  >
+                    {size}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="flex items-center gap-0.5 px-2 border-r border-neutral-200">
@@ -613,8 +734,46 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode, updateAtt
             )}
           </div>
 
-          <button onMouseDown={(e) => e.preventDefault()} className="p-1.5 hover:bg-neutral-200 text-neutral-700 rounded transition-colors ml-1"><Settings className="w-3.5 h-3.5" /></button>
+          <div className="relative ml-1" ref={settingsRef}>
+            <button
+              onMouseDown={(e) => { e.preventDefault(); setShowSettings(s => !s); setShowFontMenu(false); }}
+              className={`p-1.5 rounded transition-colors ${showSettings ? 'bg-neutral-200 text-neutral-900' : 'hover:bg-neutral-200 text-neutral-700'}`}
+              title="Table Settings"
+            >
+              <Settings className="w-3.5 h-3.5" />
+            </button>
+            {showSettings && (
+              <div className="absolute top-full right-0 mt-1 w-44 bg-white border border-neutral-200 rounded-lg shadow-xl z-[10000] py-1 animate-in fade-in zoom-in-95 duration-100">
+                <p className="px-3 py-1 text-[9px] font-bold text-neutral-400 uppercase tracking-wider">Columns</p>
+                <button onMouseDown={(e) => tableOp(e, 'addColBefore')} className="w-full text-left px-3 py-1.5 text-xs text-neutral-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">Add Column Before</button>
+                <button onMouseDown={(e) => tableOp(e, 'addColAfter')} className="w-full text-left px-3 py-1.5 text-xs text-neutral-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">Add Column After</button>
+                <button onMouseDown={(e) => tableOp(e, 'deleteCol')} className="w-full text-left px-3 py-1.5 text-xs text-red-500 hover:bg-red-50 transition-colors">Delete Column</button>
+                <div className="border-t border-neutral-100 my-1" />
+                <p className="px-3 py-1 text-[9px] font-bold text-neutral-400 uppercase tracking-wider">Rows</p>
+                <button onMouseDown={(e) => tableOp(e, 'addRowAfter')} className="w-full text-left px-3 py-1.5 text-xs text-neutral-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">Add Row After</button>
+                <button onMouseDown={(e) => tableOp(e, 'deleteRow')} className="w-full text-left px-3 py-1.5 text-xs text-red-500 hover:bg-red-50 transition-colors">Delete Row</button>
+              </div>
+            )}
+          </div>
         </div>
+
+        {/* STATS PANEL */}
+        {showStatsPanel && (
+          <div className="px-4 py-3 bg-blue-50 border-b border-blue-100 flex flex-wrap gap-3 animate-in fade-in slide-in-from-top-1 duration-150">
+            {columnStats.length === 0 ? (
+              <p className="text-[10px] text-blue-400">No numeric columns detected.</p>
+            ) : columnStats.map((s: any, i: number) => (
+              <div key={i} className="flex items-center gap-2 bg-white border border-blue-100 rounded-lg px-3 py-1.5 shadow-sm">
+                <span className="text-[10px] font-bold text-blue-600 uppercase">{s.header}</span>
+                <span className="text-[10px] text-neutral-500">n={s.n}</span>
+                <span className="text-[10px] text-neutral-600">min <b>{s.min.toFixed(2)}</b></span>
+                <span className="text-[10px] text-neutral-600">max <b>{s.max.toFixed(2)}</b></span>
+                <span className="text-[10px] text-neutral-600">mean <b>{s.mean.toFixed(2)}</b></span>
+                <span className="text-[10px] text-neutral-600">σ <b>{s.stdev.toFixed(2)}</b></span>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* FORMULA BAR */}
         <div className="flex items-center gap-2 px-3 py-1.5 bg-white border-b border-neutral-200">
@@ -695,6 +854,50 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode, updateAtt
           </div>
         </div>
       </div>
+
+      {/* EXPAND MODAL */}
+      {isExpanded && (
+        <div className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm flex flex-col p-6 animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-2xl flex flex-col flex-1 min-h-0 overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-3 border-b border-neutral-200 shrink-0">
+              <span className="text-sm font-bold text-neutral-800">Table — Expanded View</span>
+              <div className="flex items-center gap-2">
+                <button onMouseDown={downloadCSV} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-neutral-600 hover:text-neutral-900 border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors">
+                  <Download className="w-3.5 h-3.5" />
+                  Download CSV
+                </button>
+                <button onMouseDown={(e) => { e.preventDefault(); setIsExpanded(false); }} className="p-1.5 hover:bg-neutral-100 text-neutral-500 rounded-lg transition-colors">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+            <div className="flex-1 overflow-auto p-5 min-h-0">
+              <table className="w-full border-collapse text-sm">
+                <thead>
+                  <tr>
+                    {Array.from({ length: cols }).map((_, ci) => (
+                      <th key={ci} className="px-4 py-2 bg-neutral-50 border border-neutral-200 text-left text-[10px] font-bold text-neutral-500 uppercase tracking-wider">
+                        {node.childCount > 0 ? node.child(0).child(ci)?.textContent?.trim() || letters[ci] : letters[ci]}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {Array.from({ length: Math.max(0, node.childCount - 1) }).map((_, ri) => (
+                    <tr key={ri} className="even:bg-neutral-50">
+                      {Array.from({ length: cols }).map((_, ci) => (
+                        <td key={ci} className="px-4 py-2.5 border border-neutral-200 text-neutral-700">
+                          {node.child(ri + 1)?.child(ci)?.textContent?.trim() || ''}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
 
       <style>{`
         .spreadsheet-native-table {
