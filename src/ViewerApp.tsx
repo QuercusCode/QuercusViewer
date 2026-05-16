@@ -2888,9 +2888,11 @@ function App() {
           {/* Top Right Navigation (Dashboard / Auth / Notebook) */}
           {!isEmbedMode && !isStudioMode && (
             <div className={`absolute top-4 z-50 flex items-center gap-3 transition-all duration-300 ease-in-out ${
-              visualizerEngine === 'molstar' 
-                ? 'right-4 md:right-8' 
-                : (chains.length > 0 ? 'right-[192px] md:right-[288px]' : 'right-[192px]')
+              visualizerEngine === 'molstar'
+                ? (isAiChatOpen ? 'right-[324px] md:right-[392px]' : 'right-4 md:right-8')
+                : (chains.length > 0
+                    ? (isAiChatOpen ? 'right-[512px] md:right-[576px]' : 'right-[192px] md:right-[288px]')
+                    : (isAiChatOpen ? 'right-[324px] md:right-[392px]' : 'right-[192px]'))
             }`}>
               <button
                 onClick={() => setIsNotebookOpen(!isNotebookOpen)}
@@ -3633,7 +3635,7 @@ function App() {
 
       {
         !isEmbedMode && (
-          <HelpGuide isVisible={!isCleanMode} isLightMode={isLightMode} hasSequence={chains.length > 0} isMolStarActive={visualizerEngine === 'molstar'} isMolStarSidebarExpanded={isMolStarSidebarExpanded} />
+          <HelpGuide isVisible={!isCleanMode} isLightMode={isLightMode} hasSequence={chains.length > 0} isMolStarActive={visualizerEngine === 'molstar'} isMolStarSidebarExpanded={isMolStarSidebarExpanded} isAiChatOpen={isAiChatOpen} />
         )
       }
 

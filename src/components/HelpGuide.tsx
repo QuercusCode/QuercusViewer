@@ -12,7 +12,7 @@ type FeatureSection = {
     content: React.ReactNode;
 };
 
-export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, hasSequence?: boolean, isMolStarActive?: boolean, isMolStarSidebarExpanded?: boolean }> = ({ isVisible = true, isLightMode = false, hasSequence = false, isMolStarActive = false, isMolStarSidebarExpanded = true }) => {
+export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, hasSequence?: boolean, isMolStarActive?: boolean, isMolStarSidebarExpanded?: boolean, isAiChatOpen?: boolean }> = ({ isVisible = true, isLightMode = false, hasSequence = false, isMolStarActive = false, isMolStarSidebarExpanded = true, isAiChatOpen = false }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('start');
     const [showMobileList, setShowMobileList] = useState(true);
@@ -914,7 +914,7 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
     return (
         <>
             {/* Donation Dropdown (Floating next to Help) */}
-            <div className={`fixed z-40 group transition-all duration-300 ease-in-out ${isMolStarActive ? (isMolStarSidebarExpanded ? 'bottom-20 right-[380px]' : 'bottom-20 right-[80px]') : `top-4 ${hasSequence ? 'right-[76px] md:right-[172px]' : 'right-[76px]'}`}`}>
+            <div className={`fixed z-40 group transition-all duration-300 ease-in-out ${isMolStarActive ? (isMolStarSidebarExpanded ? 'bottom-20 right-[380px]' : 'bottom-20 right-[80px]') : `top-4 ${hasSequence ? (isAiChatOpen ? 'right-[396px] md:right-[460px]' : 'right-[76px] md:right-[172px]') : (isAiChatOpen ? 'right-[396px] md:right-[460px]' : 'right-[76px]')}`}`}>
                 <button
                     className={`h-10 px-4 rounded-full border shadow-lg backdrop-blur-md transition-all group-hover:bg-neutral-800 group-hover:text-white flex items-center gap-2 ${isLightMode ? 'bg-white/80 text-pink-600 border-black/10' : 'bg-neutral-900/80 text-pink-500 border-white/10'}`}
                 >
@@ -960,7 +960,7 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
             {/* Trigger Button */}
             <button
                 onClick={() => setIsOpen(true)}
-                className={`fixed z-40 h-10 w-10 flex items-center justify-center rounded-full border shadow-lg backdrop-blur-md transition-all duration-300 ease-in-out hover:scale-105 group ${isMolStarActive ? (isMolStarSidebarExpanded ? 'bottom-20 right-[330px]' : 'bottom-20 right-[30px]') : `top-4 ${hasSequence ? 'right-[24px] md:right-[120px]' : 'right-[24px]'}`} ${isLightMode ? 'bg-white/80 text-neutral-600 hover:text-blue-600 border-black/10 hover:bg-white' : 'bg-neutral-900/80 text-neutral-400 hover:text-white border-white/10'}`}
+                className={`fixed z-40 h-10 w-10 flex items-center justify-center rounded-full border shadow-lg backdrop-blur-md transition-all duration-300 ease-in-out hover:scale-105 group ${isMolStarActive ? (isMolStarSidebarExpanded ? 'bottom-20 right-[330px]' : 'bottom-20 right-[30px]') : `top-4 ${hasSequence ? (isAiChatOpen ? 'right-[344px] md:right-[408px]' : 'right-[24px] md:right-[120px]') : (isAiChatOpen ? 'right-[344px] md:right-[408px]' : 'right-[24px]')}`} ${isLightMode ? 'bg-white/80 text-neutral-600 hover:text-blue-600 border-black/10 hover:bg-white' : 'bg-neutral-900/80 text-neutral-400 hover:text-white border-white/10'}`}
                 title="Viewer Controls & Help"
             >
                 <CircleHelp className="w-5 h-5 group-hover:rotate-12 transition-transform" />

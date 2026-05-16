@@ -186,21 +186,44 @@ export const AIChatSidebar: React.FC<AIChatSidebarProps> = ({ isOpen, onClose, p
     if (!isOpen) return null;
 
     return (
-        <div
-            className="absolute right-0 top-0 bottom-0 w-80 md:w-96 bg-neutral-950 border-l border-neutral-800 flex flex-col z-[100]"
-            style={{ animation: 'slideInRight 0.2s ease-out' }}
-            onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-            onDragLeave={() => setIsDragging(false)}
-            onDrop={handleDrop}
-        >
+        <>
+            {/* Mobile backdrop */}
+            <div
+                className="fixed inset-0 z-[99] bg-black/50 md:hidden"
+                onClick={onClose}
+            />
+
+            <div
+                className={[
+                    // Mobile: bottom sheet
+                    'fixed bottom-0 left-0 right-0 z-[100] flex flex-col',
+                    'h-[82vh] rounded-t-2xl',
+                    // Desktop: right sidebar
+                    'md:absolute md:right-0 md:top-0 md:bottom-0 md:left-auto md:h-auto md:w-96 md:rounded-none',
+                    'bg-neutral-950 border-t border-neutral-800 md:border-t-0 md:border-l',
+                ].join(' ')}
+                style={{ animation: 'slideInUp 0.25s ease-out' }}
+                onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                onDragLeave={() => setIsDragging(false)}
+                onDrop={handleDrop}
+            >
             <style>{`
+                @keyframes slideInUp { from { transform: translateY(24px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
                 @keyframes slideInRight { from { transform: translateX(16px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
                 @keyframes bounce-dot { 0%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-4px); } }
+                @media (min-width: 768px) {
+                    .ai-sidebar-anim { animation-name: slideInRight !important; }
+                }
             `}</style>
+
+            {/* Mobile drag handle */}
+            <div className="flex justify-center pt-2.5 pb-1 md:hidden shrink-0">
+                <div className="w-10 h-1 rounded-full bg-neutral-700" />
+            </div>
 
             {/* Drag overlay */}
             {isDragging && (
-                <div className="absolute inset-0 z-10 border-2 border-dashed border-indigo-500 bg-indigo-500/10 flex items-center justify-center pointer-events-none">
+                <div className="absolute inset-0 z-10 border-2 border-dashed border-indigo-500 bg-indigo-500/10 flex items-center justify-center pointer-events-none rounded-t-2xl md:rounded-none">
                     <p className="text-indigo-300 text-sm font-medium">Drop files here</p>
                 </div>
             )}
@@ -330,5 +353,6 @@ export const AIChatSidebar: React.FC<AIChatSidebarProps> = ({ isOpen, onClose, p
                 </p>
             </div>
         </div>
+        </>
     );
 };
