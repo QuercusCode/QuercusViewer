@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
-    Plus, Star, Clock, Search, Upload, Dna, Trash2, ExternalLink,
+    Plus, Star, Search, Upload, Dna, Trash2, ExternalLink,
     Loader2, AlertCircle, Download, Check, Pencil, Share2,
-    FileText, Filter, List, LayoutGrid, Database, NotebookPen,
-    ChevronDown, ChevronUp, Import, Tag, Copy, X, CheckSquare,
-    Layers, Beaker, Microscope, Globe, Eye, Folder, ChevronRight, FolderInput, Pin, PanelRight, Settings2, Menu
+    Filter, List, LayoutGrid, Database,
+    Import, Tag, Copy, X, CheckSquare,
+    Layers, Globe, Eye, Folder, ChevronRight, FolderInput, Pin, PanelRight, Settings2, Menu
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../lib/AuthContext';
@@ -74,68 +74,6 @@ const PRESET_TAGS: { label: string; color: string }[] = [
 function tagColor(label: string): string {
     return PRESET_TAGS.find(t => t.label.toLowerCase() === label.toLowerCase())?.color
         ?? 'bg-neutral-500/15 border-neutral-500/30 text-[var(--text-secondary)]';
-}
-
-interface TagEditorProps {
-    tags: string[];
-    onChange: (tags: string[]) => void;
-}
-
-function TagEditor({ tags, onChange }: TagEditorProps) {
-    const [open, setOpen] = useState(false);
-    const [custom, setCustom] = useState('');
-    const ref = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        const handler = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
-        document.addEventListener('mousedown', handler);
-        return () => document.removeEventListener('mousedown', handler);
-    }, []);
-
-    const addTag = (label: string) => {
-        const t = label.trim();
-        if (!t || tags.includes(t)) return;
-        onChange([...tags, t]);
-    };
-    const removeTag = (label: string) => onChange(tags.filter(t => t !== label));
-
-    return (
-        <div className="mb-3" ref={ref}>
-            <div className="flex flex-wrap gap-1.5 items-center">
-                {tags.map(t => (
-                    <span key={t} className={`inline - flex items - center gap - 1 text - [10px] font - medium px - 1.5 py - 0.5 rounded - md border ${tagColor(t)} `}>
-                        {t}
-                        <button onClick={() => removeTag(t)} className="opacity-60 hover:opacity-100"><X className="w-2.5 h-2.5" /></button>
-                    </span>
-                ))}
-                <button onClick={() => setOpen(p => !p)}
-                    className="inline-flex items-center gap-1 text-[10px] text-[var(--text-muted)] hover:text-[var(--text-secondary)] border border-dashed border-[var(--border-main)] hover:border-neutral-500 rounded-md px-1.5 py-0.5 transition-all">
-                    <Tag className="w-2.5 h-2.5" />Add tag
-                </button>
-            </div>
-
-            {open && (
-                <div className="mt-2 bg-[var(--input-bg)] border border-[var(--border-main)] rounded-xl p-2.5 shadow-xl">
-                    <div className="flex flex-wrap gap-1.5 mb-2">
-                        {PRESET_TAGS.filter(p => !tags.includes(p.label)).map(p => (
-                            <button key={p.label} onClick={() => { addTag(p.label); setOpen(false); }}
-                                className={`text - [10px] font - medium px - 2 py - 1 rounded - md border transition - all hover: opacity - 90 ${p.color} `}>
-                                {p.label}
-                            </button>
-                        ))}
-                    </div>
-                    <div className="flex gap-1">
-                        <input value={custom} onChange={e => setCustom(e.target.value)}
-                            onKeyDown={e => { if (e.key === 'Enter') { addTag(custom); setCustom(''); setOpen(false); } }}
-                            placeholder="Custom tag…"
-                            className="flex-1 bg-[var(--input-bg)] rounded-lg text-xs text-[var(--text-primary)] placeholder-neutral-500 px-2.5 py-1.5 outline-none border border-transparent focus:border-blue-500/50" />
-                        <button onClick={() => { addTag(custom); setCustom(''); setOpen(false); }}
-                            className="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-medium transition-colors">+</button>
-                    </div>
-                </div>
-            )}
-        </div>
-    );
 }
 
 // ── Skeleton card (shimmer while loading) ─────────────────────────
@@ -431,7 +369,7 @@ interface CardProps {
 
 function StructureCard({
     item, selected, onSelect,
-    onToggleStar, onDelete, onRename, onNotesChange, onTagsChange,
+    onToggleStar, onDelete, onRename, onNotesChange: _onNotesChange, onTagsChange: _onTagsChange,
     onDuplicate, onMove, onOpen, openingId, duplicatingId, onContextMenu, onDoubleClick
 }: CardProps) {
     const [editing, setEditing] = useState(false);
