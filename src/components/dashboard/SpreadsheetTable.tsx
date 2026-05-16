@@ -856,48 +856,58 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode, updateAtt
       </div>
 
       {/* EXPAND MODAL */}
-      {isExpanded && (
-        <div className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm flex flex-col p-6 animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl shadow-2xl flex flex-col flex-1 min-h-0 overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-3 border-b border-neutral-200 shrink-0">
-              <span className="text-sm font-bold text-neutral-800">Table — Expanded View</span>
-              <div className="flex items-center gap-2">
-                <button onMouseDown={downloadCSV} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-neutral-600 hover:text-neutral-900 border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors">
-                  <Download className="w-3.5 h-3.5" />
-                  Download CSV
-                </button>
-                <button onMouseDown={(e) => { e.preventDefault(); setIsExpanded(false); }} className="p-1.5 hover:bg-neutral-100 text-neutral-500 rounded-lg transition-colors">
-                  <X className="w-4 h-4" />
-                </button>
+      {isExpanded && (() => {
+        const tableRows = getTableRows();
+        const colCount = tableRows[0]?.length ?? cols;
+        const colLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+        return (
+          <div className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm flex flex-col p-6 animate-in fade-in duration-200">
+            <div className="bg-white rounded-2xl shadow-2xl flex flex-col flex-1 min-h-0 overflow-hidden">
+              <div className="flex items-center justify-between px-5 py-3 border-b border-neutral-200 shrink-0">
+                <span className="text-sm font-bold text-neutral-800">Expanded Table View</span>
+                <div className="flex items-center gap-2">
+                  <button onMouseDown={downloadCSV} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-neutral-600 hover:text-neutral-900 border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors">
+                    <Download className="w-3.5 h-3.5" />
+                    Download CSV
+                  </button>
+                  <button onMouseDown={(e) => { e.preventDefault(); setIsExpanded(false); }} className="p-1.5 hover:bg-neutral-100 text-neutral-500 rounded-lg transition-colors">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
-            </div>
-            <div className="flex-1 overflow-auto p-5 min-h-0">
-              <table className="w-full border-collapse text-sm">
-                <thead>
-                  <tr>
-                    {Array.from({ length: cols }).map((_, ci) => (
-                      <th key={ci} className="px-4 py-2 bg-neutral-50 border border-neutral-200 text-left text-[10px] font-bold text-neutral-500 uppercase tracking-wider">
-                        {node.childCount > 0 ? node.child(0).child(ci)?.textContent?.trim() || letters[ci] : letters[ci]}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {Array.from({ length: Math.max(0, node.childCount - 1) }).map((_, ri) => (
-                    <tr key={ri} className="even:bg-neutral-50">
-                      {Array.from({ length: cols }).map((_, ci) => (
-                        <td key={ci} className="px-4 py-2.5 border border-neutral-200 text-neutral-700">
-                          {node.child(ri + 1)?.child(ci)?.textContent?.trim() || ''}
-                        </td>
+              <div className="flex-1 overflow-auto min-h-0">
+                <table className="w-full border-collapse text-sm">
+                  <thead className="sticky top-0 z-10">
+                    <tr>
+                      <th className="w-10 px-3 py-2.5 bg-neutral-100 border border-neutral-200 text-center text-[10px] font-bold text-neutral-400">#</th>
+                      {Array.from({ length: colCount }).map((_, ci) => (
+                        <th key={ci} className="px-4 py-2.5 bg-neutral-100 border border-neutral-200 text-center text-[10px] font-bold text-neutral-500 uppercase tracking-wider min-w-[120px]">
+                          {colLetters[ci] || `C${ci + 1}`}
+                        </th>
                       ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {tableRows.map((row, ri) => (
+                      <tr key={ri} className={ri % 2 === 0 ? 'bg-white' : 'bg-neutral-50'}>
+                        <td className="px-3 py-2.5 border border-neutral-200 text-center text-[10px] font-mono text-neutral-400 bg-neutral-50">{ri + 1}</td>
+                        {Array.from({ length: colCount }).map((_, ci) => (
+                          <td key={ci} className="px-4 py-2.5 border border-neutral-200 text-neutral-700 text-sm">
+                            {row[ci] ?? ''}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="px-5 py-2.5 border-t border-neutral-100 bg-neutral-50 text-[10px] text-neutral-400 shrink-0">
+                {tableRows.length} rows · {colCount} columns
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       <style>{`
         .spreadsheet-native-table {
