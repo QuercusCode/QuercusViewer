@@ -434,44 +434,23 @@ function StructureCard({
     onToggleStar, onDelete, onRename, onNotesChange, onTagsChange,
     onDuplicate, onMove, onOpen, openingId, duplicatingId, onContextMenu, onDoubleClick
 }: CardProps) {
-    const [showMenu, setShowMenu] = useState(false);
     const [editing, setEditing] = useState(false);
     const [draftName, setDraftName] = useState(item.name);
-    const [showNotes, setShowNotes] = useState(false);
-    const [draftNotes, setDraftNotes] = useState(item.notes ?? '');
     const [copied, setCopied] = useState(false);
     const [downloading, setDownloading] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
     const { t } = useTranslation();
 
-    // Use a ref for the dropdown container to detect outside clicks
-    const menuRef = useRef<HTMLDivElement>(null);
-
-    // Derive RCSB ID from name (4-char PDB format) or metadata
     const rcsbId = item.name.match(/^[1-9][A-Z0-9]{3}$/i)?.[0]?.toUpperCase();
     const hasThumbnail = !!(rcsbId && item.metadata);
 
     useEffect(() => { setDraftName(item.name); }, [item.name]);
-    useEffect(() => { setDraftNotes(item.notes ?? ''); }, [item.notes]);
     useEffect(() => { if (editing) inputRef.current?.select(); }, [editing]);
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-                setShowMenu(false);
-            }
-        };
-        if (showMenu) {
-            document.addEventListener('mousedown', handleClickOutside);
-        }
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, [showMenu]);
 
     const commitRename = () => {
         setEditing(false);
-        const t = draftName.trim();
-        if (t && t !== item.name) onRename(item.id, t);
+        const trimmed = draftName.trim();
+        if (trimmed && trimmed !== item.name) onRename(item.id, trimmed);
         else setDraftName(item.name);
     };
 
@@ -503,8 +482,8 @@ function StructureCard({
 
     return (
         <div
-            className={`structure-card group rounded-2xl transition-all duration-200 hover:shadow-xl hover:shadow-black/30 flex flex-col relative z-0 hover:z-50
-                ${selected ? 'shadow-blue-500/10 shadow-lg ring-2 ring-blue-500/50' : ''}`}
+            className={`structure-card group rounded-xl transition-all duration-200 flex flex-col relative z-0 hover:z-10
+                ${selected ? 'ring-2 ring-blue-500/50' : ''}`}
             data-id={item.id}
             onClick={e => onSelect(e, item.id)}
             onDoubleClick={() => onDoubleClick?.(item.id)}
@@ -512,167 +491,122 @@ function StructureCard({
             draggable
             onDragStart={handleDragStart}
         >
-            {/* Inner clipping wrapper */}
-            <div className={`flex-1 flex flex-col bg-[var(--bg-header)] border rounded-2xl overflow-hidden transition-colors relative
-                ${selected ? 'border-blue-500/60' : 'border-[var(--border-main)] group-hover:border-neutral-600'}`}>
+            <div className={`flex-1 flex flex-col bg-[var(--bg-header)] border rounded-xl overflow-hidden transition-colors relative
+                ${selected ? 'border-blue-500/50' : 'border-[var(--border-main)] group-hover:border-neutral-600'}`}>
 
-                {/* Global Selection Checkbox */}
-                <div className={`absolute top-2 left-2 z-20 
-                    ${selected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} 
-                    transition-opacity duration-200`}>
-                    <button onClick={(e) => { e.stopPropagation(); onSelect(e, item.id); }}
-                        className={`p-1.5 rounded-md backdrop-blur-md border shadow-sm transition-all
-                            ${selected ? 'bg-blue-500/90 border-blue-400 text-white' : 'bg-black/40 border-white/20 text-[var(--text-secondary)] hover:bg-black/60 hover:text-[var(--text-primary)] hover:border-white/40'}`}>
-                        <CheckSquare className="w-4 h-4" />
+                {/* Checkbox — hover only */}
+                <div className={`absolute top-2 left-2 z-20 transition-opacity duration-150
+                    ${selected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                    <button onClick={e => { e.stopPropagation(); onSelect(e, item.id); }}
+                        className={`p-1 rounded-md backdrop-blur-md border shadow-sm transition-all
+                            ${selected ? 'bg-blue-500/90 border-blue-400 text-white' : 'bg-black/50 border-white/15 text-white/70 hover:bg-black/70'}`}>
+                        <CheckSquare className="w-3.5 h-3.5" />
                     </button>
                 </div>
 
-                {/* Gradient strip or RCSB Thumbnail */}
+                {/* Thumbnail or accent strip */}
                 {hasThumbnail ? (
-                    <div className="relative h-36 overflow-hidden bg-[var(--input-bg)]">
+                    <div className="relative h-28 overflow-hidden bg-[var(--input-bg)] shrink-0">
                         <img
                             src={`https://cdn.rcsb.org/images/structures/${rcsbId!.toLowerCase()}_assembly-1.jpeg`}
                             alt={rcsbId}
                             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                            onError={e => {
-                                const el = e.target as HTMLImageElement;
-                                el.parentElement!.style.display = 'none';
-                            }}
+                            onError={e => { (e.target as HTMLImageElement).parentElement!.style.display = 'none'; }}
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-neutral-900/70 via-transparent to-transparent pointer-events-none" />
-                        <span className={`absolute top-2 right-2 text-[10px] font-bold px-2 py-0.5 rounded-md border backdrop-blur-sm ${badge}`}>{item.file_type}</span>
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
+
+                        {/* Hover overlay: Open in Viewer */}
+                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                            <button onClick={e => { e.stopPropagation(); onOpen(item); }} disabled={!!openingId}
+                                className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600/90 hover:bg-blue-500 backdrop-blur-sm text-white text-xs font-semibold rounded-lg shadow-lg transition-all">
+                                {openingId === item.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ExternalLink className="w-3.5 h-3.5" />}
+                                Open
+                            </button>
+                        </div>
+
+                        <span className={`absolute bottom-2 left-2 text-[9px] font-bold px-1.5 py-0.5 rounded border backdrop-blur-sm ${badge}`}>{item.file_type}</span>
                     </div>
                 ) : (
-                    <div className={`h-1 w-full bg-gradient-to-r ${strip}`} />
+                    <>
+                        <div className={`h-0.5 w-full bg-gradient-to-r ${strip} shrink-0`} />
+                        {/* No-thumbnail hover overlay */}
+                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none group-hover:pointer-events-auto z-10">
+                            <button onClick={e => { e.stopPropagation(); onOpen(item); }} disabled={!!openingId}
+                                className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600/90 hover:bg-blue-500 backdrop-blur-md text-white text-xs font-semibold rounded-lg shadow-lg transition-all">
+                                {openingId === item.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ExternalLink className="w-3.5 h-3.5" />}
+                                Open in Viewer
+                            </button>
+                        </div>
+                    </>
                 )}
 
-                <div className={`p-5 flex flex-col flex-1`}>
-                    {/* Top row */}
-                    <div className={`flex items-start justify-between mb-3 ${selected ? 'pl-6' : ''}`}>
-                        <div className="flex items-center gap-2">
-                            <div className="h-9 w-9 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center shrink-0">
-                                <Dna className="w-4 h-4 text-[var(--text-primary)]/50" />
-                            </div>
-                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${badge}`}>{item.file_type}</span>
+                {/* Card body */}
+                <div className="p-3.5 flex flex-col gap-2 flex-1">
+                    {/* Name row */}
+                    <div className="flex items-start justify-between gap-1.5">
+                        <div className="flex-1 min-w-0">
+                            {editing ? (
+                                <input ref={inputRef} value={draftName}
+                                    onChange={e => setDraftName(e.target.value)}
+                                    onBlur={commitRename}
+                                    onKeyDown={e => { if (e.key === 'Enter') commitRename(); if (e.key === 'Escape') { setEditing(false); setDraftName(item.name); } }}
+                                    onClick={e => e.stopPropagation()}
+                                    className="text-xs font-semibold text-[var(--text-primary)] bg-[var(--input-bg)] border border-blue-500/60 rounded-md px-2 py-0.5 w-full outline-none" />
+                            ) : (
+                                <button onClick={e => { e.stopPropagation(); setEditing(true); }}
+                                    className="text-left w-full" title={t.clickToRename}>
+                                    <span className="text-xs font-semibold text-[var(--text-primary)] truncate block leading-snug">{item.name}</span>
+                                </button>
+                            )}
                         </div>
-                        <button onClick={() => onToggleStar(item)} className="p-1.5 rounded-lg hover:bg-white/5 transition-colors">
-                            <Star className={`w-4 h-4 transition-all ${item.starred ? 'text-amber-400 fill-amber-400' : 'text-[var(--text-muted)] hover:text-amber-400'}`} />
+                        <button onClick={e => { e.stopPropagation(); onToggleStar(item); }}
+                            className="shrink-0 p-0.5 rounded transition-colors">
+                            <Star className={`w-3.5 h-3.5 transition-all ${item.starred ? 'text-amber-400 fill-amber-400' : 'text-[var(--text-muted)] opacity-0 group-hover:opacity-100 hover:text-amber-400'}`} />
                         </button>
                     </div>
 
-                    {/* Name */}
-                    {editing ? (
-                        <input ref={inputRef} value={draftName}
-                            onChange={e => setDraftName(e.target.value)}
-                            onBlur={commitRename}
-                            onKeyDown={e => { if (e.key === 'Enter') commitRename(); if (e.key === 'Escape') { setEditing(false); setDraftName(item.name); } }}
-                            onClick={e => e.stopPropagation()}
-                            className="text-sm font-semibold text-[var(--text-primary)] bg-[var(--input-bg)] border border-blue-500/60 rounded-lg px-2.5 py-1 w-full outline-none focus:ring-1 focus:ring-blue-500 mb-1" />
-                    ) : (
-                        <button onClick={e => { e.stopPropagation(); setEditing(true); }}
-                            className="group/name flex items-center gap-1.5 text-left mb-1 w-full min-w-0" title={t.clickToRename}>
-                            <span className="text-sm font-semibold text-[var(--text-primary)] truncate">{item.name}</span>
-                            <Pencil className="w-3 h-3 text-[var(--text-muted)] opacity-0 group-hover/name:opacity-100 transition-all shrink-0" />
-                        </button>
-                    )}
-
-                    {/* File metadata */}
-                    <div className="flex items-center gap-3 text-xs text-[var(--text-muted)] mb-2">
-                        <span className="flex items-center gap-1"><FileText className="w-3 h-3" />{formatBytes(item.file_size)}</span>
-                        <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{timeAgo(item.created_at)}</span>
-                        {(item.view_count ?? 0) > 0 && (
-                            <span className="flex items-center gap-1 ml-auto text-[var(--text-muted)]">
-                                <Eye className="w-3 h-3" />{item.view_count}
-                            </span>
-                        )}
+                    {/* Meta row */}
+                    <div className="flex items-center gap-2 text-[10px] text-[var(--text-muted)]">
+                        <span className={`px-1.5 py-0.5 rounded border text-[9px] font-bold ${badge}`}>{item.file_type}</span>
+                        <span>{formatBytes(item.file_size)}</span>
+                        <span className="ml-auto">{timeAgo(item.created_at)}</span>
                     </div>
 
-                    {/* RCSB metadata */}
-                    {item.metadata && (
-                        <div className="grid grid-cols-2 gap-1.5 mb-3">
-                            {item.metadata.organism && (
-                                <div className="flex items-center gap-1 text-[10px] text-[var(--text-muted)] truncate" title={item.metadata.organism}>
-                                    <Globe className="w-2.5 h-2.5 shrink-0" />{item.metadata.organism}
-                                </div>
-                            )}
-                            {item.metadata.method && (
-                                <div className="flex items-center gap-1 text-[10px] text-[var(--text-muted)] truncate" title={item.metadata.method}>
-                                    <Microscope className="w-2.5 h-2.5 shrink-0" />{item.metadata.method}
-                                </div>
-                            )}
-                            {item.metadata.resolution != null && (
-                                <div className="flex items-center gap-1 text-[10px] text-[var(--text-muted)]">
-                                    <Beaker className="w-2.5 h-2.5 shrink-0" />{item.metadata.resolution.toFixed(2)} Å
-                                </div>
-                            )}
-                        </div>
-                    )}
-
-                    {/* Tags */}
-                    <TagEditor
-                        tags={item.tags ?? []}
-                        onChange={tags => onTagsChange(item.id, tags)}
-                    />
-                    {item.tags?.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5 mb-3">
-                            {item.tags.map(t => (
-                                <span key={t} className={`text-[10px] font-medium px-1.5 py-0.5 rounded-md border ${tagColor(t)}`}>{t}</span>
+                    {/* Tags — display only, no editor */}
+                    {item.tags && item.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                            {item.tags.slice(0, 3).map(tag => (
+                                <span key={tag} className={`text-[9px] font-medium px-1.5 py-0.5 rounded border ${tagColor(tag)}`}>{tag}</span>
                             ))}
+                            {item.tags.length > 3 && (
+                                <span className="text-[9px] text-[var(--text-muted)]">+{item.tags.length - 3}</span>
+                            )}
                         </div>
                     )}
+                </div>
 
-                    {/* Notes */}
-                    <div className="mb-4">
-                        <button onClick={e => { e.stopPropagation(); setShowNotes(p => !p); }}
-                            className="flex items-center gap-1.5 text-xs text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors mb-1.5">
-                            <NotebookPen className="w-3 h-3" />
-                            {draftNotes ? t.notes : t.addNotes}
-                            {showNotes ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                        </button>
-                        {showNotes && (
-                            <textarea value={draftNotes}
-                                onChange={e => setDraftNotes(e.target.value)}
-                                onBlur={() => { if (draftNotes !== (item.notes ?? '')) onNotesChange(item.id, draftNotes); }}
-                                onClick={e => e.stopPropagation()}
-                                placeholder={t.notesPlaceholder}
-                                rows={3}
-                                className="w-full bg-[var(--input-bg)] border border-[var(--border-main)] rounded-lg px-3 py-2 text-xs text-[var(--text-secondary)] placeholder-neutral-600 resize-none focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500" />
-                        )}
-                    </div>
-
-                    {/* Action bar */}
-                    <div className="mt-auto pt-2">
-                        {/* Primary: Open */}
-                        <button onClick={() => onOpen(item)} disabled={!!openingId}
-                            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-blue-600 text-white hover:bg-blue-500 text-sm font-semibold transition-all shadow-sm shadow-blue-900/20 disabled:opacity-50">
-                            {openingId === item.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <ExternalLink className="w-4 h-4" />}
-                            {t.openInViewer}
-                        </button>
-                        
-                        {/* Secondary: Icon Actions */}
-                        <div className="flex items-center justify-between border-t border-[var(--border-main)] pt-3 mt-3">
-                            <button onClick={handleDownload} disabled={downloading} title={t.download}
-                                className="p-2 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--input-bg)] transition-colors disabled:opacity-50">
-                                {downloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-                            </button>
-                            <button onClick={handleShare} title={t.copyLink}
-                                className="p-2 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--input-bg)] transition-colors">
-                                {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Share2 className="w-4 h-4" />}
-                            </button>
-                            <button onClick={() => onDuplicate(item)} disabled={duplicatingId === item.id} title={t.duplicate}
-                                className="p-2 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--input-bg)] transition-colors disabled:opacity-50">
-                                {duplicatingId === item.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Copy className="w-4 h-4" />}
-                            </button>
-                            <button onClick={() => onMove(item)} title={t.moveToFolder}
-                                className="p-2 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--input-bg)] transition-colors">
-                                <FolderInput className="w-4 h-4" />
-                            </button>
-                            <button onClick={() => onDelete(item)} title={t.delete}
-                                className="p-2 rounded-lg text-[var(--text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors">
-                                <Trash2 className="w-4 h-4" />
-                            </button>
-                        </div>
-                    </div>
+                {/* Action bar — hover only */}
+                <div className="flex items-center gap-0.5 px-3 pb-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                    <button onClick={e => { e.stopPropagation(); handleDownload(); }} disabled={downloading} title={t.download}
+                        className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--input-bg)] transition-colors">
+                        {downloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+                    </button>
+                    <button onClick={e => { e.stopPropagation(); handleShare(); }} title={t.copyLink}
+                        className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--input-bg)] transition-colors">
+                        {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Share2 className="w-3.5 h-3.5" />}
+                    </button>
+                    <button onClick={e => { e.stopPropagation(); onDuplicate(item); }} disabled={duplicatingId === item.id} title={t.duplicate}
+                        className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--input-bg)] transition-colors">
+                        {duplicatingId === item.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Copy className="w-3.5 h-3.5" />}
+                    </button>
+                    <button onClick={e => { e.stopPropagation(); onMove(item); }} title={t.moveToFolder}
+                        className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--input-bg)] transition-colors">
+                        <FolderInput className="w-3.5 h-3.5" />
+                    </button>
+                    <button onClick={e => { e.stopPropagation(); onDelete(item); }} title={t.delete}
+                        className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors ml-auto">
+                        <Trash2 className="w-3.5 h-3.5" />
+                    </button>
                 </div>
             </div>
         </div>
