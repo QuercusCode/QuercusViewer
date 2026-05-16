@@ -452,30 +452,18 @@ function StructureCard({
                             onError={e => { (e.target as HTMLImageElement).parentElement!.style.display = 'none'; }}
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
-
-                        {/* Hover overlay: Open in Viewer */}
-                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                        {/* Open overlay — scoped to thumbnail, won't block action bar */}
+                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-opacity duration-150">
                             <button onClick={e => { e.stopPropagation(); onOpen(item); }} disabled={!!openingId}
                                 className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600/90 hover:bg-blue-500 backdrop-blur-sm text-white text-xs font-semibold rounded-lg shadow-lg transition-all">
                                 {openingId === item.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ExternalLink className="w-3.5 h-3.5" />}
                                 Open
                             </button>
                         </div>
-
                         <span className={`absolute bottom-2 left-2 text-[9px] font-bold px-1.5 py-0.5 rounded border backdrop-blur-sm ${badge}`}>{item.file_type}</span>
                     </div>
                 ) : (
-                    <>
-                        <div className={`h-0.5 w-full bg-gradient-to-r ${strip} shrink-0`} />
-                        {/* No-thumbnail hover overlay */}
-                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none group-hover:pointer-events-auto z-10">
-                            <button onClick={e => { e.stopPropagation(); onOpen(item); }} disabled={!!openingId}
-                                className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600/90 hover:bg-blue-500 backdrop-blur-md text-white text-xs font-semibold rounded-lg shadow-lg transition-all">
-                                {openingId === item.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ExternalLink className="w-3.5 h-3.5" />}
-                                Open in Viewer
-                            </button>
-                        </div>
-                    </>
+                    <div className={`h-0.5 w-full bg-gradient-to-r ${strip} shrink-0`} />
                 )}
 
                 {/* Card body */}
@@ -510,6 +498,18 @@ function StructureCard({
                         <span className="ml-auto">{timeAgo(item.created_at)}</span>
                     </div>
 
+                    {/* Open button for non-thumbnail cards */}
+                    {!hasThumbnail && (
+                        <button
+                            onClick={e => { e.stopPropagation(); onOpen(item); }}
+                            disabled={!!openingId}
+                            className="flex items-center gap-1.5 px-3 py-1.5 w-full justify-center rounded-lg bg-blue-600/0 group-hover:bg-blue-600 border border-transparent group-hover:border-blue-500 text-[var(--text-muted)] group-hover:text-white text-xs font-semibold opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-all duration-150"
+                        >
+                            {openingId === item.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ExternalLink className="w-3.5 h-3.5" />}
+                            Open in Viewer
+                        </button>
+                    )}
+
                     {/* Tags — display only, no editor */}
                     {item.tags && item.tags.length > 0 && (
                         <div className="flex flex-wrap gap-1">
@@ -524,7 +524,7 @@ function StructureCard({
                 </div>
 
                 {/* Action bar — hover only */}
-                <div className="flex items-center gap-0.5 px-3 pb-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                <div className="flex items-center gap-0.5 px-3 pb-2.5 opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-opacity duration-150">
                     <button onClick={e => { e.stopPropagation(); handleDownload(); }} disabled={downloading} title={t.download}
                         className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--input-bg)] transition-colors">
                         {downloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
