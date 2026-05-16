@@ -84,7 +84,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isCollapsed,
 
             {/* Nav */}
             <div className="p-3 flex-1 overflow-y-auto custom-scrollbar">
-                {!isCollapsed && <p className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-[0.2em] mb-4 px-2 mt-2">{t.nav}</p>}
+                {!isCollapsed && <p className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-3 px-2 mt-2 opacity-60">{t.nav}</p>}
                 <nav className="space-y-1">
                     {navItems.map((item) => {
                         const isActive = pathname.startsWith(item.path);
@@ -94,7 +94,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isCollapsed,
                                 key={item.path}
                                 to={item.path}
                                 title={isCollapsed ? item.label : undefined}
-                                className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all duration-200 group ${isActive
+                                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group ${isActive
                                     ? 'bg-blue-600/10 text-blue-400 border border-blue-500/20'
                                     : 'text-[var(--text-secondary)] hover:bg-[var(--input-bg)] hover:text-[var(--text-primary)] border border-transparent'
                                     } ${isCollapsed ? 'justify-center px-0' : ''}`}
@@ -107,11 +107,11 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isCollapsed,
                 </nav>
 
                 <div className="mt-6 pt-6 border-t border-[var(--border-main)]">
-                    {!isCollapsed && <p className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-[0.2em] mb-4 px-2">{t.app}</p>}
+                    {!isCollapsed && <p className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-3 px-2 opacity-60">{t.app}</p>}
                     <Link
                         to={returnUrl}
                         title={isCollapsed ? (t.backToViewer as string) : undefined}
-                        className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-[var(--text-secondary)] hover:bg-blue-500/5 hover:text-blue-400 hover:border-blue-500/20 transition-all border border-transparent group ${isCollapsed ? 'justify-center px-0' : ''}`}
+                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-[var(--text-secondary)] hover:bg-blue-500/5 hover:text-blue-400 hover:border-blue-500/20 transition-all border border-transparent group ${isCollapsed ? 'justify-center px-0' : ''}`}
                     >
                         <ChevronLeft className={`w-5 h-5 transition-colors group-hover:text-blue-400 shrink-0`} />
                         {!isCollapsed && <span className="whitespace-nowrap">{t.backToViewer}</span>}
@@ -123,7 +123,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isCollapsed,
             <div className="p-3 border-t border-[var(--border-main)] bg-[var(--bg-sidebar)]/50">
                 <div className={`flex items-center gap-3 px-2 py-2.5 rounded-xl mb-1 ${isCollapsed ? 'justify-center' : ''}`}>
                     <img
-                        className="h-8 w-8 rounded-full border border-[var(--border-main)] object-cover shrink-0"
+                        className="h-7 w-7 rounded-full border border-[var(--border-main)] object-cover shrink-0"
                         src={user?.user_metadata?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.email?.split('@')[0] || 'U')}&background=2563eb&color=fff`}
                         alt="Avatar"
                     />
@@ -137,7 +137,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isCollapsed,
                 <button
                     onClick={handleSignOut}
                     title={isCollapsed ? (t.signOut as string) : undefined}
-                    className={`flex items-center gap-3 px-3 py-3 w-full rounded-xl text-sm font-medium text-[var(--text-secondary)] hover:bg-red-500/10 hover:text-red-400 transition-all border border-transparent group ${isCollapsed ? 'justify-center px-0' : ''}`}
+                    className={`flex items-center gap-3 px-3 py-2.5 w-full rounded-xl text-sm font-medium text-[var(--text-secondary)] hover:bg-red-500/10 hover:text-red-400 transition-all border border-transparent group ${isCollapsed ? 'justify-center px-0' : ''}`}
                 >
                     <LogOut className="w-5 h-5 shrink-0 transition-colors group-hover:text-red-400" />
                     {!isCollapsed && <span className="whitespace-nowrap">{t.signOut}</span>}

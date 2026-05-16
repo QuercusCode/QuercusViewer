@@ -33,8 +33,8 @@ export const DashboardHeader = ({ onMenuClick }: DashboardHeaderProps) => {
                     <Menu className="w-5 h-5" />
                 </button>
                 <div className="flex flex-col justify-center">
-                    <h1 className="text-base font-semibold text-[var(--text-primary)] leading-tight">{title}</h1>
-                    {subtitle && <p className="text-xs text-[var(--text-muted)] hidden md:block">{subtitle}</p>}
+                    <h1 className="text-sm font-semibold text-[var(--text-primary)] leading-tight">{title}</h1>
+                    {subtitle && <p className="text-[11px] text-[var(--text-muted)] hidden md:block mt-0.5">{subtitle}</p>}
                 </div>
             </div>
 
@@ -56,7 +56,7 @@ export const DashboardHeader = ({ onMenuClick }: DashboardHeaderProps) => {
                     </div>
                     <input
                         type="text"
-                        className="block w-52 pl-9 pr-3 py-1.5 bg-[var(--input-bg)] border border-[var(--border-main)] rounded-lg text-sm placeholder-[var(--text-muted)] text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                        className="block w-48 pl-9 pr-3 py-1.5 bg-[var(--input-bg)] border border-[var(--border-main)] rounded-lg text-sm placeholder-[var(--text-muted)] text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all"
                         placeholder="Search..."
                     />
                 </div>
