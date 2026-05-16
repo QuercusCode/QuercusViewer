@@ -1029,6 +1029,17 @@ function App() {
     return !hasPdb && !isEmbed;
   });
 
+  // Sync active PDB ID into URL so browser back/forward preserves viewer state
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (pdbId) {
+      url.searchParams.set('pdb', pdbId);
+    } else {
+      url.searchParams.delete('pdb');
+    }
+    window.history.replaceState({}, '', url);
+  }, [pdbId]);
+
   // Lazy Load State REMOVED
   // const [isLazyLoaded, setIsLazyLoaded] = useState(() => {
   //   const params = new URLSearchParams(window.location.search);
