@@ -25,6 +25,8 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isCollapsed,
         navigate('/');
     };
 
+    const returnUrl = sessionStorage.getItem('viewer_return_url') || '/viewer';
+
     const navItems = [
         { label: t.myStructures, path: '/dashboard/structures', icon: FolderOpen },
         { label: t.labNotebook, path: '/dashboard/notebook', icon: NotebookPen },
@@ -107,11 +109,11 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isCollapsed,
                 <div className="mt-6 pt-6 border-t border-[var(--border-main)]">
                     {!isCollapsed && <p className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-[0.2em] mb-4 px-2">{t.app}</p>}
                     <Link
-                        to="/"
+                        to={returnUrl}
                         title={isCollapsed ? (t.backToViewer as string) : undefined}
-                        className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-[var(--text-secondary)] hover:bg-[var(--input-bg)] hover:text-[var(--text-primary)] transition-all border border-transparent group ${isCollapsed ? 'justify-center px-0' : ''}`}
+                        className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-[var(--text-secondary)] hover:bg-blue-500/5 hover:text-blue-400 hover:border-blue-500/20 transition-all border border-transparent group ${isCollapsed ? 'justify-center px-0' : ''}`}
                     >
-                        <ChevronLeft className={`w-5 h-5 transition-colors ${isCollapsed ? 'text-[var(--text-muted)]' : 'text-[var(--text-muted)] group-hover:text-[var(--text-primary)]'} shrink-0`} />
+                        <ChevronLeft className={`w-5 h-5 transition-colors group-hover:text-blue-400 shrink-0`} />
                         {!isCollapsed && <span className="whitespace-nowrap">{t.backToViewer}</span>}
                     </Link>
                 </div>

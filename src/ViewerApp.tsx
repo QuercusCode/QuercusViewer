@@ -2889,7 +2889,11 @@ function App() {
                 <span className="hidden md:inline">Notebook</span>
               </button>
               {user ? (
-                <Link to="/dashboard" className={`flex items-center gap-2 h-10 px-4 rounded-full text-sm font-medium transition-colors border shadow-lg backdrop-blur-md ${isLightMode ? 'bg-white/80 border-black/10 text-gray-700 hover:bg-white' : 'bg-neutral-900/80 border-white/10 text-neutral-300 hover:text-white hover:bg-neutral-800'}`}>
+                <Link
+                  to="/dashboard"
+                  onClick={() => sessionStorage.setItem('viewer_return_url', window.location.href)}
+                  className={`flex items-center gap-2 h-10 px-4 rounded-full text-sm font-medium transition-colors border shadow-lg backdrop-blur-md ${isLightMode ? 'bg-white/80 border-black/10 text-gray-700 hover:bg-white' : 'bg-neutral-900/80 border-white/10 text-neutral-300 hover:text-white hover:bg-neutral-800'}`}
+                >
                   <img src={user?.user_metadata?.avatar_url || `https://ui-avatars.com/api/?name=${user?.email || 'User'}&background=random`} alt="Profile" className="w-5 h-5 rounded-full" />
                   <span className="hidden sm:inline">Dashboard</span>
                 </Link>

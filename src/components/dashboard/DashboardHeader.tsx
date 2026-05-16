@@ -1,6 +1,6 @@
 import { useAuth } from '../../lib/AuthContext';
-import { Search, Moon, Sun, EyeOff, Menu } from 'lucide-react';
-import { useLocation } from 'react-router-dom';
+import { Search, Moon, Sun, EyeOff, Menu, ArrowLeft } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
 import { useTheme } from '../../lib/ThemeContext';
 
 const pageTitles: Record<string, { title: string; subtitle: string }> = {
@@ -17,6 +17,7 @@ export const DashboardHeader = ({ onMenuClick }: DashboardHeaderProps) => {
     const { user } = useAuth();
     const { pathname } = useLocation();
     const { theme, toggleTheme } = useTheme();
+    const returnUrl = sessionStorage.getItem('viewer_return_url') || '/viewer';
 
     const page = Object.entries(pageTitles).find(([key]) => pathname.startsWith(key));
     const { title, subtitle } = page?.[1] ?? { title: 'Dashboard', subtitle: '' };
@@ -39,6 +40,15 @@ export const DashboardHeader = ({ onMenuClick }: DashboardHeaderProps) => {
 
             {/* Right Controls */}
             <div className="flex items-center gap-3">
+                {/* Return to Viewer */}
+                <Link
+                    to={returnUrl}
+                    className="flex items-center gap-2 h-9 px-4 rounded-full text-sm font-medium border border-[var(--border-main)] bg-[var(--input-bg)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-blue-500/40 hover:bg-blue-500/5 transition-all"
+                >
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">Open Viewer</span>
+                </Link>
+
                 {/* Search */}
                 <div className="hidden md:flex relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
