@@ -504,7 +504,7 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode, updateAtt
           <div className="flex items-center gap-3">
             <input 
               type="text" 
-              defaultValue="Goldengate table2" 
+              defaultValue="Untitled Table"
               className="text-xs font-bold text-neutral-800 bg-transparent border-none focus:outline-none focus:ring-1 focus:ring-blue-500/30 rounded px-1 w-64"
             />
           </div>

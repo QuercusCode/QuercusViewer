@@ -375,7 +375,7 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
         },
         {
             id: 'coloring',
-            title: 'Custom Coloring',
+            title: 'Coloring',
             icon: Palette,
             description: 'Color schemes, custom rules, per-chain colors, and transparency.',
             content: (
