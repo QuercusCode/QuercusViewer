@@ -2,8 +2,8 @@ import { NodeViewContent, NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap
 import type { NodeViewProps } from '@tiptap/react'
 import { Table } from '@tiptap/extension-table'
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react'
-import { 
-  Trash2, Download, Maximize2, Settings, 
+import {
+  Trash2, Download, Settings,
   Bold, Italic, Underline as UnderlineIcon, Strikethrough, 
   AlignLeft, AlignCenter, AlignRight, Link as LinkIcon, Type,
   ChevronDown, Activity, BarChart2, Plus, X, TrendingUp
@@ -18,7 +18,6 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode, updateAtt
   const [showFontMenu, setShowFontMenu] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showStatsPanel, setShowStatsPanel] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
   const [copiedCSV, setCopiedCSV] = useState(false);
   const fontMenuRef = useRef<HTMLDivElement>(null);
   const settingsRef = useRef<HTMLDivElement>(null);
@@ -524,13 +523,6 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode, updateAtt
             >
               <Activity className="w-3.5 h-3.5" />
             </button>
-            <button
-              onMouseDown={(e) => { e.preventDefault(); setIsExpanded(true); }}
-              className="p-1.5 hover:bg-neutral-100 text-neutral-500 rounded transition-colors"
-              title="Expand Table"
-            >
-              <Maximize2 className="w-3.5 h-3.5" />
-            </button>
             <ToolbarDivider />
             <button
               onClick={(e) => { e.preventDefault(); deleteNode(); }}
@@ -855,59 +847,6 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode, updateAtt
         </div>
       </div>
 
-      {/* EXPAND MODAL */}
-      {isExpanded && (() => {
-        const tableRows = getTableRows();
-        const colCount = tableRows[0]?.length ?? cols;
-        const colLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-        return (
-          <div className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm flex flex-col p-6 animate-in fade-in duration-200">
-            <div className="bg-white rounded-2xl shadow-2xl flex flex-col flex-1 min-h-0 overflow-hidden">
-              <div className="flex items-center justify-between px-5 py-3 border-b border-neutral-200 shrink-0">
-                <span className="text-sm font-bold text-neutral-800">Expanded Table View</span>
-                <div className="flex items-center gap-2">
-                  <button onMouseDown={downloadCSV} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-neutral-600 hover:text-neutral-900 border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors">
-                    <Download className="w-3.5 h-3.5" />
-                    Download CSV
-                  </button>
-                  <button onMouseDown={(e) => { e.preventDefault(); setIsExpanded(false); }} className="p-1.5 hover:bg-neutral-100 text-neutral-500 rounded-lg transition-colors">
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-              <div className="flex-1 overflow-auto min-h-0">
-                <table className="w-full border-collapse text-sm">
-                  <thead className="sticky top-0 z-10">
-                    <tr>
-                      <th className="w-10 px-3 py-2.5 bg-neutral-100 border border-neutral-200 text-center text-[10px] font-bold text-neutral-400">#</th>
-                      {Array.from({ length: colCount }).map((_, ci) => (
-                        <th key={ci} className="px-4 py-2.5 bg-neutral-100 border border-neutral-200 text-center text-[10px] font-bold text-neutral-500 uppercase tracking-wider min-w-[120px]">
-                          {colLetters[ci] || `C${ci + 1}`}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {tableRows.map((row, ri) => (
-                      <tr key={ri} className={ri % 2 === 0 ? 'bg-white' : 'bg-neutral-50'}>
-                        <td className="px-3 py-2.5 border border-neutral-200 text-center text-[10px] font-mono text-neutral-400 bg-neutral-50">{ri + 1}</td>
-                        {Array.from({ length: colCount }).map((_, ci) => (
-                          <td key={ci} className="px-4 py-2.5 border border-neutral-200 text-neutral-700 text-sm">
-                            {row[ci] ?? ''}
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <div className="px-5 py-2.5 border-t border-neutral-100 bg-neutral-50 text-[10px] text-neutral-400 shrink-0">
-                {tableRows.length} rows · {colCount} columns
-              </div>
-            </div>
-          </div>
-        );
-      })()}
 
       <style>{`
         .spreadsheet-native-table {
