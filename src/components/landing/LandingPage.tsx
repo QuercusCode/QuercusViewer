@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as NGL from 'ngl';
 
@@ -160,7 +160,7 @@ function NGL3DBackground({ protein, opacity }: { protein: string; opacity: numbe
         colorScale: ['#4ade80', '#2dd4bf', '#60a5fa', '#a78bfa'],
       });
       comp.autoView(800);
-      stage.toggleSpin();
+      (stage as any).toggleSpin();
       setReady(true);
     }).catch(() => setReady(true));
 
