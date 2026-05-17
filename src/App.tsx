@@ -11,6 +11,7 @@ import { DashboardHome } from './components/dashboard/DashboardHome';
 import { LabNotebook } from './components/dashboard/LabNotebook';
 import { PublicPortfolio } from './components/public/PublicPortfolio';
 import { ThemeProvider } from './lib/ThemeContext';
+import { LandingPage } from './components/landing/LandingPage';
 
 // Protected Route Wrapper
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -33,8 +34,11 @@ function App() {
             <AuthProvider>
                 <Router>
                     <Routes>
+                        {/* Landing Page */}
+                        <Route path="/" element={<LandingPage />} />
+
                         {/* Main Viewer App - accessible to everyone */}
-                        <Route path="/" element={<ViewerApp />} />
+                        <Route path="/app" element={<ViewerApp />} />
 
                         {/* Authentication */}
                         <Route path="/auth" element={<AuthPage />} />
