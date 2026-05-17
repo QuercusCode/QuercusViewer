@@ -231,6 +231,8 @@ export const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>
     return colors[index];
   }, [user]);
 
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -301,10 +303,9 @@ export const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>
       onChange((editor.storage as any).markdown.getMarkdown());
     },
     onSelectionUpdate: ({ editor }: { editor: any }) => {
-      if (!noteId || !user) return;
+      if (!noteId || !user || !channelRef.current) return;
       const pos = editor.state.selection.from;
-      const channel = supabase.channel(`note:${noteId}`);
-      channel.track({
+      channelRef.current.track({
         user_id: user.id,
         user_name: user.email?.split('@')[0] || 'Unknown',
         color: userColor,
@@ -325,12 +326,13 @@ export const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>
     if (!editor || !noteId || !user) return;
 
     const channel = supabase.channel(`note:${noteId}`);
+    channelRef.current = channel;
 
     channel
       .on('presence', { event: 'sync' }, () => {
         const state = channel.presenceState();
         const cursors: any[] = [];
-        
+
         Object.values(state).forEach((presences: any) => {
           presences.forEach((p: any) => {
             if (p.user_id !== user.id) {
@@ -358,6 +360,7 @@ export const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>
       });
 
     return () => {
+      channelRef.current = null;
       channel.unsubscribe();
     };
   }, [editor, noteId, user, userColor]);

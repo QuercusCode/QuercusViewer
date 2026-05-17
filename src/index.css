@@ -232,3 +232,30 @@ ul[data-type="taskList"] input[type="checkbox"] {
 .tiptap table p {
   margin: 0;
 }
+
+/* Collaboration cursors */
+.collaboration-cursor {
+  position: relative;
+  display: inline-block;
+  border-left: 2px solid;
+  margin-left: -1px;
+  pointer-events: none;
+  user-select: none;
+}
+
+.collaboration-cursor-label {
+  position: absolute;
+  top: -1.4em;
+  left: -1px;
+  white-space: nowrap;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  padding: 2px 6px;
+  border-radius: 4px 4px 4px 0;
+  color: #fff;
+  pointer-events: none;
+  user-select: none;
+  opacity: 1;
+  z-index: 100;
+}
