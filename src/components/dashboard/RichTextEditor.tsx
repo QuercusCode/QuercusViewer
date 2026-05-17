@@ -52,19 +52,20 @@ import { ChemicalSketcher } from './ChemicalSketcher';
 import { LabCalculator } from './LabCalculator';
 import { CodeCell } from './CodeCell';
 import { createSuggestion } from './suggestion';
+import { CitationBlock } from './CitationBlock';
 import { CollaborationCursor } from './CollaborationCursor';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../lib/AuthContext';
 import { useTheme } from '../../lib/ThemeContext';
 import { 
-  Bold, Italic, Underline as UnderlineIcon, Strikethrough, 
-  Code, List, ListOrdered, CheckSquare, Undo, Redo, 
-  Heading1, Heading2, Heading3, Link as LinkIcon, 
+  Bold, Italic, Underline as UnderlineIcon, Strikethrough,
+  Code, List, ListOrdered, CheckSquare, Undo, Redo,
+  Heading1, Heading2, Heading3, Link as LinkIcon,
   Type, ChevronDown, MoreHorizontal,
   Subscript as SubscriptIcon, Superscript as SuperscriptIcon,
   Highlighter, Eraser, FlaskConical, Clock, FileText,
   Table as TableIcon, Activity, Beaker, Calculator, Image as ImageIcon,
-  AlignLeft, AlignCenter, AlignRight
+  AlignLeft, AlignCenter, AlignRight, BookOpen
 } from 'lucide-react';
 import type { Structure } from '../../lib/structuresService';
 
@@ -261,6 +262,7 @@ export const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>
         resizable: true,
       }),
       CollaborationCursor,
+      CitationBlock,
       InlineChart,
       ChemicalSketcher,
       LabCalculator,
@@ -444,6 +446,9 @@ export const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>
         break;
       case 'codeCell':
         editor.chain().focus().insertContent({ type: 'codeCell' }).run();
+        break;
+      case 'citation':
+        editor.chain().focus().insertContent({ type: 'citationBlock', attrs: { citation: null } }).run();
         break;
       case 'protocol':
         editor.chain().focus().insertContent('**Protocol:**\n\n- ').run();
@@ -831,6 +836,14 @@ export const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>
               >
                 <Code className="w-5 h-5 text-emerald-400" />
                 <span className="font-semibold">Code Cell (Python)</span>
+              </button>
+
+              <button
+                onClick={() => insertTemplate('citation')}
+                className="w-full flex items-center gap-4 px-4 py-4 text-sm text-[var(--text-secondary)] hover:bg-[var(--input-bg)] rounded-xl transition-all text-left"
+              >
+                <BookOpen className="w-5 h-5 text-amber-400" />
+                <span className="font-semibold">Citation (DOI / PMID)</span>
               </button>
 
               <button
