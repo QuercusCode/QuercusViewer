@@ -42,6 +42,7 @@ const XIcon = ({ size = 18, color = 'currentColor' }: { size?: number; color?: s
 const EyeIcon = ({ size = 18, color = 'currentColor' }: { size?: number; color?: string }) => <Icon size={size} color={color}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></Icon>;
 const ShareIcon = ({ size = 18, color = 'currentColor' }: { size?: number; color?: string }) => <Icon size={size} color={color}><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98" /></Icon>;
 const MailIcon = ({ size = 18, color = 'currentColor' }: { size?: number; color?: string }) => <Icon size={size} color={color}><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2zM22 6l-10 7L2 6" /></Icon>;
+const MenuIcon = ({ size = 18, color = 'currentColor' }: { size?: number; color?: string }) => <Icon size={size} color={color}><path d="M3 12h18M3 6h18M3 18h18" /></Icon>;
 
 // ─── Scroll-reveal hook ───────────────────────────────────────────────────────
 
@@ -192,9 +193,18 @@ function NGL3DBackground({ protein, opacity }: { protein: string; opacity: numbe
 
 // ─── Nav ──────────────────────────────────────────────────────────────────────
 
+const NAV_LINKS = [
+  { label: 'Features', id: 'features' },
+  { label: 'Workflow', id: 'workflow' },
+  { label: 'Compare', id: 'compare' },
+  { label: 'Pricing', id: 'pricing' },
+];
+
 function Nav({ scrollRoot }: { scrollRoot: React.RefObject<HTMLDivElement | null> }) {
   const [scrolled, setScrolled] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const navigate = useNavigate();
+
   useEffect(() => {
     const el = scrollRoot.current;
     if (!el) return;
@@ -203,63 +213,147 @@ function Nav({ scrollRoot }: { scrollRoot: React.RefObject<HTMLDivElement | null
     return () => el.removeEventListener('scroll', onScroll);
   }, [scrollRoot]);
 
+  // Close on resize to desktop
+  useEffect(() => {
+    const onResize = () => { if (window.innerWidth >= 768) setMobileOpen(false); };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileOpen) {
+      scrollRoot.current && (scrollRoot.current.style.overflow = 'hidden');
+    } else {
+      scrollRoot.current && (scrollRoot.current.style.overflow = 'auto');
+    }
+  }, [mobileOpen, scrollRoot]);
+
+  const scrollTo = (id: string) => {
+    setMobileOpen(false);
+    setTimeout(() => {
+      scrollRoot.current?.querySelector(`#${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, mobileOpen ? 300 : 0);
+  };
+
+  const navLinkStyle: React.CSSProperties = {
+    background: 'none', border: 'none', cursor: 'pointer',
+    fontSize: 13, fontWeight: 500, color: L.t3,
+    padding: '6px 12px', borderRadius: 8,
+    transition: 'all .2s', fontFamily: L.fontBody,
+  };
+
   return (
-    <nav style={{
-      position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
-      padding: scrolled ? '12px 24px' : '20px 24px',
-      background: scrolled ? 'rgba(3,3,3,0.85)' : 'transparent',
-      backdropFilter: scrolled ? 'blur(20px) saturate(140%)' : 'none',
-      WebkitBackdropFilter: scrolled ? 'blur(20px) saturate(140%)' : 'none',
-      borderBottom: scrolled ? `1px solid ${L.b1}` : '1px solid transparent',
-      transition: 'all .4s cubic-bezier(.4,0,.2,1)',
-      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      maxWidth: 1400, margin: '0 auto',
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <div style={{
-          width: 32, height: 32, borderRadius: 8,
-          background: L.accentBg, border: `1px solid ${L.accentBorder}`,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-            <path d="M12 2L2 7l10 5 10-5-10-5z" stroke={L.accent} strokeWidth="1.5" strokeLinejoin="round" />
-            <path d="M2 17l10 5 10-5" stroke={L.accent} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity=".6" />
-            <path d="M2 12l10 5 10-5" stroke={L.accent} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity=".3" />
-          </svg>
+    <>
+      {/* ── Nav bar ── */}
+      <nav style={{
+        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 200,
+        padding: scrolled ? '12px 24px' : '20px 24px',
+        background: scrolled || mobileOpen ? 'rgba(3,3,3,0.95)' : 'transparent',
+        backdropFilter: scrolled || mobileOpen ? 'blur(20px) saturate(140%)' : 'none',
+        WebkitBackdropFilter: scrolled || mobileOpen ? 'blur(20px) saturate(140%)' : 'none',
+        borderBottom: scrolled ? `1px solid ${L.b1}` : '1px solid transparent',
+        transition: 'padding .4s cubic-bezier(.4,0,.2,1), background .4s cubic-bezier(.4,0,.2,1)',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        maxWidth: 1400, margin: '0 auto',
+      }}>
+        {/* Logo */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{
+            width: 32, height: 32, borderRadius: 8,
+            background: L.accentBg, border: `1px solid ${L.accentBorder}`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M12 2L2 7l10 5 10-5-10-5z" stroke={L.accent} strokeWidth="1.5" strokeLinejoin="round" />
+              <path d="M2 17l10 5 10-5" stroke={L.accent} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity=".6" />
+              <path d="M2 12l10 5 10-5" stroke={L.accent} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity=".3" />
+            </svg>
+          </div>
+          <span style={{ fontFamily: L.fontDisplay, fontSize: 18, fontWeight: 700, letterSpacing: '-.01em' }}>
+            <span style={{ color: L.accent }}>Quercus</span><span style={{ color: L.t2 }}>Viewer</span>
+          </span>
         </div>
-        <span style={{ fontFamily: L.fontDisplay, fontSize: 18, fontWeight: 700, letterSpacing: '-.01em' }}>
-          <span style={{ color: L.accent }}>Quercus</span><span style={{ color: L.t2 }}>Viewer</span>
-        </span>
-      </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <a
-          href="https://github.com/QuercusCode/QuercusViewer" target="_blank" rel="noopener"
-          style={{
-            display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 500,
-            color: L.t3, textDecoration: 'none', padding: '6px 12px', borderRadius: 8,
-            transition: 'all .2s', fontFamily: L.fontBody,
-          }}
-          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = L.t1; (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.05)'; }}
-          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = L.t3; (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+
+        {/* Desktop centre links */}
+        <div className="qv-nav-links" style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          {NAV_LINKS.map(link => (
+            <button key={link.id} onClick={() => scrollTo(link.id)} style={navLinkStyle}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = L.t1; (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.05)'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = L.t3; (e.currentTarget as HTMLElement).style.background = 'none'; }}
+            >{link.label}</button>
+          ))}
+        </div>
+
+        {/* Desktop right */}
+        <div className="qv-nav-right" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <a href="https://github.com/QuercusCode/QuercusViewer" target="_blank" rel="noopener"
+            style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 500, color: L.t3, textDecoration: 'none', padding: '6px 12px', borderRadius: 8, transition: 'all .2s', fontFamily: L.fontBody }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = L.t1; (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.05)'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = L.t3; (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+          ><GitHubIcon size={15} /> GitHub</a>
+          <button onClick={() => navigate('/app')}
+            style={{ fontFamily: L.fontDisplay, fontSize: 13, fontWeight: 600, padding: '8px 20px', borderRadius: 8, border: 'none', background: L.accent, color: '#050505', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, transition: 'all .2s', whiteSpace: 'nowrap' }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.filter = 'brightness(1.12)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.filter = 'none'; (e.currentTarget as HTMLElement).style.transform = 'none'; }}
+          >Launch Viewer <ArrowRightIcon size={14} color="#050505" /></button>
+        </div>
+
+        {/* Hamburger (mobile only) */}
+        <button className="qv-hamburger" onClick={() => setMobileOpen(o => !o)}
+          style={{ display: 'none', background: 'none', border: 'none', cursor: 'pointer', color: L.t1, padding: 6, borderRadius: 8, transition: 'background .2s' }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.08)'; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'none'; }}
+          aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
         >
-          <GitHubIcon size={15} /> GitHub
-        </a>
-        <button
-          onClick={() => navigate('/app')}
-          style={{
-            fontFamily: L.fontDisplay, fontSize: 13, fontWeight: 600,
-            padding: '8px 20px', borderRadius: 8, border: 'none',
-            background: L.accent, color: '#050505', cursor: 'pointer',
-            display: 'flex', alignItems: 'center', gap: 6,
-            transition: 'all .2s', whiteSpace: 'nowrap',
-          }}
-          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.filter = 'brightness(1.12)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)'; }}
-          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.filter = 'none'; (e.currentTarget as HTMLElement).style.transform = 'none'; }}
-        >
-          Launch Viewer <ArrowRightIcon size={14} color="#050505" />
+          {mobileOpen ? <XIcon size={22} /> : <MenuIcon size={22} />}
         </button>
+      </nav>
+
+      {/* ── Mobile menu overlay ── */}
+      <div className="qv-mobile-menu" style={{
+        position: 'fixed', inset: 0, zIndex: 199,
+        background: 'rgba(3,3,3,0.98)', backdropFilter: 'blur(24px)',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+        gap: 8,
+        opacity: mobileOpen ? 1 : 0,
+        pointerEvents: mobileOpen ? 'all' : 'none',
+        transition: 'opacity .25s ease',
+      }}>
+        {NAV_LINKS.map((link, i) => (
+          <button key={link.id} onClick={() => scrollTo(link.id)}
+            style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              fontSize: 28, fontWeight: 600, fontFamily: L.fontDisplay,
+              color: L.t2, padding: '12px 32px', borderRadius: 12,
+              transition: 'color .15s, background .15s',
+              opacity: mobileOpen ? 1 : 0,
+              transform: mobileOpen ? 'translateY(0)' : 'translateY(12px)',
+              transitionDelay: `${i * 50 + 80}ms`,
+            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = L.t1; (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = L.t2; (e.currentTarget as HTMLElement).style.background = 'none'; }}
+          >{link.label}</button>
+        ))}
+        <div style={{ width: '100%', height: 1, background: L.b2, maxWidth: 200, margin: '16px 0' }} />
+        <a href="https://github.com/QuercusCode/QuercusViewer" target="_blank" rel="noopener"
+          style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 15, fontWeight: 500, color: L.t3, textDecoration: 'none', padding: '10px 24px', borderRadius: 10, transition: 'color .15s', opacity: mobileOpen ? 1 : 0, transitionDelay: '280ms' }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = L.t1; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = L.t3; }}
+        ><GitHubIcon size={18} /> GitHub</a>
+        <button onClick={() => { navigate('/app'); setMobileOpen(false); }}
+          style={{
+            fontFamily: L.fontDisplay, fontSize: 16, fontWeight: 600,
+            padding: '14px 40px', borderRadius: 10, border: 'none',
+            background: L.accent, color: '#050505', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', gap: 8, marginTop: 8,
+            opacity: mobileOpen ? 1 : 0, transitionDelay: '330ms', transition: 'opacity .25s ease, filter .2s, transform .2s',
+          }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.filter = 'brightness(1.12)'; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.filter = 'none'; }}
+        >Launch Viewer <ArrowRightIcon size={16} color="#050505" /></button>
       </div>
-    </nav>
+    </>
   );
 }
 
@@ -480,7 +574,7 @@ function FeatureCard({ icon, title, desc, idx }: { icon: React.ReactNode; title:
 
 function FeaturesSection() {
   return (
-    <section style={{ padding: '80px 24px', maxWidth: 1100, margin: '0 auto' }}>
+    <section id="features" style={{ padding: '80px 24px', maxWidth: 1100, margin: '0 auto' }}>
       <SectionHead
         label="Capabilities"
         title="Everything you need for structural analysis"
@@ -503,7 +597,7 @@ const STEPS = [
 
 function HowItWorksSection() {
   return (
-    <section style={{ padding: '80px 24px', maxWidth: 1100, margin: '0 auto' }}>
+    <section id="workflow" style={{ padding: '80px 24px', maxWidth: 1100, margin: '0 auto' }}>
       <SectionHead label="Workflow" title="Three steps to insight" />
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(260px,1fr))', gap: 24, position: 'relative' }}>
         {STEPS.map((st, i) => {
@@ -633,7 +727,7 @@ const COMPARISON_ROWS = [
 function ComparisonSection() {
   const [ref, vis] = useReveal(0.1);
   return (
-    <section style={{ padding: '80px 24px', maxWidth: 900, margin: '0 auto' }}>
+    <section id="compare" style={{ padding: '80px 24px', maxWidth: 900, margin: '0 auto' }}>
       <SectionHead
         label="Compare"
         title="How QuercusViewer stacks up"
@@ -700,7 +794,7 @@ const PLANS = [
 function PricingSection() {
   const navigate = useNavigate();
   return (
-    <section style={{ padding: '80px 24px', maxWidth: 1100, margin: '0 auto' }}>
+    <section id="pricing" style={{ padding: '80px 24px', maxWidth: 1100, margin: '0 auto' }}>
       <SectionHead label="Pricing" title="Simple, transparent pricing" desc="Start free and scale as your research grows. No hidden fees." />
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 16, alignItems: 'start' }}>
         {PLANS.map((plan, i) => {
@@ -922,6 +1016,16 @@ export function LandingPage() {
         .qv-landing-scroll::-webkit-scrollbar-track { background: transparent; }
         .qv-landing-scroll::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
         ::selection { background: rgba(74,222,128,0.3); color: #fff; }
+        /* Nav responsive */
+        @media (max-width: 767px) {
+          .qv-nav-links { display: none !important; }
+          .qv-nav-right  { display: none !important; }
+          .qv-hamburger  { display: flex !important; align-items: center; justify-content: center; }
+          .qv-mobile-menu { display: flex !important; }
+        }
+        @media (min-width: 768px) {
+          .qv-mobile-menu { display: none !important; }
+        }
       `}</style>
       <div
         ref={scrollRootRef}
