@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
     CircleHelp, X, MousePointer2, Keyboard, Sparkles,
-    BookOpen, Layers, Activity, Share2, FileUp, ArrowLeft, Wrench, Palette, Mail, Github, MessageSquare, ExternalLink, Linkedin, Heart, Users, Video, Ghost, Shapes, LayoutDashboard, PenTool, Bot, FolderOpen, FlaskConical, Terminal
+    BookOpen, Layers, Activity, Share2, FileUp, ArrowLeft, Palette, Mail, Github, MessageSquare, ExternalLink, Linkedin, Heart, Users, Video, Shapes, LayoutDashboard, PenTool, Bot, FolderOpen, FlaskConical
 } from 'lucide-react';
 
 type FeatureSection = {
