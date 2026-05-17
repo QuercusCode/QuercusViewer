@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
     CircleHelp, X, MousePointer2, Keyboard, Sparkles,
-    BookOpen, Layers, Activity, Share2, FileUp, ArrowLeft, Wrench, Palette, Mail, Github, MessageSquare, ExternalLink, Linkedin, Heart, Users, Video, Ghost, Shapes, LayoutDashboard, PenTool
+    BookOpen, Layers, Activity, Share2, FileUp, ArrowLeft, Wrench, Palette, Mail, Github, MessageSquare, ExternalLink, Linkedin, Heart, Users, Video, Ghost, Shapes, LayoutDashboard, PenTool, Bot, FolderOpen, FlaskConical, Terminal
 } from 'lucide-react';
 
 type FeatureSection = {
@@ -37,129 +37,110 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
             id: 'start',
             title: 'Getting Started',
             icon: BookOpen,
-            description: 'How to load structures and navigate the interface.',
+            description: 'Load structures and navigate the 3D viewer.',
             content: (
-                <div className="space-y-6 intro-slide">
+                <div className="space-y-5">
                     <div className="bg-neutral-800/50 p-4 rounded-xl border border-neutral-700/50">
-                        <div className="flex items-center justify-between mb-3">
-                            <h4 className="text-sm font-bold text-white flex items-center gap-2">
-                                <FileUp className="w-4 h-4 text-blue-400" /> Loading Structures
-                            </h4>
-                        </div>
+                        <h4 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
+                            <FileUp className="w-4 h-4 text-blue-400" /> Loading Structures
+                        </h4>
                         <ul className="space-y-3 text-xs text-neutral-300">
                             <li className="flex gap-3">
-                                <span className="text-neutral-500 font-mono">01</span>
-                                <span>
-                                    <strong className="text-white block">RCSB PDB</strong>
-                                    Enter a 4-character PDB ID (e.g., <code className="bg-neutral-800 px-1 rounded">2B3P</code>) to fetch directly.
-                                </span>
+                                <span className="text-neutral-500 font-mono shrink-0">01</span>
+                                <span><strong className="text-white block">RCSB PDB</strong>Enter a 4-character PDB ID (e.g., <code className="bg-neutral-800 px-1 rounded">2B3P</code>) in the sidebar search and click Load.</span>
                             </li>
                             <li className="flex gap-3">
-                                <span className="text-neutral-500 font-mono">02</span>
-                                <span>
-                                    <strong className="text-white block">PubChem</strong>
-                                    Load small molecules by CID (e.g., <code className="bg-neutral-800 px-1 rounded">2244</code>).
-                                </span>
+                                <span className="text-neutral-500 font-mono shrink-0">02</span>
+                                <span><strong className="text-white block">PubChem</strong>Switch to the PubChem tab and enter a compound CID (e.g., <code className="bg-neutral-800 px-1 rounded">2244</code>) to load small molecules.</span>
                             </li>
                             <li className="flex gap-3">
-                                <span className="text-neutral-500 font-mono">03</span>
-                                <span>
-                                    <strong className="text-white block">Library</strong>
-                                    Browse our curated collection of interesting proteins and chemicals.
-                                </span>
+                                <span className="text-neutral-500 font-mono shrink-0">03</span>
+                                <span><strong className="text-white block">Curated Library</strong>Click <strong className="text-neutral-200">Library</strong> in the sidebar to browse 200+ hand-picked proteins and chemicals across 24 categories (enzymes, viral, antibodies, drug targets, DNA/RNA, neurotransmitters, and more).</span>
                             </li>
                             <li className="flex gap-3">
-                                <span className="text-neutral-500 font-mono">04</span>
-                                <span>
-                                    <strong className="text-white block">Local Files</strong>
-                                    Drag and drop <code className="text-blue-300">.pdb</code>, <code className="text-blue-300">.sdf</code>, or <code className="text-blue-300">.mol</code> files anywhere on the screen.
-                                </span>
+                                <span className="text-neutral-500 font-mono shrink-0">04</span>
+                                <span><strong className="text-white block">Local Files</strong>Drag and drop <code className="text-blue-300">.pdb</code>, <code className="text-blue-300">.cif</code>, <code className="text-blue-300">.mmcif</code>, <code className="text-blue-300">.sdf</code>, or <code className="text-blue-300">.mol</code> files anywhere on the screen, or use the Upload button.</span>
+                            </li>
+                            <li className="flex gap-3">
+                                <span className="text-neutral-500 font-mono shrink-0">05</span>
+                                <span><strong className="text-white block">My Library</strong>Logged-in users can save structures to their personal cloud library and reload them from any device via the Dashboard.</span>
                             </li>
                         </ul>
                     </div>
-
-                    <div className="bg-neutral-800/50 p-3 rounded-lg flex items-center gap-3 border border-neutral-700/50">
-                        <div className="p-2 bg-neutral-700/50 rounded-full">
-                            <Sparkles className="w-4 h-4 text-neutral-300" />
-                        </div>
-                        <div>
-                            <h4 className="text-xs font-bold text-white mb-0.5">Interactive Tour</h4>
-                            <p className="text-[11px] text-neutral-400">
-                                Click "Start Tour" in the sidebar for a guided walkthrough of all features.
-                            </p>
-                        </div>
-                    </div>
-
                     <div className="bg-neutral-800/50 p-4 rounded-xl border border-neutral-700/50">
                         <h4 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
-                            <MousePointer2 className="w-4 h-4 text-purple-400" /> Controls
+                            <MousePointer2 className="w-4 h-4 text-purple-400" /> 3D Navigation
                         </h4>
-                        <div className="grid grid-cols-2 gap-3 text-xs">
-                            <div className="bg-black/20 p-2 rounded border border-white/5">
-                                <strong className="text-white block mb-1">Rotate</strong>
-                                <span className="text-neutral-400">Left Click + Drag</span>
-                            </div>
-                            <div className="bg-black/20 p-2 rounded border border-white/5">
-                                <strong className="text-white block mb-1">Zoom</strong>
-                                <span className="text-neutral-400">Scroll Wheel</span>
-                            </div>
-                            <div className="bg-black/20 p-2 rounded border border-white/5">
-                                <strong className="text-white block mb-1">Pan</strong>
-                                <span className="text-neutral-400">Right Click + Drag</span>
-                            </div>
-                            <div className="bg-black/20 p-2 rounded border border-white/5">
-                                <strong className="text-white block mb-1">Power User</strong>
-                                <span className="text-neutral-400">Cmd+K for Commands</span>
-                            </div>
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                            {[
+                                ['Rotate', 'Left Click + Drag'],
+                                ['Zoom', 'Scroll Wheel'],
+                                ['Pan', 'Right Click + Drag'],
+                                ['Toggle Spin', 'Space'],
+                                ['Reset View', 'R'],
+                                ['Select Residue', 'Click atom in 3D'],
+                                ['Measure Distance', 'M → click two atoms'],
+                                ['Command Palette', '⌘K / Ctrl+K'],
+                            ].map(([label, action]) => (
+                                <div key={label} className="bg-black/20 p-2 rounded border border-white/5">
+                                    <strong className="text-white block mb-0.5">{label}</strong>
+                                    <span className="text-neutral-400">{action}</span>
+                                </div>
+                            ))}
                         </div>
                     </div>
-
-
-                    <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-                        <strong className="text-blue-400 text-xs block mb-1">Pro Tip: Quick Access</strong>
-                        <p className="text-[11px] text-neutral-400">
-                            Press <kbd className="bg-neutral-800 px-1 rounded text-neutral-300">?</kbd> anywhere in the app to toggle this guide instantly.
-                        </p>
+                    <div className="bg-neutral-800/50 p-4 rounded-xl border border-neutral-700/50">
+                        <h4 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
+                            <Sparkles className="w-4 h-4 text-amber-400" /> HUD &amp; Structure Info
+                        </h4>
+                        <div className="space-y-2 text-xs text-neutral-300">
+                            <p>The heads-up display (HUD) overlaid on the viewer shows the loaded structure's name or PDB ID. Hover over any atom to see the residue name, number, chain, and atom type in real time.</p>
+                            <p>During collaboration sessions the HUD also shows participant names, voice status, and control indicators.</p>
+                        </div>
                     </div>
-                </div >
+                    <div className="bg-neutral-800/50 p-3 rounded-lg border border-neutral-700/50">
+                        <h4 className="text-xs font-bold text-white mb-1 flex items-center gap-2">
+                            <Sparkles className="w-3.5 h-3.5 text-neutral-400" /> Interactive Onboarding Tour
+                        </h4>
+                        <p className="text-[11px] text-neutral-400">Click <strong className="text-neutral-300">Start Tour</strong> on the landing screen for a step-by-step guided walkthrough that highlights the 3D viewer, loading, visualization controls, multi-view layouts, and analysis tools.</p>
+                    </div>
+                    <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                        <strong className="text-blue-400 text-xs block mb-1">Pro Tips</strong>
+                        <p className="text-[11px] text-neutral-400">Press <kbd className="bg-neutral-800 px-1 rounded text-neutral-300">?</kbd> anywhere to toggle this guide. Press <kbd className="bg-neutral-800 px-1 rounded text-neutral-300">Esc</kbd> to close any modal. Open the Command Palette with <kbd className="bg-neutral-800 px-1 rounded text-neutral-300">⌘K</kbd> to search and run any action by name.</p>
+                    </div>
+                </div>
             )
         },
         {
             id: 'dashboard',
             title: 'Integrated Dashboard',
             icon: LayoutDashboard,
-            description: 'Manage workspaces and drafts.',
+            description: 'Your personal research hub — structures, analytics, and settings.',
             content: (
-                <div className="space-y-6">
+                <div className="space-y-4">
                     <div className="bg-gradient-to-br from-cyan-500/10 to-teal-500/10 border border-cyan-500/20 p-4 rounded-xl">
                         <h4 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
-                            <LayoutDashboard className="w-4 h-4 text-cyan-400" /> Workspaces & Drafts
+                            <LayoutDashboard className="w-4 h-4 text-cyan-400" /> Your Research Hub
                         </h4>
-                        <p className="text-xs text-neutral-300 mb-4 leading-relaxed">
-                            Access all your saved sessions and studio drafts in one unified space.
-                        </p>
-                        
-                        <div className="space-y-4">
-                            <div className="bg-black/20 p-3 rounded-lg border border-white/5">
-                                <strong className="text-white text-xs block mb-1">Workspaces</strong>
-                                <p className="text-[11px] text-neutral-400">
-                                    Organize your sessions and structures into private workspaces. Easily search and load previous saves.
-                                </p>
-                            </div>
-                            <div className="bg-black/20 p-3 rounded-lg border border-white/5">
-                                <strong className="text-white text-xs block mb-1">Studio Drafts</strong>
-                                <p className="text-[11px] text-neutral-400">
-                                    Manage your saved Studio Mode animations. Resume editing your keyframes or export completed videos directly.
-                                </p>
-                            </div>
+                        <p className="text-xs text-neutral-300 mb-3 leading-relaxed">Access the dashboard via the <strong className="text-white">Dashboard</strong> button in the top-right corner. It opens your personal workspace while preserving the current viewer state.</p>
+                        <div className="space-y-2">
+                            {[
+                                ['Overview', 'Activity sparklines (uploads, views, shares, deletes) over the last 14 days with 7-day trend indicators. Highlights top structures by view count and shows a scrollable recent activity feed.'],
+                                ['My Structures', 'Cloud library of all your uploaded structures. Toggle between grid and list view. Sort by date, size, or name. Filter and tag structures (Protein, Ligand, Drug Target, Published, In Progress, Mutant, Control, Complex). Organize into color-coded folders, star for quick access, or bulk-export as ZIP.'],
+                                ['Lab Notebook', 'A full scientific notebook with rich-text editing, spreadsheet tables, inline charts, code cells, and PDF export — all cloud-synced with real-time collaboration cursors.'],
+                                ['Studio Drafts', 'Resume or export your saved molecular animation projects from Studio Mode. Each draft shows title, duration, frame count, and creation date.'],
+                                ['Account Settings', 'Manage your profile name, avatar/picture upload, password, and security preferences.'],
+                            ].map(([title, desc]) => (
+                                <div key={title as string} className="bg-black/20 p-3 rounded-lg border border-white/5">
+                                    <strong className="text-white text-xs block mb-1">{title}</strong>
+                                    <p className="text-[11px] text-neutral-400">{desc}</p>
+                                </div>
+                            ))}
                         </div>
                     </div>
-
-                    <div className="mt-4 p-3 bg-cyan-500/10 border border-cyan-500/20 rounded-lg">
-                        <strong className="text-cyan-400 text-xs block mb-1">Pro Tip: Quick Navigation</strong>
-                        <p className="text-[11px] text-neutral-400">
-                            Click your user avatar in the top right to instantly access the Dashboard, User Settings, and Subscription management.
-                        </p>
+                    <div className="p-3 bg-cyan-500/10 border border-cyan-500/20 rounded-lg">
+                        <strong className="text-cyan-400 text-xs block mb-1">Pro Tip</strong>
+                        <p className="text-[11px] text-neutral-400">The <strong className="text-neutral-300">Open Viewer</strong> button in the dashboard header returns you to the exact structure and viewer state you left.</p>
                     </div>
                 </div>
             )
@@ -168,44 +149,70 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
             id: 'lab-notebook',
             title: 'Lab Notebook',
             icon: PenTool,
-            description: 'Comprehensive rich-text notes.',
+            description: 'Rich-text notes, tables, charts, code cells, and PDF export.',
             content: (
-                <div className="space-y-6">
+                <div className="space-y-4">
                     <div className="bg-gradient-to-br from-amber-500/10 to-orange-500/10 border border-amber-500/20 p-4 rounded-xl">
                         <h4 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
-                            <PenTool className="w-4 h-4 text-amber-400" /> Digital Lab Notebook
+                            <PenTool className="w-4 h-4 text-amber-400" /> Scientific Notebook
                         </h4>
-                        <p className="text-xs text-neutral-300 mb-4 leading-relaxed">
-                            Maintain detailed documentation alongside your visualization work, keeping your research organized.
-                        </p>
-                        
-                        <div className="space-y-4">
-                            <div className="bg-black/20 p-3 rounded-lg border border-white/5">
-                                <strong className="text-white text-xs block mb-1">Rich Content</strong>
-                                <p className="text-[11px] text-neutral-400">
-                                    Embed interactive structure views, molecular sketches, inline Python math kernels, and tables directly into your notes.
-                                </p>
-                            </div>
-                            <div className="bg-black/20 p-3 rounded-lg border border-white/5">
-                                <strong className="text-white text-xs block mb-1">PDF Export</strong>
-                                <p className="text-[11px] text-neutral-400">
-                                    Generate clean, publication-ready PDF reports from your notebook entries with one click.
-                                </p>
-                            </div>
-                            <div className="bg-black/20 p-3 rounded-lg border border-white/5">
-                                <strong className="text-white text-xs block mb-1">Collaboration</strong>
-                                <p className="text-[11px] text-neutral-400">
-                                    See real-time cursors of other users viewing or editing the same notebook entry during collaborative sessions.
-                                </p>
-                            </div>
+                        <p className="text-xs text-neutral-300 mb-3 leading-relaxed">A full-featured research notebook with cloud sync, auto-save, and real-time collaboration cursors. Access it from the Dashboard → Lab Notebook tab.</p>
+                        <div className="space-y-2">
+                            {[
+                                ['Rich Text Editor', 'Bold, italic, underline, strikethrough, headings (H1–H3), bullet and numbered lists, blockquotes, code blocks (use ```python fence syntax), links, subscript, superscript, text highlights, and custom text color. Select any text to reveal the floating formatting toolbar.'],
+                                ['Spreadsheet Tables', 'Inline editable spreadsheet with column letter headers and row numbers. Download as CSV, view column statistics (min, max, mean, σ) via the Activity button, adjust font size, and manage columns/rows via the Settings (⚙) menu.'],
+                                ['Inline Charts', 'Click Visualize in the table toolbar to link a table to a chart block. Choose Line or Bar chart, select X-axis and Y-axis columns, assign per-series colors, and optionally overlay a trend line (linear regression) or show mean/σ statistics. The chart auto-syncs when table data changes.'],
+                                ['Code Cells', 'Python-style executable math cells for scientific calculations directly inside your notes.'],
+                                ['Structure Mentions', 'Type @ to mention a structure from your library. It embeds a clickable reference badge that opens the structure in the viewer.'],
+                                ['Chemical Sketcher', 'Draw and embed 2D chemical structures using the built-in Ketcher-powered sketcher. Insert via the toolbar.'],
+                                ['Image Embedding', 'Paste or drag images directly into the editor. Resize by dragging the corner handle.'],
+                                ['Floating Calculator', 'Insert a scientific calculator widget from the Insert menu for quick in-note calculations without leaving the page.'],
+                                ['PDF Export', 'Export any notebook entry as a multi-page PDF with an auto-generated cover page from the toolbar.'],
+                            ].map(([title, desc]) => (
+                                <div key={title as string} className="bg-black/20 p-3 rounded-lg border border-white/5">
+                                    <strong className="text-white text-xs block mb-1">{title}</strong>
+                                    <p className="text-[11px] text-neutral-400">{desc}</p>
+                                </div>
+                            ))}
                         </div>
                     </div>
-
-                    <div className="mt-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
-                        <strong className="text-amber-400 text-xs block mb-1">Pro Tip: Formatting</strong>
-                        <p className="text-[11px] text-neutral-400">
-                            Highlight text to access formatting options instantly, or try alignment tools for images and paragraphs.
-                        </p>
+                    <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+                        <strong className="text-amber-400 text-xs block mb-1">Pro Tip</strong>
+                        <p className="text-[11px] text-neutral-400">Select text to reveal the floating formatting toolbar. Use the <strong className="text-neutral-300">Insert</strong> menu in the main toolbar to add tables, charts, calculators, chemical structures, and more.</p>
+                    </div>
+                </div>
+            )
+        },
+        {
+            id: 'ai',
+            title: 'Quercus AI',
+            icon: Bot,
+            description: 'Context-aware AI assistant for structures and data analysis.',
+            content: (
+                <div className="space-y-4">
+                    <div className="bg-gradient-to-br from-indigo-500/10 to-violet-500/10 border border-indigo-500/20 p-4 rounded-xl">
+                        <h4 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
+                            <Bot className="w-4 h-4 text-indigo-400" /> AI-Powered Analysis
+                        </h4>
+                        <p className="text-xs text-neutral-300 mb-3 leading-relaxed">Click the <strong className="text-white">AI</strong> button in the bottom pill (sign-in required) to open the Quercus AI assistant, powered by Claude.</p>
+                        <div className="space-y-2">
+                            {[
+                                ['Structure Context', 'When a structure is loaded, Quercus AI automatically receives its PDB ID, name, organism, method, resolution, formula, and molecular weight — no copy-pasting needed.'],
+                                ['Ask Anything', 'Ask about protein function, binding sites, mutations, drug interactions, structural features, or AlphaFold confidence scores.'],
+                                ['File Attachments', 'Attach images, PDFs, CSV, or TSV files (up to 5 per message) by clicking the paperclip icon or dragging files directly into the AI panel.'],
+                                ['Data Analysis', 'Upload experimental data tables and ask the AI to interpret, summarize, find patterns, or suggest statistical approaches.'],
+                                ['Streaming Responses', 'Responses stream in real-time token by token. Use Shift+Enter to insert a new line without sending.'],
+                            ].map(([title, desc]) => (
+                                <div key={title as string} className="bg-black/20 p-3 rounded-lg border border-white/5">
+                                    <strong className="text-white text-xs block mb-1">{title}</strong>
+                                    <p className="text-[11px] text-neutral-400">{desc}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                    <div className="p-3 bg-indigo-500/10 border border-indigo-500/20 rounded-lg">
+                        <strong className="text-indigo-400 text-xs block mb-1">Mobile</strong>
+                        <p className="text-[11px] text-neutral-400">On phones the AI panel opens as a bottom sheet, so the structure remains visible above it.</p>
                     </div>
                 </div>
             )
@@ -214,168 +221,110 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
             id: 'layout',
             title: 'Multi-View & Layout',
             icon: Layers,
-            description: 'Compare structures side-by-side.',
+            description: 'Compare up to 4 structures simultaneously with independent viewports.',
             content: (
-                <div className="space-y-6">
+                <div className="space-y-5">
                     <div className="bg-gradient-to-br from-indigo-500/10 to-blue-500/10 border border-indigo-500/20 p-4 rounded-xl">
                         <h4 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
-                            <Layers className="w-4 h-4 text-indigo-400" /> Multi-View System
+                            <Layers className="w-4 h-4 text-indigo-400" /> Multi-Viewport System
                         </h4>
-                        <p className="text-xs text-neutral-300 mb-4 leading-relaxed">
-                            Visualize up to 4 structures simultaneously. Perfect for comparing mutants, binding sites, or different conformations.
-                        </p>
-                        <div className="grid grid-cols-2 gap-3 text-xs">
-                            <div className="bg-black/20 p-2 rounded border border-white/5 flex items-center gap-2">
-                                <div className="w-4 h-4 rounded bg-indigo-500/20 border border-indigo-500/50" />
-                                <span className="text-white">Single View</span>
-                            </div>
-                            <div className="bg-black/20 p-2 rounded border border-white/5 flex items-center gap-2">
-                                <div className="flex gap-0.5 w-4 h-4"><div className="w-full bg-indigo-500/20 border border-indigo-500/50" /><div className="w-full bg-indigo-500/20 border border-indigo-500/50" /></div>
-                                <span className="text-white">Side-by-Side</span>
-                            </div>
-                            <div className="bg-black/20 p-2 rounded border border-white/5 flex items-center gap-2">
-                                <div className="flex flex-col gap-0.5 w-4 h-4"><div className="h-full bg-indigo-500/20 border border-indigo-500/50" /><div className="flex gap-0.5 h-full"><div className="w-full bg-indigo-500/20 border border-indigo-500/50" /><div className="w-full bg-indigo-500/20 border border-indigo-500/50" /></div></div>
-                                <span className="text-white">Triple View</span>
-                            </div>
-                            <div className="bg-black/20 p-2 rounded border border-white/5 flex items-center gap-2">
-                                <div className="grid grid-cols-2 gap-0.5 w-4 h-4"><div className="bg-indigo-500/20 border border-indigo-500/50" /><div className="bg-indigo-500/20 border border-indigo-500/50" /><div className="bg-indigo-500/20 border border-indigo-500/50" /><div className="bg-indigo-500/20 border border-indigo-500/50" /></div>
-                                <span className="text-white">Quad Grid</span>
-                            </div>
+                        <p className="text-xs text-neutral-300 mb-3 leading-relaxed">Use the layout buttons at the bottom of the left sidebar to switch between 1, 2, 3, or 4 simultaneous viewports. Each viewport is fully independent — load different structures, use different representations and coloring schemes.</p>
+                        <div className="grid grid-cols-2 gap-2 text-xs mb-3">
+                            {[
+                                ['Single', 'Full-width single structure view'],
+                                ['Dual (Side-by-Side)', 'Compare two structures or two representations of the same structure'],
+                                ['Triple', 'One large main viewport + two smaller ones'],
+                                ['Quad Grid', 'Four equal viewports for multi-conformer or multi-mutant analysis'],
+                            ].map(([label, desc]) => (
+                                <div key={label} className="bg-black/20 p-2 rounded border border-white/5">
+                                    <strong className="text-white block mb-0.5 text-[11px]">{label}</strong>
+                                    <span className="text-neutral-500 text-[10px]">{desc}</span>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="bg-black/20 p-3 rounded-lg border border-white/5">
+                            <strong className="text-white text-xs block mb-1">Rendering Engines</strong>
+                            <p className="text-[11px] text-neutral-400">Switch between <strong className="text-neutral-300">NGL</strong> (default, fast, broad format support) and <strong className="text-neutral-300">Mol*</strong> (feature-rich, advanced selections and ligand environments) using the engine buttons at the bottom of the sidebar.</p>
                         </div>
                     </div>
-
-
-                    <div className="mt-4 p-3 bg-indigo-500/10 border border-indigo-500/20 rounded-lg">
-                        <strong className="text-indigo-400 text-xs block mb-1">Pro Tip: Focus Mode</strong>
-                        <p className="text-[11px] text-neutral-400">
-                            Need more screen space? Press <kbd className="bg-neutral-800 px-1 rounded text-neutral-300">Cmd+B</kbd> to collapse the sidebar and maximize your viewports.
-                        </p>
+                    <div className="p-3 bg-indigo-500/10 border border-indigo-500/20 rounded-lg">
+                        <strong className="text-indigo-400 text-xs block mb-1">Pro Tip</strong>
+                        <p className="text-[11px] text-neutral-400">Load the same PDB in two viewports with different representations (e.g., Cartoon vs. Surface) to compare structural features at a glance without switching back and forth.</p>
                     </div>
-                </div >
+                </div>
             )
         },
         {
             id: 'live',
             title: 'Live Collaboration',
             icon: Users,
-            description: 'Real-time synchronization and chat.',
+            description: 'Real-time multi-user sessions with voice, chat, and reactions.',
             content: (
-                <div className="space-y-6">
+                <div className="space-y-4">
                     <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/20 p-4 rounded-xl">
                         <h4 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
-                            <Users className="w-4 h-4 text-green-400" /> Remote Teaching & Research
+                            <Users className="w-4 h-4 text-green-400" /> Real-Time Sessions
                         </h4>
-                        <p className="text-xs text-neutral-300 mb-4 leading-relaxed">
-                            Turn your viewer into a shared classroom or lab bench. All participants see exactly what you see, in real-time.
-                        </p>
-
-                        <div className="space-y-4">
-                            {/* How to Connect */}
-                            <div className="bg-black/20 p-3 rounded-lg border border-white/5">
-                                <h5 className="text-xs font-bold text-white mb-2 flex items-center gap-2">
-                                    <span className="w-4 h-4 flex items-center justify-center bg-green-500/20 text-green-400 rounded-full text-[10px]">1</span>
-                                    Start a Session
-                                </h5>
-                                <p className="text-[11px] text-neutral-400 mb-2 ml-6">
-                                    Click the <strong className="text-neutral-300">Share</strong> button in the top toolbar. You will be assigned a unique Session ID.
-                                </p>
-                                <p className="text-[11px] text-neutral-400 ml-6">
-                                    Copy the <strong className="text-neutral-300">Invite Link</strong> and send it to your students or colleagues. They just need to open the link to join.
-                                </p>
-                            </div>
-
-                            {/* What is Synced */}
-                            <div className="bg-black/20 p-3 rounded-lg border border-white/5">
-                                <h5 className="text-xs font-bold text-white mb-2 flex items-center gap-2">
-                                    <span className="w-4 h-4 flex items-center justify-center bg-blue-500/20 text-blue-400 rounded-full text-[10px]">2</span>
-                                    What is Synced?
-                                </h5>
-                                <ul className="ml-6 space-y-1.5 text-[11px] text-neutral-400 list-disc">
-                                    <li><strong className="text-neutral-300">Camera View:</strong> When you rotate or zoom, everyone follows.</li>
-                                    <li><strong className="text-neutral-300">Representation:</strong> Switch from Cartoon to Surface, and it updates for all.</li>
-                                    <li><strong className="text-neutral-300">Measurements:</strong> Distances you measure (M) appear instantly on everyone's screen.</li>
-                                    <li><strong className="text-neutral-300">Highlights:</strong> Hover over a residue to point it out to others.</li>
-                                </ul>
-                            </div>
-
-                            {/* Interaction */}
-                            <div className="bg-black/20 p-3 rounded-lg border border-white/5">
-                                <h5 className="text-xs font-bold text-white mb-2 flex items-center gap-2">
-                                    <span className="w-4 h-4 flex items-center justify-center bg-purple-500/20 text-purple-400 rounded-full text-[10px]">3</span>
-                                    Interaction & Control
-                                </h5>
-                                <div className="ml-6 grid grid-cols-2 gap-3">
-                                    <div>
-                                        <strong className="text-white text-[11px] block">Pass the Chalk</strong>
-                                        <p className="text-[10px] text-neutral-500">
-                                            The Host controls the view by default. Click a user's Nametag in the sidebar to give them control.
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <strong className="text-white text-[11px] block">Live Chat</strong>
-                                        <p className="text-[10px] text-neutral-500">
-                                            Discuss findings in real-time with the built-in text chat and always-on nametags.
-                                        </p>
-                                    </div>
+                        <p className="text-xs text-neutral-300 mb-3 leading-relaxed">Turn Quercus Viewer into a shared lab bench. Everyone in the session sees the same structure, camera, and annotations in real time — no account required for guests.</p>
+                        <div className="space-y-2">
+                            {[
+                                ['Start a Session', 'Click Share → Live tab. Copy the invite link and send it to collaborators. They join by opening the link — no account required.'],
+                                ['What Syncs in Real Time', 'Camera rotation and zoom, representation changes, coloring updates, measurement additions, structure loads, and residue hover highlights all sync instantly to all participants.'],
+                                ['Pass the Chalk', 'The host controls the view by default. Click a participant\'s nametag in the HUD to transfer control to them. Guests can switch to View-only mode to unlock their own camera.'],
+                                ['Voice Chat', 'Click JOIN VOICE in the bottom pill to join the WebRTC audio room. Mute/unmute without leaving the session.'],
+                                ['Text Chat', 'The CHAT button (visible during sessions) opens a real-time message thread. System events (structure loaded, user joined) appear automatically.'],
+                                ['Emoji Reactions', 'Click 👍 ❤️ 👏 🎉 in the HUD to broadcast an animated reaction over the viewer for all participants — great for celebrating a discovery.'],
+                                ['Quick Notes', 'The NOTES button opens a local floating notepad above the viewer, useful for jotting observations during a session. Notes are local only.'],
+                            ].map(([title, desc]) => (
+                                <div key={title as string} className="bg-black/20 p-3 rounded-lg border border-white/5">
+                                    <strong className="text-white text-xs block mb-1">{title}</strong>
+                                    <p className="text-[11px] text-neutral-400">{desc}</p>
                                 </div>
-                            </div>
+                            ))}
                         </div>
                     </div>
-
-
-                    <div className="mt-4 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
-                        <strong className="text-green-400 text-xs block mb-1">Pro Tip: Instant Chat</strong>
-                        <p className="text-[11px] text-neutral-400">
-                            During a session, press <kbd className="bg-neutral-800 px-1 rounded text-neutral-300">C</kbd> to toggle the chat window without leaving your view.
-                        </p>
+                    <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+                        <strong className="text-green-400 text-xs block mb-1">Pro Tip</strong>
+                        <p className="text-[11px] text-neutral-400">Guests can switch to View-only mode in the HUD to unlock their own camera and freely explore the structure while still watching the host's highlights and measurements.</p>
                     </div>
-                </div >
+                </div>
             )
         },
         {
             id: 'data',
             title: 'History & Favorites',
-            icon: BookOpen,
-            description: 'Manage your saved structures.',
+            icon: FolderOpen,
+            description: 'Favorites, recent history, and the curated structure library.',
             content: (
                 <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="bg-neutral-800/50 p-3 rounded-lg border border-neutral-700/50">
-                            <h4 className="text-xs font-bold text-white mb-2 flex items-center gap-2">
-                                <span className="text-yellow-500">★</span> Favorites
-                            </h4>
-                            <p className="text-[11px] text-neutral-400">
-                                Click the star icon next to any structure name to save it to your local favorites for quick access.
-                            </p>
-                        </div>
-                        <div className="bg-neutral-800/50 p-3 rounded-lg border border-neutral-700/50">
-                            <h4 className="text-xs font-bold text-white mb-2 flex items-center gap-2">
-                                <span className="text-blue-400">🕒</span> History
-                            </h4>
-                            <p className="text-[11px] text-neutral-400">
-                                Usually revisit structures? We automatically keep track of your last 10 viewed items in the History tab.
-                            </p>
-                        </div>
-                    </div>
                     <div className="bg-neutral-800/50 p-4 rounded-xl border border-neutral-700/50">
-                        <h4 className="text-sm font-bold text-white mb-2">Built-in Library</h4>
-                        <p className="text-xs text-neutral-400 mb-3">
-                            Explore our curated collection of over 1000+ protein structures and small molecule chemicals.
-                        </p>
-                        <div className="flex flex-wrap gap-2">
-                            <span className="px-2 py-1 bg-neutral-700 rounded text-[10px] text-neutral-300">Essential Enzymes</span>
-                            <span className="px-2 py-1 bg-neutral-700 rounded text-[10px] text-neutral-300">Viral Proteins</span>
-                            <span className="px-2 py-1 bg-neutral-700 rounded text-[10px] text-neutral-300">Drug Targets</span>
-                            <span className="px-2 py-1 bg-blue-900/30 text-blue-200 border border-blue-500/20 rounded text-[10px]">Vitamins</span>
-                            <span className="px-2 py-1 bg-blue-900/30 text-blue-200 border border-blue-500/20 rounded text-[10px]">Antibiotics</span>
-                            <span className="px-2 py-1 bg-blue-900/30 text-blue-200 border border-blue-500/20 rounded text-[10px]">Nucleotides</span>
+                        <div className="grid grid-cols-2 gap-3 mb-3">
+                            <div className="bg-black/20 p-3 rounded-lg border border-white/5">
+                                <h4 className="text-xs font-bold text-white mb-1 flex items-center gap-1.5"><span className="text-yellow-400">★</span> Favorites</h4>
+                                <p className="text-[11px] text-neutral-400">Click the star next to any loaded structure name to save it for quick re-access from the Favorites panel in the sidebar.</p>
+                            </div>
+                            <div className="bg-black/20 p-3 rounded-lg border border-white/5">
+                                <h4 className="text-xs font-bold text-white mb-1">🕒 History</h4>
+                                <p className="text-[11px] text-neutral-400">The last 10 viewed structures are remembered locally so you can resume exactly where you left off.</p>
+                            </div>
+                        </div>
+                        <div className="bg-black/20 p-3 rounded-lg border border-white/5 mb-3">
+                            <strong className="text-white text-xs block mb-1">My Structures (Dashboard)</strong>
+                            <p className="text-[11px] text-neutral-400">Your personal cloud-synced library. Features grid/list view toggle, sorting by date/size/name, tag filtering (Protein, Ligand, Drug Target, Mutant, In Progress…), color-coded folder organization, starring, bulk ZIP export, and per-structure sharing links.</p>
+                        </div>
+                        <div className="bg-black/20 p-3 rounded-lg border border-white/5">
+                            <strong className="text-white text-xs block mb-2">Curated Library</strong>
+                            <p className="text-[11px] text-neutral-400 mb-2">200+ hand-picked proteins and chemicals across 24 categories:</p>
+                            <div className="flex flex-wrap gap-1.5">
+                                {['Enzymes', 'Viral', 'Immune', 'Antibodies', 'Drug Targets', 'DNA/RNA', 'Vitamins', 'Drugs', 'Neurotransmitters', 'Metabolites'].map(tag => (
+                                    <span key={tag} className="px-2 py-0.5 bg-neutral-700 rounded text-[10px] text-neutral-300">{tag}</span>
+                                ))}
+                            </div>
                         </div>
                     </div>
-                    <div className="mt-4 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
-                        <strong className="text-yellow-400 text-xs block mb-1">Pro Tip: Data Persistence</strong>
-                        <p className="text-[11px] text-neutral-400">
-                            Your **History** and **Favorites** are stored locally in your browser, so they'll be here when you come back.
-                        </p>
+                    <div className="p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+                        <strong className="text-yellow-400 text-xs block mb-1">Pro Tip</strong>
+                        <p className="text-[11px] text-neutral-400">Save a structure to your library with <strong className="text-neutral-300">Save to Library</strong> in the left sidebar, then tag and annotate it in the Dashboard for future reference and sharing.</p>
                     </div>
                 </div>
             )
@@ -384,45 +333,42 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
             id: 'visuals',
             title: 'Visualization',
             icon: Sparkles,
-            description: 'Representations, Coloring, and Lighting.',
+            description: 'Representations, rendering engines, quality, and clipping.',
             content: (
-                <div className="space-y-6">
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="col-span-2 bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-500/20 p-4 rounded-xl">
-                            <h4 className="text-sm font-bold text-white mb-2 flex items-center gap-2">
-                                <Sparkles className="w-4 h-4 text-blue-400" /> Scientific Palettes
-                            </h4>
-                            <p className="text-xs text-neutral-300 mb-3">
-                                Switch between <span className="text-white">Viridis, Magma, Cividis</span>, and Standard palettes. These are color-blind friendly and perceptually uniform.
-                            </p>
+                <div className="space-y-4">
+                    <div className="bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-500/20 p-4 rounded-xl">
+                        <h4 className="text-sm font-bold text-white mb-3 flex items-center gap-2"><Sparkles className="w-4 h-4 text-blue-400" /> Representations</h4>
+                        <div className="grid grid-cols-2 gap-2 text-xs mb-3">
+                            {[
+                                ['1 · Cartoon', 'Ribbons showing secondary structure — best default'],
+                                ['2 · Spacefill', 'CPK van der Waals spheres'],
+                                ['3 · Surface', 'Solvent-accessible surface for pocket analysis'],
+                                ['4 · Licorice', 'Bonds only — good for ligands'],
+                                ['5 · Backbone', 'Cα trace only, minimal detail'],
+                                ['6 · Ribbon', 'Smooth ribbon variant — great for presentations'],
+                                ['7 · Ball & Stick', 'Atoms + bonds — ideal for active sites'],
+                                ['8 · Line', 'Minimal wireframe — fastest for large structures'],
+                            ].map(([label, desc]) => (
+                                <div key={label} className="bg-black/20 p-2 rounded border border-white/5">
+                                    <strong className="text-white block mb-0.5">{label}</strong>
+                                    <span className="text-neutral-500 text-[10px]">{desc}</span>
+                                </div>
+                            ))}
                         </div>
-
-                        <div className="bg-neutral-800/50 p-3 rounded-lg border border-neutral-700/50">
-                            <h5 className="text-xs font-bold text-white mb-2">Representations</h5>
-                            <ul className="text-xs space-y-1.5 text-neutral-400">
-                                <li><strong className="text-neutral-300">Cartoon:</strong> Best for secondary structure.</li>
-                                <li><strong className="text-neutral-300">Surface:</strong> visualizing pockets/volume.</li>
-                                <li><strong className="text-neutral-300">Ball & Stick:</strong> Atomics & Bond Orders.</li>
-                                <li><strong className="text-neutral-300">Licorice:</strong> Ligand interactions.</li>
-                                <li><strong className="text-neutral-300">Base:</strong> DNA/RNA Nucleotides.</li>
-                            </ul>
-                        </div>
-
-                        <div className="bg-neutral-800/50 p-3 rounded-lg border border-neutral-700/50">
-                            <h5 className="text-xs font-bold text-white mb-2">Smart Coloring</h5>
-                            <ul className="text-xs space-y-1.5 text-neutral-400">
-                                <li><strong className="text-neutral-300">Hydrophobicity:</strong> Residue polarity.</li>
-                                <li><strong className="text-neutral-300">B-Factor:</strong> Flexibility/Confidence.</li>
-                                <li><strong className="text-neutral-300">Chain ID:</strong> Distinct chain colors.</li>
-                                <li><strong className="text-neutral-300">Element:</strong> CPK standard.</li>
-                            </ul>
+                        <div className="space-y-2">
+                            <div className="bg-black/20 p-3 rounded-lg border border-white/5">
+                                <strong className="text-white text-xs block mb-1">Rendering Quality</strong>
+                                <p className="text-[11px] text-neutral-400">Choose <strong className="text-neutral-300">Low / Medium / High</strong> quality in the sidebar. Enable <strong className="text-neutral-300">SSAO</strong> (Screen Space Ambient Occlusion) for depth shading that makes large structures easier to read. Adjust the <strong className="text-neutral-300">Clip</strong> slider to slice through the structure at any depth and reveal internal cavities or binding pockets.</p>
+                            </div>
+                            <div className="bg-black/20 p-3 rounded-lg border border-white/5">
+                                <strong className="text-white text-xs block mb-1">Rendering Engines</strong>
+                                <p className="text-[11px] text-neutral-400">Switch between <strong className="text-neutral-300">NGL</strong> (fast, great default) and <strong className="text-neutral-300">Mol*</strong> (advanced ligand analysis, custom selections) at the bottom of the sidebar.</p>
+                            </div>
                         </div>
                     </div>
-                    <div className="mt-4 p-3 bg-purple-500/10 border border-purple-500/20 rounded-lg">
-                        <strong className="text-purple-400 text-xs block mb-1">Pro Tip: Performance</strong>
-                        <p className="text-[11px] text-neutral-400">
-                            Working with large complexes? Use **Cartoon** representation to maintain smooth frame rates while rotating.
-                        </p>
+                    <div className="p-3 bg-purple-500/10 border border-purple-500/20 rounded-lg">
+                        <strong className="text-purple-400 text-xs block mb-1">Pro Tip</strong>
+                        <p className="text-[11px] text-neutral-400">Use keyboard shortcuts <kbd className="bg-neutral-800 px-1 rounded text-neutral-300">1</kbd>–<kbd className="bg-neutral-800 px-1 rounded text-neutral-300">8</kbd> to switch representations instantly without touching the sidebar.</p>
                     </div>
                 </div>
             )
@@ -431,85 +377,46 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
             id: 'coloring',
             title: 'Custom Coloring',
             icon: Palette,
-            description: 'Highlight specific residues and chains.',
+            description: 'Color schemes, custom rules, per-chain colors, and transparency.',
             content: (
-                <div className="space-y-6">
+                <div className="space-y-4">
                     <div className="bg-neutral-800/50 p-4 rounded-xl border border-neutral-700/50">
-                        <h4 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
-                            <Palette className="w-4 h-4 text-pink-400" /> Custom Selection
-                        </h4>
-                        <p className="text-xs text-neutral-300 mb-4">
-                            Create custom color schemes to highlight specific regions of interest.
-                        </p>
-                        <ul className="space-y-3 text-xs text-neutral-300">
-                            <li className="flex gap-3">
-                                <span className="text-neutral-500 font-mono">01</span>
-                                <span>
-                                    <strong className="text-white block">Select Chain</strong>
-                                    Choose which chain to apply the coloring to (e.g., Chain A).
-                                </span>
-                            </li>
-                            <li className="flex gap-3">
-                                <span className="text-neutral-500 font-mono">02</span>
-                                <span>
-                                    <strong className="text-white block">Define Range</strong>
-                                    Enter residue numbers (e.g., <code className="bg-neutral-800 px-1 rounded">10-50</code>) or comma-separated lists.
-                                </span>
-                            </li>
-                            <li className="flex gap-3">
-                                <span className="text-neutral-500 font-mono">03</span>
-                                <span>
-                                    <strong className="text-white block">Apply Color</strong>
-                                    Pick a distinct color to make your selection stand out against the rest of the structure.
-                                </span>
-                            </li>
-                        </ul>
-                    </div>
-                    <div className="mt-4 p-3 bg-pink-500/10 border border-pink-500/20 rounded-lg">
-                        <strong className="text-pink-400 text-xs block mb-1">Pro Tip: Syntax</strong>
-                        <p className="text-[11px] text-neutral-400">
-                            You can paste comma-separated lists (e.g., <code className="bg-neutral-800 px-1 rounded">10,15,42</code>) or ranges (<code className="bg-neutral-800 px-1 rounded">20-50</code>) directly.
-                        </p>
-                    </div>
-                </div>
-            )
-        },
-        {
-            id: 'transparency',
-            title: 'Transparency',
-            icon: Ghost,
-            description: 'See *through* the structure.',
-            content: (
-                <div className="space-y-6">
-                    <div className="bg-neutral-800/50 p-4 rounded-xl border border-neutral-700/50">
-                        <h4 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
-                            <Ghost className="w-4 h-4 text-neutral-400" /> Transparency Layers
-                        </h4>
-                        <p className="text-xs text-neutral-300 mb-4">
-                            Reveal internal cavities or focus on specific binding sites by making outer layers transparent.
-                        </p>
-
-                        <div className="grid grid-cols-2 gap-4">
+                        <h4 className="text-sm font-bold text-white mb-3 flex items-center gap-2"><Palette className="w-4 h-4 text-pink-400" /> Color Schemes</h4>
+                        <div className="grid grid-cols-2 gap-2 text-xs mb-4">
+                            {[
+                                ['By Chain', 'Each chain a distinct color (Q)'],
+                                ['By Element', 'CPK standard coloring (W)'],
+                                ['Hydrophobicity', 'Polarity gradient (E)'],
+                                ['B-Factor / pLDDT', 'Flexibility or AlphaFold confidence (A)'],
+                                ['Secondary Structure', 'Helix/sheet/loop coloring (D)'],
+                                ['Charge', 'Electrostatic charge (Z)'],
+                                ['Rainbow / Spectrum', 'N→C terminus gradient (X)'],
+                                ['Residue Name', 'Amino acid identity (V)'],
+                            ].map(([label, key]) => (
+                                <div key={label} className="bg-black/20 p-2 rounded border border-white/5 flex justify-between items-center">
+                                    <span className="text-neutral-300 text-[11px]">{label}</span>
+                                    <kbd className="font-mono bg-neutral-800 px-1.5 rounded text-[10px] text-neutral-500">{key.match(/\((\w)\)/)?.[1]}</kbd>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="space-y-2">
                             <div className="bg-black/20 p-3 rounded-lg border border-white/5">
-                                <h5 className="text-xs font-bold text-white mb-1">Per-Chain Mode</h5>
-                                <p className="text-[11px] text-neutral-400">
-                                    Adjust the opacity of an entire chain (e.g., Chain A) to ghost it out while keeping others solid.
-                                </p>
+                                <strong className="text-white text-xs block mb-1">Custom Color Rules</strong>
+                                <p className="text-[11px] text-neutral-400">In the Colors panel, add rules targeting a specific chain + residue range and assign any color. Enter comma-separated residue numbers (<code className="bg-neutral-900 px-1 rounded">10,15,42</code>) or ranges (<code className="bg-neutral-900 px-1 rounded">20-50</code>) to highlight discontinuous active site residues. Residue rules override chain rules, which override the global scheme.</p>
                             </div>
                             <div className="bg-black/20 p-3 rounded-lg border border-white/5">
-                                <h5 className="text-xs font-bold text-white mb-1">Residue Mode</h5>
-                                <p className="text-[11px] text-neutral-400">
-                                    Create a "window" into the protein by making specific residues (e.g., <code className="bg-white/10 px-1 rounded">50-100</code>) transparent.
-                                </p>
+                                <strong className="text-white text-xs block mb-1">Transparency</strong>
+                                <p className="text-[11px] text-neutral-400">Set per-chain or per-residue opacity in the Transparency section. Combine Surface at 50% opacity with Cartoon underneath to see internal structure through the volume — useful for visualizing buried active sites.</p>
+                            </div>
+                            <div className="bg-black/20 p-3 rounded-lg border border-white/5">
+                                <strong className="text-white text-xs block mb-1">Background Color</strong>
+                                <p className="text-[11px] text-neutral-400">Use the color picker in the sidebar to set a custom viewer background. Dark blue works well for presentations; pure black for publications.</p>
                             </div>
                         </div>
-
-                        <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-                            <strong className="text-blue-400 text-xs block mb-1">Pro Tip: Layering</strong>
-                            <p className="text-[11px] text-neutral-400">
-                                Combine <span className="text-white">Surface</span> representation with <span className="text-white">50% Opacity</span> to see the internal backbone structure through the volume.
-                            </p>
-                        </div>
+                    </div>
+                    <div className="p-3 bg-pink-500/10 border border-pink-500/20 rounded-lg">
+                        <strong className="text-pink-400 text-xs block mb-1">Pro Tip</strong>
+                        <p className="text-[11px] text-neutral-400">Layer transparency and custom rules: Surface at 30% opacity on Chain A, with residues 50–60 highlighted in red Ball & Stick for a figure that shows both the protein surface and the active site at once.</p>
                     </div>
                 </div>
             )
@@ -518,51 +425,38 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
             id: 'advanced-styles',
             title: 'Advanced Styles',
             icon: Shapes,
-            description: 'Mix & Match representations.',
+            description: 'Per-chain and per-residue representation mixing.',
             content: (
-                <div className="space-y-6">
+                <div className="space-y-4">
                     <div className="bg-neutral-800/50 p-4 rounded-xl border border-neutral-700/50">
-                        <h4 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
-                            <Shapes className="w-4 h-4 text-purple-400" /> Advanced Styling
-                        </h4>
-                        <p className="text-xs text-neutral-300 mb-4">
-                            Go beyond global settings. Apply different geometric representations to specific parts of the structure to tell a clearer story.
-                        </p>
-
-                        <div className="space-y-4">
+                        <h4 className="text-sm font-bold text-white mb-3 flex items-center gap-2"><Shapes className="w-4 h-4 text-purple-400" /> Layered Styling</h4>
+                        <p className="text-xs text-neutral-300 mb-3">Apply different representations to specific parts of the structure without affecting the rest. Build complex scientific figures by layering styles at the global, chain, and residue level.</p>
+                        <div className="space-y-2">
                             <div className="bg-black/20 p-3 rounded-lg border border-white/5">
-                                <h5 className="text-xs font-bold text-white mb-2 flex items-center gap-2">
-                                    <span className="w-4 h-4 flex items-center justify-center bg-purple-500/20 text-purple-400 rounded text-[10px]">1</span>
-                                    Per-Chain Styles
+                                <h5 className="text-xs font-bold text-white mb-1 flex items-center gap-2">
+                                    <span className="w-4 h-4 flex items-center justify-center bg-purple-500/20 text-purple-400 rounded text-[10px]">1</span>Global Style
                                 </h5>
-                                <p className="text-[11px] text-neutral-400 ml-6">
-                                    Set a unique style for an entire chain.
-                                    <br />
-                                    <em className="text-neutral-500">Example: Render Chain A as <strong className="text-neutral-300">Surface</strong> (to show volume) and Chain B as <strong className="text-neutral-300">Licorice</strong> (to show bonds).</em>
-                                </p>
+                                <p className="text-[11px] text-neutral-400 ml-6">The global representation (keys 1–8) applies to the entire structure as a base.</p>
                             </div>
-
                             <div className="bg-black/20 p-3 rounded-lg border border-white/5">
-                                <h5 className="text-xs font-bold text-white mb-2 flex items-center gap-2">
-                                    <span className="w-4 h-4 flex items-center justify-center bg-pink-500/20 text-pink-400 rounded text-[10px]">2</span>
-                                    Residue Styles
+                                <h5 className="text-xs font-bold text-white mb-1 flex items-center gap-2">
+                                    <span className="w-4 h-4 flex items-center justify-center bg-blue-500/20 text-blue-400 rounded text-[10px]">2</span>Per-Chain Styles
                                 </h5>
-                                <p className="text-[11px] text-neutral-400 ml-6">
-                                    Highlight specific active sites or motifs with a different representation.
-                                    <br />
-                                    <em className="text-neutral-500">Example: Select residues <code className="bg-white/10 px-1 rounded">50-60</code> and set them to <strong className="text-neutral-300">Ball & Stick</strong> to make them pop out from the cartoon.</em>
-                                </p>
+                                <p className="text-[11px] text-neutral-400 ml-6">Choose a chain and set its representation independently. <em className="text-neutral-500">Example: Chain A as Surface, Chain B as Licorice — useful for protein-ligand complexes.</em></p>
                             </div>
-                        </div>
-
-                        <div className="mt-4 p-3 bg-purple-500/10 border border-purple-500/20 rounded-lg">
-                            <div className="flex gap-2">
-                                <Layers className="w-4 h-4 text-purple-400 shrink-0" />
-                                <div>
-                                    <strong className="text-purple-400 text-xs block mb-0.5">Priority Layering</strong>
-                                    <p className="text-[10px] text-neutral-400">
-                                        Residue styles override Chain styles, which override Global styles. Use this hierarchy to build complex scenes.
-                                    </p>
+                            <div className="bg-black/20 p-3 rounded-lg border border-white/5">
+                                <h5 className="text-xs font-bold text-white mb-1 flex items-center gap-2">
+                                    <span className="w-4 h-4 flex items-center justify-center bg-pink-500/20 text-pink-400 rounded text-[10px]">3</span>Per-Residue Styles
+                                </h5>
+                                <p className="text-[11px] text-neutral-400 ml-6">Target a residue range within a chain. <em className="text-neutral-500">Example: Residues 50–60 as Ball &amp; Stick to highlight the active site over a Cartoon background.</em></p>
+                            </div>
+                            <div className="p-3 bg-purple-500/10 border border-purple-500/20 rounded-lg">
+                                <div className="flex gap-2">
+                                    <Layers className="w-4 h-4 text-purple-400 shrink-0 mt-0.5" />
+                                    <div>
+                                        <strong className="text-purple-400 text-xs block mb-0.5">Priority Order</strong>
+                                        <p className="text-[10px] text-neutral-400">Residue style &gt; Chain style &gt; Global style. Higher specificity always wins.</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -573,44 +467,32 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
         {
             id: 'tools',
             title: 'Analysis & Tools',
-            icon: Wrench,
-            description: 'Advanced structural analysis tools.',
+            icon: FlaskConical,
+            description: 'Measurements, sequence track, superposition, contact maps, and motif search.',
             content: (
-                <div className="space-y-6">
+                <div className="space-y-4">
                     <div className="bg-neutral-800/50 p-4 rounded-xl border border-neutral-700/50">
-                        <h4 className="text-sm font-bold text-white mb-3">Structural Tools</h4>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="bg-black/20 p-3 rounded-lg border border-white/5">
-                                <strong className="text-white text-xs block mb-1">Sequence Track</strong>
-                                <p className="text-[11px] text-neutral-400">
-                                    Analyze chain sequences. Color by <span className="text-yellow-400">Hydrophobicity</span> or <span className="text-purple-400">B-Factor</span> to identify key regions.
-                                </p>
-                            </div>
-                            <div className="bg-black/20 p-3 rounded-lg border border-white/5">
-                                <strong className="text-white text-xs block mb-1">Measurements Panel</strong>
-                                <p className="text-[11px] text-neutral-400">
-                                    Calculate distances (Å) between atoms. Manage list, customize colors, and <strong className="text-neutral-300">Export CSV</strong>.
-                                </p>
-                            </div>
-                            <div className="bg-black/20 p-3 rounded-lg border border-white/5">
-                                <strong className="text-white text-xs block mb-1">Structure Superposition</strong>
-                                <p className="text-[11px] text-neutral-400">
-                                    Align multiple protein structures (by PDB ID or file) onto the main view to compare conformations.
-                                </p>
-                            </div>
-                            <div className="bg-black/20 p-3 rounded-lg border border-white/5">
-                                <strong className="text-white text-xs block mb-1">Contact Map</strong>
-                                <p className="text-[11px] text-neutral-400">
-                                    Interactive 2D heatmap of residue interactions. Click cells to visualize contacts in 3D.
-                                </p>
-                            </div>
+                        <h4 className="text-sm font-bold text-white mb-3">Structural Analysis Tools</h4>
+                        <div className="space-y-2">
+                            {[
+                                ['Distance Measurements (M)', 'Press M (or click the ruler icon) to enter measurement mode, then click any two atoms to measure their distance in Ångströms. Name, recolor, or delete individual measurements in the Measurements panel. Export all measurements with chain, residue, and atom metadata as CSV.'],
+                                ['Sequence Track', 'The right-side panel shows the full residue sequence for each chain. Click any residue to select and highlight it in 3D. Color the track by hydrophobicity, B-factor, or secondary structure. Secondary structure elements (helices, sheets) appear as colored bars at the top of the track.'],
+                                ['Sequence Alignment', 'Open the Superposition panel → Alignment tab to align two chains using Smith-Waterman. View identity %, similarity %, gap count, and RMSD side-by-side. Export as FASTA, Clustal, or Stockholm format, or generate a formatted PDF alignment report.'],
+                                ['Structure Superposition', 'Open the Superposition panel to overlay additional structures (by PDB ID or file upload) on the current view. Each overlay gets its own color. Visualize RMSD deviation at a glance by comparing the traces.'],
+                                ['Contact Map (C)', 'Press C or open from the sidebar to view an interactive 2D residue-residue distance heatmap. Click any cell to highlight that contact in 3D. Zoom with the scroll wheel, pan by dragging. Filter by contact threshold (default 5 Å), chain, or interaction type: hydrophobic, salt bridge, disulfide, or π-stacking. A mini-map shows your current viewport within the full map.'],
+                                ['Motif Search', 'Search for PROSITE-style sequence patterns or secondary structure motifs within the loaded structure. Matches are automatically highlighted in the 3D view.'],
+                                ['Chemical Properties', 'When a PubChem structure is loaded, expand the Chemical Properties panel in the sidebar to view SMILES string, XLogP (lipophilicity), H-bond donors/acceptors, rotatable bond count, and heavy atom count.'],
+                            ].map(([title, desc]) => (
+                                <div key={title as string} className="bg-black/20 p-3 rounded-lg border border-white/5">
+                                    <strong className="text-white text-xs block mb-1">{title}</strong>
+                                    <p className="text-[11px] text-neutral-400">{desc}</p>
+                                </div>
+                            ))}
                         </div>
                     </div>
-                    <div className="mt-4 p-3 bg-neutral-500/10 border border-neutral-500/20 rounded-lg">
-                        <strong className="text-neutral-400 text-xs block mb-1">Pro Tip: Export Data</strong>
-                        <p className="text-[11px] text-neutral-400">
-                            The **Measurements Panel** allows you to export your distance calculations as a CSV file for analysis in Excel.
-                        </p>
+                    <div className="p-3 bg-neutral-500/10 border border-neutral-500/20 rounded-lg">
+                        <strong className="text-neutral-400 text-xs block mb-1">Pro Tip</strong>
+                        <p className="text-[11px] text-neutral-400">Press <kbd className="bg-neutral-800 px-1 rounded text-neutral-300">M</kbd> to toggle measurement mode and <kbd className="bg-neutral-800 px-1 rounded text-neutral-300">C</kbd> to toggle the contact map from anywhere — no need to open the sidebar.</p>
                     </div>
                 </div>
             )
@@ -618,47 +500,32 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
         {
             id: 'settings',
             title: 'Personalization',
-            icon: Activity, // Using Activity icon as placeholder for settings-like thing if Settings icon isn't imported, but imports show Activity is used for Analysis. Let's check imports.
-            description: 'Accessibility and appearance settings.',
+            icon: Activity,
+            description: 'Theme, accessibility, clean mode, and rendering appearance.',
             content: (
                 <div className="space-y-4">
                     <div className="bg-neutral-800/50 p-4 rounded-xl border border-neutral-700/50">
-                        <h4 className="text-sm font-bold text-white mb-3">Accessibility</h4>
-                        <div className="flex items-start gap-3">
-                            <div className="bg-black/20 p-2 rounded border border-white/5 shrink-0">
-                                <span className="text-lg">Aa</span>
-                            </div>
-                            <div>
-                                <strong className="text-white text-xs block mb-1">OpenDyslexic Font</strong>
-                                <p className="text-[11px] text-neutral-400">
-                                    Toggle the specialized font designed to mitigate some of the common reading errors caused by dyslexia.
-                                </p>
-                            </div>
+                        <h4 className="text-sm font-bold text-white mb-3">Appearance &amp; Accessibility</h4>
+                        <div className="space-y-2">
+                            {[
+                                ['Theme', 'Cycle between Light, Dark, and Dark-Room modes using the sun/moon icon in the top-right corner of both the viewer and the dashboard. Dark-Room minimizes brightness for microscopy environments.'],
+                                ['OpenDyslexic Font', 'Toggle the Dyslexic button in the sidebar to switch to OpenDyslexic — a typeface specifically designed to reduce common reading errors and improve readability.'],
+                                ['Background Color', 'Use the color picker in the sidebar to set a custom viewer background. Dark blue works well for presentations; pure black for publications and figures.'],
+                                ['Clean Mode', 'Click the eye icon in the sidebar to hide all UI elements, leaving only the 3D structure. Ideal for screenshots, screencasts, or conference presentations.'],
+                                ['Rendering Quality', 'Choose Low / Medium / High rendering quality in the sidebar. Low is useful for large assemblies; High for publication screenshots.'],
+                                ['SSAO', 'Enable Screen Space Ambient Occlusion for depth shading that makes large multi-chain structures significantly easier to read.'],
+                                ['Clipping Planes', 'Enable the clip slider in the sidebar to slice through the structure at any depth — revealing internal cavities, binding pockets, or transmembrane regions.'],
+                            ].map(([title, desc]) => (
+                                <div key={title as string} className="bg-black/20 p-3 rounded-lg border border-white/5">
+                                    <strong className="text-white text-xs block mb-1">{title}</strong>
+                                    <p className="text-[11px] text-neutral-400">{desc}</p>
+                                </div>
+                            ))}
                         </div>
                     </div>
-
-                    <div className="bg-neutral-800/50 p-4 rounded-xl border border-neutral-700/50">
-                        <h4 className="text-sm font-bold text-white mb-3">Appearance</h4>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <strong className="text-white text-xs block mb-1">Background Color</strong>
-                                <p className="text-[11px] text-neutral-400">
-                                    Custom color picker for the viewer background. Try dark blue for presentations!
-                                </p>
-                            </div>
-                            <div>
-                                <strong className="text-white text-xs block mb-1">Clean Mode</strong>
-                                <p className="text-[11px] text-neutral-400">
-                                    Hides all UI elements for distraction-free viewing or clean screenshots.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="mt-4 p-3 bg-white/5 border border-white/10 rounded-lg">
-                        <strong className="text-white text-xs block mb-1">Pro Tip: Screenshots</strong>
-                        <p className="text-[11px] text-neutral-400">
-                            Combine **Clean Mode** with a custom background color to create publication-ready figure bases.
-                        </p>
+                    <div className="p-3 bg-white/5 border border-white/10 rounded-lg">
+                        <strong className="text-white text-xs block mb-1">Pro Tip</strong>
+                        <p className="text-[11px] text-neutral-400">Enable Clean Mode + custom dark background + screenshot at 4× resolution for publication-quality figures with a transparent alpha channel.</p>
                     </div>
                 </div>
             )
@@ -667,95 +534,54 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
             id: 'export',
             title: 'Export & Share',
             icon: Share2,
-            description: 'Saving images, movies, and sessions.',
+            description: 'Screenshots, gallery, share links, embeds, and Studio animations.',
             content: (
                 <div className="space-y-4">
                     <div className="bg-neutral-800/50 p-4 rounded-xl border border-neutral-700/50">
-                        <h4 className="text-sm font-bold text-white mb-3">Publication Ready Exports</h4>
-                        <div className="grid grid-cols-3 gap-3 text-xs text-center">
-                            <div className="bg-black/20 p-3 rounded-lg hover:bg-black/30 transition-colors">
-                                <div className="text-2xl mb-1">📸</div>
-                                <div className="text-bold text-white">Image</div>
-                                <div className="text-neutral-500 scale-90">High-Res PNG (3x)</div>
-                            </div>
-                            <div className="bg-black/20 p-3 rounded-lg hover:bg-black/30 transition-colors">
-                                <div className="text-2xl mb-1">🎬</div>
-                                <div className="font-bold text-white">Movie</div>
-                                <div className="text-neutral-500 scale-90">Studio Mode</div>
-                            </div>
-                            <div className="bg-black/20 p-3 rounded-lg hover:bg-black/30 transition-colors">
-                                <div className="text-2xl mb-1">💾</div>
-                                <div className="font-bold text-white">Session</div>
-                                <div className="text-neutral-500 scale-90">Save JSON State</div>
-                            </div>
+                        <h4 className="text-sm font-bold text-white mb-2">Screenshots</h4>
+                        <p className="text-xs text-neutral-400 mb-2">Press <kbd className="bg-neutral-800 px-1 rounded text-neutral-300">S</kbd> or click the camera icon to export a PNG. Choose resolution and toggle transparent background. Multi-viewport snapshots let you capture any combination of active viewports at once.</p>
+                        <div className="grid grid-cols-4 gap-2 text-center text-[10px] mb-3">
+                            {[['1×', 'Screen res'], ['2×', 'Presentations'], ['4×', '300 DPI print'], ['8×', 'Poster/large']].map(([res, label]) => (
+                                <div key={res} className="bg-black/20 p-2 rounded border border-white/5">
+                                    <strong className="text-white block">{res}</strong>
+                                    <span className="text-neutral-500">{label}</span>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="bg-black/20 p-3 rounded-lg border border-white/5">
+                            <strong className="text-white text-xs block mb-1">Gallery</strong>
+                            <p className="text-[11px] text-neutral-400">Open the Gallery to browse all your saved snapshots and Studio animations in one place. Filter by type (all / snapshots / movies), preview, or download any entry.</p>
                         </div>
                     </div>
-
                     <div className="bg-gradient-to-br from-pink-500/10 to-rose-500/10 border border-pink-500/20 p-4 rounded-xl">
-                        <h4 className="text-sm font-bold text-white mb-2 flex items-center gap-2">
-                            <Video className="w-4 h-4 text-pink-400" /> Studio Mode
-                        </h4>
-                        <p className="text-xs text-neutral-300 mb-3 leading-relaxed">
-                            Create professional molecular animations directly in the browser.
-                        </p>
-                        <ul className="grid grid-cols-2 gap-2 text-[11px] text-neutral-400">
-                            <li className="flex items-center gap-2">
-                                <span className="w-1.5 h-1.5 rounded-full bg-pink-500" /> Keyframe Animation
-                            </li>
-                            <li className="flex items-center gap-2">
-                                <span className="w-1.5 h-1.5 rounded-full bg-pink-500" /> Camera Movements
-                            </li>
-                            <li className="flex items-center gap-2">
-                                <span className="w-1.5 h-1.5 rounded-full bg-pink-500" /> Transition Effects
-                            </li>
-                            <li className="flex items-center gap-2">
-                                <span className="w-1.5 h-1.5 rounded-full bg-pink-500" /> HD Video Export
-                            </li>
-                        </ul>
-                    </div>
-
-                    <div className="bg-gradient-to-br from-indigo-500/10 to-blue-500/10 border border-indigo-500/20 p-4 rounded-xl">
-                        <h4 className="text-sm font-bold text-white mb-2 flex items-center gap-2">
-                            <Share2 className="w-4 h-4 text-indigo-400" /> Share Visualization
-                        </h4>
-                        <p className="text-xs text-neutral-300 mb-3 leading-relaxed">
-                            Share your current state via links, iframe embeds, or live sessions.
-                        </p>
-                        <div className="space-y-3">
-                            <div className="bg-black/20 p-3 rounded-lg border border-white/5">
-                                <strong className="text-white text-xs block mb-1">Select Views to Share</strong>
-                                <p className="text-[11px] text-neutral-400">
-                                    Choose which specific viewports (1-4) you want to include in your shared link or widget.
-                                </p>
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                <div className="bg-black/20 p-3 rounded-lg border border-white/5">
-                                    <strong className="text-white text-xs block mb-1">Share Link</strong>
-                                    <p className="text-[11px] text-neutral-400">
-                                        Generate a direct URL to send to others. It reconstructs the exact state you configured.
-                                    </p>
-                                </div>
-                                <div className="bg-black/20 p-3 rounded-lg border border-white/5">
-                                    <strong className="text-white text-xs block mb-1">Embed Widget</strong>
-                                    <p className="text-[11px] text-neutral-400">
-                                        Get an <code className="bg-white/10 px-1 rounded">{'<iframe>'}</code> code snippet to embed the viewer directly into your website or blog.
-                                    </p>
-                                </div>
-                                <div className="bg-black/20 p-3 rounded-lg border border-white/5">
-                                    <strong className="text-white text-xs block mb-1">Live Session</strong>
-                                    <p className="text-[11px] text-neutral-400">
-                                        Start a real-time collaboration session to sync camera and representation changes instantly.
-                                    </p>
-                                </div>
-                            </div>
+                        <h4 className="text-sm font-bold text-white mb-2 flex items-center gap-2"><Video className="w-4 h-4 text-pink-400" /> Studio Mode</h4>
+                        <p className="text-xs text-neutral-300 mb-3">Create molecular animations using a timeline non-linear editor (NLE). Add keyframes for camera movements, representation transitions, and representation changes. Attach an audio track. Export as HD video or save as a draft to resume later.</p>
+                        <div className="flex flex-wrap gap-2 text-[10px]">
+                            {['Keyframe Animation', 'Camera Movements', 'Representation Transitions', 'Audio Tracks', 'HD Video Export', 'Timeline NLE', 'Save Drafts'].map(f => (
+                                <span key={f} className="flex items-center gap-1 text-neutral-400"><span className="w-1.5 h-1.5 rounded-full bg-pink-500 shrink-0" />{f}</span>
+                            ))}
                         </div>
                     </div>
-
-                    <div className="mt-4 p-3 bg-rose-500/10 border border-rose-500/20 rounded-lg">
-                        <strong className="text-rose-400 text-xs block mb-1">Pro Tip: Transparent PNGs</strong>
-                        <p className="text-[11px] text-neutral-400">
-                            Image exports automatically include an alpha channel (transparent background) if you haven't set a custom background color.
-                        </p>
+                    <div className="bg-gradient-to-br from-indigo-500/10 to-blue-500/10 border border-indigo-500/20 p-4 rounded-xl">
+                        <h4 className="text-sm font-bold text-white mb-2 flex items-center gap-2"><Share2 className="w-4 h-4 text-indigo-400" /> Sharing</h4>
+                        <div className="space-y-2">
+                            {[
+                                ['Share Link', 'Generates a URL that reconstructs the exact structure and viewer state. Choose which viewports to include. A QR code is generated automatically.'],
+                                ['Embed Widget', 'Get an <iframe> snippet to embed an interactive viewer into your website, paper supplementary, or blog. Options include: auto-spin, show/hide controls, dark/light theme, scroll protection, border radius, drop shadow, transparent background, and custom dimensions.'],
+                                ['Live Session Link', 'Share a real-time collaboration link from Share → Live tab. Anyone who opens it joins your live session instantly — no account needed.'],
+                                ['Sequence Export', 'Export aligned sequences as FASTA, Clustal, or Stockholm format from the Sequence Alignment panel.'],
+                                ['Measurements CSV', 'Export all distance measurements with chain, residue, and atom metadata from the Measurements panel.'],
+                            ].map(([title, desc]) => (
+                                <div key={title as string} className="bg-black/20 p-2.5 rounded-lg border border-white/5">
+                                    <strong className="text-white text-xs block mb-0.5">{title}</strong>
+                                    <p className="text-[10px] text-neutral-400">{desc}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                    <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-lg">
+                        <strong className="text-rose-400 text-xs block mb-1">Pro Tip</strong>
+                        <p className="text-[11px] text-neutral-400">Screenshots include a transparent alpha channel by default when no custom background color is set — ready for compositing in Illustrator, Figma, or PowerPoint.</p>
                     </div>
                 </div>
             )
@@ -764,22 +590,21 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
             id: 'shortcuts',
             title: 'Shortcuts',
             icon: Keyboard,
-            description: 'Keyboard cheat sheet.',
+            description: 'Complete keyboard reference.',
             content: (
                 <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-xs">
                     <div className="col-span-2 pb-1 mb-1 border-b border-neutral-800 font-bold text-neutral-400 uppercase tracking-widest text-[10px]">General</div>
                     <div className="flex justify-between text-neutral-300"><span>Help Guide</span> <kbd className="font-mono bg-neutral-800 px-1.5 rounded text-neutral-400">?</kbd></div>
                     <div className="flex justify-between text-neutral-300"><span>Command Palette</span> <kbd className="font-mono bg-neutral-800 px-1.5 rounded text-neutral-400">⌘K</kbd></div>
-                    <div className="flex justify-between text-neutral-300"><span>Full Screen</span> <kbd className="font-mono bg-neutral-800 px-1.5 rounded text-neutral-400">F</kbd></div>
-                    <div className="flex justify-between text-neutral-300"><span>Theme Toggle</span> <kbd className="font-mono bg-neutral-800 px-1.5 rounded text-neutral-400">T</kbd></div>
                     <div className="flex justify-between text-neutral-300"><span>Screenshot</span> <kbd className="font-mono bg-neutral-800 px-1.5 rounded text-neutral-400">S</kbd></div>
-                    <div className="flex justify-between text-neutral-300"><span>Undo</span> <kbd className="font-mono bg-neutral-800 px-1.5 rounded text-neutral-400">⌘Z / Ctrl+Z</kbd></div>
-                    <div className="flex justify-between text-neutral-300"><span>Redo</span> <kbd className="font-mono bg-neutral-800 px-1.5 rounded text-neutral-400">⇧⌘Z / Shift+Ctrl+Z</kbd></div>
+                    <div className="flex justify-between text-neutral-300"><span>Close Modal</span> <kbd className="font-mono bg-neutral-800 px-1.5 rounded text-neutral-400">Esc</kbd></div>
+                    <div className="flex justify-between text-neutral-300"><span>Undo</span> <kbd className="font-mono bg-neutral-800 px-1.5 rounded text-neutral-400">⌘Z</kbd></div>
+                    <div className="flex justify-between text-neutral-300"><span>Redo</span> <kbd className="font-mono bg-neutral-800 px-1.5 rounded text-neutral-400">⇧⌘Z</kbd></div>
 
-                    <div className="col-span-2 pb-1 mb-1 mt-3 border-b border-neutral-800 font-bold text-neutral-400 uppercase tracking-widest text-[10px]">Views</div>
+                    <div className="col-span-2 pb-1 mb-1 mt-3 border-b border-neutral-800 font-bold text-neutral-400 uppercase tracking-widest text-[10px]">Viewer Controls</div>
                     <div className="flex justify-between text-neutral-300"><span>Reset View</span> <kbd className="font-mono bg-neutral-800 px-1.5 rounded text-neutral-400">R</kbd></div>
                     <div className="flex justify-between text-neutral-300"><span>Toggle Spin</span> <kbd className="font-mono bg-neutral-800 px-1.5 rounded text-neutral-400">Space</kbd></div>
-                    <div className="flex justify-between text-neutral-300"><span>Measurement</span> <kbd className="font-mono bg-neutral-800 px-1.5 rounded text-neutral-400">M</kbd></div>
+                    <div className="flex justify-between text-neutral-300"><span>Measure Mode</span> <kbd className="font-mono bg-neutral-800 px-1.5 rounded text-neutral-400">M</kbd></div>
                     <div className="flex justify-between text-neutral-300"><span>Contact Map</span> <kbd className="font-mono bg-neutral-800 px-1.5 rounded text-neutral-400">C</kbd></div>
 
                     <div className="col-span-2 pb-1 mb-1 mt-3 border-b border-neutral-800 font-bold text-neutral-400 uppercase tracking-widest text-[10px]">Representations</div>
@@ -808,7 +633,7 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
             id: 'contact',
             title: 'Contact & Feedback',
             icon: MessageSquare,
-            description: 'Get in touch with the developer.',
+            description: 'Report bugs, request features, or say hi.',
             content: (
                 <div className="space-y-6">
                     <div className="bg-neutral-800/50 p-4 rounded-xl border border-neutral-700/50">
@@ -818,7 +643,6 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
                         </p>
 
                         <div className="space-y-3">
-                            {/* Email Option */}
                             <a
                                 href="mailto:codequercus@gmail.com"
                                 className="group flex items-center gap-4 p-3 rounded-xl border border-neutral-700/50 hover:border-blue-500/50 hover:bg-blue-500/5 transition-all duration-200"
@@ -829,13 +653,12 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
                                 <div className="flex-1">
                                     <h3 className="font-semibold text-sm text-neutral-200 group-hover:text-white">Send an Email</h3>
                                     <p className="text-[11px] mt-0.5 text-neutral-500 group-hover:text-neutral-400">
-                                        Reach out directly for questions
+                                        codequercus@gmail.com — questions, feedback, or collaboration
                                     </p>
                                 </div>
                                 <ExternalLink className="w-3.5 h-3.5 text-neutral-600 group-hover:text-blue-400 transition-colors" />
                             </a>
 
-                            {/* GitHub Option */}
                             <a
                                 href="https://github.com/QuercusCode/QuercusProteinViewer"
                                 target="_blank"
@@ -854,7 +677,6 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
                                 <ExternalLink className="w-3.5 h-3.5 text-neutral-600 group-hover:text-purple-400 transition-colors" />
                             </a>
 
-                            {/* LinkedIn Option */}
                             <a
                                 href="https://www.linkedin.com/in/amir-m-cheraghali-195b23207/"
                                 target="_blank"
@@ -922,9 +744,7 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
                     <span className="text-sm font-medium hidden sm:block">Donate</span>
                 </button>
 
-                {/* Dropdown Menu - Upward or Downward depending on position */}
                 <div className={`absolute right-0 w-48 py-2 bg-neutral-900/90 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform flex flex-col overflow-hidden ${isMolStarActive ? 'bottom-12 translate-y-[10px] group-hover:translate-y-0' : 'top-12 translate-y-[-10px] group-hover:translate-y-0'}`}>
-                    {/* Buy Me A Coffee */}
                     <a
                         href="https://buymeacoffee.com/amirmcheraghali"
                         target="_blank"
@@ -939,7 +759,6 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
                             <span className="text-[10px] text-neutral-400">Support widely</span>
                         </div>
                     </a>
-                    {/* GitHub Sponsors */}
                     <a
                         href="https://github.com/sponsors/QuercusCode"
                         target="_blank"
