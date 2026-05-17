@@ -3,31 +3,133 @@
 
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Primary meta -->
+  <title>Quercus Viewer — Professional 3D Molecular Structure Analysis</title>
+  <meta name="description" content="Free, browser-based 3D molecular structure viewer for proteins and chemicals. Load from RCSB PDB or PubChem, compare up to 4 structures side-by-side, collaborate live, and export publication-quality renders — no installation required." />
+  <meta name="keywords" content="protein structure viewer, 3D molecular visualization, PDB viewer, WebGL molecular viewer, browser-based molecular viewer, NGL viewer, protein visualization, structural biology, PubChem viewer, molecular graphics, open source protein viewer" />
+  <meta name="author" content="QuercusCode" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://quercusviewer.com/" />
+
+  <!-- Theme -->
+  <meta name="theme-color" content="#030303" />
+  <meta name="color-scheme" content="dark" />
+
+  <!-- Favicons -->
   <link rel="icon" type="image/png" href="logo/icon-black.png" media="(prefers-color-scheme: light)" />
   <link rel="icon" type="image/png" href="logo/icon-white.png" media="(prefers-color-scheme: dark)" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description"
-    content="A professional, high-performance 3D Protein & Chemical structure viewer built for modern research. Visualize PDB structures with publication-quality rendering directly in your browser." />
-  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
-  <meta name="theme-color" content="#171717" media="(prefers-color-scheme: dark)" />
 
-  <!-- Open Graph / Facebook -->
+  <!-- Open Graph -->
   <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Quercus Viewer" />
   <meta property="og:url" content="https://quercusviewer.com/" />
-  <meta property="og:title" content="Quercus Viewer - Professional 3D Structure Analysis" />
-  <meta property="og:description"
-    content="High-performance 3D Protein & Chemical structure viewer. Visualize PDB structures, superimposed models, and custom data with publication-quality rendering." />
+  <meta property="og:title" content="Quercus Viewer — Professional 3D Molecular Structure Analysis" />
+  <meta property="og:description" content="Free, browser-based 3D molecular structure viewer. Load proteins from RCSB PDB, compare structures side-by-side, collaborate live, and export publication-quality renders — no installation required." />
   <meta property="og:image" content="https://quercusviewer.com/logo/og-card-v3.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Quercus Viewer — 3D protein structure visualized in a dark browser interface" />
+  <meta property="og:locale" content="en_US" />
 
-  <!-- Twitter -->
-  <meta property="twitter:card" content="summary_large_image" />
-  <meta property="twitter:url" content="https://quercusviewer.com/" />
-  <meta property="twitter:title" content="Quercus Viewer - Professional 3D Structure Analysis" />
-  <meta property="twitter:description"
-    content="High-performance 3D Protein & Chemical structure viewer. Visualize PDB structures, superimposed models, and custom data with publication-quality rendering." />
-  <meta property="twitter:image" content="https://quercusviewer.com/logo/og-card-v3.png" />
+  <!-- Twitter / X -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:url" content="https://quercusviewer.com/" />
+  <meta name="twitter:title" content="Quercus Viewer — Professional 3D Molecular Structure Analysis" />
+  <meta name="twitter:description" content="Free, browser-based 3D molecular structure viewer. Load proteins from RCSB PDB, compare structures side-by-side, collaborate live, and export publication-quality renders." />
+  <meta name="twitter:image" content="https://quercusviewer.com/logo/og-card-v3.png" />
+  <meta name="twitter:image:alt" content="Quercus Viewer interface showing a 3D protein structure" />
 
-  <title>Quercus Viewer</title>
+  <!-- Structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "SoftwareApplication",
+        "@id": "https://quercusviewer.com/#app",
+        "name": "Quercus Viewer",
+        "url": "https://quercusviewer.com/",
+        "description": "Professional browser-based 3D molecular structure viewer for proteins and chemicals. Features multi-view analysis, live collaboration, studio mode, and publication-quality export.",
+        "applicationCategory": "ScientificApplication",
+        "applicationSubCategory": "Molecular Visualization",
+        "operatingSystem": "Web Browser",
+        "browserRequirements": "Requires a modern browser with WebGL support",
+        "softwareVersion": "1.0",
+        "license": "https://opensource.org/licenses/MIT",
+        "isAccessibleForFree": true,
+        "offers": [
+          {
+            "@type": "Offer",
+            "name": "Free",
+            "price": "0",
+            "priceCurrency": "USD",
+            "description": "Unlimited structure viewing, PDB & PubChem import, basic representations, screenshot export"
+          },
+          {
+            "@type": "Offer",
+            "name": "Pro",
+            "price": "12",
+            "priceCurrency": "USD",
+            "description": "Multi-view compare, advanced color schemes, studio mode, publication export, PDF reports"
+          },
+          {
+            "@type": "Offer",
+            "name": "Team",
+            "price": "29",
+            "priceCurrency": "USD",
+            "description": "Real-time live collaboration, shared session management, team structure library, admin dashboard"
+          }
+        ],
+        "featureList": [
+          "Load structures from RCSB PDB and PubChem",
+          "Drag-and-drop local PDB, CIF, SDF, MOL files",
+          "Up to 4 simultaneous side-by-side views",
+          "Cartoon, surface, ball-and-stick, ribbon representations",
+          "Real-time live collaboration with cursor sync",
+          "Keyframe animation and studio mode",
+          "High-resolution publication export",
+          "PDF summary report generation",
+          "Structure superposition and contact maps",
+          "Accessibility features including OpenDyslexic font"
+        ],
+        "screenshot": "https://quercusviewer.com/logo/og-card-v3.png",
+        "provider": {
+          "@type": "Organization",
+          "@id": "https://quercusviewer.com/#organization"
+        }
+      },
+      {
+        "@type": "Organization",
+        "@id": "https://quercusviewer.com/#organization",
+        "name": "QuercusCode",
+        "url": "https://quercusviewer.com/",
+        "sameAs": ["https://github.com/QuercusCode/QuercusViewer"]
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://quercusviewer.com/#website",
+        "url": "https://quercusviewer.com/",
+        "name": "Quercus Viewer",
+        "description": "Professional 3D Molecular Structure Analysis",
+        "publisher": {
+          "@id": "https://quercusviewer.com/#organization"
+        },
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": {
+            "@type": "EntryPoint",
+            "urlTemplate": "https://quercusviewer.com/app?q={search_term_string}"
+          },
+          "query-input": "required name=search_term_string"
+        }
+      }
+    ]
+  }
+  </script>
+
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">

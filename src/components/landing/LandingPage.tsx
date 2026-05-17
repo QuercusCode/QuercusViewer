@@ -905,8 +905,10 @@ function FooterSection() {
 export function LandingPage() {
   const scrollRootRef = useRef<HTMLDivElement>(null);
   const [, forceUpdate] = useState(0);
-  // Give Nav ref access after mount
   useEffect(() => { forceUpdate(1); }, []);
+  useEffect(() => {
+    document.title = 'Quercus Viewer — Professional 3D Molecular Structure Analysis';
+  }, []);
 
   return (
     <>

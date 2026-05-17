@@ -90,6 +90,11 @@ const deepEqual = (a: any, b: any): boolean => {
 function App() {
   const { t } = useTranslation();
 
+  // Set page title for the viewer route
+  useEffect(() => {
+    document.title = 'Quercus Viewer — 3D Molecular Structure Viewer';
+  }, []);
+
   // Initialize Analytics
   useEffect(() => {
     initGA();
