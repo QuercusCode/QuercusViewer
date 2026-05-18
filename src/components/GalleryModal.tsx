@@ -15,6 +15,7 @@ import {
 import clsx from 'clsx';
 import type { Snapshot, Movie } from '../types';
 import { useTimezone, formatDate, formatDateTime } from '../lib/timezoneUtils';
+import { useTranslation } from '../lib/i18n';
 
 interface GalleryModalProps {
     isOpen: boolean;
@@ -41,6 +42,7 @@ export const GalleryModal: React.FC<GalleryModalProps> = ({
     onDownloadMovie,
     isLightMode
 }) => {
+    const { t } = useTranslation();
     const timezone = useTimezone();
     const [activeTab, setActiveTab] = useState<'all' | 'snapshots' | 'movies'>('all');
     const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -101,9 +103,9 @@ export const GalleryModal: React.FC<GalleryModalProps> = ({
                                 <Grid className="w-5 h-5" />
                             </div>
                             <div>
-                                <h2 className={clsx("text-base sm:text-lg font-bold", textColor)}>Media Gallery</h2>
+                                <h2 className={clsx("text-base sm:text-lg font-bold", textColor)}>{t.galleryTitle as string}</h2>
                                 <p className={clsx("text-[10px] sm:text-xs", subtleText)}>
-                                    {items.length} items • {snapshots.length} images, {movies.length} videos
+                                    {(t.imagesVideos as (imgs: number, vids: number) => string)(snapshots.length, movies.length)}
                                 </p>
                             </div>
                         </div>
@@ -130,7 +132,7 @@ export const GalleryModal: React.FC<GalleryModalProps> = ({
                                         : (isLightMode ? "text-neutral-500 hover:text-neutral-700" : "text-neutral-400 hover:text-neutral-200")
                                 )}
                             >
-                                {tab}
+                                {tab === 'all' ? (t.galleryTabAll as string) : tab === 'snapshots' ? (t.galleryTabSnapshots as string) : (t.galleryTabMovies as string)}
                             </button>
                         ))}
                     </div>
@@ -152,7 +154,7 @@ export const GalleryModal: React.FC<GalleryModalProps> = ({
                         {filteredItems.length === 0 ? (
                             <div className="h-full flex flex-col items-center justify-center opacity-30 gap-4">
                                 <Layers className="w-16 h-16" />
-                                <p className="text-lg font-medium">No items found</p>
+                                <p className="text-lg font-medium">{t.galleryNoItems as string}</p>
                             </div>
                         ) : (
                             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
@@ -202,7 +204,7 @@ export const GalleryModal: React.FC<GalleryModalProps> = ({
                         )}>
                             {/* Preview Header */}
                             <div className="p-4 border-b border-neutral-200 dark:border-neutral-800 flex justify-between items-center">
-                                <h3 className={clsx("font-bold text-sm", textColor)}>Details</h3>
+                                <h3 className={clsx("font-bold text-sm", textColor)}>{t.galleryDetails as string}</h3>
                                 <button onClick={() => setSelectedId(null)} className="text-neutral-400 hover:text-neutral-600">
                                     <X className="w-4 h-4" />
                                 </button>
@@ -239,13 +241,13 @@ export const GalleryModal: React.FC<GalleryModalProps> = ({
                             {/* Metadata */}
                             <div className="p-4 space-y-6 overflow-y-auto flex-1">
                                 <div>
-                                    <h4 className={clsx("text-xs font-bold uppercase tracking-wider mb-3", subtleText)}>Information</h4>
+                                    <h4 className={clsx("text-xs font-bold uppercase tracking-wider mb-3", subtleText)}>{t.galleryInformation as string}</h4>
                                     <div className="space-y-3">
                                         <div className="flex items-start gap-3">
                                             <FileText className="w-4 h-4 mt-0.5 text-blue-500" />
                                             <div>
-                                                <p className={clsx("text-sm font-medium", textColor)}>{selectedItem.pdbId || 'Unknown Structure'}</p>
-                                                <p className={clsx("text-xs", subtleText)}>{selectedItem.description || 'No description'}</p>
+                                                <p className={clsx("text-sm font-medium", textColor)}>{selectedItem.pdbId || (t.galleryUnknownStructure as string)}</p>
+                                                <p className={clsx("text-xs", subtleText)}>{selectedItem.description || (t.galleryNoDescription as string)}</p>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-3">
@@ -280,7 +282,7 @@ export const GalleryModal: React.FC<GalleryModalProps> = ({
                                     onClick={() => selectedItem.type === 'snapshot' ? onDownloadSnapshot(selectedItem.id) : onDownloadMovie(selectedItem.id)}
                                     className="flex-1 flex items-center justify-center gap-2 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold transition-colors shadow-lg shadow-blue-500/20"
                                 >
-                                    <Download className="w-3.5 h-3.5" /> Download
+                                    <Download className="w-3.5 h-3.5" /> {t.downloadBtn as string}
                                 </button>
                                 <button
                                     onClick={() => setIsDeleteConfirmOpen(true)}
@@ -298,16 +300,16 @@ export const GalleryModal: React.FC<GalleryModalProps> = ({
             {isDeleteConfirmOpen && selectedItem && (
                 <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
                     <div className={clsx("w-full max-w-sm rounded-xl p-6 shadow-2xl scale-100 animate-in zoom-in-95 duration-200 border", bgColor, borderColor)}>
-                        <h3 className={clsx("text-lg font-bold mb-2", textColor)}>Delete Item?</h3>
+                        <h3 className={clsx("text-lg font-bold mb-2", textColor)}>{t.deleteItemTitle as string}</h3>
                         <p className={clsx("text-sm mb-6", subtleText)}>
-                            Are you sure you want to delete this {selectedItem.type}? This action cannot be undone.
+                            {(t.deleteItemConfirm as (type: string) => string)(selectedItem.type)}
                         </p>
                         <div className="flex justify-end gap-3">
                             <button
                                 onClick={() => setIsDeleteConfirmOpen(false)}
                                 className={clsx("px-4 py-2 rounded-lg text-sm font-medium transition-colors", isLightMode ? "hover:bg-neutral-100 text-neutral-600" : "hover:bg-white/10 text-neutral-400")}
                             >
-                                Cancel
+                                {t.cancelBtn as string}
                             </button>
                             <button
                                 onClick={() => {
@@ -318,7 +320,7 @@ export const GalleryModal: React.FC<GalleryModalProps> = ({
                                 }}
                                 className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg text-sm font-bold shadow-lg shadow-red-500/20"
                             >
-                                Delete
+                                {t.deleteBtn as string}
                             </button>
                         </div>
                     </div>

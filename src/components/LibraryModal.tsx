@@ -3,6 +3,7 @@ import { Search, X, BookOpen, Database, FlaskConical, Dna, Activity, Zap, Shield
 import clsx from 'clsx';
 import { OFFLINE_LIBRARY } from '../data/library';
 import { CHEMICAL_LIBRARY } from '../data/chemicalLibrary';
+import { useTranslation } from '../lib/i18n';
 
 
 
@@ -47,6 +48,7 @@ const CHEMICAL_CATEGORY_CONFIG: Record<string, { icon: React.ReactNode, style: s
 };
 
 const LibraryModal: React.FC<LibraryModalProps> = ({ isOpen, onClose, onSelect }) => {
+    const { t } = useTranslation();
     const [activeTab, setActiveTab] = useState<'proteins' | 'chemicals'>('proteins');
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<string | 'All'>('All');
@@ -138,8 +140,8 @@ const LibraryModal: React.FC<LibraryModalProps> = ({ isOpen, onClose, onSelect }
                                 <BookOpen size={20} />
                             </div>
                             <div>
-                                <h2 className="text-xl sm:text-2xl font-bold text-white leading-tight">Structure Library</h2>
-                                <p className="text-gray-400 text-xs sm:text-sm">Curated biomolecules.</p>
+                                <h2 className="text-xl sm:text-2xl font-bold text-white leading-tight">{t.libraryTitle as string}</h2>
+                                <p className="text-gray-400 text-xs sm:text-sm">{t.librarySubtitle as string}</p>
                             </div>
                         </div>
                         <button onClick={onClose} className="sm:hidden p-2 hover:bg-white/10 rounded-full transition-colors text-gray-400 hover:text-white">
@@ -157,7 +159,7 @@ const LibraryModal: React.FC<LibraryModalProps> = ({ isOpen, onClose, onSelect }
                             )}
                         >
                             <Dna size={16} />
-                            Proteins
+                            {t.libraryProteins as string}
                         </button>
                         <button
                             onClick={() => handleTabChange('chemicals')}
@@ -167,7 +169,7 @@ const LibraryModal: React.FC<LibraryModalProps> = ({ isOpen, onClose, onSelect }
                             )}
                         >
                             <FlaskConical size={16} />
-                            Chemicals
+                            {t.libraryChemicals as string}
                         </button>
 
 
@@ -178,7 +180,7 @@ const LibraryModal: React.FC<LibraryModalProps> = ({ isOpen, onClose, onSelect }
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
                         <input
                             type="text"
-                            placeholder={activeTab === 'proteins' ? "Search Library..." : "Search Chemicals..."}
+                            placeholder={activeTab === 'proteins' ? (t.librarySearchPlaceholder as string) : (t.librarySearchChemicals as string)}
                             value={searchTerm}
 
                             onChange={(e) => handleSearch(e.target.value)}
@@ -225,7 +227,7 @@ const LibraryModal: React.FC<LibraryModalProps> = ({ isOpen, onClose, onSelect }
                                         <p className="text-xs sm:text-sm opacity-70 mb-3 sm:mb-4 h-8 sm:h-10 line-clamp-2">{config?.description || 'Browse collection.'}</p>
 
                                         <div className="mt-auto py-1 px-3 rounded-full bg-black/20 text-[10px] sm:text-xs font-mono border border-white/10">
-                                            {count} entries
+                                            {(t.libraryEntries as (n: number) => string)(count)}
                                         </div>
                                     </button>
                                 );
@@ -243,7 +245,7 @@ const LibraryModal: React.FC<LibraryModalProps> = ({ isOpen, onClose, onSelect }
                                     className="self-start flex items-center gap-2 px-3 py-2 rounded-xl bg-gray-800 text-white border border-white/10 hover:bg-gray-700 transition-colors text-sm"
                                 >
                                     <ArrowLeft size={14} />
-                                    Back
+                                    {t.libraryBackBtn as string}
                                 </button>
                                 {selectedCategory !== 'All' && (
                                     <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20 text-sm">
@@ -259,7 +261,7 @@ const LibraryModal: React.FC<LibraryModalProps> = ({ isOpen, onClose, onSelect }
                                 {/* 1. LOCAL RESULTS */}
                                 {filteredItems.length > 0 && (
                                     <div>
-                                        {searchTerm && <h3 className="text-sm font-bold text-gray-500 mb-3 uppercase tracking-wider">Curated Library</h3>}
+                                        {searchTerm && <h3 className="text-sm font-bold text-gray-500 mb-3 uppercase tracking-wider">{t.libraryCuratedSection as string}</h3>}
                                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
                                             {filteredItems.map(item => {
                                                 const config = currentConfig[item.category];
@@ -299,8 +301,8 @@ const LibraryModal: React.FC<LibraryModalProps> = ({ isOpen, onClose, onSelect }
                                 {filteredItems.length === 0 && (
                                     <div className="text-center py-20 text-gray-500">
                                         <Database size={48} className="mx-auto mb-4 opacity-50" />
-                                        <p className="text-lg">No items found matching "{searchTerm}".</p>
-                                        <p className="text-sm opacity-60">Try a different category or search term.</p>
+                                        <p className="text-lg">{(t.libraryNoResults as (term: string) => string)(searchTerm)}</p>
+                                        <p className="text-sm opacity-60">{t.libraryNoResultsHint as string}</p>
                                     </div>
                                 )}
 

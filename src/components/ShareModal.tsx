@@ -3,6 +3,7 @@ import { X, Copy, Download, Check, Settings2, Camera, Users, Radio, Globe, Link 
 import QRCode from 'qrcode';
 import { logEvent } from '../utils/analytics';
 import type { PeerSession } from '../hooks/usePeerSession';
+import { useTranslation } from '../lib/i18n';
 
 interface ShareModalProps {
     isOpen: boolean;
@@ -22,6 +23,7 @@ interface ShareModalProps {
 }
 
 export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, isLightMode, warning, peerSession, viewports, onGenerateLink, selectedIndices, onSelectionChange, onLiveUpgradeRequired }) => {
+    const { t } = useTranslation();
     const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string | null>(null);
     const [copied, setCopied] = useState(false);
     const [generationError, setGenerationError] = useState<string | null>(null);
@@ -221,7 +223,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, isLight
             <div className={`relative w-full max-w-5xl rounded-xl shadow-2xl p-5 my-auto ${isLightMode ? 'bg-white text-neutral-900' : 'bg-neutral-900 text-white'}`}>
                 {/* Header */}
                 <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-bold">Share Visualization</h2>
+                    <h2 className="text-xl font-bold">{t.shareVisualization as string}</h2>
                     <button
                         onClick={onClose}
                         className={`p-2 rounded-lg transition-colors ${isLightMode ? 'hover:bg-neutral-100' : 'hover:bg-neutral-800'}`}
@@ -236,7 +238,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, isLight
                             <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" /><path d="M12 9v4" /><path d="M12 17h.01" /></svg>
                         </div>
                         <div>
-                            <h3 className={`font-semibold ${isLightMode ? 'text-neutral-900' : 'text-white'}`}>Sharing Unavailable</h3>
+                            <h3 className={`font-semibold ${isLightMode ? 'text-neutral-900' : 'text-white'}`}>{t.sharingUnavailable as string}</h3>
                             <p className={`text-sm mt-1 ${isLightMode ? 'text-neutral-600' : 'text-neutral-400'}`}>
                                 {warning}
                             </p>
@@ -247,7 +249,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, isLight
                         {/* Multi-View Selection */}
                         <div className={`p-4 mb-6 rounded-xl border ${isLightMode ? 'bg-neutral-50 border-neutral-200' : 'bg-neutral-950 border-neutral-800'}`}>
                             <h3 className={`text-xs font-bold uppercase tracking-wider mb-3 ${isLightMode ? 'text-neutral-500' : 'text-neutral-400'}`}>
-                                Select Views to Share
+                                {t.shareSelectViews as string}
                             </h3>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                 {viewports.map((vp) => (
@@ -282,10 +284,10 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, isLight
                                         />
                                         <div className="flex flex-col min-w-0">
                                             <span className={`text-xs font-bold uppercase tracking-wider ${isLightMode ? 'text-neutral-500' : 'text-neutral-500'}`}>
-                                                Viewport {vp.index + 1}
+                                                {t.shareViewport as string} {vp.index + 1}
                                             </span>
                                             <span className={`text-sm font-medium truncate ${isLightMode ? 'text-neutral-900' : 'text-white'}`}>
-                                                {vp.title || "Empty"}
+                                                {vp.title || (t.shareEmpty as string)}
                                             </span>
                                         </div>
                                     </label>
@@ -303,7 +305,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, isLight
                                     : (isLightMode ? 'text-neutral-500 hover:text-neutral-900' : 'text-neutral-400 hover:text-white')
                                     }`}
                             >
-                                Share Link
+                                {t.shareTabLink as string}
                             </button>
                             <button
                                 onClick={() => setActiveTab('embed')}
@@ -312,7 +314,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, isLight
                                     : (isLightMode ? 'text-neutral-500 hover:text-neutral-900' : 'text-neutral-400 hover:text-white')
                                     }`}
                             >
-                                Embed Widget
+                                {t.shareTabEmbed as string}
                             </button>
                             <button
                                 onClick={() => {
@@ -327,7 +329,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, isLight
                                     : (isLightMode ? 'text-neutral-500 hover:text-neutral-900' : 'text-neutral-400 hover:text-white')
                                     }`}
                             >
-                                Live Session {onLiveUpgradeRequired ? '🔒' : ''}
+                                {t.shareTabLive as string} {onLiveUpgradeRequired ? '🔒' : ''}
                             </button>
                         </div>
 
@@ -357,7 +359,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, isLight
                                 {/* Link */}
                                 <div className="space-y-3 mb-6">
                                     <label className={`text-sm font-medium ${isLightMode ? 'text-neutral-700' : 'text-neutral-300'}`}>
-                                        Shareable Link
+                                        {t.shareableLink as string}
                                     </label>
                                     <div className={`flex items-center gap-2 p-3 rounded-lg border ${isLightMode ? 'bg-neutral-50 border-neutral-200' : 'bg-neutral-950 border-neutral-700'}`}>
                                         <input
@@ -379,7 +381,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, isLight
                                 {/* Social Sharing */}
                                 <div className="space-y-3 mb-6">
                                     <label className={`text-sm font-medium ${isLightMode ? 'text-neutral-700' : 'text-neutral-300'}`}>
-                                        Post to Socials
+                                        {t.postToSocials as string}
                                     </label>
                                     <div className="flex gap-2">
                                         <a
@@ -417,7 +419,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, isLight
                                     {/* Behavior Group */}
                                     <div className="space-y-3">
                                         <label className={`text-xs font-bold uppercase tracking-wider ${isLightMode ? 'text-neutral-500' : 'text-neutral-400'}`}>
-                                            Behavior
+                                            {t.embedBehavior as string}
                                         </label>
                                         <div className="flex flex-col gap-2">
                                             <button
@@ -429,7 +431,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, isLight
                                             >
                                                 <span className="flex items-center gap-2">
                                                     <div className={`w-2 h-2 rounded-full ${embedSpin ? 'bg-blue-500' : 'bg-neutral-400'}`} />
-                                                    Auto-Spin
+                                                    {t.embedAutoSpin as string}
                                                 </span>
                                                 {embedSpin && <Check className="w-4 h-4" />}
                                             </button>
@@ -445,7 +447,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, isLight
                                             >
                                                 <span className="flex items-center gap-2">
                                                     <div className={`w-2 h-2 rounded-full ${embedScrollProtection ? 'bg-blue-500' : 'bg-neutral-400'}`} />
-                                                    Scroll Protection
+                                                    {t.embedScrollProtection as string}
                                                 </span>
                                                 {embedScrollProtection && <Check className="w-4 h-4" />}
                                             </button>
@@ -459,7 +461,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, isLight
                                             >
                                                 <span className="flex items-center gap-2">
                                                     <div className={`w-2 h-2 rounded-full ${embedStatic ? 'bg-blue-500' : 'bg-neutral-400'}`} />
-                                                    Static Mode
+                                                    {t.embedStaticMode as string}
                                                 </span>
                                             </button>
 
@@ -472,7 +474,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, isLight
                                             >
                                                 <span className="flex items-center gap-2">
                                                     <div className={`w-2 h-2 rounded-full ${embedOrientation ? 'bg-blue-500' : 'bg-neutral-400'}`} />
-                                                    Set Start View
+                                                    {t.embedSetStartView as string}
                                                 </span>
                                                 {embedOrientation ? <Check className="w-4 h-4" /> : <Camera className="w-4 h-4" />}
                                             </button>
@@ -488,7 +490,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, isLight
                                             >
                                                 <span className="flex items-center gap-2">
                                                     <div className={`w-2 h-2 rounded-full ${embedInteractionWrapper ? 'bg-blue-500' : 'bg-neutral-400'}`} />
-                                                    Click-to-Interact
+                                                    {t.embedClickToInteract as string}
                                                 </span>
                                                 {embedInteractionWrapper && <Check className="w-4 h-4" />}
                                             </button>
@@ -498,7 +500,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, isLight
                                     {/* Appearance Group */}
                                     <div className="space-y-3">
                                         <label className={`text-xs font-bold uppercase tracking-wider ${isLightMode ? 'text-neutral-500' : 'text-neutral-400'}`}>
-                                            Appearance
+                                            {t.embedAppearance as string}
                                         </label>
                                         <div className="flex flex-col gap-2">
                                             <button
@@ -510,7 +512,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, isLight
                                             >
                                                 <span className="flex items-center gap-2">
                                                     <div className={`w-2 h-2 rounded-full ${!embedControls ? 'bg-blue-500' : 'bg-neutral-400'}`} />
-                                                    Hide Controls
+                                                    {t.embedHideControls as string}
                                                 </span>
                                                 {!embedControls && <Check className="w-4 h-4" />}
                                             </button>
@@ -524,7 +526,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, isLight
                                                         : 'text-neutral-500 hover:text-neutral-400'
                                                         }`}
                                                 >
-                                                    Dark Theme
+                                                    {t.embedDarkTheme as string}
                                                 </button>
                                                 <button
                                                     onClick={() => setEmbedTheme('light')}
@@ -533,7 +535,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, isLight
                                                         : 'text-neutral-500 hover:text-neutral-400'
                                                         }`}
                                                 >
-                                                    Light Theme
+                                                    {t.embedLightTheme as string}
                                                 </button>
                                             </div>
                                         </div>
@@ -542,7 +544,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, isLight
                                     {/* Visual Style Group */}
                                     <div className="space-y-3">
                                         <label className={`text-xs font-bold uppercase tracking-wider ${isLightMode ? 'text-neutral-500' : 'text-neutral-400'}`}>
-                                            Visual Style
+                                            {t.embedVisualStyle as string}
                                         </label>
                                         <div className="flex flex-col gap-2">
 
@@ -556,7 +558,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, isLight
                                             >
                                                 <span className="flex items-center gap-2">
                                                     <div className={`w-2 h-2 rounded-full ${embedTransparent ? 'bg-blue-500' : 'bg-neutral-400'}`} />
-                                                    Transparent Background
+                                                    {t.embedTransparentBg as string}
                                                 </span>
                                                 {embedTransparent && <Check className="w-4 h-4" />}
                                             </button>
@@ -570,7 +572,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, isLight
                                             >
                                                 <span className="flex items-center gap-2">
                                                     <div className={`w-2 h-2 rounded-full ${embedShadow ? 'bg-blue-500' : 'bg-neutral-400'}`} />
-                                                    Drop Shadow
+                                                    {t.embedDropShadow as string}
                                                 </span>
                                                 {embedShadow && <Check className="w-4 h-4" />}
                                             </button>
@@ -578,7 +580,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, isLight
                                             {/* Border Radius Control */}
                                             <div className={`p-3 rounded-lg border space-y-2 ${isLightMode ? 'bg-neutral-50 border-neutral-200' : 'bg-neutral-800/50 border-neutral-700'}`}>
                                                 <div className="flex justify-between text-xs font-medium opacity-70">
-                                                    <span>Corner Radius</span>
+                                                    <span>{t.embedCornerRadius as string}</span>
                                                     <span>{embedBorderRadius}px</span>
                                                 </div>
                                                 <div className="flex gap-1">
@@ -602,7 +604,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, isLight
                                     {/* Frame Size Selector */}
                                     <div className="space-y-3">
                                         <label className={`text-xs font-bold uppercase tracking-wider ${isLightMode ? 'text-neutral-500' : 'text-neutral-400'}`}>
-                                            Frame Width
+                                            {t.embedFrameWidth as string}
                                         </label>
                                         <div className="flex gap-2">
                                             {/* Presets Group */}
@@ -678,7 +680,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, isLight
                                     {/* Preview */}
                                     <div className="space-y-2">
                                         <label className={`text-xs font-bold uppercase tracking-wider ${isLightMode ? 'text-neutral-500' : 'text-neutral-400'}`}>
-                                            Live Preview
+                                            {t.embedLivePreview as string}
                                         </label>
                                         <div className="relative w-full aspect-video rounded-xl overflow-hidden border border-white/10 shadow-lg bg-black/50">
                                             <iframe
@@ -692,8 +694,8 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, isLight
                                     {/* Code Block */}
                                     <div className="space-y-2">
                                         <label className={`text-xs font-bold uppercase tracking-wider flex justify-between ${isLightMode ? 'text-neutral-500' : 'text-neutral-400'}`}>
-                                            <span>Embed Code</span>
-                                            <span className="text-[10px] font-normal opacity-70">Click to copy</span>
+                                            <span>{t.embedCodeLabel as string}</span>
+                                            <span className="text-[10px] font-normal opacity-70">{t.embedClickToCopy as string}</span>
                                         </label>
                                         <div
                                             onClick={handleCopyEmbed}
@@ -711,7 +713,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, isLight
                                         className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-bold transition-all shadow-lg ${copied ? 'bg-green-500 text-white' : 'bg-blue-600 hover:bg-blue-500 text-white hover:scale-[1.02] active:scale-[0.98]'}`}
                                     >
                                         {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                                        {copied ? 'Copied to Clipboard!' : 'Copy Embed Code'}
+                                        {copied ? (t.embedCopied as string) : (t.embedCopyCode as string)}
                                     </button>
                                 </div>
                             </div>
@@ -722,9 +724,9 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, isLight
                                     <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-indigo-500/20 flex items-center justify-center">
                                         <Users className="w-8 h-8 text-indigo-400" />
                                     </div>
-                                    <h3 className="text-xl font-bold mb-2">Live Collaboration</h3>
+                                    <h3 className="text-xl font-bold mb-2">{t.liveCollaboration as string}</h3>
                                     <p className={`text-sm max-w-md mx-auto mb-6 ${isLightMode ? 'text-neutral-600' : 'text-neutral-400'}`}>
-                                        Share your session ID or join a friend to synchronize your view in real-time. Camera and structure changes are mirrored instantly.
+                                        {t.liveCollabDesc as string}
                                     </p>
 
                                     {peerSession ? (
@@ -748,14 +750,14 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, isLight
                                                         <div>
                                                             <label className="text-xs font-bold uppercase tracking-wider text-indigo-500 mb-2 flex items-center gap-2">
                                                                 <Radio className="w-3 h-3" />
-                                                                Invite Others
+                                                                {t.liveInviteOthers as string}
                                                             </label>
                                                             <p className={`text-sm mb-3 ${isLightMode ? 'text-neutral-600' : 'text-neutral-400'}`}>
-                                                                Share this ID or let others scan the QR code to join your session instantly.
+                                                                {t.liveInviteDesc as string}
                                                             </p>
                                                             <div className="flex items-center gap-2">
                                                                 <div className={`flex-1 font-mono text-sm truncate p-3 rounded-lg border ${isLightMode ? 'bg-neutral-50 border-neutral-200' : 'bg-neutral-900 border-neutral-800'}`}>
-                                                                    {peerSession.peerId || 'Generating...'}
+                                                                    {peerSession.peerId || (t.liveGenerating as string)}
                                                                 </div>
                                                                 <button
                                                                     onClick={handleCopySessionId}
@@ -783,19 +785,19 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, isLight
                                                     <div className={`w-full border-t ${isLightMode ? 'border-neutral-200' : 'border-neutral-800'}`}></div>
                                                 </div>
                                                 <div className="relative flex justify-center text-xs uppercase">
-                                                    <span className={`px-2 ${isLightMode ? 'bg-white text-neutral-500' : 'bg-neutral-900 text-neutral-500'}`}>Or join existing</span>
+                                                    <span className={`px-2 ${isLightMode ? 'bg-white text-neutral-500' : 'bg-neutral-900 text-neutral-500'}`}>{t.liveOrJoin as string}</span>
                                                 </div>
                                             </div>
 
                                             <div className={`p-5 rounded-2xl border ${isLightMode ? 'bg-white border-neutral-200' : 'bg-neutral-950 border-neutral-800'}`}>
                                                 <label className="text-xs font-bold uppercase tracking-wider text-purple-500 mb-3 block flex items-center gap-2">
                                                     <Globe className="w-3 h-3" />
-                                                    Join a Session
+                                                    {t.liveJoinSession as string}
                                                 </label>
                                                 <div className="flex gap-3">
                                                     <input
                                                         type="text"
-                                                        placeholder="Enter Peer ID to join..."
+                                                        placeholder={t.liveJoinPlaceholder as string}
                                                         value={remotePeerIdInput}
                                                         onChange={(e) => setRemotePeerIdInput(e.target.value)}
                                                         className={`flex-1 min-w-0 px-4 py-2.5 text-sm rounded-lg outline-none border focus:border-purple-500 transition-all ${isLightMode ? 'bg-neutral-50 border-neutral-200 text-neutral-900' : 'bg-neutral-900 border-neutral-800 text-white'
@@ -806,7 +808,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, isLight
                                                         disabled={!remotePeerIdInput}
                                                         className="px-6 py-2.5 text-sm font-bold rounded-lg bg-purple-600 hover:bg-purple-500 text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-purple-500/20"
                                                     >
-                                                        Join
+                                                        {t.liveJoinBtn as string}
                                                     </button>
                                                 </div>
                                             </div>
@@ -816,14 +818,14 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, isLight
                                                 <div className={`w-2.5 h-2.5 rounded-full ${peerSession.isConnected ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]' : 'bg-neutral-500'}`} />
                                                 <span className={`text-xs font-medium ${isLightMode ? 'text-neutral-500' : 'text-neutral-400'}`}>
                                                     {peerSession.isConnected
-                                                        ? `Active Session • ${peerSession.connections.length} peer(s) connected`
-                                                        : 'Ready to connect'}
+                                                        ? (t.liveActiveSession as (peers: number) => string)(peerSession.connections.length)
+                                                        : (t.liveReadyToConnect as string)}
                                                 </span>
                                             </div>
                                         </div>
                                     ) : (
                                         <div className="text-center text-red-400 p-4 border border-red-500/20 rounded-xl bg-red-500/10">
-                                            PeerJS Service Unavailable
+                                            {t.livePeerUnavailable as string}
                                         </div>
                                     )}
 
@@ -834,8 +836,8 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, isLight
                                                 }`} />
                                             <span className={`text-sm font-medium ${isLightMode ? 'text-neutral-600' : 'text-neutral-400'}`}>
                                                 {peerSession.isConnected
-                                                    ? `Connected to ${peerSession.connections.length} peer(s)`
-                                                    : 'Waiting for connection...'}
+                                                    ? (t.liveConnectedPeers as (peers: number) => string)(peerSession.connections.length)
+                                                    : (t.liveWaiting as string)}
                                             </span>
                                         </div>
                                     )}
@@ -853,13 +855,13 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, isLight
                             className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${isLightMode ? 'bg-neutral-100 hover:bg-neutral-200 text-neutral-900' : 'bg-neutral-800 hover:bg-neutral-700 text-white'}`}
                         >
                             <Download className="w-4 h-4" />
-                            Download QR
+                            {t.downloadQR as string}
                         </button>
                         <button
                             onClick={onClose}
                             className="flex-1 px-4 py-2 rounded-lg font-medium bg-blue-600 hover:bg-blue-500 text-white transition-colors"
                         >
-                            Done
+                            {t.doneBtn as string}
                         </button>
                     </div>
                 )}
