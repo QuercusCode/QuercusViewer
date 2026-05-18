@@ -257,6 +257,7 @@ const NAV_LINKS = [
   { label: 'Workflow', id: 'workflow' },
   { label: 'Compare', id: 'compare' },
   { label: 'Pricing', id: 'pricing' },
+  { label: 'FAQ', id: 'faq' },
 ];
 
 function Nav({ scrollRoot }: { scrollRoot: React.RefObject<HTMLDivElement | null> }) {
@@ -958,6 +959,102 @@ function TechBar() {
   );
 }
 
+// ─── FAQ Section ─────────────────────────────────────────────────────────────
+
+const FAQ_ITEMS = [
+  {
+    q: 'Does it work offline?',
+    a: 'Quercus Viewer runs entirely in your browser using WebGL — no server-side rendering. Once the page is loaded, you can open local .pdb, .cif, .sdf, and .mol files without any internet connection. Fetching structures from RCSB PDB or PubChem does require a connection.',
+  },
+  {
+    q: 'What file formats are supported?',
+    a: 'You can load PDB (.pdb), mmCIF (.cif), SDF (.sdf), and MOL (.mol) files by drag-and-drop or file picker. Remote sources include RCSB PDB (by accession code), PubChem (by compound ID or name), and direct URL. Export is available as PNG screenshots and PDF reports.',
+  },
+  {
+    q: 'Is my data private? Are uploaded files sent to a server?',
+    a: 'Local files you drag-and-drop are read entirely in your browser — they are never uploaded to any server. Only RCSB/PubChem lookups make outbound requests, and those go directly to the respective public APIs. Your session data is stored in your browser\'s memory only unless you explicitly save to your Quercus dashboard.',
+  },
+  {
+    q: 'How many structures can I view at once?',
+    a: 'Free accounts support a single viewport. Pro and Team plans unlock up to four side-by-side viewports for structure comparison and superposition. Viewport count can be switched at any time from the sidebar without reloading your structures.',
+  },
+  {
+    q: 'Do I need to install anything?',
+    a: 'No installation required — Quercus Viewer is a progressive web app that runs in any modern browser with WebGL support (Chrome, Firefox, Edge, Safari). There is no desktop app, no plugin, and no command-line setup.',
+  },
+  {
+    q: 'Is the source code open source?',
+    a: 'Yes. Quercus Viewer is released under the MIT License and the full source is available on GitHub. You are free to self-host, fork, or contribute. The NGL Viewer rendering engine it builds on is also open source (MIT).',
+  },
+];
+
+function FAQItem({ q, a, idx }: { q: string; a: string; idx: number }) {
+  const [open, setOpen] = useState(false);
+  const [ref, vis] = useReveal(0.1);
+  return (
+    <div ref={ref} style={{
+      borderBottom: `1px solid ${L.b2}`,
+      opacity: vis ? 1 : 0,
+      transform: vis ? 'translateY(0)' : 'translateY(16px)',
+      transition: `opacity .6s ${idx * 60}ms cubic-bezier(.4,0,.2,1), transform .6s ${idx * 60}ms cubic-bezier(.4,0,.2,1)`,
+    }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        style={{
+          width: '100%', background: 'none', border: 'none', cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          gap: 16, padding: '20px 0', textAlign: 'left',
+          fontFamily: L.fontDisplay, fontSize: 15.5, fontWeight: 600,
+          color: open ? L.t1 : L.t2,
+          transition: 'color .2s',
+        }}
+        aria-expanded={open}
+      >
+        <span>{q}</span>
+        <span style={{
+          flexShrink: 0, width: 22, height: 22, borderRadius: 6,
+          background: open ? L.accentBg : 'rgba(255,255,255,0.04)',
+          border: `1px solid ${open ? L.accentBorder : L.b3}`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          color: open ? L.accent : L.t4,
+          transition: 'all .25s',
+          fontSize: 14, lineHeight: 1,
+        }}>
+          {open ? '−' : '+'}
+        </span>
+      </button>
+      <div style={{
+        overflow: 'hidden',
+        maxHeight: open ? 300 : 0,
+        transition: 'max-height .35s cubic-bezier(.4,0,.2,1)',
+      }}>
+        <p style={{
+          margin: 0, paddingBottom: 20,
+          fontSize: 14, lineHeight: 1.75, color: L.t3,
+          fontFamily: L.fontBody,
+        }}>{a}</p>
+      </div>
+    </div>
+  );
+}
+
+function FAQSection() {
+  return (
+    <section id="faq" style={{ padding: '80px 24px', maxWidth: 720, margin: '0 auto' }}>
+      <SectionHead
+        label="FAQ"
+        title="Common questions"
+        desc="Everything you need to know before you start."
+      />
+      <div>
+        {FAQ_ITEMS.map((item, i) => (
+          <FAQItem key={i} q={item.q} a={item.a} idx={i} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
 // ─── Newsletter Section ───────────────────────────────────────────────────────
 
 function NewsletterSection() {
@@ -1107,6 +1204,7 @@ export function LandingPage() {
         <ComparisonSection />
         <PricingSection />
         <TechBar />
+        <FAQSection />
         <NewsletterSection />
         <FooterSection />
       </div>
