@@ -68,6 +68,19 @@
     "success": "¡Estás en la lista!",
     "fine_print": "Sin spam. Cancela la suscripción en cualquier momento."
   },
+  "preview": {
+    "label": "Vista Previa",
+    "title": "Véalo en acción",
+    "card1_title": "Visor 3D",
+    "card1_desc": "Ventana WebGL interactiva con rotación en tiempo real, zoom e información al pasar el cursor a nivel atómico.",
+    "card2_title": "Análisis Multi-Vista",
+    "card2_desc": "Compare hasta cuatro estructuras simultáneamente con controles de cámara sincronizados y superposiciones.",
+    "card3_title": "Modo Estudio",
+    "card3_desc": "Crea animaciones por fotogramas clave, ajusta la iluminación y exporta renders e informes de calidad para publicación."
+  },
+  "techbar": {
+    "built_with": "Desarrollado con"
+  },
   "footer": {
     "license": "Licencia MIT",
     "engine": "Motor 3D: NGL Viewer"

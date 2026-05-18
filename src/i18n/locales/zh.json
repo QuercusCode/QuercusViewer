@@ -68,6 +68,19 @@
     "success": "您已加入列表！",
     "fine_print": "无垃圾邮件，随时取消订阅。"
   },
+  "preview": {
+    "label": "预览",
+    "title": "看看它的实际效果",
+    "card1_title": "3D结构查看器",
+    "card1_desc": "交互式WebGL视口，支持实时旋转、缩放和原子级悬停信息。",
+    "card2_title": "多视图分析",
+    "card2_desc": "同步摄像机控制与叠加，同时比较最多四个结构。",
+    "card3_title": "工作室模式",
+    "card3_desc": "创建关键帧动画，调整灯光，导出出版级渲染图像和报告。"
+  },
+  "techbar": {
+    "built_with": "技术栈"
+  },
   "footer": {
     "license": "MIT 许可证",
     "engine": "3D引擎：NGL Viewer"

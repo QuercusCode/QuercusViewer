@@ -68,6 +68,19 @@
     "success": "Você está na lista!",
     "fine_print": "Sem spam. Cancele a inscrição a qualquer momento."
   },
+  "preview": {
+    "label": "Prévia",
+    "title": "Veja em ação",
+    "card1_title": "Visualizador 3D",
+    "card1_desc": "Janela WebGL interativa com rotação em tempo real, zoom e informações ao passar o mouse no nível atômico.",
+    "card2_title": "Análise Multi-Visualização",
+    "card2_desc": "Compare até quatro estruturas simultaneamente com controles de câmera sincronizados e sobreposições.",
+    "card3_title": "Modo Estúdio",
+    "card3_desc": "Crie animações por quadros-chave, ajuste a iluminação e exporte renders e relatórios de qualidade para publicação."
+  },
+  "techbar": {
+    "built_with": "Desenvolvido com"
+  },
   "footer": {
     "license": "Licença MIT",
     "engine": "Motor 3D: NGL Viewer"

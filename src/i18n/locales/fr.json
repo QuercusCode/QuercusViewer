@@ -68,6 +68,19 @@
     "success": "Vous êtes sur la liste !",
     "fine_print": "Pas de spam. Désabonnez-vous à tout moment."
   },
+  "preview": {
+    "label": "Aperçu",
+    "title": "Voyez-le en action",
+    "card1_title": "Visionneur 3D",
+    "card1_desc": "Fenêtre WebGL interactive avec rotation, zoom en temps réel et informations au survol au niveau atomique.",
+    "card2_title": "Analyse multi-vues",
+    "card2_desc": "Comparez jusqu'à quatre structures simultanément avec des contrôles de caméra synchronisés et des superpositions.",
+    "card3_title": "Mode Studio",
+    "card3_desc": "Créez des animations par images clés, ajustez l'éclairage et exportez des rendus et rapports de qualité publication."
+  },
+  "techbar": {
+    "built_with": "Construit avec"
+  },
   "footer": {
     "license": "Licence MIT",
     "engine": "Moteur 3D : NGL Viewer"

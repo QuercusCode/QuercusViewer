@@ -68,6 +68,19 @@
     "success": "You're on the list!",
     "fine_print": "No spam. Unsubscribe anytime."
   },
+  "preview": {
+    "label": "Preview",
+    "title": "See it in action",
+    "card1_title": "3D Structure Viewer",
+    "card1_desc": "Interactive WebGL viewport with real-time rotation, zoom, and atom-level hover information.",
+    "card2_title": "Multi-View Analysis",
+    "card2_desc": "Compare up to four structures simultaneously with synchronized camera controls and overlays.",
+    "card3_title": "Studio Mode",
+    "card3_desc": "Create keyframe animations, adjust lighting, and export publication-quality renders and reports."
+  },
+  "techbar": {
+    "built_with": "Built with"
+  },
   "footer": {
     "license": "MIT License",
     "engine": "3D Engine: NGL Viewer"

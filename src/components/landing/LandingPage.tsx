@@ -705,16 +705,16 @@ function HowItWorksSection() {
 
 // ─── Demo Showcase ────────────────────────────────────────────────────────────
 
-const DEMO_CARDS = [
-  { title: '3D Structure Viewer', desc: 'Interactive WebGL viewport with real-time rotation, zoom, and atom-level hover information.', gradient: 'linear-gradient(135deg,rgba(74,222,128,0.12),rgba(45,212,191,0.05))', lineColor: '#4ade80', icon: <EyeIcon size={24} color="#4ade80" />, badge: 'Viewer', filename: 'hemoglobin.pdb' },
-  { title: 'Multi-View Analysis', desc: 'Compare up to four structures simultaneously with synchronized camera controls and overlays.', gradient: 'linear-gradient(135deg,rgba(96,165,250,0.12),rgba(167,139,250,0.05))', lineColor: '#60a5fa', icon: <GridIcon size={24} color="#60a5fa" />, badge: 'Analytics', filename: 'compare.session' },
-  { title: 'Studio Mode', desc: 'Create keyframe animations, adjust lighting, and export publication-quality renders and reports.', gradient: 'linear-gradient(135deg,rgba(167,139,250,0.12),rgba(251,191,36,0.05))', lineColor: '#a78bfa', icon: <CameraIcon size={24} color="#a78bfa" />, badge: 'Export', filename: 'render_4k.png' },
-];
-
 function DemoShowcase() {
+  const { t } = useTranslation();
+  const DEMO_CARDS = [
+    { title: t('preview.card1_title'), desc: t('preview.card1_desc'), gradient: 'linear-gradient(135deg,rgba(74,222,128,0.12),rgba(45,212,191,0.05))', lineColor: '#4ade80', icon: <EyeIcon size={24} color="#4ade80" />, badge: 'Viewer', filename: 'hemoglobin.pdb' },
+    { title: t('preview.card2_title'), desc: t('preview.card2_desc'), gradient: 'linear-gradient(135deg,rgba(96,165,250,0.12),rgba(167,139,250,0.05))', lineColor: '#60a5fa', icon: <GridIcon size={24} color="#60a5fa" />, badge: 'Analytics', filename: 'compare.session' },
+    { title: t('preview.card3_title'), desc: t('preview.card3_desc'), gradient: 'linear-gradient(135deg,rgba(167,139,250,0.12),rgba(251,191,36,0.05))', lineColor: '#a78bfa', icon: <CameraIcon size={24} color="#a78bfa" />, badge: 'Export', filename: 'render_4k.png' },
+  ];
   return (
     <section style={{ padding: '80px 24px', maxWidth: 1100, margin: '0 auto' }}>
-      <SectionHead label="Preview" title="See it in action" />
+      <SectionHead label={t('preview.label')} title={t('preview.title')} />
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 16 }}>
         {DEMO_CARDS.map((card, i) => {
           const [ref, vis] = useReveal(0.1);
@@ -941,6 +941,7 @@ function PricingSection() {
 // ─── Tech Bar ─────────────────────────────────────────────────────────────────
 
 function TechBar() {
+  const { t } = useTranslation();
   const [ref, vis] = useReveal(0.15, 'tech_bar');
   const techs = ['React 18', 'TypeScript', 'NGL Viewer', 'Tailwind CSS', 'Vite', 'Supabase'];
   return (
@@ -949,7 +950,7 @@ function TechBar() {
       opacity: vis ? 1 : 0, transform: vis ? 'translateY(0)' : 'translateY(20px)',
       transition: 'all .8s cubic-bezier(.4,0,.2,1)',
     }}>
-      <p style={{ fontFamily: L.fontMono, fontSize: 10, color: L.t4, letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: 16 }}>Built with</p>
+      <p style={{ fontFamily: L.fontMono, fontSize: 10, color: L.t4, letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: 16 }}>{t('techbar.built_with')}</p>
       <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
         {techs.map(t => (
           <span key={t} style={{
