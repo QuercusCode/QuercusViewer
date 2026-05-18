@@ -3,6 +3,7 @@ import { useNavigate, Navigate, Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../lib/AuthContext';
 import { Mail, Lock, ArrowLeft, Loader2 } from 'lucide-react';
+import { useTranslation } from '../../lib/i18n';
 
 export const AuthPage = () => {
     const [isLogin, setIsLogin] = useState(true);
@@ -13,6 +14,7 @@ export const AuthPage = () => {
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const navigate = useNavigate();
     const { user } = useAuth();
+    const { t } = useTranslation();
 
     // If user is already logged in, redirect them
     if (user) {
@@ -41,11 +43,11 @@ export const AuthPage = () => {
                     password,
                 });
                 if (error) throw error;
-                setSuccessMessage('Registration successful! Check your email for a confirmation link if required, or log in.');
+                setSuccessMessage(t.authRegistrationSuccess as string);
                 setIsLogin(true);
             }
         } catch (err: any) {
-            setError(err.message || 'An error occurred during authentication.');
+            setError(err.message || (t.authErrorOccurred as string));
         } finally {
             setLoading(false);
         }
@@ -58,7 +60,7 @@ export const AuthPage = () => {
             <div className="absolute top-6 left-6">
                 <Link to="/" className="flex items-center gap-2 text-neutral-400 hover:text-white transition-colors text-sm font-medium">
                     <ArrowLeft className="w-4 h-4" />
-                    Back to Viewer
+                    {t.authBackToViewer as string}
                 </Link>
             </div>
 
@@ -67,10 +69,10 @@ export const AuthPage = () => {
                 <div className="flex flex-col items-center mb-8">
                     <img src="/logo/icon-white.png" alt="Quercus Logo" className="w-12 h-12 mb-4" />
                     <h1 className="text-2xl font-bold text-white tracking-tight">
-                        {isLogin ? 'Welcome back' : 'Create an account'}
+                        {isLogin ? (t.authWelcomeBack as string) : (t.authCreateAccount as string)}
                     </h1>
                     <p className="text-neutral-400 text-sm mt-2">
-                        {isLogin ? 'Log in to access your personal dashboard.' : 'Sign up to save structures and manage your studio drafts.'}
+                        {isLogin ? (t.authLoginDesc as string) : (t.authSignUpDesc as string)}
                     </p>
                 </div>
 
@@ -93,7 +95,7 @@ export const AuthPage = () => {
                         {/* Email Field */}
                         <div>
                             <label className="block text-sm font-medium text-neutral-300 mb-1.5" htmlFor="email">
-                                Email
+                                {t.authEmailLabel as string}
                             </label>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-neutral-500">
@@ -114,7 +116,7 @@ export const AuthPage = () => {
                         {/* Password Field */}
                         <div>
                             <label className="block text-sm font-medium text-neutral-300 mb-1.5" htmlFor="password">
-                                Password
+                                {t.authPasswordLabel as string}
                             </label>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-neutral-500">
@@ -139,13 +141,13 @@ export const AuthPage = () => {
                             className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg py-2.5 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-                            {isLogin ? 'Log In' : 'Sign Up'}
+                            {isLogin ? (t.authLogIn as string) : (t.authSignUp as string)}
                         </button>
                     </form>
 
                     {/* Toggle Mode */}
                     <div className="mt-6 text-center text-sm text-neutral-400">
-                        {isLogin ? "Don't have an account?" : "Already have an account?"}{' '}
+                        {isLogin ? (t.authNoAccount as string) : (t.authHaveAccount as string)}{' '}
                         <button
                             type="button"
                             onClick={() => {
@@ -155,7 +157,7 @@ export const AuthPage = () => {
                             }}
                             className="text-blue-400 hover:text-blue-300 font-medium transition-colors"
                         >
-                            {isLogin ? 'Sign up' : 'Log in'}
+                            {isLogin ? (t.authSignUpLink as string) : (t.authLogInLink as string)}
                         </button>
                     </div>
                 </div>
