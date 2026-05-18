@@ -2,6 +2,7 @@ import { useMemo, useState, useEffect } from 'react';
 import type { ResidueInfo, PDBMetadata } from '../types';
 import type { PeerSession } from '../hooks/usePeerSession';
 import { Eye, Wrench, Lock, Unlock, Mic, MicOff, PhoneOff, MessageSquare, Sparkles, StickyNote } from 'lucide-react';
+import { useTranslation } from '../lib/i18n';
 
 interface HUDProps {
     hoveredResidue: ResidueInfo | null;
@@ -30,6 +31,7 @@ interface HUDProps {
 }
 
 export function HUD({ hoveredResidue, pdbMetadata, pdbId, isLightMode, isEmbedMode = false, peerSession, remoteHoveredResidue, isHost, remoteUserName, peerNames = {}, controllerId, isCameraSynced, onToggleCameraSync, userName, unreadCount = 0, isChatOpen = false, onToggleChat, isAiChatOpen = false, onToggleAiChat, isNotesOpen = false, onToggleNotes, onOpenSettings }: HUDProps) {
+    const { t } = useTranslation();
     const textColor = isLightMode ? 'text-gray-800' : 'text-gray-200';
     const bgColor = isLightMode ? 'bg-white/80' : 'bg-black/80';
     const borderColor = isLightMode ? 'border-gray-200' : 'border-neutral-800';
@@ -89,7 +91,7 @@ export function HUD({ hoveredResidue, pdbMetadata, pdbId, isLightMode, isEmbedMo
                 <div className="fixed top-20 right-4 md:right-28 z-40 flex flex-col gap-2 items-end pointer-events-auto">
                     <div className={`backdrop-blur-md rounded-xl border ${borderColor} ${bgColor} shadow-lg p-3 min-w-[180px] animate-in slide-in-from-right-4 transition-all duration-300`}>
                         <div className="flex items-center justify-between mb-2 pb-2 border-b border-white/10">
-                            <span className={`text-[10px] font-bold uppercase tracking-wider opacity-70 ${textColor}`}>Live Session</span>
+                            <span className={`text-[10px] font-bold uppercase tracking-wider opacity-70 ${textColor}`}>{t.liveSession as string}</span>
                             <div className="flex items-center gap-1.5">
                                 <span className="relative flex h-2 w-2">
                                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
@@ -104,13 +106,13 @@ export function HUD({ hoveredResidue, pdbMetadata, pdbId, isLightMode, isEmbedMo
                             <div className="flex items-center justify-between gap-2">
                                 <div className="flex items-center gap-2">
                                     <div className="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
-                                    <span className={`text-xs font-medium ${textColor}`}>You {isHost ? '(Host)' : ''}</span>
+                                    <span className={`text-xs font-medium ${textColor}`}>{isHost ? (t.youHostLabel as string) : (t.youLabel as string)}</span>
                                 </div>
                                 {controllerId === peerSession.peerId && (
                                     <button
                                         onClick={onOpenSettings}
                                         className="hover:bg-amber-500/10 p-1 rounded-md transition-colors cursor-pointer"
-                                        title="Open Settings"
+                                        title={t.openSettingsTitle as string}
                                     >
                                         <Wrench className="w-3 h-3 text-amber-500" />
                                     </button>
@@ -201,10 +203,10 @@ export function HUD({ hoveredResidue, pdbMetadata, pdbId, isLightMode, isEmbedMo
                                             ? 'bg-amber-500 text-white shadow-md'
                                             : (isLightMode ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' : 'bg-amber-500/20 text-amber-300 hover:bg-amber-500/30')
                                             }`}
-                                        title="Quick Notes"
+                                        title={t.quickNotes as string}
                                     >
                                         <StickyNote className="w-4 h-4 md:w-3 md:h-3" />
-                                        NOTES
+                                        {t.notesBtn as string}
                                     </button>
                                 )}
                                 {onToggleChat && (
@@ -216,7 +218,7 @@ export function HUD({ hoveredResidue, pdbMetadata, pdbId, isLightMode, isEmbedMo
                                             }`}
                                     >
                                         <MessageSquare className="w-4 h-4 md:w-3 md:h-3" />
-                                        CHAT
+                                        {t.chatBtn as string}
                                         {unreadCount > 0 && (
                                             <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-bold w-4 h-4 flex items-center justify-center rounded-full border-2 border-white dark:border-black">
                                                 {unreadCount}
@@ -234,7 +236,7 @@ export function HUD({ hoveredResidue, pdbMetadata, pdbId, isLightMode, isEmbedMo
                                         title="Quercus AI"
                                     >
                                         <Sparkles className="w-4 h-4 md:w-3 md:h-3" />
-                                        AI
+                                        {t.aiBtn as string}
                                     </button>
                                 )}
                             </div>
@@ -252,7 +254,7 @@ export function HUD({ hoveredResidue, pdbMetadata, pdbId, isLightMode, isEmbedMo
                                             }`}
                                     >
                                         <div className="w-1.5 h-1.5 rounded-full bg-current" />
-                                        JOIN VOICE
+                                        {t.joinVoice as string}
                                     </button>
                                 ) : (
                                     <>
@@ -262,14 +264,14 @@ export function HUD({ hoveredResidue, pdbMetadata, pdbId, isLightMode, isEmbedMo
                                                 ? 'bg-red-500 text-white hover:bg-red-600'
                                                 : (isLightMode ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' : 'bg-white/10 text-white hover:bg-white/20')
                                                 }`}
-                                            title={peerSession.isMuted ? "Unmute" : "Mute"}
+                                            title={peerSession.isMuted ? (t.unmuteBtn as string) : (t.muteBtn as string)}
                                         >
                                             {peerSession.isMuted ? <MicOff className="w-4 h-4 md:w-3 md:h-3" /> : <Mic className="w-4 h-4 md:w-3 md:h-3" />}
                                         </button>
                                         <button
                                             onClick={() => peerSession.leaveAudio?.()}
                                             className="p-2 md:p-1.5 rounded-full bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-colors"
-                                            title="Leave Voice"
+                                            title={t.leaveVoice as string}
                                         >
                                             <PhoneOff className="w-4 h-4 md:w-3 md:h-3" />
                                         </button>
@@ -290,7 +292,7 @@ export function HUD({ hoveredResidue, pdbMetadata, pdbId, isLightMode, isEmbedMo
                                 >
                                     {isCameraSynced ? <Lock className="w-3 h-3 md:w-3 md:h-3" /> : <Unlock className="w-3 h-3 md:w-3 md:h-3" />}
                                     <span className="hidden sm:inline">
-                                        {isCameraSynced ? 'VIEW' : 'EDIT'}
+                                        {isCameraSynced ? (t.viewMode as string) : (t.editMode as string)}
                                     </span>
                                 </button>
                             </div>

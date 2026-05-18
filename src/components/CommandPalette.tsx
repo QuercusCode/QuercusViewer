@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, Command, ArrowRight } from 'lucide-react';
+import { useTranslation } from '../lib/i18n';
 
 export interface CommandAction {
     id: string;
@@ -19,6 +20,7 @@ interface CommandPaletteProps {
 }
 
 export function CommandPalette({ isOpen, onClose, actions, isLightMode }: CommandPaletteProps) {
+    const { t } = useTranslation();
     const [query, setQuery] = useState('');
     const [selectedIndex, setSelectedIndex] = useState(0);
     const inputRef = useRef<HTMLInputElement>(null);
@@ -105,7 +107,7 @@ export function CommandPalette({ isOpen, onClose, actions, isLightMode }: Comman
                             setQuery(e.target.value);
                             setSelectedIndex(0);
                         }}
-                        placeholder="Type a command or search..."
+                        placeholder={t.commandSearch as string}
                         className={`flex-1 bg-transparent border-none outline-none text-lg ${textColor} placeholder-opacity-50 placeholder-current`}
                     />
                     <div className="flex items-center gap-2">
@@ -122,7 +124,7 @@ export function CommandPalette({ isOpen, onClose, actions, isLightMode }: Comman
                 >
                     {filteredActions.length === 0 ? (
                         <div className={`px-4 py-8 text-center text-sm ${subTextColor}`}>
-                            No results found.
+                            {t.noResults as string}
                         </div>
                     ) : (
                         <div className="px-2 space-y-0.5">
@@ -175,7 +177,7 @@ export function CommandPalette({ isOpen, onClose, actions, isLightMode }: Comman
                 {/* Footer */}
                 <div className={`px-4 py-2 border-t ${borderColor} flex justify-between items-center bg-opacity-50 ${isLightMode ? 'bg-neutral-50' : 'bg-black/20'}`}>
                     <div className={`text-[10px] ${subTextColor}`}>
-                        Use <span className="font-bold">↑↓</span> to navigate, <span className="font-bold">enter</span> to select
+                        {t.cmdNavHint as string}
                     </div>
                     <div className={`text-[10px] ${subTextColor}`}>
                         Protein Viewer Pro

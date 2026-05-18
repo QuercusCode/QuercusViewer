@@ -77,6 +77,7 @@ import { Link } from 'react-router-dom';
 import { uploadStructure } from './lib/structuresService';
 import { addRecentStructure } from './lib/recentStructures';
 import { useTranslation } from './lib/i18n';
+import { LanguageSwitcher } from './components/landing/LanguageSwitcher';
 
 const deepEqual = (a: any, b: any): boolean => {
   if (a === b) return true;
@@ -2914,8 +2915,9 @@ function App() {
                 className={`flex items-center gap-2 h-10 px-4 rounded-full text-sm font-medium transition-all border shadow-lg backdrop-blur-md ${isNotebookOpen ? 'bg-blue-600/90 border-blue-500/50 text-white' : isLightMode ? 'bg-white/80 border-black/10 text-gray-700 hover:bg-white' : 'bg-neutral-900/80 border-white/10 text-neutral-300 hover:text-white hover:bg-neutral-800'}`}
               >
                 <NotebookPen className={`w-4 h-4 ${isNotebookOpen ? 'animate-pulse' : ''}`} />
-                <span className="hidden md:inline">Notebook</span>
+                <span className="hidden md:inline">{t.notebookLabel as string}</span>
               </button>
+              <LanguageSwitcher />
               {user ? (
                 <Link
                   to="/dashboard"
@@ -2923,11 +2925,11 @@ function App() {
                   className={`flex items-center gap-2 h-10 px-4 rounded-full text-sm font-medium transition-colors border shadow-lg backdrop-blur-md ${isLightMode ? 'bg-white/80 border-black/10 text-gray-700 hover:bg-white' : 'bg-neutral-900/80 border-white/10 text-neutral-300 hover:text-white hover:bg-neutral-800'}`}
                 >
                   <img src={user?.user_metadata?.avatar_url || `https://ui-avatars.com/api/?name=${user?.email || 'User'}&background=random`} alt="Profile" className="w-5 h-5 rounded-full" />
-                  <span className="hidden sm:inline">Dashboard</span>
+                  <span className="hidden sm:inline">{t.dashboardLabel as string}</span>
                 </Link>
               ) : (
                 <Link to="/auth" className={`flex items-center h-10 px-4 rounded-full text-sm font-medium transition-colors border shadow-lg backdrop-blur-md ${isLightMode ? 'bg-white/80 border-black/10 text-gray-700 hover:bg-white' : 'bg-neutral-900/80 border-white/10 text-neutral-300 hover:text-white hover:bg-neutral-800'}`}>
-                  Log In
+                  {t.logInLabel as string}
                 </Link>
               )}
             </div>

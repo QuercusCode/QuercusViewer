@@ -1,5 +1,6 @@
 
 import { X, Check } from 'lucide-react';
+import { useTranslation } from '../lib/i18n';
 
 interface SettingsProps {
     isLightMode: boolean;
@@ -21,6 +22,7 @@ export function Settings({
     visualizerEngine, setVisualizerEngine,
     isOpen, onClose
 }: SettingsProps) {
+    const { t } = useTranslation();
 
     if (!isOpen) return null;
 
@@ -34,7 +36,7 @@ export function Settings({
 
                 {/* Header */}
                 <div className={`flex items-center justify-between p-5 border-b ${borderColor} ${isLightMode ? 'bg-gradient-to-r from-blue-50/50 to-transparent' : 'bg-gradient-to-r from-neutral-900 to-black'}`}>
-                    <h2 className="text-lg font-bold tracking-tight">Settings</h2>
+                    <h2 className="text-lg font-bold tracking-tight">{t.settingsTitle as string}</h2>
                     <button onClick={onClose} className={`p-1.5 rounded-lg opacity-60 hover:opacity-100 transition-all ${isLightMode ? 'hover:bg-black/5' : 'hover:bg-white/10'}`}>
                         <X className="w-5 h-5" />
                     </button>
@@ -45,7 +47,7 @@ export function Settings({
 
                     {/* Visualizer Engine */}
                     <div className="space-y-3">
-                        <h3 className="text-xs font-bold opacity-60 uppercase tracking-widest pl-1">Rendering Engine</h3>
+                        <h3 className="text-xs font-bold opacity-60 uppercase tracking-widest pl-1">{t.renderingEngine as string}</h3>
                         <div className="grid grid-cols-2 gap-3">
                             {['ngl', 'molstar'].map((engine) => (
                                 <button
@@ -66,7 +68,7 @@ export function Settings({
                             ))}
                         </div>
                         <p className="text-xs opacity-50 pl-1">
-                            Switch between the NGL viewer (Legacy) and Mol* (Advanced).
+                            {t.renderingEngineDesc as string}
                         </p>
                     </div>
 
@@ -74,9 +76,9 @@ export function Settings({
 
                     {/* Theme */}
                     <div className="space-y-3">
-                        <h3 className="text-xs font-bold opacity-60 uppercase tracking-widest pl-1">Appearance</h3>
+                        <h3 className="text-xs font-bold opacity-60 uppercase tracking-widest pl-1">{t.sectionAppearance as string}</h3>
                         <div className="flex items-center justify-between p-1">
-                            <span className="text-sm font-medium">Dark Mode</span>
+                            <span className="text-sm font-medium">{t.darkMode as string}</span>
                             <button
                                 onClick={() => setIsLightMode(!isLightMode)}
                                 className={`w-14 h-7 rounded-full transition-all duration-300 relative shadow-inner ${!isLightMode ? 'bg-indigo-600' : 'bg-neutral-200'}`}
@@ -88,16 +90,15 @@ export function Settings({
 
                     <hr className={`border-t ${borderColor}`} />
 
-
                     {/* Graphics */}
                     <div className="space-y-3">
-                        <h3 className="text-xs font-bold opacity-60 uppercase tracking-widest pl-1">Graphics Quality</h3>
+                        <h3 className="text-xs font-bold opacity-60 uppercase tracking-widest pl-1">{t.graphicsQuality as string}</h3>
 
                         <div className="grid grid-cols-3 gap-2">
-                            {['low', 'medium', 'high'].map(q => (
+                            {(['low', 'medium', 'high'] as const).map(q => (
                                 <button
                                     key={q}
-                                    onClick={() => setQuality(q as any)}
+                                    onClick={() => setQuality(q)}
                                     className={`px-3 py-2.5 text-xs font-bold uppercase rounded-lg border transition-all ${quality === q
                                         ? 'bg-blue-600 text-white border-blue-500 shadow-md transform scale-105'
                                         : `${borderColor} hover:bg-neutral-500/5 opacity-70 hover:opacity-100`
@@ -109,7 +110,7 @@ export function Settings({
                         </div>
 
                         <label className="flex items-center justify-between cursor-pointer pt-2 p-1 hover:opacity-80 transition-opacity">
-                            <span className="text-sm font-medium">Ambient Occlusion (SSAO)</span>
+                            <span className="text-sm font-medium">{t.ambientOcclusion as string}</span>
                             <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${ssao ? 'bg-blue-600 border-blue-600' : 'border-neutral-500'}`}>
                                 {ssao && <Check className="w-3.5 h-3.5 text-white" />}
                             </div>
