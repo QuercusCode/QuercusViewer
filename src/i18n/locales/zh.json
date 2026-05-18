@@ -1,0 +1,82 @@
+{
+  "nav": {
+    "features": "功能特性",
+    "workflow": "工作流程",
+    "faq": "常见问题",
+    "github": "GitHub",
+    "launch": "打开查看器"
+  },
+  "hero": {
+    "badge": "开源 · 浏览器端 · WebGL",
+    "subtitle": "专业3D分子结构分析",
+    "description": "直接在浏览器中可视化、分析和协作蛋白质及化学结构，提供出版级渲染质量——无需安装任何软件。",
+    "cta_launch": "打开查看器",
+    "cta_source": "查看源码",
+    "stat_molecules": "分子数量",
+    "stat_views": "同时视口",
+    "stat_install": "无需安装"
+  },
+  "features": {
+    "label": "功能特性",
+    "title": "结构分析所需的一切",
+    "desc": "一套完整的蛋白质和分子结构可视化、分析与协作工具。",
+    "import_title": "通用导入",
+    "import_desc": "直接从RCSB PDB和PubChem加载，浏览精选库，或拖放本地 .pdb、.cif、.sdf、.mol 文件。",
+    "multiview_title": "多视图分析",
+    "multiview_desc": "并排比较最多4个结构。执行结构叠加，分析同步的2D接触图。",
+    "collab_title": "实时协作",
+    "collab_desc": "启动实时会话，与远程同事同步3D视口、相机移动和表示方式。",
+    "studio_title": "工作室与导出",
+    "studio_desc": "录制关键帧动画，导出出版级高分辨率图像，生成PDF摘要报告。",
+    "styling_title": "高级样式",
+    "styling_desc": "基于B因子、疏水性或残基范围，叠加多种自定义着色的表示方式。",
+    "access_title": "易用且快速",
+    "access_desc": "界面主题、OpenDyslexic字体支持，以及持久化历史记录和收藏夹，打造个性化工作空间。"
+  },
+  "workflow": {
+    "label": "工作流程",
+    "title": "三步获得洞见",
+    "s1_title": "搜索或导入",
+    "s1_desc": "从RCSB PDB、PubChem查找结构，或拖放本地文件。浏览1000+精选分子。",
+    "s2_title": "可视化与分析",
+    "s2_desc": "应用卡通、表面、球棍表示方式。测量距离，并排比较结构。",
+    "s3_title": "协作与导出",
+    "s3_desc": "与同事共享实时会话。导出高分辨率图像，录制动画，生成PDF报告。"
+  },
+  "faq": {
+    "label": "常见问题",
+    "title": "常见问题解答",
+    "desc": "开始使用前您需要了解的一切。",
+    "q1": "可以离线使用吗？",
+    "a1": "Quercus Viewer完全在您的浏览器中使用WebGL运行，无需服务器端渲染。页面加载后，您无需网络连接即可打开本地 .pdb、.cif、.sdf 和 .mol 文件。从RCSB PDB或PubChem获取结构需要网络连接。",
+    "q2": "支持哪些文件格式？",
+    "a2": "您可以通过拖放或文件选择器加载PDB（.pdb）、mmCIF（.cif）、SDF（.sdf）和MOL（.mol）文件。远程来源包括RCSB PDB（通过登录号）、PubChem（通过化合物ID或名称）和直接URL。支持导出为PNG截图和PDF报告。",
+    "q3": "我的数据安全吗？上传的文件会发送到服务器吗？",
+    "a3": "您拖放的本地文件完全在您的浏览器中读取，永远不会上传到任何服务器。只有RCSB/PubChem查询会向相应的公共API发出请求。您的会话数据仅存储在浏览器内存中，除非您明确保存到Quercus控制面板。",
+    "q4": "我可以同时查看多少个结构？",
+    "a4": "Quercus Viewer支持最多四个并排视口，用于结构比较和叠加。可以随时从侧边栏切换视口数量，无需重新加载结构。",
+    "q5": "需要安装任何东西吗？",
+    "a5": "无需安装——Quercus Viewer是一个渐进式Web应用，可在任何支持WebGL的现代浏览器（Chrome、Firefox、Edge、Safari）中运行。没有桌面应用、插件或命令行设置。",
+    "q6": "源代码是开源的吗？",
+    "a6": "是的。Quercus Viewer在MIT许可证下发布，完整源代码可在GitHub上获取。您可以自由托管、分叉或贡献。其底层使用的NGL Viewer渲染引擎也是开源的（MIT）。"
+  },
+  "newsletter": {
+    "title": "保持更新",
+    "desc": "获取新功能、更新和版本发布的通知。",
+    "placeholder": "您的@邮箱.com",
+    "button": "订阅",
+    "success": "您已加入列表！",
+    "fine_print": "无垃圾邮件，随时取消订阅。"
+  },
+  "footer": {
+    "license": "MIT 许可证",
+    "engine": "3D引擎：NGL Viewer"
+  },
+  "cookie": {
+    "title": "Cookie 偏好设置",
+    "desc": "我们使用分析性Cookie来改善Quercus Viewer。您可以随时选择退出。",
+    "privacy": "隐私政策",
+    "accept": "接受",
+    "decline": "拒绝"
+  }
+}

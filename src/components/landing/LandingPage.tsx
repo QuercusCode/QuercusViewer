@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import * as NGL from 'ngl';
 import { logEvent } from '../../utils/analytics';
 import { CookieBanner } from './CookieBanner';
+import { LanguageSwitcher } from './LanguageSwitcher';
 
 // ─── Design tokens (scoped to landing page) ──────────────────────────────────
 
@@ -252,16 +254,17 @@ function BackToTop({ scrollRoot }: { scrollRoot: React.RefObject<HTMLDivElement 
 
 // ─── Nav ──────────────────────────────────────────────────────────────────────
 
-const NAV_LINKS = [
-  { label: 'Features', id: 'features' },
-  { label: 'Workflow', id: 'workflow' },
-  { label: 'FAQ', id: 'faq' },
-];
-
 function Nav({ scrollRoot }: { scrollRoot: React.RefObject<HTMLDivElement | null> }) {
+  const { t } = useTranslation();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const navigate = useNavigate();
+
+  const NAV_LINKS = [
+    { label: t('nav.features'), id: 'features' },
+    { label: t('nav.workflow'), id: 'workflow' },
+    { label: t('nav.faq'),      id: 'faq' },
+  ];
 
   useEffect(() => {
     const el = scrollRoot.current;
@@ -345,18 +348,19 @@ function Nav({ scrollRoot }: { scrollRoot: React.RefObject<HTMLDivElement | null
         </div>
 
         {/* Desktop right */}
-        <div className="qv-nav-right" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div className="qv-nav-right" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <a href="https://github.com/QuercusCode/QuercusViewer" target="_blank" rel="noopener"
             onClick={() => logEvent('github_link_click', { location: 'nav' })}
             style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 500, color: L.t3, textDecoration: 'none', padding: '6px 12px', borderRadius: 8, transition: 'all .2s', fontFamily: L.fontBody }}
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = L.t1; (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.05)'; }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = L.t3; (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
-          ><GitHubIcon size={15} /> GitHub</a>
+          ><GitHubIcon size={15} /> {t('nav.github')}</a>
+          <LanguageSwitcher />
           <button onClick={() => { logEvent('cta_click', { cta: 'nav_launch' }); navigate('/app'); }}
             style={{ fontFamily: L.fontDisplay, fontSize: 13, fontWeight: 600, padding: '8px 20px', borderRadius: 8, border: 'none', background: L.accent, color: '#050505', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, transition: 'all .2s', whiteSpace: 'nowrap' }}
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.filter = 'brightness(1.12)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)'; }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.filter = 'none'; (e.currentTarget as HTMLElement).style.transform = 'none'; }}
-          >Launch Viewer <ArrowRightIcon size={14} color="#050505" /></button>
+          >{t('nav.launch')} <ArrowRightIcon size={14} color="#050505" /></button>
         </div>
 
         {/* Hamburger (mobile only) */}
@@ -400,7 +404,11 @@ function Nav({ scrollRoot }: { scrollRoot: React.RefObject<HTMLDivElement | null
           style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 15, fontWeight: 500, color: L.t3, textDecoration: 'none', padding: '10px 24px', borderRadius: 10, transition: 'color .15s', opacity: mobileOpen ? 1 : 0, transitionDelay: '280ms' }}
           onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = L.t1; }}
           onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = L.t3; }}
-        ><GitHubIcon size={18} /> GitHub</a>
+        ><GitHubIcon size={18} /> {t('nav.github')}</a>
+        {/* Language switcher in mobile menu */}
+        <div style={{ opacity: mobileOpen ? 1 : 0, transitionDelay: '310ms', transition: 'opacity .25s ease' }}>
+          <LanguageSwitcher compact />
+        </div>
         <button onClick={() => { navigate('/app'); setMobileOpen(false); }}
           style={{
             fontFamily: L.fontDisplay, fontSize: 16, fontWeight: 600,
@@ -411,7 +419,7 @@ function Nav({ scrollRoot }: { scrollRoot: React.RefObject<HTMLDivElement | null
           }}
           onMouseEnter={e => { (e.currentTarget as HTMLElement).style.filter = 'brightness(1.12)'; }}
           onMouseLeave={e => { (e.currentTarget as HTMLElement).style.filter = 'none'; }}
-        >Launch Viewer <ArrowRightIcon size={16} color="#050505" /></button>
+        >{t('nav.launch')} <ArrowRightIcon size={16} color="#050505" /></button>
       </div>
     </>
   );
@@ -420,6 +428,7 @@ function Nav({ scrollRoot }: { scrollRoot: React.RefObject<HTMLDivElement | null
 // ─── Hero Section ─────────────────────────────────────────────────────────────
 
 function HeroSection({ protein }: { protein: string }) {
+  const { t } = useTranslation();
   const [ready, setReady] = useState(false);
   const navigate = useNavigate();
   useEffect(() => { requestAnimationFrame(() => setReady(true)); }, []);
@@ -469,7 +478,7 @@ function HeroSection({ protein }: { protein: string }) {
             width: 6, height: 6, borderRadius: '50%', background: L.accent,
             display: 'inline-block', animation: 'qvLandPulse 2s ease infinite',
           }} />
-          OPEN SOURCE · BROWSER-BASED · WebGL
+          {t('hero.badge')}
         </div>
 
         <h1 style={{
@@ -486,15 +495,14 @@ function HeroSection({ protein }: { protein: string }) {
           fontFamily: L.fontDisplay, fontSize: 'clamp(16px,2.2vw,21px)',
           fontWeight: 400, color: L.t2, marginBottom: 12, letterSpacing: '.005em',
         }}>
-          Professional 3D Molecular Structure Analysis
+          {t('hero.subtitle')}
         </p>
         <p style={{
           ...anim('.55s', '.6s'),
           fontSize: 'clamp(13px,1.4vw,15px)', lineHeight: 1.75, color: L.t3,
           maxWidth: 480, margin: '0 auto 36px',
         }}>
-          Visualize, analyze, and collaborate on protein and chemical structures
-          with publication-quality rendering — directly in your browser.
+          {t('hero.description')}
         </p>
 
         {/* CTAs */}
@@ -513,7 +521,7 @@ function HeroSection({ protein }: { protein: string }) {
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.filter = 'brightness(1.12)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 32px rgba(74,222,128,0.25)'; }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.filter = 'none'; (e.currentTarget as HTMLElement).style.transform = 'none'; (e.currentTarget as HTMLElement).style.boxShadow = 'none'; }}
           >
-            Launch Viewer <ArrowRightIcon size={16} color="#050505" />
+            {t('hero.cta_launch')} <ArrowRightIcon size={16} color="#050505" />
           </button>
           <a
             href="https://github.com/QuercusCode/QuercusViewer" target="_blank" rel="noopener"
@@ -528,7 +536,7 @@ function HeroSection({ protein }: { protein: string }) {
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = L.t3; (e.currentTarget as HTMLElement).style.color = L.t1; (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.05)'; }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = L.b3; (e.currentTarget as HTMLElement).style.color = L.t2; (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)'; }}
           >
-            <GitHubIcon size={16} /> View Source
+            <GitHubIcon size={16} /> {t('hero.cta_source')}
           </a>
         </div>
       </div>
@@ -540,9 +548,9 @@ function HeroSection({ protein }: { protein: string }) {
         display: 'flex', gap: 0, flexWrap: 'wrap', justifyContent: 'center',
       }}>
         {([
-          { n: 1000, suffix: '+', label: 'Molecules' },
-          { n: 4, suffix: '', label: 'Simultaneous Views' },
-          { n: 0, suffix: '', label: 'Installation Required' },
+          { n: 1000, suffix: '+', label: t('hero.stat_molecules') },
+          { n: 4, suffix: '', label: t('hero.stat_views') },
+          { n: 0, suffix: '', label: t('hero.stat_install') },
         ] as const).map((st, i) => (
           <div key={i} style={{
             padding: '16px 32px', textAlign: 'center',
@@ -594,15 +602,6 @@ function SectionHead({ label, title, desc }: { label: string; title: string; des
 
 // ─── Features Section ─────────────────────────────────────────────────────────
 
-const FEATURES = [
-  { icon: <DownloadIcon />, title: 'Universal Import', desc: 'Load directly from RCSB PDB and PubChem, browse a curated library, or drag-and-drop local .pdb, .cif, .sdf, .mol files.' },
-  { icon: <GridIcon />, title: 'Multi-View Analytics', desc: 'Compare up to 4 structures side-by-side. Perform structure superposition and analyze synced 2D contact maps.' },
-  { icon: <UsersIcon />, title: 'Live Collaboration', desc: 'Start a live session to sync 3D viewports, camera movements, and representations with remote colleagues.' },
-  { icon: <CameraIcon />, title: 'Studio & Export', desc: 'Record keyframe animations, export publication-ready high-res images, and generate PDF summary reports.' },
-  { icon: <LayersIcon />, title: 'Advanced Styling', desc: 'Layer multiple representations with custom coloring based on B-Factor, Hydrophobicity, or residue ranges.' },
-  { icon: <LightningIcon />, title: 'Accessible & Fast', desc: 'UI themes, OpenDyslexic font support, and persistent history and favorites for a personalized workspace.' },
-];
-
 function FeatureCard({ icon, title, desc, idx }: { icon: React.ReactNode; title: string; desc: string; idx: number }) {
   const [ref, vis] = useReveal(0.1);
   const [hov, setHov] = useState(false);
@@ -634,12 +633,21 @@ function FeatureCard({ icon, title, desc, idx }: { icon: React.ReactNode; title:
 }
 
 function FeaturesSection() {
+  const { t } = useTranslation();
+  const FEATURES = [
+    { icon: <DownloadIcon />, title: t('features.import_title'),    desc: t('features.import_desc') },
+    { icon: <GridIcon />,     title: t('features.multiview_title'), desc: t('features.multiview_desc') },
+    { icon: <UsersIcon />,    title: t('features.collab_title'),    desc: t('features.collab_desc') },
+    { icon: <CameraIcon />,   title: t('features.studio_title'),    desc: t('features.studio_desc') },
+    { icon: <LayersIcon />,   title: t('features.styling_title'),   desc: t('features.styling_desc') },
+    { icon: <LightningIcon />,title: t('features.access_title'),    desc: t('features.access_desc') },
+  ];
   return (
     <section id="features" style={{ padding: '80px 24px', maxWidth: 1100, margin: '0 auto' }}>
       <SectionHead
-        label="Capabilities"
-        title="Everything you need for structural analysis"
-        desc="A complete suite of tools for protein and molecular structure visualization, analysis, and collaboration."
+        label={t('features.label')}
+        title={t('features.title')}
+        desc={t('features.desc')}
       />
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 14 }}>
         {FEATURES.map((f, i) => <FeatureCard key={i} idx={i} icon={f.icon} title={f.title} desc={f.desc} />)}
@@ -650,16 +658,16 @@ function FeaturesSection() {
 
 // ─── How It Works ─────────────────────────────────────────────────────────────
 
-const STEPS = [
-  { num: '01', title: 'Search or Import', desc: 'Find structures from RCSB PDB, PubChem, or drag-and-drop local files. Browse 1000+ curated molecules.', icon: <SearchIcon size={24} /> },
-  { num: '02', title: 'Visualize & Analyze', desc: 'Apply cartoon, surface, ball-and-stick representations. Measure distances, compare structures side-by-side.', icon: <EyeIcon size={24} /> },
-  { num: '03', title: 'Collaborate & Export', desc: 'Share live sessions with colleagues. Export high-res images, record animations, generate PDF reports.', icon: <ShareIcon size={24} /> },
-];
-
 function HowItWorksSection() {
+  const { t } = useTranslation();
+  const STEPS = [
+    { num: '01', title: t('workflow.s1_title'), desc: t('workflow.s1_desc'), icon: <SearchIcon size={24} /> },
+    { num: '02', title: t('workflow.s2_title'), desc: t('workflow.s2_desc'), icon: <EyeIcon size={24} /> },
+    { num: '03', title: t('workflow.s3_title'), desc: t('workflow.s3_desc'), icon: <ShareIcon size={24} /> },
+  ];
   return (
     <section id="workflow" style={{ padding: '80px 24px', maxWidth: 1100, margin: '0 auto' }}>
-      <SectionHead label="Workflow" title="Three steps to insight" />
+      <SectionHead label={t('workflow.label')} title={t('workflow.title')} />
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(260px,1fr))', gap: 24, position: 'relative' }}>
         {STEPS.map((st, i) => {
           const [ref, vis] = useReveal(0.15);
@@ -685,7 +693,6 @@ function HowItWorksSection() {
                   position: 'absolute', top: '50%', right: -13, width: 26, height: 2, zIndex: 2,
                   background: `linear-gradient(to right, ${L.accentBorder}, ${L.b3})`,
                   borderRadius: 1,
-                  // Hidden on mobile via inline — we'll manage with a class
                 }} className="qv-step-connector" />
               )}
             </div>
@@ -770,7 +777,7 @@ function DemoShowcase() {
   );
 }
 
-// ─── Comparison Table ─────────────────────────────────────────────────────────
+// ─── Comparison Table (hidden until monetization is live) ─────────────────────
 
 const COMPARISON_TOOLS = ['QuercusViewer', 'PyMOL', 'UCSF Chimera', 'Jmol'];
 const COMPARISON_ROWS = [
@@ -829,7 +836,7 @@ function ComparisonSection() {
   );
 }
 
-// ─── Pricing Section ──────────────────────────────────────────────────────────
+// ─── Pricing Section (hidden until monetization is live) ──────────────────────
 
 const PLANS = [
   {
@@ -959,33 +966,6 @@ function TechBar() {
 
 // ─── FAQ Section ─────────────────────────────────────────────────────────────
 
-const FAQ_ITEMS = [
-  {
-    q: 'Does it work offline?',
-    a: 'Quercus Viewer runs entirely in your browser using WebGL — no server-side rendering. Once the page is loaded, you can open local .pdb, .cif, .sdf, and .mol files without any internet connection. Fetching structures from RCSB PDB or PubChem does require a connection.',
-  },
-  {
-    q: 'What file formats are supported?',
-    a: 'You can load PDB (.pdb), mmCIF (.cif), SDF (.sdf), and MOL (.mol) files by drag-and-drop or file picker. Remote sources include RCSB PDB (by accession code), PubChem (by compound ID or name), and direct URL. Export is available as PNG screenshots and PDF reports.',
-  },
-  {
-    q: 'Is my data private? Are uploaded files sent to a server?',
-    a: 'Local files you drag-and-drop are read entirely in your browser — they are never uploaded to any server. Only RCSB/PubChem lookups make outbound requests, and those go directly to the respective public APIs. Your session data is stored in your browser\'s memory only unless you explicitly save to your Quercus dashboard.',
-  },
-  {
-    q: 'How many structures can I view at once?',
-    a: 'Quercus Viewer supports up to four simultaneous side-by-side viewports for structure comparison and superposition. Viewport count can be switched at any time from the sidebar without reloading your structures.',
-  },
-  {
-    q: 'Do I need to install anything?',
-    a: 'No installation required — Quercus Viewer is a progressive web app that runs in any modern browser with WebGL support (Chrome, Firefox, Edge, Safari). There is no desktop app, no plugin, and no command-line setup.',
-  },
-  {
-    q: 'Is the source code open source?',
-    a: 'Yes. Quercus Viewer is released under the MIT License and the full source is available on GitHub. You are free to self-host, fork, or contribute. The NGL Viewer rendering engine it builds on is also open source (MIT).',
-  },
-];
-
 function FAQItem({ q, a, idx }: { q: string; a: string; idx: number }) {
   const [open, setOpen] = useState(false);
   const [ref, vis] = useReveal(0.1);
@@ -1037,12 +1017,21 @@ function FAQItem({ q, a, idx }: { q: string; a: string; idx: number }) {
 }
 
 function FAQSection() {
+  const { t } = useTranslation();
+  const FAQ_ITEMS = [
+    { q: t('faq.q1'), a: t('faq.a1') },
+    { q: t('faq.q2'), a: t('faq.a2') },
+    { q: t('faq.q3'), a: t('faq.a3') },
+    { q: t('faq.q4'), a: t('faq.a4') },
+    { q: t('faq.q5'), a: t('faq.a5') },
+    { q: t('faq.q6'), a: t('faq.a6') },
+  ];
   return (
     <section id="faq" style={{ padding: '80px 24px', maxWidth: 720, margin: '0 auto' }}>
       <SectionHead
-        label="FAQ"
-        title="Common questions"
-        desc="Everything you need to know before you start."
+        label={t('faq.label')}
+        title={t('faq.title')}
+        desc={t('faq.desc')}
       />
       <div>
         {FAQ_ITEMS.map((item, i) => (
@@ -1056,6 +1045,7 @@ function FAQSection() {
 // ─── Newsletter Section ───────────────────────────────────────────────────────
 
 function NewsletterSection() {
+  const { t } = useTranslation();
   const [ref, vis] = useReveal(0.15, 'newsletter');
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
@@ -1073,14 +1063,14 @@ function NewsletterSection() {
         }}>
           <MailIcon size={22} color={L.accent} />
         </div>
-        <h2 style={{ fontFamily: L.fontDisplay, fontSize: 24, fontWeight: 600, color: L.t1, marginBottom: 8 }}>Stay Updated</h2>
-        <p style={{ fontSize: 14, color: L.t3, marginBottom: 24, lineHeight: 1.6 }}>Get notified about new features, updates, and releases.</p>
+        <h2 style={{ fontFamily: L.fontDisplay, fontSize: 24, fontWeight: 600, color: L.t1, marginBottom: 8 }}>{t('newsletter.title')}</h2>
+        <p style={{ fontSize: 14, color: L.t3, marginBottom: 24, lineHeight: 1.6 }}>{t('newsletter.desc')}</p>
         {!submitted ? (
           <div style={{ display: 'flex', gap: 8, maxWidth: 400, margin: '0 auto' }}>
             <input
               value={email}
               onChange={e => setEmail(e.target.value)}
-              placeholder="your@email.com"
+              placeholder={t('newsletter.placeholder')}
               type="email"
               style={{
                 flex: 1, padding: '10px 14px', borderRadius: 8, fontSize: 13,
@@ -1100,7 +1090,7 @@ function NewsletterSection() {
               }}
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.filter = 'brightness(1.12)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)'; }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.filter = 'none'; (e.currentTarget as HTMLElement).style.transform = 'none'; }}
-            >Subscribe</button>
+            >{t('newsletter.button')}</button>
           </div>
         ) : (
           <div style={{
@@ -1109,10 +1099,10 @@ function NewsletterSection() {
             background: L.accentBg, border: `1px solid ${L.accentBorder}`,
             color: L.accent, fontSize: 14, fontWeight: 500,
           }}>
-            <CheckIcon size={16} /> You're on the list!
+            <CheckIcon size={16} /> {t('newsletter.success')}
           </div>
         )}
-        <p style={{ fontSize: 11, color: L.t4, marginTop: 14 }}>No spam. Unsubscribe anytime.</p>
+        <p style={{ fontSize: 11, color: L.t4, marginTop: 14 }}>{t('newsletter.fine_print')}</p>
       </div>
     </section>
   );
@@ -1121,6 +1111,7 @@ function NewsletterSection() {
 // ─── Footer ───────────────────────────────────────────────────────────────────
 
 function FooterSection() {
+  const { t } = useTranslation();
   return (
     <footer style={{
       padding: '32px 24px', borderTop: `1px solid ${L.b1}`,
@@ -1131,7 +1122,7 @@ function FooterSection() {
         <span style={{ fontFamily: L.fontDisplay, fontSize: 14, fontWeight: 700 }}>
           <span style={{ color: L.accent }}>Q</span><span style={{ color: L.t4 }}>uercus</span>
         </span>
-        <span style={{ fontSize: 11, color: L.t4, fontFamily: L.fontMono }}>· MIT License</span>
+        <span style={{ fontSize: 11, color: L.t4, fontFamily: L.fontMono }}>· {t('footer.license')}</span>
       </div>
       <div style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
         {[
@@ -1146,7 +1137,7 @@ function FooterSection() {
           >{l.label}</a>
         ))}
       </div>
-      <div style={{ fontSize: 11, color: L.t4, fontFamily: L.fontMono }}>3D Engine: NGL Viewer</div>
+      <div style={{ fontSize: 11, color: L.t4, fontFamily: L.fontMono }}>{t('footer.engine')}</div>
     </footer>
   );
 }

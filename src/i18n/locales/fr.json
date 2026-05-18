@@ -1,0 +1,82 @@
+{
+  "nav": {
+    "features": "Fonctionnalités",
+    "workflow": "Processus",
+    "faq": "FAQ",
+    "github": "GitHub",
+    "launch": "Ouvrir le visualiseur"
+  },
+  "hero": {
+    "badge": "OPEN SOURCE · NAVIGATEUR · WebGL",
+    "subtitle": "Analyse professionnelle de structures moléculaires 3D",
+    "description": "Visualisez, analysez et collaborez sur des structures protéiques et chimiques avec un rendu de qualité publication — directement dans votre navigateur.",
+    "cta_launch": "Ouvrir le visualiseur",
+    "cta_source": "Voir le code source",
+    "stat_molecules": "Molécules",
+    "stat_views": "Vues simultanées",
+    "stat_install": "Installation requise"
+  },
+  "features": {
+    "label": "FONCTIONNALITÉS",
+    "title": "Tout ce qu'il vous faut pour l'analyse structurale",
+    "desc": "Une suite complète d'outils pour la visualisation, l'analyse et la collaboration sur les structures protéiques et moléculaires.",
+    "import_title": "Import universel",
+    "import_desc": "Chargez directement depuis RCSB PDB et PubChem, parcourez une bibliothèque organisée, ou glissez-déposez des fichiers .pdb, .cif, .sdf, .mol.",
+    "multiview_title": "Analyse multi-vues",
+    "multiview_desc": "Comparez jusqu'à 4 structures côte à côte. Effectuez une superposition et analysez des cartes de contacts 2D synchronisées.",
+    "collab_title": "Collaboration en direct",
+    "collab_desc": "Démarrez une session pour synchroniser les vues 3D, les mouvements de caméra et les représentations avec des collègues à distance.",
+    "studio_title": "Studio et export",
+    "studio_desc": "Enregistrez des animations par images clés, exportez des images haute résolution et générez des rapports PDF.",
+    "styling_title": "Style avancé",
+    "styling_desc": "Superposez plusieurs représentations avec une coloration personnalisée basée sur le facteur B, l'hydrophobicité ou les plages de résidus.",
+    "access_title": "Accessible et rapide",
+    "access_desc": "Thèmes d'interface, support de la police OpenDyslexic, et historique persistant pour un espace de travail personnalisé."
+  },
+  "workflow": {
+    "label": "PROCESSUS",
+    "title": "Trois étapes vers la découverte",
+    "s1_title": "Rechercher ou importer",
+    "s1_desc": "Trouvez des structures depuis RCSB PDB, PubChem, ou glissez-déposez des fichiers locaux. Parcourez plus de 1000 molécules organisées.",
+    "s2_title": "Visualiser et analyser",
+    "s2_desc": "Appliquez des représentations en cartoon, surface, boule et bâton. Mesurez des distances, comparez des structures côte à côte.",
+    "s3_title": "Collaborer et exporter",
+    "s3_desc": "Partagez des sessions en direct avec vos collègues. Exportez des images haute résolution, enregistrez des animations, générez des rapports PDF."
+  },
+  "faq": {
+    "label": "FAQ",
+    "title": "Questions fréquentes",
+    "desc": "Tout ce que vous devez savoir avant de commencer.",
+    "q1": "Fonctionne-t-il hors ligne ?",
+    "a1": "Quercus Viewer fonctionne entièrement dans votre navigateur via WebGL — sans rendu côté serveur. Une fois la page chargée, vous pouvez ouvrir des fichiers locaux .pdb, .cif, .sdf et .mol sans connexion internet. La récupération de structures depuis RCSB PDB ou PubChem nécessite une connexion.",
+    "q2": "Quels formats de fichiers sont pris en charge ?",
+    "a2": "Vous pouvez charger des fichiers PDB (.pdb), mmCIF (.cif), SDF (.sdf) et MOL (.mol) par glisser-déposer ou via le sélecteur de fichiers. Les sources distantes incluent RCSB PDB (par code d'accession), PubChem (par ID ou nom) et URL directe. L'export est disponible en PNG et en rapports PDF.",
+    "q3": "Mes données sont-elles privées ? Les fichiers sont-ils envoyés à un serveur ?",
+    "a3": "Les fichiers que vous glissez-déposez sont lus entièrement dans votre navigateur — ils ne sont jamais envoyés à un serveur. Seules les recherches RCSB/PubChem envoient des requêtes sortantes, directement vers leurs API publiques. Vos données de session sont stockées uniquement dans la mémoire de votre navigateur.",
+    "q4": "Combien de structures puis-je visualiser simultanément ?",
+    "a4": "Quercus Viewer prend en charge jusqu'à quatre fenêtres côte à côte pour la comparaison et la superposition de structures. Le nombre de fenêtres peut être modifié à tout moment depuis la barre latérale sans recharger vos structures.",
+    "q5": "Dois-je installer quelque chose ?",
+    "a5": "Aucune installation n'est requise — Quercus Viewer est une application web progressive qui fonctionne dans tout navigateur moderne avec support WebGL (Chrome, Firefox, Edge, Safari). Il n'y a pas d'application bureau, pas de plugin, et pas de configuration en ligne de commande.",
+    "q6": "Le code source est-il open source ?",
+    "a6": "Oui. Quercus Viewer est publié sous licence MIT et le code source complet est disponible sur GitHub. Vous êtes libre de l'héberger, le forker ou y contribuer. Le moteur NGL Viewer est également open source (MIT)."
+  },
+  "newsletter": {
+    "title": "Restez informé",
+    "desc": "Soyez notifié des nouvelles fonctionnalités, mises à jour et versions.",
+    "placeholder": "votre@email.com",
+    "button": "S'abonner",
+    "success": "Vous êtes sur la liste !",
+    "fine_print": "Pas de spam. Désabonnez-vous à tout moment."
+  },
+  "footer": {
+    "license": "Licence MIT",
+    "engine": "Moteur 3D : NGL Viewer"
+  },
+  "cookie": {
+    "title": "Préférences de cookies",
+    "desc": "Nous utilisons des cookies analytiques pour améliorer Quercus Viewer. Vous pouvez vous désabonner à tout moment.",
+    "privacy": "Politique de confidentialité",
+    "accept": "Accepter",
+    "decline": "Refuser"
+  }
+}

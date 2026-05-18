@@ -1,0 +1,82 @@
+{
+  "nav": {
+    "features": "Features",
+    "workflow": "Workflow",
+    "faq": "FAQ",
+    "github": "GitHub",
+    "launch": "Launch Viewer"
+  },
+  "hero": {
+    "badge": "OPEN SOURCE · BROWSER-BASED · WebGL",
+    "subtitle": "Professional 3D Molecular Structure Analysis",
+    "description": "Visualize, analyze, and collaborate on protein and chemical structures with publication-quality rendering — directly in your browser.",
+    "cta_launch": "Launch Viewer",
+    "cta_source": "View Source",
+    "stat_molecules": "Molecules",
+    "stat_views": "Simultaneous Views",
+    "stat_install": "Installation Required"
+  },
+  "features": {
+    "label": "CAPABILITIES",
+    "title": "Everything you need for structural analysis",
+    "desc": "A complete suite of tools for protein and molecular structure visualization, analysis, and collaboration.",
+    "import_title": "Universal Import",
+    "import_desc": "Load directly from RCSB PDB and PubChem, browse a curated library, or drag-and-drop local .pdb, .cif, .sdf, .mol files.",
+    "multiview_title": "Multi-View Analytics",
+    "multiview_desc": "Compare up to 4 structures side-by-side. Perform structure superposition and analyze synced 2D contact maps.",
+    "collab_title": "Live Collaboration",
+    "collab_desc": "Start a live session to sync 3D viewports, camera movements, and representations with remote colleagues.",
+    "studio_title": "Studio & Export",
+    "studio_desc": "Record keyframe animations, export publication-ready high-res images, and generate PDF summary reports.",
+    "styling_title": "Advanced Styling",
+    "styling_desc": "Layer multiple representations with custom coloring based on B-Factor, Hydrophobicity, or residue ranges.",
+    "access_title": "Accessible & Fast",
+    "access_desc": "UI themes, OpenDyslexic font support, and persistent history and favorites for a personalized workspace."
+  },
+  "workflow": {
+    "label": "WORKFLOW",
+    "title": "Three steps to insight",
+    "s1_title": "Search or Import",
+    "s1_desc": "Find structures from RCSB PDB, PubChem, or drag-and-drop local files. Browse 1000+ curated molecules.",
+    "s2_title": "Visualize & Analyze",
+    "s2_desc": "Apply cartoon, surface, ball-and-stick representations. Measure distances, compare structures side-by-side.",
+    "s3_title": "Collaborate & Export",
+    "s3_desc": "Share live sessions with colleagues. Export high-res images, record animations, generate PDF reports."
+  },
+  "faq": {
+    "label": "FAQ",
+    "title": "Common questions",
+    "desc": "Everything you need to know before you start.",
+    "q1": "Does it work offline?",
+    "a1": "Quercus Viewer runs entirely in your browser using WebGL — no server-side rendering. Once the page is loaded, you can open local .pdb, .cif, .sdf, and .mol files without any internet connection. Fetching structures from RCSB PDB or PubChem does require a connection.",
+    "q2": "What file formats are supported?",
+    "a2": "You can load PDB (.pdb), mmCIF (.cif), SDF (.sdf), and MOL (.mol) files by drag-and-drop or file picker. Remote sources include RCSB PDB (by accession code), PubChem (by compound ID or name), and direct URL. Export is available as PNG screenshots and PDF reports.",
+    "q3": "Is my data private? Are uploaded files sent to a server?",
+    "a3": "Local files you drag-and-drop are read entirely in your browser — they are never uploaded to any server. Only RCSB/PubChem lookups make outbound requests, and those go directly to the respective public APIs. Your session data is stored in your browser's memory only unless you explicitly save to your Quercus dashboard.",
+    "q4": "How many structures can I view at once?",
+    "a4": "Quercus Viewer supports up to four simultaneous side-by-side viewports for structure comparison and superposition. Viewport count can be switched at any time from the sidebar without reloading your structures.",
+    "q5": "Do I need to install anything?",
+    "a5": "No installation required — Quercus Viewer is a progressive web app that runs in any modern browser with WebGL support (Chrome, Firefox, Edge, Safari). There is no desktop app, no plugin, and no command-line setup.",
+    "q6": "Is the source code open source?",
+    "a6": "Yes. Quercus Viewer is released under the MIT License and the full source is available on GitHub. You are free to self-host, fork, or contribute. The NGL Viewer rendering engine it builds on is also open source (MIT)."
+  },
+  "newsletter": {
+    "title": "Stay Updated",
+    "desc": "Get notified about new features, updates, and releases.",
+    "placeholder": "your@email.com",
+    "button": "Subscribe",
+    "success": "You're on the list!",
+    "fine_print": "No spam. Unsubscribe anytime."
+  },
+  "footer": {
+    "license": "MIT License",
+    "engine": "3D Engine: NGL Viewer"
+  },
+  "cookie": {
+    "title": "Cookie preferences",
+    "desc": "We use analytics cookies to improve Quercus Viewer. You can opt out at any time.",
+    "privacy": "Privacy policy",
+    "accept": "Accept",
+    "decline": "Decline"
+  }
+}

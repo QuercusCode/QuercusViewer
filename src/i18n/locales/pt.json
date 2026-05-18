@@ -1,0 +1,82 @@
+{
+  "nav": {
+    "features": "Funcionalidades",
+    "workflow": "Fluxo de trabalho",
+    "faq": "FAQ",
+    "github": "GitHub",
+    "launch": "Abrir Visualizador"
+  },
+  "hero": {
+    "badge": "CÓDIGO ABERTO · NAVEGADOR · WebGL",
+    "subtitle": "Análise Profissional de Estruturas Moleculares 3D",
+    "description": "Visualize, analise e colabore em estruturas proteicas e químicas com renderização de qualidade para publicação — diretamente no seu navegador.",
+    "cta_launch": "Abrir Visualizador",
+    "cta_source": "Ver Código Fonte",
+    "stat_molecules": "Moléculas",
+    "stat_views": "Visualizações Simultâneas",
+    "stat_install": "Instalação Necessária"
+  },
+  "features": {
+    "label": "FUNCIONALIDADES",
+    "title": "Tudo que você precisa para análise estrutural",
+    "desc": "Um conjunto completo de ferramentas para visualização, análise e colaboração em estruturas proteicas e moleculares.",
+    "import_title": "Importação Universal",
+    "import_desc": "Carregue diretamente do RCSB PDB e PubChem, navegue por uma biblioteca curada, ou arraste e solte arquivos .pdb, .cif, .sdf, .mol.",
+    "multiview_title": "Análise Multi-Visualização",
+    "multiview_desc": "Compare até 4 estruturas lado a lado. Realize superposição de estruturas e analise mapas de contato 2D sincronizados.",
+    "collab_title": "Colaboração ao Vivo",
+    "collab_desc": "Inicie uma sessão ao vivo para sincronizar viewports 3D, movimentos de câmera e representações com colegas remotos.",
+    "studio_title": "Estúdio e Exportação",
+    "studio_desc": "Grave animações por quadros-chave, exporte imagens de alta resolução prontas para publicação e gere relatórios em PDF.",
+    "styling_title": "Estilização Avançada",
+    "styling_desc": "Sobreponha múltiplas representações com coloração personalizada baseada em Fator B, Hidrofobicidade ou intervalos de resíduos.",
+    "access_title": "Acessível e Rápido",
+    "access_desc": "Temas de interface, suporte à fonte OpenDyslexic e histórico persistente para um espaço de trabalho personalizado."
+  },
+  "workflow": {
+    "label": "FLUXO DE TRABALHO",
+    "title": "Três etapas para o insight",
+    "s1_title": "Pesquisar ou Importar",
+    "s1_desc": "Encontre estruturas no RCSB PDB, PubChem, ou arraste e solte arquivos locais. Navegue por mais de 1000 moléculas curadas.",
+    "s2_title": "Visualizar e Analisar",
+    "s2_desc": "Aplique representações em cartoon, superfície, bola-e-bastão. Meça distâncias, compare estruturas lado a lado.",
+    "s3_title": "Colaborar e Exportar",
+    "s3_desc": "Compartilhe sessões ao vivo com colegas. Exporte imagens de alta resolução, grave animações, gere relatórios em PDF."
+  },
+  "faq": {
+    "label": "FAQ",
+    "title": "Perguntas frequentes",
+    "desc": "Tudo que você precisa saber antes de começar.",
+    "q1": "Funciona offline?",
+    "a1": "O Quercus Viewer é executado inteiramente no seu navegador usando WebGL — sem renderização no servidor. Uma vez que a página esteja carregada, você pode abrir arquivos locais .pdb, .cif, .sdf e .mol sem conexão à internet. A busca de estruturas no RCSB PDB ou PubChem requer conexão.",
+    "q2": "Quais formatos de arquivo são suportados?",
+    "a2": "Você pode carregar arquivos PDB (.pdb), mmCIF (.cif), SDF (.sdf) e MOL (.mol) por arrastar e soltar ou pelo seletor de arquivos. As fontes remotas incluem RCSB PDB (por código de acesso), PubChem (por ID ou nome do composto) e URL direto. A exportação está disponível como capturas de tela PNG e relatórios PDF.",
+    "q3": "Meus dados são privados? Os arquivos enviados vão para um servidor?",
+    "a3": "Os arquivos que você arrasta e solta são lidos inteiramente no seu navegador — nunca são enviados para nenhum servidor. Apenas as consultas ao RCSB/PubChem fazem requisições externas, diretamente para as respectivas APIs públicas. Seus dados de sessão são armazenados apenas na memória do navegador.",
+    "q4": "Quantas estruturas posso visualizar ao mesmo tempo?",
+    "a4": "O Quercus Viewer suporta até quatro viewports lado a lado simultâneos para comparação e superposição de estruturas. O número de viewports pode ser alterado a qualquer momento na barra lateral sem recarregar suas estruturas.",
+    "q5": "Preciso instalar alguma coisa?",
+    "a5": "Nenhuma instalação necessária — o Quercus Viewer é um aplicativo web progressivo que roda em qualquer navegador moderno com suporte a WebGL (Chrome, Firefox, Edge, Safari). Não há aplicativo desktop, plugin ou configuração de linha de comando.",
+    "q6": "O código-fonte é open source?",
+    "a6": "Sim. O Quercus Viewer é lançado sob a Licença MIT e o código-fonte completo está disponível no GitHub. Você é livre para hospedar, fazer fork ou contribuir. O motor de renderização NGL Viewer também é open source (MIT)."
+  },
+  "newsletter": {
+    "title": "Fique Atualizado",
+    "desc": "Seja notificado sobre novas funcionalidades, atualizações e versões.",
+    "placeholder": "seu@email.com",
+    "button": "Inscrever-se",
+    "success": "Você está na lista!",
+    "fine_print": "Sem spam. Cancele a inscrição a qualquer momento."
+  },
+  "footer": {
+    "license": "Licença MIT",
+    "engine": "Motor 3D: NGL Viewer"
+  },
+  "cookie": {
+    "title": "Preferências de cookies",
+    "desc": "Usamos cookies analíticos para melhorar o Quercus Viewer. Você pode recusar a qualquer momento.",
+    "privacy": "Política de privacidade",
+    "accept": "Aceitar",
+    "decline": "Recusar"
+  }
+}

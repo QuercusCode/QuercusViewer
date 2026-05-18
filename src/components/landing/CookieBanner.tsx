@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { initGA } from '../../utils/analytics';
 
 const CONSENT_KEY = 'qv_cookie_consent';
@@ -14,12 +15,13 @@ export function getConsent(): ConsentState {
 }
 
 export function CookieBanner() {
+    const { t } = useTranslation();
     const [visible, setVisible] = useState(false);
 
     useEffect(() => {
         if (getConsent() === null) {
-            const t = setTimeout(() => setVisible(true), 1200);
-            return () => clearTimeout(t);
+            const timer = setTimeout(() => setVisible(true), 1200);
+            return () => clearTimeout(timer);
         }
     }, []);
 
@@ -56,11 +58,11 @@ export function CookieBanner() {
             `}</style>
             <div style={{ flex: '1 1 260px', minWidth: 0 }}>
                 <p style={{ margin: 0, fontSize: 13, lineHeight: 1.55, color: '#a3a3a3' }}>
-                    <span style={{ color: '#f5f5f5', fontWeight: 600 }}>Cookie preferences</span>
-                    {' '}— We use analytics cookies to improve Quercus Viewer. You can opt out at any time.{' '}
+                    <span style={{ color: '#f5f5f5', fontWeight: 600 }}>{t('cookie.title')}</span>
+                    {' — '}{t('cookie.desc')}{' '}
                     <a href="https://github.com/QuercusCode/QuercusViewer#privacy" target="_blank" rel="noopener"
                         style={{ color: '#4ade80', textDecoration: 'none', fontSize: 12 }}>
-                        Privacy policy ↗
+                        {t('cookie.privacy')} ↗
                     </a>
                 </p>
             </div>
@@ -73,7 +75,7 @@ export function CookieBanner() {
                 }}
                     onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = '#555'; (e.currentTarget as HTMLElement).style.color = '#999'; }}
                     onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = '#333'; (e.currentTarget as HTMLElement).style.color = '#666'; }}
-                >Decline</button>
+                >{t('cookie.decline')}</button>
                 <button onClick={accept} style={{
                     padding: '8px 18px', borderRadius: 8, border: 'none',
                     background: '#4ade80', color: '#050505', cursor: 'pointer',
@@ -82,7 +84,7 @@ export function CookieBanner() {
                 }}
                     onMouseEnter={e => { (e.currentTarget as HTMLElement).style.filter = 'brightness(1.1)'; }}
                     onMouseLeave={e => { (e.currentTarget as HTMLElement).style.filter = 'none'; }}
-                >Accept</button>
+                >{t('cookie.accept')}</button>
             </div>
         </div>
     );
