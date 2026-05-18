@@ -2,12 +2,7 @@ import { useAuth } from '../../lib/AuthContext';
 import { Search, Moon, Sun, EyeOff, Menu, ArrowLeft } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTheme } from '../../lib/ThemeContext';
-
-const pageTitles: Record<string, { title: string; subtitle: string }> = {
-    '/dashboard/structures': { title: 'My Structures', subtitle: 'Manage and visualize your uploaded PDB and CIF files.' },
-    '/dashboard/drafts': { title: 'Studio Drafts', subtitle: 'Your saved video timelines and molecular animations.' },
-    '/dashboard/settings': { title: 'Account Settings', subtitle: 'Manage your profile and security preferences.' },
-};
+import { useTranslation } from '../../lib/i18n';
 
 interface DashboardHeaderProps {
     onMenuClick?: () => void;
@@ -17,10 +12,17 @@ export const DashboardHeader = ({ onMenuClick }: DashboardHeaderProps) => {
     const { user } = useAuth();
     const { pathname } = useLocation();
     const { theme, toggleTheme } = useTheme();
+    const { t } = useTranslation();
     const returnUrl = sessionStorage.getItem('viewer_return_url') || '/viewer';
 
+    const pageTitles: Record<string, { title: string; subtitle: string }> = {
+        '/dashboard/structures': { title: t.myStructuresTitle as string, subtitle: t.myStructuresDesc as string },
+        '/dashboard/drafts': { title: t.studioDrafts as string, subtitle: t.studioDraftsSubtitle as string },
+        '/dashboard/settings': { title: t.accountSettings as string, subtitle: t.settingsDesc as string },
+    };
+
     const page = Object.entries(pageTitles).find(([key]) => pathname.startsWith(key));
-    const { title, subtitle } = page?.[1] ?? { title: 'Dashboard', subtitle: '' };
+    const { title, subtitle } = page?.[1] ?? { title: t.nav as string, subtitle: '' };
 
     return (
         <header className="h-16 bg-[var(--bg-header)] border-b border-[var(--border-main)] px-4 md:px-8 flex items-center justify-between shrink-0 sticky top-0 z-50 transition-colors duration-300">
@@ -46,7 +48,7 @@ export const DashboardHeader = ({ onMenuClick }: DashboardHeaderProps) => {
                     className="flex items-center gap-2 h-9 px-4 rounded-full text-sm font-medium border border-[var(--border-main)] bg-[var(--input-bg)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-blue-500/40 hover:bg-blue-500/5 transition-all"
                 >
                     <ArrowLeft className="w-3.5 h-3.5" />
-                    <span className="hidden sm:inline">Open Viewer</span>
+                    <span className="hidden sm:inline">{t.backToViewer as string}</span>
                 </Link>
 
                 {/* Search */}
@@ -57,7 +59,7 @@ export const DashboardHeader = ({ onMenuClick }: DashboardHeaderProps) => {
                     <input
                         type="text"
                         className="block w-48 pl-9 pr-3 py-1.5 bg-[var(--input-bg)] border border-[var(--border-main)] rounded-lg text-sm placeholder-[var(--text-muted)] text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                        placeholder="Search..."
+                        placeholder={t.searchPlaceholder as string}
                     />
                 </div>
 
