@@ -66,6 +66,9 @@ import { useStructureMetadata } from './hooks/useStructureMetadata';
 
 
 import { initGA, logPageView, logEvent } from './utils/analytics';
+import { getConsent } from './components/landing/CookieBanner';
+import { useSubscription, planCanUse } from './lib/useSubscription';
+import { UpgradeModal } from './components/UpgradeModal';
 import { useSessionRecorder } from './hooks/useSessionRecorder';
 import { RecorderControls } from './components/RecorderControls';
 import { StudioLayout } from './components/StudioLayout';
@@ -95,10 +98,12 @@ function App() {
     document.title = 'Quercus Viewer — 3D Molecular Structure Viewer';
   }, []);
 
-  // Initialize Analytics
+  // Initialize Analytics (only if user has given cookie consent)
   useEffect(() => {
-    initGA();
-    logPageView(window.location.pathname + window.location.search);
+    if (getConsent() === 'accepted') {
+      initGA();
+      logPageView(window.location.pathname + window.location.search);
+    }
   }, []);
 
   // Refs for Multi-View Viewers (supports 1-4 viewports)
@@ -374,6 +379,10 @@ function App() {
     type: 'snapshot' | 'record' | 'reset' | 'save' | 'load' | 'share';
     args?: any;
   } | null>(null);
+
+  // --- Subscription / Plan ---
+  const { plan } = useSubscription();
+  const [upgradeModalTarget, setUpgradeModalTarget] = useState<{ feature: string; requiredPlan: 'pro' | 'team' } | null>(null);
 
   // --- Studio Mode State ---
   const [isStudioMode, setIsStudioMode] = useState(false);
@@ -2993,6 +3002,10 @@ function App() {
                       <RecorderControls
                         {...recorder}
                         onEnterStudio={() => {
+                          if (!planCanUse(plan, 'studio')) {
+                            setUpgradeModalTarget({ feature: 'Studio Mode', requiredPlan: 'pro' });
+                            return;
+                          }
                           if (recorder.isRecording) {
                             recorder.stopRecording();
                           }
@@ -3086,7 +3099,13 @@ function App() {
 
                     // Multi-View Mode
                     viewMode={viewMode}
-                    onSetViewMode={setViewMode}
+                    onSetViewMode={(mode) => {
+                      if (mode !== 'single' && !planCanUse(plan, 'multi_view')) {
+                        setUpgradeModalTarget({ feature: 'Multi-View Analysis', requiredPlan: 'pro' });
+                        return;
+                      }
+                      setViewMode(mode);
+                    }}
 
 
                   />
@@ -3576,6 +3595,7 @@ function App() {
         }}
         isLightMode={isLightMode}
         peerSession={peerSession}
+        onLiveUpgradeRequired={!planCanUse(plan, 'collaboration') ? () => setUpgradeModalTarget({ feature: 'Live Collaboration', requiredPlan: 'team' }) : undefined}
       />
 
       <GalleryModal
@@ -3661,6 +3681,15 @@ function App() {
 
       <div className={`absolute inset-0 pointer-events-none transition-opacity duration-300 ${isLightMode ? 'opacity-0' : 'opacity-100 bg-[radial-gradient(circle_at_50%_50%,rgba(50,50,80,0.2),rgba(0,0,0,0))]'}`} />
       </div>
+
+      {upgradeModalTarget && (
+        <UpgradeModal
+          requiredPlan={upgradeModalTarget.requiredPlan}
+          featureName={upgradeModalTarget.feature}
+          onClose={() => setUpgradeModalTarget(null)}
+        />
+      )}
+
     </main >
   );
 }

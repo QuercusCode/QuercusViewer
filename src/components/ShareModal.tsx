@@ -17,9 +17,11 @@ interface ShareModalProps {
     // New Props for Lifting State
     selectedIndices: number[];
     onSelectionChange: (indices: number[]) => void;
+    /** Called when the user clicks the Live tab without a team plan */
+    onLiveUpgradeRequired?: () => void;
 }
 
-export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, isLightMode, warning, peerSession, viewports, onGenerateLink, selectedIndices, onSelectionChange }) => {
+export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, isLightMode, warning, peerSession, viewports, onGenerateLink, selectedIndices, onSelectionChange, onLiveUpgradeRequired }) => {
     const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string | null>(null);
     const [copied, setCopied] = useState(false);
     const [generationError, setGenerationError] = useState<string | null>(null);
@@ -313,13 +315,19 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, isLight
                                 Embed Widget
                             </button>
                             <button
-                                onClick={() => setActiveTab('live')}
+                                onClick={() => {
+                                    if (onLiveUpgradeRequired) {
+                                        onLiveUpgradeRequired();
+                                    } else {
+                                        setActiveTab('live');
+                                    }
+                                }}
                                 className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-all ${activeTab === 'live'
                                     ? (isLightMode ? 'bg-white shadow-sm text-neutral-900' : 'bg-neutral-700 shadow-sm text-white')
                                     : (isLightMode ? 'text-neutral-500 hover:text-neutral-900' : 'text-neutral-400 hover:text-white')
                                     }`}
                             >
-                                Live Session
+                                Live Session {onLiveUpgradeRequired ? '🔒' : ''}
                             </button>
                         </div>
 

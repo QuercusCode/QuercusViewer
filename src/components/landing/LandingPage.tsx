@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as NGL from 'ngl';
+import { logEvent } from '../../utils/analytics';
+import { CookieBanner } from './CookieBanner';
 
 // ─── Design tokens (scoped to landing page) ──────────────────────────────────
 
@@ -46,19 +48,25 @@ const MenuIcon = ({ size = 18, color = 'currentColor' }: { size?: number; color?
 
 // ─── Scroll-reveal hook ───────────────────────────────────────────────────────
 
-function useReveal(threshold = 0.15) {
+function useReveal(threshold = 0.15, sectionName?: string) {
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
     const obs = new IntersectionObserver(
-      (entries) => entries.forEach((e) => { if (e.isIntersecting) { setVisible(true); obs.unobserve(e.target); } }),
+      (entries) => entries.forEach((e) => {
+        if (e.isIntersecting) {
+          setVisible(true);
+          if (sectionName) logEvent('section_view', { section: sectionName });
+          obs.unobserve(e.target);
+        }
+      }),
       { threshold, rootMargin: '0px 0px -40px 0px' }
     );
     obs.observe(el);
     return () => obs.disconnect();
-  }, [threshold]);
+  }, [threshold, sectionName]);
   return [ref, visible] as const;
 }
 
@@ -191,6 +199,57 @@ function NGL3DBackground({ protein, opacity }: { protein: string; opacity: numbe
   );
 }
 
+// ─── Back to top ──────────────────────────────────────────────────────────────
+
+function BackToTop({ scrollRoot }: { scrollRoot: React.RefObject<HTMLDivElement | null> }) {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = scrollRoot.current;
+    if (!el) return;
+    const onScroll = () => setVisible(el.scrollTop > 400);
+    el.addEventListener('scroll', onScroll, { passive: true });
+    return () => el.removeEventListener('scroll', onScroll);
+  }, [scrollRoot]);
+
+  const scrollToTop = () => {
+    scrollRoot.current?.scrollTo({ top: 0, behavior: 'smooth' });
+    logEvent('back_to_top_click');
+  };
+
+  return (
+    <button
+      onClick={scrollToTop}
+      aria-label="Back to top"
+      style={{
+        position: 'fixed', bottom: 28, right: 28, zIndex: 300,
+        width: 44, height: 44, borderRadius: '50%',
+        background: 'rgba(10,10,10,0.9)', border: '1px solid #222',
+        backdropFilter: 'blur(12px)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        cursor: 'pointer', color: '#a3a3a3',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
+        opacity: visible ? 1 : 0,
+        transform: visible ? 'translateY(0) scale(1)' : 'translateY(12px) scale(0.85)',
+        pointerEvents: visible ? 'all' : 'none',
+        transition: 'opacity .3s ease, transform .3s ease, color .2s, border-color .2s',
+      }}
+      onMouseEnter={e => {
+        (e.currentTarget as HTMLElement).style.color = '#4ade80';
+        (e.currentTarget as HTMLElement).style.borderColor = 'rgba(74,222,128,0.3)';
+      }}
+      onMouseLeave={e => {
+        (e.currentTarget as HTMLElement).style.color = '#a3a3a3';
+        (e.currentTarget as HTMLElement).style.borderColor = '#222';
+      }}
+    >
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 19V5M5 12l7-7 7 7" />
+      </svg>
+    </button>
+  );
+}
+
 // ─── Nav ──────────────────────────────────────────────────────────────────────
 
 const NAV_LINKS = [
@@ -230,6 +289,7 @@ function Nav({ scrollRoot }: { scrollRoot: React.RefObject<HTMLDivElement | null
   }, [mobileOpen, scrollRoot]);
 
   const scrollTo = (id: string) => {
+    logEvent('nav_scroll_click', { section: id });
     setMobileOpen(false);
     setTimeout(() => {
       scrollRoot.current?.querySelector(`#${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -288,11 +348,12 @@ function Nav({ scrollRoot }: { scrollRoot: React.RefObject<HTMLDivElement | null
         {/* Desktop right */}
         <div className="qv-nav-right" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <a href="https://github.com/QuercusCode/QuercusViewer" target="_blank" rel="noopener"
+            onClick={() => logEvent('github_link_click', { location: 'nav' })}
             style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 500, color: L.t3, textDecoration: 'none', padding: '6px 12px', borderRadius: 8, transition: 'all .2s', fontFamily: L.fontBody }}
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = L.t1; (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.05)'; }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = L.t3; (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
           ><GitHubIcon size={15} /> GitHub</a>
-          <button onClick={() => navigate('/app')}
+          <button onClick={() => { logEvent('cta_click', { cta: 'nav_launch' }); navigate('/app'); }}
             style={{ fontFamily: L.fontDisplay, fontSize: 13, fontWeight: 600, padding: '8px 20px', borderRadius: 8, border: 'none', background: L.accent, color: '#050505', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, transition: 'all .2s', whiteSpace: 'nowrap' }}
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.filter = 'brightness(1.12)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)'; }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.filter = 'none'; (e.currentTarget as HTMLElement).style.transform = 'none'; }}
@@ -443,7 +504,7 @@ function HeroSection({ protein }: { protein: string }) {
           display: 'flex', gap: 12, alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap',
         }}>
           <button
-            onClick={() => navigate('/app')}
+            onClick={() => { logEvent('cta_click', { cta: 'hero_launch' }); navigate('/app'); }}
             style={{
               fontFamily: L.fontDisplay, fontSize: 15, fontWeight: 600,
               padding: '14px 32px', borderRadius: 10, border: 'none',
@@ -457,6 +518,7 @@ function HeroSection({ protein }: { protein: string }) {
           </button>
           <a
             href="https://github.com/QuercusCode/QuercusViewer" target="_blank" rel="noopener"
+            onClick={() => logEvent('github_link_click', { location: 'hero' })}
             style={{
               fontFamily: L.fontDisplay, fontSize: 14, fontWeight: 500,
               padding: '13px 24px', borderRadius: 10,
@@ -725,7 +787,7 @@ const COMPARISON_ROWS = [
 ];
 
 function ComparisonSection() {
-  const [ref, vis] = useReveal(0.1);
+  const [ref, vis] = useReveal(0.1, 'compare');
   return (
     <section id="compare" style={{ padding: '80px 24px', maxWidth: 900, margin: '0 auto' }}>
       <SectionHead
@@ -873,7 +935,7 @@ function PricingSection() {
 // ─── Tech Bar ─────────────────────────────────────────────────────────────────
 
 function TechBar() {
-  const [ref, vis] = useReveal();
+  const [ref, vis] = useReveal(0.15, 'tech_bar');
   const techs = ['React 18', 'TypeScript', 'NGL Viewer', 'Tailwind CSS', 'Vite', 'Supabase'];
   return (
     <section ref={ref} style={{
@@ -899,7 +961,7 @@ function TechBar() {
 // ─── Newsletter Section ───────────────────────────────────────────────────────
 
 function NewsletterSection() {
-  const [ref, vis] = useReveal();
+  const [ref, vis] = useReveal(0.15, 'newsletter');
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
   return (
@@ -931,10 +993,10 @@ function NewsletterSection() {
                 color: L.t1, fontFamily: L.fontBody, minWidth: 0, outline: 'none',
                 transition: 'border-color .2s',
               }}
-              onKeyDown={e => { if (e.key === 'Enter' && email.includes('@')) setSubmitted(true); }}
+              onKeyDown={e => { if (e.key === 'Enter' && email.includes('@')) { setSubmitted(true); logEvent('newsletter_subscribe'); } }}
             />
             <button
-              onClick={() => { if (email.includes('@')) setSubmitted(true); }}
+              onClick={() => { if (email.includes('@')) { setSubmitted(true); logEvent('newsletter_subscribe'); } }}
               style={{
                 fontFamily: L.fontDisplay, fontSize: 13, fontWeight: 600,
                 padding: '10px 20px', borderRadius: 8, border: 'none',
@@ -1048,6 +1110,8 @@ export function LandingPage() {
         <NewsletterSection />
         <FooterSection />
       </div>
+      <BackToTop scrollRoot={scrollRootRef} />
+      <CookieBanner />
     </>
   );
 }
