@@ -1,5 +1,4 @@
 import { useEffect } from 'react';
-import type { Plan } from '../lib/useSubscription';
 
 interface Props {
     requiredPlan: 'pro' | 'team';

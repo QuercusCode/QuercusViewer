@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useSubscription, planCanUse } from '../lib/useSubscription';
 import { UpgradeModal } from './UpgradeModal';
-import type { Plan } from '../lib/useSubscription';
 
 interface Props {
     feature: 'multi_view' | 'studio' | 'collaboration';
