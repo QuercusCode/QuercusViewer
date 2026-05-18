@@ -255,8 +255,6 @@ function BackToTop({ scrollRoot }: { scrollRoot: React.RefObject<HTMLDivElement 
 const NAV_LINKS = [
   { label: 'Features', id: 'features' },
   { label: 'Workflow', id: 'workflow' },
-  { label: 'Compare', id: 'compare' },
-  { label: 'Pricing', id: 'pricing' },
   { label: 'FAQ', id: 'faq' },
 ];
 
@@ -976,7 +974,7 @@ const FAQ_ITEMS = [
   },
   {
     q: 'How many structures can I view at once?',
-    a: 'Free accounts support a single viewport. Pro and Team plans unlock up to four side-by-side viewports for structure comparison and superposition. Viewport count can be switched at any time from the sidebar without reloading your structures.',
+    a: 'Quercus Viewer supports up to four simultaneous side-by-side viewports for structure comparison and superposition. Viewport count can be switched at any time from the sidebar without reloading your structures.',
   },
   {
     q: 'Do I need to install anything?',
@@ -1201,8 +1199,12 @@ export function LandingPage() {
         <FeaturesSection />
         <HowItWorksSection />
         <DemoShowcase />
-        <ComparisonSection />
-        <PricingSection />
+        {/* ComparisonSection and PricingSection hidden until monetization is ready —
+            re-add the lines below and restore NAV_LINKS entries to re-enable:
+            <ComparisonSection />
+            <PricingSection />
+        */}
+        {(false as boolean) && <><ComparisonSection /><PricingSection /></>}
         <TechBar />
         <FAQSection />
         <NewsletterSection />

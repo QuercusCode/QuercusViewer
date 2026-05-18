@@ -67,7 +67,7 @@ import { useStructureMetadata } from './hooks/useStructureMetadata';
 
 import { initGA, logPageView, logEvent } from './utils/analytics';
 import { getConsent } from './components/landing/CookieBanner';
-import { useSubscription, planCanUse } from './lib/useSubscription';
+import { useSubscription, planCanUse as _planCanUse } from './lib/useSubscription';
 import { UpgradeModal } from './components/UpgradeModal';
 import { useSessionRecorder } from './hooks/useSessionRecorder';
 import { RecorderControls } from './components/RecorderControls';
@@ -380,8 +380,9 @@ function App() {
     args?: any;
   } | null>(null);
 
-  // --- Subscription / Plan ---
+  // --- Subscription / Plan (gates disabled until monetization is live) ---
   const { plan } = useSubscription();
+  void plan; // re-enable gates below when monetization launches
   const [upgradeModalTarget, setUpgradeModalTarget] = useState<{ feature: string; requiredPlan: 'pro' | 'team' } | null>(null);
 
   // --- Studio Mode State ---
@@ -3002,10 +3003,11 @@ function App() {
                       <RecorderControls
                         {...recorder}
                         onEnterStudio={() => {
-                          if (!planCanUse(plan, 'studio')) {
-                            setUpgradeModalTarget({ feature: 'Studio Mode', requiredPlan: 'pro' });
-                            return;
-                          }
+                          // Gate disabled until monetization is live:
+                          // if (!planCanUse(plan, 'studio')) {
+                          //   setUpgradeModalTarget({ feature: 'Studio Mode', requiredPlan: 'pro' });
+                          //   return;
+                          // }
                           if (recorder.isRecording) {
                             recorder.stopRecording();
                           }
@@ -3100,10 +3102,11 @@ function App() {
                     // Multi-View Mode
                     viewMode={viewMode}
                     onSetViewMode={(mode) => {
-                      if (mode !== 'single' && !planCanUse(plan, 'multi_view')) {
-                        setUpgradeModalTarget({ feature: 'Multi-View Analysis', requiredPlan: 'pro' });
-                        return;
-                      }
+                      // Gate disabled until monetization is live:
+                      // if (mode !== 'single' && !planCanUse(plan, 'multi_view')) {
+                      //   setUpgradeModalTarget({ feature: 'Multi-View Analysis', requiredPlan: 'pro' });
+                      //   return;
+                      // }
                       setViewMode(mode);
                     }}
 
@@ -3595,7 +3598,8 @@ function App() {
         }}
         isLightMode={isLightMode}
         peerSession={peerSession}
-        onLiveUpgradeRequired={!planCanUse(plan, 'collaboration') ? () => setUpgradeModalTarget({ feature: 'Live Collaboration', requiredPlan: 'team' }) : undefined}
+        // onLiveUpgradeRequired disabled until monetization is live:
+        // onLiveUpgradeRequired={!planCanUse(plan, 'collaboration') ? () => setUpgradeModalTarget({ feature: 'Live Collaboration', requiredPlan: 'team' }) : undefined}
       />
 
       <GalleryModal
