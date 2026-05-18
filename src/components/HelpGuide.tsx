@@ -3,6 +3,7 @@ import {
     CircleHelp, X, MousePointer2, Keyboard, Sparkles,
     BookOpen, Layers, Activity, Share2, FileUp, ArrowLeft, Palette, Mail, Github, MessageSquare, ExternalLink, Linkedin, Heart, Users, Video, Shapes, LayoutDashboard, PenTool, Bot, FolderOpen, FlaskConical
 } from 'lucide-react';
+import { useTranslation } from '../lib/i18n';
 
 type FeatureSection = {
     id: string;
@@ -13,6 +14,7 @@ type FeatureSection = {
 };
 
 export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, hasSequence?: boolean, isMolStarActive?: boolean, isMolStarSidebarExpanded?: boolean, isAiChatOpen?: boolean }> = ({ isVisible = true, isLightMode = false, hasSequence = false, isMolStarActive = false, isMolStarSidebarExpanded = true, isAiChatOpen = false }) => {
+    const { t } = useTranslation();
     const [isOpen, setIsOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('start');
     const [showMobileList, setShowMobileList] = useState(true);
@@ -35,9 +37,9 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
     const features: FeatureSection[] = [
         {
             id: 'start',
-            title: 'Getting Started',
+            title: t.helpSectionGettingStarted as string,
             icon: BookOpen,
-            description: 'Load structures and navigate the 3D viewer.',
+            description: t.helpSectionGettingStartedDesc as string,
             content: (
                 <div className="space-y-5">
                     <div className="bg-neutral-800/50 p-4 rounded-xl border border-neutral-700/50">
@@ -113,9 +115,9 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
         },
         {
             id: 'dashboard',
-            title: 'Integrated Dashboard',
+            title: t.helpSectionDashboard as string,
             icon: LayoutDashboard,
-            description: 'Your personal research hub — structures, analytics, and settings.',
+            description: t.helpSectionDashboardDesc as string,
             content: (
                 <div className="space-y-4">
                     <div className="bg-gradient-to-br from-cyan-500/10 to-teal-500/10 border border-cyan-500/20 p-4 rounded-xl">
@@ -147,9 +149,9 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
         },
         {
             id: 'lab-notebook',
-            title: 'Lab Notebook',
+            title: t.helpSectionLabNotebook as string,
             icon: PenTool,
-            description: 'Rich-text notes, tables, charts, code cells, and PDF export.',
+            description: t.helpSectionLabNotebookDesc as string,
             content: (
                 <div className="space-y-4">
                     <div className="bg-gradient-to-br from-amber-500/10 to-orange-500/10 border border-amber-500/20 p-4 rounded-xl">
@@ -185,9 +187,9 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
         },
         {
             id: 'ai',
-            title: 'Quercus AI',
+            title: t.helpSectionAI as string,
             icon: Bot,
-            description: 'Context-aware AI assistant for structures and data analysis.',
+            description: t.helpSectionAIDesc as string,
             content: (
                 <div className="space-y-4">
                     <div className="bg-gradient-to-br from-indigo-500/10 to-violet-500/10 border border-indigo-500/20 p-4 rounded-xl">
@@ -219,9 +221,9 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
         },
         {
             id: 'layout',
-            title: 'Multi-View & Layout',
+            title: t.helpSectionLayout as string,
             icon: Layers,
-            description: 'Compare up to 4 structures simultaneously with independent viewports.',
+            description: t.helpSectionLayoutDesc as string,
             content: (
                 <div className="space-y-5">
                     <div className="bg-gradient-to-br from-indigo-500/10 to-blue-500/10 border border-indigo-500/20 p-4 rounded-xl">
@@ -256,9 +258,9 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
         },
         {
             id: 'live',
-            title: 'Live Collaboration',
+            title: t.helpSectionLive as string,
             icon: Users,
-            description: 'Real-time multi-user sessions with voice, chat, and reactions.',
+            description: t.helpSectionLiveDesc as string,
             content: (
                 <div className="space-y-4">
                     <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/20 p-4 rounded-xl">
@@ -292,9 +294,9 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
         },
         {
             id: 'data',
-            title: 'History & Favorites',
+            title: t.helpSectionData as string,
             icon: FolderOpen,
-            description: 'Favorites, recent history, and the curated structure library.',
+            description: t.helpSectionDataDesc as string,
             content: (
                 <div className="space-y-4">
                     <div className="bg-neutral-800/50 p-4 rounded-xl border border-neutral-700/50">
@@ -331,9 +333,9 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
         },
         {
             id: 'visuals',
-            title: 'Visualization',
+            title: t.helpSectionVisuals as string,
             icon: Sparkles,
-            description: 'Representations, rendering engines, quality, and clipping.',
+            description: t.helpSectionVisualsDesc as string,
             content: (
                 <div className="space-y-4">
                     <div className="bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-500/20 p-4 rounded-xl">
@@ -375,9 +377,9 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
         },
         {
             id: 'coloring',
-            title: 'Coloring',
+            title: t.helpSectionColoring as string,
             icon: Palette,
-            description: 'Color schemes, custom rules, per-chain colors, and transparency.',
+            description: t.helpSectionColoringDesc as string,
             content: (
                 <div className="space-y-4">
                     <div className="bg-neutral-800/50 p-4 rounded-xl border border-neutral-700/50">
@@ -423,9 +425,9 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
         },
         {
             id: 'advanced-styles',
-            title: 'Advanced Styles',
+            title: t.helpSectionAdvancedStyles as string,
             icon: Shapes,
-            description: 'Per-chain and per-residue representation mixing.',
+            description: t.helpSectionAdvancedStylesDesc as string,
             content: (
                 <div className="space-y-4">
                     <div className="bg-neutral-800/50 p-4 rounded-xl border border-neutral-700/50">
@@ -466,9 +468,9 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
         },
         {
             id: 'tools',
-            title: 'Analysis & Tools',
+            title: t.helpSectionTools as string,
             icon: FlaskConical,
-            description: 'Measurements, sequence track, superposition, contact maps, and motif search.',
+            description: t.helpSectionToolsDesc as string,
             content: (
                 <div className="space-y-4">
                     <div className="bg-neutral-800/50 p-4 rounded-xl border border-neutral-700/50">
@@ -499,9 +501,9 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
         },
         {
             id: 'settings',
-            title: 'Personalization',
+            title: t.helpSectionSettings as string,
             icon: Activity,
-            description: 'Theme, accessibility, clean mode, and rendering appearance.',
+            description: t.helpSectionSettingsDesc as string,
             content: (
                 <div className="space-y-4">
                     <div className="bg-neutral-800/50 p-4 rounded-xl border border-neutral-700/50">
@@ -532,9 +534,9 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
         },
         {
             id: 'export',
-            title: 'Export & Share',
+            title: t.helpSectionExport as string,
             icon: Share2,
-            description: 'Screenshots, gallery, share links, embeds, and Studio animations.',
+            description: t.helpSectionExportDesc as string,
             content: (
                 <div className="space-y-4">
                     <div className="bg-neutral-800/50 p-4 rounded-xl border border-neutral-700/50">
@@ -588,9 +590,9 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
         },
         {
             id: 'shortcuts',
-            title: 'Shortcuts',
+            title: t.helpSectionShortcuts as string,
             icon: Keyboard,
-            description: 'Complete keyboard reference.',
+            description: t.helpSectionShortcutsDesc as string,
             content: (
                 <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-xs">
                     <div className="col-span-2 pb-1 mb-1 border-b border-neutral-800 font-bold text-neutral-400 uppercase tracking-widest text-[10px]">General</div>
@@ -631,9 +633,9 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
         },
         {
             id: 'contact',
-            title: 'Contact & Feedback',
+            title: t.helpSectionContact as string,
             icon: MessageSquare,
-            description: 'Report bugs, request features, or say hi.',
+            description: t.helpSectionContactDesc as string,
             content: (
                 <div className="space-y-6">
                     <div className="bg-neutral-800/50 p-4 rounded-xl border border-neutral-700/50">
@@ -741,7 +743,7 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
                     className={`h-10 px-4 rounded-full border shadow-lg backdrop-blur-md transition-all group-hover:bg-neutral-800 group-hover:text-white flex items-center gap-2 ${isLightMode ? 'bg-white/80 text-pink-600 border-black/10' : 'bg-neutral-900/80 text-pink-500 border-white/10'}`}
                 >
                     <Heart className={`w-4 h-4 ${isLightMode ? 'fill-pink-100' : 'fill-pink-900/30'}`} />
-                    <span className="text-sm font-medium hidden sm:block">Donate</span>
+                    <span className="text-sm font-medium hidden sm:block">{t.helpDonate as string}</span>
                 </button>
 
                 <div className={`absolute right-0 w-48 py-2 bg-neutral-900/90 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform flex flex-col overflow-hidden ${isMolStarActive ? 'bottom-12 translate-y-[10px] group-hover:translate-y-0' : 'top-12 translate-y-[-10px] group-hover:translate-y-0'}`}>
@@ -797,7 +799,7 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
                                     <div>
                                         <h2 className="text-lg font-bold text-white flex items-center gap-2">
                                             <CircleHelp className="w-5 h-5 text-blue-500" />
-                                            User Manual
+                                            {t.helpUserManual as string}
                                         </h2>
                                         <p className="text-[10px] text-neutral-500 mt-1 uppercase tracking-wider font-semibold">Quercus Viewer v1.0</p>
                                     </div>
@@ -836,7 +838,7 @@ export const HelpGuide: React.FC<{ isVisible?: boolean, isLightMode?: boolean, h
                                         <X className="w-3 h-3" /> Close
                                     </button>
                                     <p className="text-[10px] text-neutral-600 hidden md:block">
-                                        Press <kbd className="font-mono bg-neutral-800 px-1 rounded text-neutral-400">Esc</kbd> to close
+                                        Press <kbd className="font-mono bg-neutral-800 px-1 rounded text-neutral-400">Esc</kbd> {t.helpEscToClose as string}
                                     </p>
                                 </div>
                             </div>
