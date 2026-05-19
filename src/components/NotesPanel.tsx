@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { X, Trash2, Check } from 'lucide-react';
+import { useTranslation } from '../lib/i18n';
 
 const STORAGE_KEY = 'quercus_viewer_notes';
 
@@ -9,6 +10,7 @@ interface NotesPanelProps {
 }
 
 export function NotesPanel({ isOpen, onClose }: NotesPanelProps) {
+    const { t } = useTranslation();
     const [notes, setNotes] = useState('');
     const [saved, setSaved] = useState(false);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -68,18 +70,18 @@ export function NotesPanel({ isOpen, onClose }: NotesPanelProps) {
 
                 {/* Header */}
                 <div className="flex items-center justify-between px-4 py-2.5 border-b border-neutral-800/60 shrink-0">
-                    <span className="text-[11px] font-semibold text-neutral-400 tracking-widest uppercase">Notes</span>
+                    <span className="text-[11px] font-semibold text-neutral-400 tracking-widest uppercase">{t.notesTitle as string}</span>
                     <div className="flex items-center gap-1.5">
                         {saved && (
                             <span className="flex items-center gap-1 text-[10px] text-emerald-500">
                                 <Check className="w-3 h-3" />
-                                Saved
+                                {t.notesSaved as string}
                             </span>
                         )}
                         {notes.trim() && !saved && (
                             <button
                                 onClick={handleClear}
-                                title="Clear"
+                                title={t.clearBtn as string}
                                 className="p-1 rounded-lg text-neutral-700 hover:text-red-400 transition-colors"
                             >
                                 <Trash2 className="w-3.5 h-3.5" />
@@ -99,7 +101,7 @@ export function NotesPanel({ isOpen, onClose }: NotesPanelProps) {
                     ref={textareaRef}
                     value={notes}
                     onChange={handleChange}
-                    placeholder="Start typing…"
+                    placeholder={t.notesStartTyping as string}
                     className="flex-1 bg-transparent text-sm text-neutral-200 placeholder-neutral-700 resize-none focus:outline-none px-4 py-3 leading-relaxed"
                     spellCheck
                 />
@@ -107,7 +109,7 @@ export function NotesPanel({ isOpen, onClose }: NotesPanelProps) {
                 {/* Footer */}
                 <div className="px-4 py-2 border-t border-neutral-800/40 shrink-0">
                     <p className="text-[10px] text-neutral-700">
-                        {wordCount} {wordCount === 1 ? 'word' : 'words'} · saved locally
+                        {(t.notesWordsSuffix as (n: number) => string)(wordCount)}
                     </p>
                 </div>
             </div>

@@ -5,6 +5,7 @@ import type { HistoryItem } from '../hooks/useHistory';
 
 import { type DataSource } from '../utils/pdbUtils';
 import { useTimezone, formatDate } from '../lib/timezoneUtils';
+import { useTranslation } from '../lib/i18n';
 
 interface FavoritesPanelProps {
     favorites: Favorite[];
@@ -31,6 +32,7 @@ export const FavoritesPanel: React.FC<FavoritesPanelProps> = ({
     initialTab = 'favorites',
     showTabs = true,
 }) => {
+    const { t } = useTranslation();
     const [activeTab, setActiveTab] = useState<'favorites' | 'history'>(initialTab);
     const timezone = useTimezone();
 
@@ -70,7 +72,7 @@ export const FavoritesPanel: React.FC<FavoritesPanelProps> = ({
                                     }`}
                             >
                                 <Star className={`w-5 h-5 ${activeTab === 'favorites' ? 'text-yellow-500 fill-yellow-500' : ''}`} />
-                                <h2 className="text-lg font-bold">Favorites</h2>
+                                <h2 className="text-lg font-bold">{t.favoritesTitle as string}</h2>
                                 <span className="text-xs opacity-60">({favorites.length})</span>
                             </button>
                             <button
@@ -81,7 +83,7 @@ export const FavoritesPanel: React.FC<FavoritesPanelProps> = ({
                                     }`}
                             >
                                 <History className={`w-5 h-5 ${activeTab === 'history' ? 'text-blue-500' : ''}`} />
-                                <h2 className="text-lg font-bold">History</h2>
+                                <h2 className="text-lg font-bold">{t.historyTitle as string}</h2>
                                 <span className="text-xs opacity-60">({history.length})</span>
                             </button>
                         </div>
@@ -90,13 +92,13 @@ export const FavoritesPanel: React.FC<FavoritesPanelProps> = ({
                             {activeTab === 'favorites' ? (
                                 <div className={`flex items-center gap-2 pb-1 border-b-2 border-transparent ${textColor}`}>
                                     <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
-                                    <h2 className="text-lg font-bold">Favorites</h2>
+                                    <h2 className="text-lg font-bold">{t.favoritesTitle as string}</h2>
                                     <span className="text-xs opacity-60">({favorites.length})</span>
                                 </div>
                             ) : (
                                 <div className={`flex items-center gap-2 pb-1 border-b-2 border-transparent ${textColor}`}>
                                     <History className="w-5 h-5 text-blue-500" />
-                                    <h2 className="text-lg font-bold">History</h2>
+                                    <h2 className="text-lg font-bold">{t.historyTitle as string}</h2>
                                     <span className="text-xs opacity-60">({history.length})</span>
                                 </div>
                             )}
@@ -117,7 +119,7 @@ export const FavoritesPanel: React.FC<FavoritesPanelProps> = ({
                             <div className="flex flex-col items-center justify-center h-full py-12">
                                 <Star className={`w-16 h-16 mb-4 opacity-20`} />
                                 <p className={`text-center ${subtleText}`}>
-                                    No favorites yet. Star structures to save them here!
+                                    {t.noFavorites as string}
                                 </p>
                             </div>
                         ) : (
@@ -149,7 +151,7 @@ export const FavoritesPanel: React.FC<FavoritesPanelProps> = ({
                                                 onRemove(fav.id, fav.dataSource);
                                             }}
                                             className={`p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-all ${isLightMode ? 'hover:bg-red-100 text-red-600' : 'hover:bg-red-950/50 text-red-400'}`}
-                                            title="Remove from favorites"
+                                            title={t.removeFromFavorites as string}
                                         >
                                             <Trash2 className="w-4 h-4" />
                                         </button>
@@ -162,7 +164,7 @@ export const FavoritesPanel: React.FC<FavoritesPanelProps> = ({
                             <div className="flex flex-col items-center justify-center h-full py-12">
                                 <Clock className={`w-16 h-16 mb-4 opacity-20`} />
                                 <p className={`text-center ${subtleText}`}>
-                                    No history yet. Structures you view will appear here.
+                                    {t.noHistory as string}
                                 </p>
                             </div>
                         ) : (

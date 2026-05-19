@@ -1,4 +1,5 @@
 import { Play, Calendar, Film, Plus, Clock } from 'lucide-react';
+import { useTranslation } from '../../lib/i18n';
 
 const mockDrafts = [
     { id: '1', title: 'Viral Entry Animation', duration: '0:45', date: 'Yesterday', frames: '540', color: 'from-blue-600 to-violet-600' },
@@ -6,13 +7,14 @@ const mockDrafts = [
 ];
 
 export const StudioDrafts = () => {
+    const { t } = useTranslation();
     return (
         <div className="max-w-6xl mx-auto space-y-6">
             {/* Page Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-xl font-semibold text-white tracking-tight">Studio Drafts</h1>
-                    <p className="text-sm text-neutral-500 mt-0.5">Your saved video timelines and animations.</p>
+                    <h1 className="text-xl font-semibold text-white tracking-tight">{t.studioDrafts as string}</h1>
+                    <p className="text-sm text-neutral-500 mt-0.5">{t.studioDraftsSubtitle as string}</p>
                 </div>
             </div>
 
@@ -38,7 +40,7 @@ export const StudioDrafts = () => {
                         {/* Info */}
                         <div className="p-4 flex flex-col flex-1">
                             <h3 className="font-semibold text-neutral-100 mb-1">{draft.title}</h3>
-                            <p className="text-xs text-neutral-500 mb-3">{draft.frames} frames</p>
+                            <p className="text-xs text-neutral-500 mb-3">{(t.studioFrames as (n: string | number) => string)(draft.frames)}</p>
                             <div className="flex items-center gap-1.5 text-xs text-neutral-600 mt-auto pt-3 border-t border-neutral-800">
                                 <Calendar className="w-3.5 h-3.5" />
                                 {draft.date}
@@ -56,11 +58,11 @@ export const StudioDrafts = () => {
                     <div className="w-12 h-12 rounded-full bg-neutral-800 group-hover:bg-blue-500/10 flex items-center justify-center mb-3 transition-colors">
                         <Film className="w-5 h-5" />
                     </div>
-                    <span className="text-sm font-medium">New Animation</span>
-                    <span className="text-xs mt-2 text-neutral-700 group-hover:text-neutral-500 transition-colors px-6 text-center">Open Studio Mode in the viewer to create a new draft</span>
+                    <span className="text-sm font-medium">{t.studioNewAnimation as string}</span>
+                    <span className="text-xs mt-2 text-neutral-700 group-hover:text-neutral-500 transition-colors px-6 text-center">{t.studioNewAnimationDesc as string}</span>
                     <div className="mt-4 flex items-center gap-1.5 text-xs text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity">
                         <Plus className="w-3.5 h-3.5" />
-                        Go to Viewer
+                        {t.studioGoToViewer as string}
                     </div>
                 </button>
             </div>

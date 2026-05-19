@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, Plus, Eye, EyeOff, Trash2, Upload, FileDown } from 'lucide-react';
 import jsPDF from 'jspdf';
 import type { SuperposedStructure } from '../types';
+import { useTranslation } from '../lib/i18n';
 
 interface SuperpositionModalProps {
     isOpen: boolean;
@@ -24,6 +25,7 @@ export const SuperpositionModal: React.FC<SuperpositionModalProps> = ({
     onOpenAlignment,
     getSnapshot
 }) => {
+    const { t } = useTranslation();
     const [pdbInput, setPdbInput] = useState('');
     const [colorInput, setColorInput] = useState('#FFA500'); // Default Orange
 
@@ -213,7 +215,7 @@ export const SuperpositionModal: React.FC<SuperpositionModalProps> = ({
             <div className="bg-neutral-900 border border-neutral-700/50 rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
                 {/* Header */}
                 <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-800">
-                    <h2 className="text-lg font-semibold text-white">Structure Superposition</h2>
+                    <h2 className="text-lg font-semibold text-white">{t.superpositionTitle as string}</h2>
                     <div className="flex gap-2">
                         <button
                             onClick={handleGeneratePDF}
@@ -221,14 +223,14 @@ export const SuperpositionModal: React.FC<SuperpositionModalProps> = ({
                             className="bg-violet-500/10 hover:bg-violet-500/20 text-violet-400 text-xs px-3 py-1.5 rounded-lg border border-violet-500/30 transition-colors flex items-center gap-1.5"
                         >
                             <FileDown size={14} />
-                            Report
+                            {t.superpositionReport as string}
                         </button>
                         <button
                             onClick={onOpenAlignment}
                             title="View Sequence Alignment"
                             className="bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 text-xs px-3 py-1.5 rounded-lg border border-cyan-500/30 transition-colors"
                         >
-                            Align Sequences
+                            {t.superpositionAlignSeq as string}
                         </button>
                         <button onClick={onClose} className="text-neutral-400 hover:text-white transition-colors">
                             <X size={20} />
@@ -241,7 +243,7 @@ export const SuperpositionModal: React.FC<SuperpositionModalProps> = ({
 
                     {/* Add New Section */}
                     <div className="space-y-4">
-                        <h3 className="text-xs font-bold text-neutral-500 uppercase tracking-wider">Add Overlay</h3>
+                        <h3 className="text-xs font-bold text-neutral-500 uppercase tracking-wider">{t.superpositionAddOverlay as string}</h3>
 
                         <div className="flex gap-2">
                             <div className="relative flex-1">

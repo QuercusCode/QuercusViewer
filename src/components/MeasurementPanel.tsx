@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Ruler, Trash2, Download, Edit2, Check, X, Palette } from 'lucide-react';
 import type { Measurement, MeasurementTextColor } from '../types';
+import { useTranslation } from '../lib/i18n';
 
 interface MeasurementPanelProps {
     measurements: Measurement[];
@@ -16,6 +17,7 @@ interface MeasurementPanelProps {
 }
 
 export const MeasurementPanel: React.FC<MeasurementPanelProps> = ({ measurements, onUpdate, onDelete, onClearAll, isOpen, onClose, textColorMode, onSetTextColor }) => {
+    const { t } = useTranslation();
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editName, setEditName] = useState("");
     const [activeColorPickerId, setActiveColorPickerId] = useState<string | null>(null);
@@ -68,7 +70,7 @@ export const MeasurementPanel: React.FC<MeasurementPanelProps> = ({ measurements
             <div className="flex items-center justify-between p-4 border-b border-neutral-800 bg-neutral-900/50 rounded-t-xl">
                 <div className="flex items-center gap-2 text-white">
                     <Ruler className="w-4 h-4 text-cyan-400" />
-                    <span className="font-bold text-sm">Measurements</span>
+                    <span className="font-bold text-sm">{t.sectionMeasurements as string}</span>
                     <span className="bg-neutral-800 text-xs px-2 py-0.5 rounded-full text-neutral-400">
                         {measurements.length}
                     </span>
@@ -94,7 +96,7 @@ export const MeasurementPanel: React.FC<MeasurementPanelProps> = ({ measurements
                                                 setShowTextColorPalette(false);
                                             }}
                                         >
-                                            Auto (Dynamic)
+                                            {t.measureAutoColor as string}
                                         </button>
                                     </div>
                                     <div className="grid grid-cols-5 gap-1.5">
@@ -122,7 +124,7 @@ export const MeasurementPanel: React.FC<MeasurementPanelProps> = ({ measurements
                         onClick={onClearAll}
                         disabled={measurements.length === 0}
                         className="p-1 hover:bg-white/10 rounded text-neutral-400 hover:text-red-400 disabled:opacity-30 disabled:cursor-not-allowed"
-                        title="Clear All Measurements"
+                        title={t.clearMeasurements as string}
                     >
                         <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -130,7 +132,7 @@ export const MeasurementPanel: React.FC<MeasurementPanelProps> = ({ measurements
                         onClick={handleExport}
                         disabled={measurements.length === 0}
                         className="p-1 hover:bg-white/10 rounded text-neutral-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
-                        title="Export CSV"
+                        title={t.exportCSV as string}
                     >
                         <Download className="w-3.5 h-3.5" />
                     </button>
@@ -143,9 +145,8 @@ export const MeasurementPanel: React.FC<MeasurementPanelProps> = ({ measurements
             {/* List */}
             <div className="flex-1 overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-neutral-700 scrollbar-track-transparent rounded-b-xl">
                 {measurements.length === 0 ? (
-                    <div className="text-center py-8 opacity-40 text-sm italic">
-                        No measurements yet.<br />
-                        Click two atoms to measure distance.
+                    <div className="text-center py-8 opacity-40 text-sm italic whitespace-pre-line">
+                        {t.measurementsEmpty as string}
                     </div>
                 ) : (
                     <div className="space-y-2">
