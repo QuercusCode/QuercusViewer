@@ -3,6 +3,7 @@ import { X, GitCommitVertical, AlertTriangle, FileText, BarChart2, Hash, Percent
 import type { ChainInfo, SuperposedStructure } from '../types';
 import clsx from 'clsx';
 import { jsPDF } from 'jspdf';
+import { useTranslation } from '../lib/i18n';
 
 interface SequenceAlignmentModalProps {
     isOpen: boolean;
@@ -183,6 +184,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
     primaryStructure,
     overlays
 }) => {
+    const { t } = useTranslation();
     const [selectedChain, setSelectedChain] = useState<string | null>(null);
     const [annotations, setAnnotations] = useState<Record<string, ResidueAnnotation[]>>({});
     const [showAnnotationPopup, setShowAnnotationPopup] = useState<{ chainKey: string, position: number } | null>(null);
@@ -1269,8 +1271,8 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                             <GitCommitVertical className="text-cyan-400" size={28} />
                         </div>
                         <div>
-                            <h2 className="text-xl font-bold text-white tracking-tight">Sequence Alignment</h2>
-                            <p className="text-sm text-neutral-400 font-medium">Pairwise Needleman-Wunsch • BLOSUM62 Heuristic • Gap Penalty: -5</p>
+                            <h2 className="text-xl font-bold text-white tracking-tight">{t.saTitle as string}</h2>
+                            <p className="text-sm text-neutral-400 font-medium">{t.saSubtitle as string}</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -1279,7 +1281,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                             className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-purple-500/20 text-purple-400 rounded-lg transition-colors border border-white/10 hover:border-purple-500/50 text-sm font-bold"
                         >
                             <FileDown size={16} />
-                            Export PDF
+                            {t.exportPdf as string}
                         </button>
                         <button onClick={onClose} className="text-neutral-500 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full">
                             <X size={24} />
@@ -1300,7 +1302,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                                     : "border-transparent text-neutral-500 hover:text-neutral-300 hover:bg-white/5"
                             )}
                         >
-                            Chain {chain}
+                            {t.chainLabel as string} {chain}
                         </button>
                     ))}
                 </div>
@@ -1319,33 +1321,33 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                                 {/* Stats Dashboard */}
                                 <div className="grid grid-cols-2 md:grid-cols-5 divide-x divide-white/10 border-b border-white/10 bg-white/5">
                                     <StatBox
-                                        label="Identity"
+                                        label={t.saIdentity as string}
                                         value={`${match.stats.identity.toFixed(1)}%`}
                                         icon={<Percent size={14} />}
                                         color={match.stats.identity > 30 ? 'text-green-400' : 'text-yellow-400'}
                                     />
                                     <StatBox
-                                        label="Similarity"
+                                        label={t.saSimilarity as string}
                                         value={`${match.stats.similarity.toFixed(1)}%`}
                                         icon={<Hash size={14} />}
                                         color="text-blue-400"
                                     />
                                     <StatBox
-                                        label="RMSD"
+                                        label={t.saRmsd as string}
                                         value={match.stats.rmsd ? `${match.stats.rmsd.toFixed(2)} Å` : "N/A"}
                                         icon={<Activity size={14} />}
                                         color="text-cyan-400"
                                         subtext={match.stats.rmsd ? "Cα Atoms" : "No Coordinates"}
                                     />
                                     <StatBox
-                                        label="Gaps"
+                                        label={t.saGaps as string}
                                         value={match.stats.gaps.toString()}
                                         subtext={`(${(match.stats.gaps / match.stats.length * 100).toFixed(1)}%)`}
                                         icon={<AlertTriangle size={14} />}
                                         color="text-orange-400"
                                     />
                                     <StatBox
-                                        label="Total Length"
+                                        label={t.saTotalLength as string}
                                         value={match.stats.length.toString()}
                                         icon={<BarChart2 size={14} />}
                                         color="text-neutral-300"
@@ -1429,7 +1431,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
 
                                             {/* Primary Sequence */}
                                             <SequenceRow
-                                                label="Primary"
+                                                label={t.saPrimary as string}
                                                 sequence={match.alignment.seq1}
                                                 onResidueClick={(pos) => handleResidueClick(chainKey, pos)}
                                             />
@@ -1448,7 +1450,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
 
                                             {/* Target Sequence */}
                                             <SequenceRow
-                                                label="Overlay"
+                                                label={t.saOverlay as string}
                                                 sequence={match.alignment.seq2}
                                                 onResidueClick={(pos) => handleResidueClick(chainKey, pos)}
                                             />
@@ -1462,8 +1464,8 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                     {alignmentResults.length === 0 && (
                         <div className="flex flex-col items-center justify-center h-64 text-neutral-500 border-2 border-dashed border-white/5 rounded-2xl mx-6">
                             <FileText size={48} className="mb-4 opacity-20" />
-                            <p className="text-lg font-medium">No alignment data available</p>
-                            <p className="text-sm opacity-60">Add structure overlays to see pairwise alignments</p>
+                            <p className="text-lg font-medium">{t.saNoAlignment as string}</p>
+                            <p className="text-sm opacity-60">{t.saAddOverlays as string}</p>
                         </div>
                     )}
                 </div>
@@ -1475,13 +1477,13 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                     <div className="bg-[#0D1117] border border-white/20 rounded-lg p-6 w-96 shadow-2xl">
                         <div className="flex items-center gap-2 mb-4">
                             <MessageSquare size={20} className="text-amber-400" />
-                            <h3 className="text-lg font-bold text-white">Residue Annotation</h3>
+                            <h3 className="text-lg font-bold text-white">{t.saResidueAnnotation as string}</h3>
                         </div>
-                        <p className="text-sm text-neutral-400 mb-4">Position: {showAnnotationPopup.position + 1}</p>
+                        <p className="text-sm text-neutral-400 mb-4">{(t.saPosition as (n: number) => string)(showAnnotationPopup.position + 1)}</p>
                         <textarea
                             value={annotationText}
                             onChange={(e) => setAnnotationText(e.target.value)}
-                            placeholder="Add your note here..."
+                            placeholder={t.saAddNote as string}
                             className="w-full h-24 bg-black/40 border border-white/10 rounded-lg p-3 text-sm text-white placeholder-neutral-500 focus:border-cyan-500 focus:outline-none resize-none"
                             autoFocus
                         />
@@ -1490,21 +1492,21 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                                 onClick={saveAnnotation}
                                 className="flex-1 px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg font-bold transition-colors"
                             >
-                                Save
+                                {t.saveBtn as string}
                             </button>
                             {annotations[showAnnotationPopup.chainKey]?.find(a => a.position === showAnnotationPopup.position) && (
                                 <button
                                     onClick={deleteAnnotation}
                                     className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg font-bold transition-colors border border-red-500/50"
                                 >
-                                    Delete
+                                    {t.deleteBtn as string}
                                 </button>
                             )}
                             <button
                                 onClick={() => setShowAnnotationPopup(null)}
                                 className="px-4 py-2 bg-white/5 hover:bg-white/10 text-neutral-400 rounded-lg font-bold transition-colors"
                             >
-                                Cancel
+                                {t.cancelBtn as string}
                             </button>
                         </div>
                     </div>
