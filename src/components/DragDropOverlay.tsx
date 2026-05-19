@@ -1,12 +1,14 @@
 
 import React from 'react';
 import { UploadCloud } from 'lucide-react';
+import { useTranslation } from '../lib/i18n';
 
 interface DragDropOverlayProps {
     isDragging: boolean;
 }
 
 export const DragDropOverlay: React.FC<DragDropOverlayProps> = ({ isDragging }) => {
+    const { t } = useTranslation();
     if (!isDragging) return null;
 
     return (
@@ -16,8 +18,8 @@ export const DragDropOverlay: React.FC<DragDropOverlayProps> = ({ isDragging }) 
                     <UploadCloud size={64} className="text-blue-400" />
                 </div>
                 <div className="text-center">
-                    <h2 className="text-3xl font-bold text-white mb-2">Drop to Load</h2>
-                    <p className="text-neutral-400 text-lg">Release your PDB or CIF file here</p>
+                    <h2 className="text-3xl font-bold text-white mb-2">{t.dropToLoad as string}</h2>
+                    <p className="text-neutral-400 text-lg">{t.dropToLoadDesc as string}</p>
                 </div>
             </div>
         </div>

@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import type { RecordedSession } from '../types';
 import { formatTime } from '../utils/timeUtils';
+import { useTranslation } from '../lib/i18n';
 
 interface RecorderControlsProps {
     isRecording: boolean;
@@ -36,6 +37,7 @@ export const RecorderControls = ({
     isLightMode, cardBg, onEnterStudio
 }: RecorderControlsProps) => {
 
+    const { t } = useTranslation();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isEditingTitle, setIsEditingTitle] = useState(false);
 
@@ -83,7 +85,7 @@ export const RecorderControls = ({
                             </button>
                         )
                     ) : (
-                        <span className={styles.text}>Session Recorder</span>
+                        <span className={styles.text}>{t.recorderTitle as string}</span>
                     )}
                 </div>
 
@@ -94,7 +96,7 @@ export const RecorderControls = ({
                             <button
                                 onClick={() => fileInputRef.current?.click()}
                                 className="p-1 hover:text-blue-500 transition-colors"
-                                title="Load Session"
+                                title={t.recorderLoadSession as string}
                             >
                                 <Upload className="w-3.5 h-3.5" />
                             </button>
@@ -110,14 +112,14 @@ export const RecorderControls = ({
                                     <button
                                         onClick={exportVideo}
                                         className="p-1 hover:text-purple-500 transition-colors"
-                                        title="Export Video (WebM)"
+                                        title={t.recorderExportVideo as string}
                                     >
                                         <Film className="w-3.5 h-3.5" />
                                     </button>
                                     <button
                                         onClick={exportSession}
                                         className="p-1 hover:text-green-500 transition-colors"
-                                        title="Save Session (JSON)"
+                                        title={t.recorderSaveSession as string}
                                     >
                                         <Save className="w-3.5 h-3.5" />
                                     </button>
@@ -165,7 +167,7 @@ export const RecorderControls = ({
                                 className={`w-full flex items-center justify-center gap-2 p-3 rounded-xl mb-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-lg shadow-blue-900/20 transition-all hover:scale-[1.02] active:scale-[0.98]`}
                             >
                                 <Film className="w-4 h-4" />
-                                <span className="text-xs font-bold uppercase tracking-wider">Launch Studio</span>
+                                <span className="text-xs font-bold uppercase tracking-wider">{t.recorderLaunchStudio as string}</span>
                             </button>
                         )}
                     </div>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Image as ImageIcon, Check, Camera } from 'lucide-react';
 import clsx from 'clsx';
+import { useTranslation } from '../lib/i18n';
 
 interface ScreenshotModalProps {
     isOpen: boolean;
@@ -10,16 +11,17 @@ interface ScreenshotModalProps {
 }
 
 export const ScreenshotModal: React.FC<ScreenshotModalProps> = ({ isOpen, onClose, onCapture, isLightMode }) => {
+    const { t } = useTranslation();
     const [resolution, setResolution] = useState<1 | 2 | 4 | 8>(4); // Default to High (4x)
     const [transparent, setTransparent] = useState(true);
 
     if (!isOpen) return null;
 
     const resolutions = [
-        { factor: 1, label: 'Standard (1x)', desc: 'Screen resolution' },
-        { factor: 2, label: 'High (2x)', desc: 'Good for presentations' },
-        { factor: 4, label: 'Ultra (4x)', desc: 'Print quality (300 DPI)' },
-        { factor: 8, label: 'Extreme (8x)', desc: 'Poster size' }
+        { factor: 1, label: t.screenshotStandardLabel as string, desc: t.screenshotStandardDesc as string },
+        { factor: 2, label: t.screenshotHighLabel as string, desc: t.screenshotHighDesc as string },
+        { factor: 4, label: t.screenshotUltraLabel as string, desc: t.screenshotUltraDesc as string },
+        { factor: 8, label: t.screenshotExtremeLabel as string, desc: t.screenshotExtremeDesc as string },
     ];
 
     return (
@@ -35,7 +37,7 @@ export const ScreenshotModal: React.FC<ScreenshotModalProps> = ({ isOpen, onClos
                 )}>
                     <div className="flex items-center gap-2">
                         <ImageIcon className={clsx("w-5 h-5", isLightMode ? "text-blue-600" : "text-blue-400")} />
-                        <h3 className={clsx("font-bold", isLightMode ? "text-neutral-900" : "text-white")}>Export Image</h3>
+                        <h3 className={clsx("font-bold", isLightMode ? "text-neutral-900" : "text-white")}>{t.screenshotTitle as string}</h3>
                     </div>
                     <button onClick={onClose} className={clsx("p-1.5 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors", isLightMode ? "text-neutral-500" : "text-neutral-400")}>
                         <X className="w-5 h-5" />
@@ -47,7 +49,7 @@ export const ScreenshotModal: React.FC<ScreenshotModalProps> = ({ isOpen, onClos
                     {/* Resolution Selector */}
                     <div className="space-y-3">
                         <label className={clsx("text-xs font-bold uppercase tracking-wider", isLightMode ? "text-neutral-500" : "text-neutral-400")}>
-                            Resolution / Quality
+                            {t.screenshotResolution as string}
                         </label>
                         <div className="grid grid-cols-1 gap-2">
                             {resolutions.map((res) => (
@@ -78,7 +80,7 @@ export const ScreenshotModal: React.FC<ScreenshotModalProps> = ({ isOpen, onClos
                     {/* Transparency Toggle */}
                     <div className="space-y-3">
                         <label className={clsx("text-xs font-bold uppercase tracking-wider", isLightMode ? "text-neutral-500" : "text-neutral-400")}>
-                            Background
+                            {t.snapBackground as string}
                         </label>
                         <button
                             onClick={() => setTransparent(!transparent)}
@@ -90,8 +92,8 @@ export const ScreenshotModal: React.FC<ScreenshotModalProps> = ({ isOpen, onClos
                             )}
                         >
                             <div className="text-left">
-                                <div className={clsx("font-bold text-sm", isLightMode ? "text-neutral-900" : "text-white")}>Transparent Background</div>
-                                <div className={clsx("text-xs", isLightMode ? "text-neutral-500" : "text-neutral-400")}>Removes background color for easy compositing</div>
+                                <div className={clsx("font-bold text-sm", isLightMode ? "text-neutral-900" : "text-white")}>{t.embedTransparentBg as string}</div>
+                                <div className={clsx("text-xs", isLightMode ? "text-neutral-500" : "text-neutral-400")}>{t.screenshotTransparentDesc as string}</div>
                             </div>
                             <div className={clsx(
                                 "w-10 h-6 rounded-full p-1 transition-colors",
@@ -118,7 +120,7 @@ export const ScreenshotModal: React.FC<ScreenshotModalProps> = ({ isOpen, onClos
                             isLightMode ? "text-neutral-600 hover:bg-neutral-200" : "text-neutral-400 hover:bg-white/10"
                         )}
                     >
-                        Cancel
+                        {t.cancelBtn as string}
                     </button>
                     <button
                         onClick={() => {
@@ -128,7 +130,7 @@ export const ScreenshotModal: React.FC<ScreenshotModalProps> = ({ isOpen, onClos
                         className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-bold text-sm shadow-lg shadow-blue-500/20 active:scale-95 transition-all flex items-center gap-2"
                     >
                         <Camera className="w-4 h-4" />
-                        Save to Gallery
+                        {t.screenshotSaveToGallery as string}
                     </button>
                 </div>
             </div>
