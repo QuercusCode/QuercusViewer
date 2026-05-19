@@ -3,6 +3,7 @@ import { Node, mergeAttributes } from '@tiptap/core';
 import { ReactNodeViewRenderer, NodeViewWrapper } from '@tiptap/react';
 import type { NodeViewProps } from '@tiptap/react';
 import { Beaker, Edit2, Trash2, X, Plus } from 'lucide-react';
+import { useTranslation } from '../../lib/i18n';
 
 // --- Tiptap Extension ---
 
@@ -108,6 +109,7 @@ let scriptLoadingStarted = false;
 
 
 const ChemicalSketcherComponent = ({ node, updateAttributes, deleteNode }: NodeViewProps) => {
+  const { t } = useTranslation();
   const { molfile, svg, width, height } = node.attrs;
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [jsmeReady, setJsmeReady] = useState(false);
@@ -301,7 +303,7 @@ const ChemicalSketcherComponent = ({ node, updateAttributes, deleteNode }: NodeV
             </div>
             <div className="flex flex-col">
               <span className="text-[11px] font-bold text-[var(--text-primary)] leading-tight">2D Molecular Structure</span>
-              {!molfile && <span className="text-[9px] text-[var(--text-muted)] uppercase tracking-tight">Empty Sketch</span>}
+              {!molfile && <span className="text-[9px] text-[var(--text-muted)] uppercase tracking-tight">{t.csEmptySketch}</span>}
             </div>
           </div>
           
@@ -309,14 +311,14 @@ const ChemicalSketcherComponent = ({ node, updateAttributes, deleteNode }: NodeV
             <button 
               onClick={() => setIsModalOpen(true)}
               className="p-1.5 hover:bg-indigo-500/10 text-[var(--text-muted)] hover:text-indigo-400 rounded-lg transition-all cursor-pointer"
-              title="Edit Structure"
+              title={t.csEditStructure as string}
             >
               <Edit2 className="w-3 h-3" />
             </button>
             <button 
               onClick={() => deleteNode()}
               className="p-1.5 hover:bg-red-500/10 text-[var(--text-muted)] hover:text-red-400 rounded-lg transition-all cursor-pointer"
-              title="Delete Structure"
+              title={t.csDeleteStructure as string}
             >
               <Trash2 className="w-3 h-3" />
             </button>
@@ -344,7 +346,7 @@ const ChemicalSketcherComponent = ({ node, updateAttributes, deleteNode }: NodeV
           ) : (
             <div className="flex flex-col items-center gap-2 text-indigo-400/40 group-hover/canvas:text-indigo-400/60 transition-colors">
               <Plus className="w-10 h-10 stroke-[1.5]" />
-              <span className="text-[10px] font-bold uppercase tracking-[0.2em]">Start Sketching</span>
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em]">{t.csStartSketching}</span>
             </div>
           )}
 
@@ -388,8 +390,8 @@ const ChemicalSketcherComponent = ({ node, updateAttributes, deleteNode }: NodeV
                   <Beaker className="w-6 h-6" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-[var(--text-primary)]">Molecular Sketcher</h2>
-                  <p className="text-xs text-[var(--text-muted)] font-medium">Draw your 2D structure below</p>
+                  <h2 className="text-xl font-bold text-[var(--text-primary)]">{t.csMolecularSketcher}</h2>
+                  <p className="text-xs text-[var(--text-muted)] font-medium">{t.csDrawStructure}</p>
                 </div>
               </div>
               <button 
@@ -409,7 +411,7 @@ const ChemicalSketcherComponent = ({ node, updateAttributes, deleteNode }: NodeV
                       <div className="p-3 bg-red-500/10 text-red-400 rounded-full mb-4">
                         <X className="w-6 h-6" />
                       </div>
-                      <p className="text-sm font-bold text-[var(--text-primary)] mb-2">Initialization Failed</p>
+                      <p className="text-sm font-bold text-[var(--text-primary)] mb-2">{t.csInitFailed}</p>
                       <p className="text-xs text-[var(--text-muted)] mb-2 text-center max-w-[240px] leading-relaxed">
                         {initError}
                       </p>
@@ -426,7 +428,7 @@ const ChemicalSketcherComponent = ({ node, updateAttributes, deleteNode }: NodeV
                   ) : (
                     <>
                       <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4" />
-                      <p className="text-sm font-medium">Initializing JSME Sketcher...</p>
+                      <p className="text-sm font-medium">{t.csInitializing}</p>
                     </>
                   )}
                 </div>

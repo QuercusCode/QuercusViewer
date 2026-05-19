@@ -3,6 +3,7 @@ import { ReactNodeViewRenderer, NodeViewWrapper } from '@tiptap/react';
 import type { NodeViewProps } from '@tiptap/react';
 import { useState, useRef, useEffect } from 'react';
 import { BookOpen, ExternalLink, Trash2, Loader2, RotateCcw, Search } from 'lucide-react';
+import { useTranslation } from '../../lib/i18n';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -97,6 +98,7 @@ async function fetchByDOI(doi: string): Promise<CitationData> {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 const CitationBlockComponent = ({ node, updateAttributes, deleteNode }: NodeViewProps) => {
+    const { t } = useTranslation();
     const citation: CitationData | null = node.attrs.citation;
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
@@ -184,14 +186,14 @@ const CitationBlockComponent = ({ node, updateAttributes, deleteNode }: NodeView
                         <button
                             onClick={reset}
                             className="p-1.5 rounded-lg hover:bg-[var(--input-bg)] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
-                            title="Edit citation"
+                            title={t.cbEditCitation as string}
                         >
                             <RotateCcw className="w-3.5 h-3.5" />
                         </button>
                         <button
                             onClick={() => deleteNode()}
                             className="p-1.5 rounded-lg hover:bg-red-500/10 text-[var(--text-muted)] hover:text-red-400 transition-colors"
-                            title="Remove citation"
+                            title={t.cbRemoveCitation as string}
                         >
                             <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -207,7 +209,7 @@ const CitationBlockComponent = ({ node, updateAttributes, deleteNode }: NodeView
             <div className="flex flex-col gap-2 p-4 bg-[var(--bg-sidebar)] border border-[var(--border-main)] border-dashed rounded-xl">
                 <div className="flex items-center gap-2 mb-1">
                     <BookOpen className="w-4 h-4 text-blue-400 shrink-0" />
-                    <span className="text-sm font-semibold text-[var(--text-secondary)]">Insert Citation</span>
+                    <span className="text-sm font-semibold text-[var(--text-secondary)]">{t.cbInsertCitation}</span>
                 </div>
                 <p className="text-[11px] text-[var(--text-muted)] leading-relaxed">
                     Enter a <strong className="text-[var(--text-secondary)]">PubMed ID</strong> (e.g. <code className="bg-[var(--input-bg)] px-1 rounded">38261013</code>) or a{' '}
@@ -237,7 +239,7 @@ const CitationBlockComponent = ({ node, updateAttributes, deleteNode }: NodeView
                     <button
                         onClick={() => deleteNode()}
                         className="h-9 px-2.5 text-[var(--text-muted)] hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-                        title="Remove"
+                        title={t.cbRemoveBtn as string}
                     >
                         <Trash2 className="w-3.5 h-3.5" />
                     </button>

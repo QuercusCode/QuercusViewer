@@ -3,6 +3,7 @@ import { ReactNodeViewRenderer, NodeViewWrapper } from '@tiptap/react';
 import type { NodeViewProps } from '@tiptap/react';
 import { Play, Terminal, Trash2, Loader2, AlertCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useTranslation } from '../../lib/i18n';
 
 /**
  * Tiptap Extension for Jupyter-style Code Cells
@@ -118,7 +119,7 @@ async function getPyodide() {
 
 // --- Component ---
 const CodeCellComponent = ({ node, updateAttributes, deleteNode }: NodeViewProps) => {
-
+  const { t } = useTranslation();
   const { code, output } = node.attrs;
   const [localCode, setLocalCode] = useState(code);
   const [localOutput, setLocalOutput] = useState(output);
@@ -134,7 +135,7 @@ const CodeCellComponent = ({ node, updateAttributes, deleteNode }: NodeViewProps
     if (isRunning) return;
     setIsRunning(true);
     setError(null);
-    setLocalOutput("Running...");
+    setLocalOutput(t.ccRunning as string);
 
     try {
       const py = await getPyodide();
@@ -153,7 +154,7 @@ sys.stderr = io.StringIO()
         const stdout = py.runPython("sys.stdout.getvalue()");
         const stderr = py.runPython("sys.stderr.getvalue()");
         
-        const finalOutput = (stdout + stderr).trim() || "Execution finished (no output).";
+        const finalOutput = (stdout + stderr).trim() || (t.ccExecFinished as string);
         setLocalOutput(finalOutput);
         updateAttributes({ code: localCode, output: finalOutput, lastRun: new Date().toISOString() });
       } catch (e: any) {
@@ -162,8 +163,8 @@ sys.stderr = io.StringIO()
         updateAttributes({ code: localCode, output: e.message });
       }
     } catch (err: any) {
-      setError("Failed to load Python environment.");
-      setLocalOutput("Error loading Pyodide.");
+      setError(t.ccFailedLoad as string);
+      setLocalOutput(t.ccErrorLoad as string);
     } finally {
       setIsRunning(false);
     }
@@ -180,7 +181,7 @@ sys.stderr = io.StringIO()
               <Terminal className="w-3.5 h-3.5" />
             </div>
             <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest flex items-center gap-2">
-              Python Kernel
+              {t.ccPythonKernel}
               {isLoaded && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>}
             </span>
           </div>
@@ -196,7 +197,7 @@ sys.stderr = io.StringIO()
               }`}
             >
               {isRunning ? <Loader2 className="w-3 h-3 animate-spin" /> : <Play className="w-3 h-3 fill-current" />}
-              {isRunning ? 'Running...' : 'Run Cell'}
+              {isRunning ? t.ccRunning : t.ccRunCell}
             </button>
             <button onClick={deleteNode} className="p-1.5 hover:bg-red-500/10 text-neutral-500 hover:text-red-400 rounded-lg transition-all">
               <Trash2 className="w-3 h-3" />
@@ -220,7 +221,7 @@ sys.stderr = io.StringIO()
           <div className="border-t border-[#30363d] bg-black/30 p-4">
             <div className="flex items-center gap-2 mb-2">
               <div className={`text-[9px] font-black uppercase tracking-tighter px-1.5 py-0.5 rounded ${error ? 'bg-red-500/20 text-red-400' : 'bg-blue-500/20 text-blue-400'}`}>
-                Output
+                {t.ccOutput}
               </div>
             </div>
             <pre className={`text-[13px] font-mono whitespace-pre-wrap leading-relaxed ${error ? 'text-red-400/90' : 'text-neutral-400'}`}>
@@ -233,7 +234,7 @@ sys.stderr = io.StringIO()
         {!isLoaded && !isRunning && (
           <div className="px-4 py-2 bg-amber-500/5 flex items-center gap-2 border-t border-amber-500/10">
             <AlertCircle className="w-3 h-3 text-amber-500/50" />
-            <span className="text-[10px] text-amber-500/70">Kernel not initialized. Click "Run" to load Python.</span>
+            <span className="text-[10px] text-amber-500/70">{t.ccKernelNotInit}</span>
           </div>
         )}
       </div>

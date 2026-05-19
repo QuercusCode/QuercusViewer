@@ -4,6 +4,7 @@ import { Trash2, FileText, FileSpreadsheet } from 'lucide-react';
 import type { Measurement } from '../types';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { useTranslation } from '../lib/i18n';
 
 interface MeasurementTableProps {
     measurements: Measurement[];
@@ -16,6 +17,7 @@ export const MeasurementTable: React.FC<MeasurementTableProps> = ({
     onDelete,
     isLightMode
 }) => {
+    const { t } = useTranslation();
 
     // --- Export Handlers ---
 
@@ -24,7 +26,7 @@ export const MeasurementTable: React.FC<MeasurementTableProps> = ({
 
         // Header
         doc.setFontSize(18);
-        doc.text("Structure Measurements Report", 14, 22);
+        doc.text(t.mtReport as string, 14, 22);
 
         doc.setFontSize(11);
         doc.setTextColor(100);
@@ -50,7 +52,7 @@ export const MeasurementTable: React.FC<MeasurementTableProps> = ({
     };
 
     const handleExportCSV = () => {
-        const headers = ["Index", "Distance (A)", "Atom 1", "Atom 2"];
+        const headers = [t.mtIndex as string, t.mtDistance as string, t.mtAtom1 as string, t.mtAtom2 as string];
         const rows = measurements.map((m, i) => [
             i + 1,
             m.distance.toFixed(2),
@@ -106,9 +108,9 @@ export const MeasurementTable: React.FC<MeasurementTableProps> = ({
                 <table className="w-full text-xs">
                     <thead className={`${isLightMode ? 'bg-neutral-100 text-neutral-500' : 'bg-white/5 text-neutral-400'}`}>
                         <tr>
-                            <th className="px-2 py-1.5 text-left font-medium">Dist.</th>
-                            <th className="px-2 py-1.5 text-left font-medium">From</th>
-                            <th className="px-2 py-1.5 text-left font-medium">To</th>
+                            <th className="px-2 py-1.5 text-left font-medium">{t.mtDist}</th>
+                            <th className="px-2 py-1.5 text-left font-medium">{t.mtFrom}</th>
+                            <th className="px-2 py-1.5 text-left font-medium">{t.mtTo}</th>
                             <th className="w-6"></th>
                         </tr>
                     </thead>
@@ -134,7 +136,7 @@ export const MeasurementTable: React.FC<MeasurementTableProps> = ({
                                     <button
                                         onClick={() => onDelete(m.id)}
                                         className="p-1 text-neutral-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all rounded"
-                                        title="Delete Measurement"
+                                        title={t.mtDeleteMeasurement as string}
                                     >
                                         <Trash2 className="w-3 h-3" />
                                     </button>

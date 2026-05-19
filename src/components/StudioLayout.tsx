@@ -8,6 +8,7 @@ import { VideoTimeline } from './VideoTimeline';
 import type { useSessionRecorder } from '../hooks/useSessionRecorder';
 import { formatTime, parseTimeString } from '../utils/timeUtils';
 import { getSoundManager, type SoundEffectType } from '../utils/soundEffects';
+import { useTranslation } from '../lib/i18n';
 
 interface StudioLayoutProps {
     recorder: ReturnType<typeof useSessionRecorder>;
@@ -46,6 +47,7 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
         canRedo
     } = recorder;
 
+    const { t } = useTranslation();
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -134,7 +136,7 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                     <button
                         onClick={onExit}
                         className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/70 hover:text-white"
-                        title="Exit Studio"
+                        title={t.studioExitStudio as string}
                     >
                         <ArrowLeft className="w-5 h-5" />
                     </button>
@@ -148,7 +150,7 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                             onClick={undo}
                             disabled={!canUndo}
                             className={`p-2 rounded-full transition-colors ${canUndo ? 'hover:bg-white/10 text-white' : 'text-white/30 cursor-not-allowed'}`}
-                            title="Undo (Ctrl+Z)"
+                            title={t.studioUndoShortcut as string}
                         >
                             <Undo className="w-4 h-4" />
                         </button>
@@ -156,7 +158,7 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                             onClick={redo}
                             disabled={!canRedo}
                             className={`p-2 rounded-full transition-colors ${canRedo ? 'hover:bg-white/10 text-white' : 'text-white/30 cursor-not-allowed'}`}
-                            title="Redo (Ctrl+Shift+Z)"
+                            title={t.studioRedoShortcut as string}
                         >
                             <Redo className="w-4 h-4" />
                         </button>
@@ -205,18 +207,18 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                     <button
                         onClick={exportVideo}
                         className="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 rounded text-xs font-medium text-white transition-colors flex items-center gap-2 shadow-lg shadow-purple-900/20"
-                        title="Export Video"
+                        title={t.studioExportVideo as string}
                     >
                         <Film className="w-3.5 h-3.5" />
-                        <span>Export Video</span>
+                        <span>{t.studioExportVideo}</span>
                     </button>
                     <button
                         onClick={exportSession}
                         className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 rounded text-xs font-medium text-white transition-colors flex items-center gap-2 shadow-lg shadow-blue-900/20"
-                        title="Save Project"
+                        title={t.studioSaveProject as string}
                     >
                         <Download className="w-3.5 h-3.5" />
-                        <span>Save Project</span>
+                        <span>{t.studioSaveProject}</span>
                     </button>
                 </div>
 
@@ -225,7 +227,7 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                     <button
                         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                         className={`p-2 rounded-lg transition-colors flex items-center justify-center ${isMobileMenuOpen ? 'bg-neutral-700 text-white' : 'bg-neutral-800 hover:bg-neutral-700 text-white/90'}`}
-                        title="Actions"
+                        title={t.studioActionsBtn as string}
                     >
                         <Menu className="w-5 h-5" />
                     </button>
@@ -244,14 +246,14 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                     onClick={() => { setIsMobileMenuOpen(false); exportVideo(); }}
                                     className="px-4 py-3 text-sm text-left hover:bg-white/10 text-white transition-colors w-full flex items-center justify-between border-b border-white/5"
                                 >
-                                    <span>Export Video</span>
+                                    <span>{t.studioExportVideo}</span>
                                     <Film className="w-4 h-4 text-purple-400" />
                                 </button>
                                 <button
                                     onClick={() => { setIsMobileMenuOpen(false); exportSession(); }}
                                     className="px-4 py-3 text-sm text-left hover:bg-white/10 text-white transition-colors w-full flex items-center justify-between"
                                 >
-                                    <span>Save Project</span>
+                                    <span>{t.studioSaveProject}</span>
                                     <Download className="w-4 h-4 text-blue-400" />
                                 </button>
                             </div>
@@ -266,31 +268,31 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                 <div className="absolute bottom-0 inset-x-0 h-16 flex-row overflow-x-auto overflow-y-hidden md:relative md:inset-auto md:w-16 md:h-auto md:flex-col bg-neutral-900/95 backdrop-blur border-t md:border-t-0 md:border-r border-white/10 flex items-center py-2 md:py-4 px-4 md:px-0 gap-4 pointer-events-auto z-50">
                     <ToolButton
                         icon={<Scissors className="w-5 h-5" />}
-                        label="Edit Recording"
+                        label={t.studioEditRecording as string}
                         active={activeTool === 'edit'}
                         onClick={() => setActiveTool(activeTool === 'edit' ? 'default' : 'edit')}
                     />
                     <ToolButton
                         icon={<Settings className="w-5 h-5" />}
-                        label="Settings"
+                        label={t.studioStudioSettings as string}
                         active={activeTool === 'settings'}
                         onClick={() => setActiveTool(activeTool === 'settings' ? 'default' : 'settings')}
                     />
                     <ToolButton
                         icon={<Layers className="w-5 h-5" />}
-                        label="Tracks"
+                        label={t.studioTracksLabel as string}
                         active={activeTool === 'tracks'}
                         onClick={() => setActiveTool(activeTool === 'tracks' ? 'default' : 'tracks')}
                     />
                     <ToolButton
                         icon={<Music className="w-5 h-5" />}
-                        label="Audio"
+                        label={t.studioAudioLabel as string}
                         active={activeTool === 'audio'}
                         onClick={() => setActiveTool(activeTool === 'audio' ? 'default' : 'audio')}
                     />
                     <ToolButton
                         icon={<Type className="w-5 h-5" />}
-                        label="Text"
+                        label={t.studioTextLabel as string}
                         active={activeTool === 'text'}
                         onClick={() => setActiveTool(activeTool === 'text' ? 'default' : 'text')}
                     />
@@ -334,19 +336,19 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
             `}>
                     <div className="p-4 border-b border-white/10 flex items-center justify-between">
                         <h2 className="text-xs font-bold text-white/50 uppercase tracking-wider">
-                            {activeTool === 'settings' && 'Studio Settings'}
-                            {activeTool === 'tracks' && 'Timeline Tracks'}
-                            {activeTool === 'audio' && 'Audio Mixer'}
-                            {activeTool === 'text' && 'Text Overlays'}
-                            {activeTool === 'edit' && 'Edit Recording'}
-                            {activeTool === 'default' && (selectedSegmentIds.length > 0 ? 'Clip Properties' : 'Project Properties')}
+                            {activeTool === 'settings' && t.studioStudioSettings}
+                            {activeTool === 'tracks' && t.studioTimelineTracks}
+                            {activeTool === 'audio' && t.studioAudioMixer}
+                            {activeTool === 'text' && t.studioTextOverlays}
+                            {activeTool === 'edit' && t.studioEditRecording}
+                            {activeTool === 'default' && (selectedSegmentIds.length > 0 ? t.studioClipProperties : t.studioProjectProperties)}
                         </h2>
                         {/* Mobile Close Button */}
                         <button
                             className="md:hidden text-blue-500 font-bold text-xs"
                             onClick={() => setActiveTool('default')}
                         >
-                            Done
+                            {t.studioDoneBtn}
                         </button>
                     </div>
 
@@ -364,20 +366,20 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                             className="p-3 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg border border-red-500/20 flex flex-col items-center gap-2 transition-colors group"
                                         >
                                             <Trash2 className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                                            <span className="text-[10px] uppercase font-bold">Delete</span>
+                                            <span className="text-[10px] uppercase font-bold">{t.studioDeleteEvents}</span>
                                         </button>
                                         <button
                                             onClick={() => splitSession(playbackTime)}
                                             className="p-3 bg-neutral-800 hover:bg-neutral-700 text-white rounded-lg border border-white/10 flex flex-col items-center gap-2 transition-colors group"
                                         >
                                             <Scissors className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                                            <span className="text-[10px] uppercase font-bold">Split</span>
+                                            <span className="text-[10px] uppercase font-bold">{t.studioSplitBtn}</span>
                                         </button>
                                     </div>
                                 </div>
 
                                 <div className="space-y-3">
-                                    <label className="text-xs text-white/70 font-semibold">Speed FX</label>
+                                    <label className="text-xs text-white/70 font-semibold">{t.studioSpeedFX}</label>
                                     <div className="bg-neutral-800 rounded-lg p-1 flex gap-1">
                                         {[0.5, 1, 2, 4].map(speed => (
                                             <button
@@ -406,21 +408,21 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                         }}
                                         className="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold transition-colors"
                                     >
-                                        Apply {speedFactor}x Speed
+                                        {(t.studioApplySpeed as (s: number) => string)(speedFactor)}
                                     </button>
                                     <p className="text-[10px] text-white/30 text-center">
-                                        Applies to range {formatTime(tempTrimStart)} - {formatTime(tempTrimEnd)}
+                                        {(t.studioAppliesRange as (a: string, b: string) => string)(formatTime(tempTrimStart), formatTime(tempTrimEnd))}
                                     </p>
                                 </div>
                                 <div className="space-y-3 mb-4">
                                     <div className="flex items-center justify-between">
-                                        <span className="text-white font-bold truncate">Segment Settings</span>
+                                        <span className="text-white font-bold truncate">{t.studioSegmentSettings}</span>
                                     </div>
 
                                     {selectedSegments.length === 1 && (
                                         <div className="space-y-3 mb-4">
                                             <div className="flex items-center justify-between">
-                                                <span className="text-xs text-white/60">Fade In/Out</span>
+                                                <span className="text-xs text-white/60">{t.studioFadeInOut}</span>
                                                 <button
                                                     onClick={() => {
                                                         const seg = selectedSegments[0];
@@ -444,27 +446,27 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                 {/* Description Field */}
                                 <div className="space-y-3">
                                     <label className="text-xs text-white/70 font-semibold flex items-center gap-2">
-                                        <Type className="w-3 h-3" /> Project Info
+                                        <Type className="w-3 h-3" /> {t.studioProjectInfo}
                                     </label>
                                     <input
                                         type="text"
                                         value={session.metadata.title}
                                         onChange={(e) => updateMetadata({ title: e.target.value })}
                                         className="w-full bg-neutral-800 border border-white/10 rounded px-2 py-1.5 text-xs text-white outline-none focus:border-blue-500 font-bold"
-                                        placeholder="Project Title"
+                                        placeholder={t.studioProjectTitlePlaceholder as string}
                                     />
                                     <textarea
                                         value={session.metadata.description || ''}
                                         onChange={(e) => updateMetadata({ description: e.target.value })}
                                         className="w-full h-16 bg-neutral-800 border border-white/10 rounded-lg p-3 text-xs text-white resize-none focus:ring-1 focus:ring-blue-500 outline-none"
-                                        placeholder="Add project notes..."
+                                        placeholder={t.studioProjectNotes as string}
                                     />
                                 </div>
 
                                 {/* Thumbnail */}
                                 <div className="space-y-3 pt-4 border-t border-white/10">
                                     <label className="text-xs text-white/70 font-semibold flex items-center gap-2">
-                                        <ImageIcon className="w-3 h-3" /> Thumbnail
+                                        <ImageIcon className="w-3 h-3" /> {t.studioThumbnail}
                                     </label>
                                     <div className="relative group rounded-lg overflow-hidden border border-white/10 bg-black/20 aspect-video flex items-center justify-center">
                                         {session.metadata.thumbnail ? (
@@ -472,7 +474,7 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                         ) : (
                                             <div className="text-white/20 flex flex-col items-center">
                                                 <ImageIcon className="w-8 h-8 mb-2 opacity-50" />
-                                                <span className="text-[10px]">No Thumbnail</span>
+                                                <span className="text-[10px]">{t.studioNoThumbnail}</span>
                                             </div>
                                         )}
                                         <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -484,7 +486,7 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                                     }}
                                                     className="px-3 py-1.5 bg-white text-black rounded text-xs font-bold hover:scale-105 transition-transform flex items-center gap-2"
                                                 >
-                                                    <Camera className="w-3 h-3" /> Capture Frame
+                                                    <Camera className="w-3 h-3" /> {t.studioCaptureFrame}
                                                 </button>
                                             )}
                                         </div>
@@ -494,12 +496,12 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                 {/* Output Settings */}
                                 <div className="space-y-3 pt-4 border-t border-white/10">
                                     <label className="text-xs text-white/70 font-semibold flex items-center gap-2">
-                                        <Film className="w-3 h-3" /> Output Settings
+                                        <Film className="w-3 h-3" /> {t.studioOutputSettings}
                                     </label>
 
                                     <div className="grid grid-cols-2 gap-3">
                                         <div className="space-y-1">
-                                            <span className="text-[10px] text-white/40 uppercase font-bold">Format</span>
+                                            <span className="text-[10px] text-white/40 uppercase font-bold">{t.studioFormat}</span>
                                             <select
                                                 value={session.metadata.settings?.exportFormat || 'mp4'}
                                                 onChange={(e) => updateMetadata({
@@ -507,13 +509,13 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                                 })}
                                                 className="w-full bg-neutral-800 border-none text-xs text-white rounded px-2 py-1.5 outline-none cursor-pointer hover:bg-neutral-700 font-mono"
                                             >
-                                                <option value="mp4">MP4 Video</option>
-                                                <option value="webm">WebM Video</option>
-                                                <option value="gif">Animated GIF</option>
+                                                <option value="mp4">{t.studioMP4Video}</option>
+                                                <option value="webm">{t.studioWebMVideo}</option>
+                                                <option value="gif">{t.studioAnimatedGIF}</option>
                                             </select>
                                         </div>
                                         <div className="space-y-1">
-                                            <span className="text-[10px] text-white/40 uppercase font-bold">Framerate</span>
+                                            <span className="text-[10px] text-white/40 uppercase font-bold">{t.studioFramerate}</span>
                                             <select
                                                 value={session.metadata.settings?.fps || 30}
                                                 onChange={(e) => updateMetadata({
@@ -521,13 +523,13 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                                 })}
                                                 className="w-full bg-neutral-800 border-none text-xs text-white rounded px-2 py-1.5 outline-none cursor-pointer hover:bg-neutral-700 font-mono"
                                             >
-                                                <option value="24">24 FPS (Film)</option>
-                                                <option value="30">30 FPS (Std)</option>
-                                                <option value="60">60 FPS (HFR)</option>
+                                                <option value="24">{t.studio24FPS}</option>
+                                                <option value="30">{t.studio30FPS}</option>
+                                                <option value="60">{t.studio60FPS}</option>
                                             </select>
                                         </div>
                                         <div className="space-y-1">
-                                            <span className="text-[10px] text-white/40 uppercase font-bold">Aspect Ratio</span>
+                                            <span className="text-[10px] text-white/40 uppercase font-bold">{t.studioAspectRatio}</span>
                                             <select
                                                 value={session.metadata.settings?.aspectRatio || '16:9'}
                                                 onChange={(e) => updateMetadata({
@@ -535,13 +537,13 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                                 })}
                                                 className="w-full bg-neutral-800 border-none text-xs text-white rounded px-2 py-1.5 outline-none cursor-pointer hover:bg-neutral-700 font-mono"
                                             >
-                                                <option value="16:9">16:9 (Landscape)</option>
-                                                <option value="9:16">9:16 (Portrait)</option>
-                                                <option value="1:1">1:1 (Square)</option>
+                                                <option value="16:9">{t.studio169}</option>
+                                                <option value="9:16">{t.studio916}</option>
+                                                <option value="1:1">{t.studio11}</option>
                                             </select>
                                         </div>
                                         <div className="space-y-1">
-                                            <span className="text-[10px] text-white/40 uppercase font-bold">Quality</span>
+                                            <span className="text-[10px] text-white/40 uppercase font-bold">{t.studioQuality}</span>
                                             <select
                                                 value={session.metadata.settings?.exportQuality || 'medium'}
                                                 onChange={(e) => updateMetadata({
@@ -549,9 +551,9 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                                 })}
                                                 className="w-full bg-neutral-800 border-none text-xs text-white rounded px-2 py-1.5 outline-none cursor-pointer hover:bg-neutral-700 font-mono"
                                             >
-                                                <option value="low">Low (720p)</option>
-                                                <option value="medium">Medium (1080p)</option>
-                                                <option value="high">High (4K)</option>
+                                                <option value="low">{t.studioLow720p}</option>
+                                                <option value="medium">{t.studioMedium1080p}</option>
+                                                <option value="high">{t.studioHigh4K}</option>
                                             </select>
                                         </div>
                                     </div>
@@ -560,12 +562,12 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                 {/* Visual Settings */}
                                 <div className="space-y-3 pt-4 border-t border-white/10">
                                     <label className="text-xs text-white/70 font-semibold flex items-center gap-2">
-                                        <Monitor className="w-3 h-3" /> Visuals
+                                        <Monitor className="w-3 h-3" /> {t.studioVisuals}
                                     </label>
 
                                     <div className="space-y-2">
                                         <div className="flex items-center justify-between">
-                                            <span className="text-xs text-white/60">Ambient Occlusion</span>
+                                            <span className="text-xs text-white/60">{t.studioAmbientOcclusion}</span>
                                             <button
                                                 onClick={() => updateMetadata({
                                                     settings: { ...session.metadata.settings, ssao: !session.metadata.settings?.ssao }
@@ -576,7 +578,7 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                             </button>
                                         </div>
                                         <div className="flex items-center justify-between">
-                                            <span className="text-xs text-white/60">High-Res Render (2x)</span>
+                                            <span className="text-xs text-white/60">{t.studioHighResRender}</span>
                                             <button
                                                 onClick={() => updateMetadata({
                                                     settings: { ...session.metadata.settings, resolutionScale: session.metadata.settings?.resolutionScale === 2 ? 1 : 2 }
@@ -587,7 +589,7 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                             </button>
                                         </div>
                                         <div className="flex items-center justify-between">
-                                            <span className="text-xs text-white/60">Background</span>
+                                            <span className="text-xs text-white/60">{t.studioBackground}</span>
                                             <div className="flex items-center gap-2">
                                                 <input
                                                     type="color"
@@ -600,7 +602,7 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                             </div>
                                         </div>
                                         <div className="flex items-center justify-between pt-2 border-t border-white/5">
-                                            <span className="text-xs text-white/60">Show Cursor</span>
+                                            <span className="text-xs text-white/60">{t.studioShowCursor}</span>
                                             <button
                                                 onClick={() => updateMetadata({
                                                     settings: { ...session.metadata.settings, showCursor: !session.metadata.settings?.showCursor }
@@ -616,12 +618,12 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                 {/* Branding */}
                                 <div className="space-y-3 pt-4 border-t border-white/10">
                                     <label className="text-xs text-white/70 font-semibold flex items-center gap-2">
-                                        <ImageIcon className="w-3 h-3" /> Branding
+                                        <ImageIcon className="w-3 h-3" /> {t.studioBranding}
                                     </label>
 
                                     <div className="space-y-2">
                                         <div className="flex items-center justify-between">
-                                            <span className="text-xs text-white/60">Watermark</span>
+                                            <span className="text-xs text-white/60">{t.studioWatermark}</span>
                                             <button
                                                 onClick={() => updateMetadata({
                                                     settings: { ...session.metadata.settings, showWatermark: !session.metadata.settings?.showWatermark }
@@ -639,10 +641,10 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                                     value={session.metadata.watermarkText || ''}
                                                     onChange={(e) => updateMetadata({ watermarkText: e.target.value })}
                                                     className="w-full bg-neutral-800 border border-white/10 rounded px-2 py-1 text-xs text-white"
-                                                    placeholder="Watermark Text..."
+                                                    placeholder={t.studioWatermarkTextPlaceholder as string}
                                                 />
                                                 <div className="flex items-center justify-between px-1">
-                                                    <span className="text-[10px] text-white/40">Position</span>
+                                                    <span className="text-[10px] text-white/40">{t.studioPosition}</span>
                                                     <div className="grid grid-cols-2 gap-1 w-12 h-8">
                                                         {['top-left', 'top-right', 'bottom-left', 'bottom-right'].map(pos => (
                                                             <button
@@ -660,7 +662,7 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                         )}
 
                                         <div className="flex items-center justify-between pt-2">
-                                            <span className="text-xs text-white/60">Upload Logo</span>
+                                            <span className="text-xs text-white/60">{t.studioUploadLogo}</span>
                                             <input
                                                 type="file"
                                                 accept="image/*"
@@ -673,16 +675,16 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                                     <button
                                                         onClick={() => updateMetadata({ watermarkLogo: undefined })}
                                                         className="text-[10px] text-red-400 hover:text-red-300 transition-colors"
-                                                        title="Remove Logo"
+                                                        title={t.studioRemoveLogo as string}
                                                     >
-                                                        Clear
+                                                        {t.studioClearBtn}
                                                     </button>
                                                 )}
                                                 <button
                                                     onClick={() => watermarkLogoInputRef.current?.click()}
                                                     className="text-[10px] text-blue-400 hover:underline flex items-center gap-1"
                                                 >
-                                                    <Plus className="w-3 h-3" /> {session.metadata.watermarkLogo ? 'Change Image' : 'Select Image'}
+                                                    <Plus className="w-3 h-3" /> {session.metadata.watermarkLogo ? t.studioChangeImage : t.studioSelectImage}
                                                 </button>
                                             </div>
                                         </div>
@@ -695,7 +697,7 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                 <div className="space-y-3">
                                     <div className="flex items-center justify-between">
                                         <label className="text-xs text-white/70 font-semibold flex items-center gap-2">
-                                            <Type className="w-3 h-3" /> Overlays
+                                            <Type className="w-3 h-3" /> {t.studioOverlays}
                                         </label>
                                         <button
                                             onClick={() => {
@@ -750,8 +752,8 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                             </div>
                                         )) : (
                                             <div className="py-8 text-center border ring-1 ring-white/5 border-dashed border-white/10 rounded-lg">
-                                                <p className="text-[10px] text-white/30 italic">No text overlays added yet.</p>
-                                                <p className="text-[10px] text-white/20 mt-1">Click "Add Text" to start.</p>
+                                                <p className="text-[10px] text-white/30 italic">{t.studioNoTextOverlays}</p>
+                                                <p className="text-[10px] text-white/20 mt-1">{t.studioAddTextHint}</p>
                                             </div>
                                         )}
                                     </div>
@@ -763,7 +765,7 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                 {/* Segment List */}
                                 <div className="space-y-3">
                                     <label className="text-xs text-white/70 font-semibold flex items-center gap-2">
-                                        <Layers className="w-3 h-3" /> Timeline Segments ({segments.length})
+                                        <Layers className="w-3 h-3" /> {t.studioTimelineTracks} ({segments.length})
                                     </label>
                                     <div className="max-h-60 overflow-y-auto space-y-1">
                                         {segments.map((seg, idx) => {
@@ -779,7 +781,7 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                                 >
                                                     <span className="font-mono text-white/30 text-[10px] w-4">{idx + 1}</span>
                                                     <div className="flex-1 truncate">
-                                                        <span className="font-semibold">Clip {idx + 1}</span>
+                                                        <span className="font-semibold">{(t.studioClip as (n: number) => string)(idx + 1)}</span>
                                                         <span className="mx-1 opacity-50">•</span>
                                                         <span>{formatTime(seg.startTime)}</span>
                                                     </div>
@@ -790,7 +792,7 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                             );
                                         })}
                                         {segments.length === 0 && (
-                                            <p className="text-[10px] text-white/30 text-center italic py-4">No segments in timeline</p>
+                                            <p className="text-[10px] text-white/30 text-center italic py-4">{t.studioNoSegments}</p>
                                         )}
                                     </div>
                                 </div>
@@ -805,15 +807,15 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                             onClick={() => deleteEventsByType('camera', undefined)}
                                             className="p-3 bg-neutral-800 hover:bg-neutral-700 text-white/80 rounded block text-xs transition-colors border border-white/5 text-left"
                                         >
-                                            <span className="block font-bold mb-1">Clear Camera</span>
-                                            <span className="text-[10px] opacity-50 block">Removes all camera moves</span>
+                                            <span className="block font-bold mb-1">{t.studioClearCamera}</span>
+                                            <span className="text-[10px] opacity-50 block">{t.studioClearCameraDesc}</span>
                                         </button>
                                         <button
                                             onClick={() => deleteEventsByType('annotation', undefined)}
                                             className="p-3 bg-neutral-800 hover:bg-neutral-700 text-white/80 rounded block text-xs transition-colors border border-white/5 text-left"
                                         >
-                                            <span className="block font-bold mb-1">Clear Notes</span>
-                                            <span className="text-[10px] opacity-50 block">Removes all annotations</span>
+                                            <span className="block font-bold mb-1">{t.studioClearNotes}</span>
+                                            <span className="text-[10px] opacity-50 block">{t.studioClearNotesDesc}</span>
                                         </button>
                                     </div>
                                     <button
@@ -829,7 +831,7 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
 
                                 {/* Delete Range */}
                                 <div className="space-y-3 pt-4 border-t border-white/10">
-                                    <label className="text-xs text-white/70 font-semibold">Delete Range</label>
+                                    <label className="text-xs text-white/70 font-semibold">{t.studioDeleteRange}</label>
                                     <div className="flex items-center gap-2">
                                         <input
                                             type="text"
@@ -868,13 +870,13 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                             <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-200">
                                 <div className="space-y-3">
                                     <label className="text-xs text-white/70 font-semibold flex items-center gap-2">
-                                        <Music className="w-3 h-3" /> Audio Mixer
+                                        <Music className="w-3 h-3" /> {t.studioAudioMixer}
                                     </label>
 
                                     {/* Emulate Audio Channels */}
                                     <div className="bg-neutral-800 p-3 rounded-lg border border-white/5 space-y-3">
                                         <div className="flex items-center justify-between">
-                                            <span className="text-xs font-bold text-white">Master Volume</span>
+                                            <span className="text-xs font-bold text-white">{t.studioMasterVolume}</span>
                                             <span className="text-[10px] text-blue-400">{Math.round((recorder.masterVolume || 1) * 100)}%</span>
                                         </div>
                                         <input
@@ -890,7 +892,7 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
 
                                     <div className="space-y-2">
                                         <div className="flex items-center justify-between">
-                                            <span className="text-xs text-white/60">Music & Sounds</span>
+                                            <span className="text-xs text-white/60">{t.studioMusicSounds}</span>
                                             <label className="text-[10px] text-blue-400 hover:underline cursor-pointer flex items-center gap-1">
                                                 <Plus className="w-3 h-3" /> Add File
                                                 <input
@@ -962,7 +964,7 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                             ))}
                                             {(!session.metadata.audioClips || session.metadata.audioClips.length === 0) && (
                                                 <div className="text-center py-4 border border-dashed border-white/10 rounded">
-                                                    <p className="text-[10px] text-white/30 italic">No audio clips added</p>
+                                                    <p className="text-[10px] text-white/30 italic">{t.studioNoAudioClips}</p>
                                                 </div>
                                             )}
                                         </div>
@@ -970,7 +972,7 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
 
                                     <div className="space-y-2">
                                         <div className="flex items-center justify-between">
-                                            <span className="text-xs text-white/60">Sound Effects</span>
+                                            <span className="text-xs text-white/60">{t.studioSoundEffects}</span>
                                             {session.metadata.sfxTrack && (
                                                 <span className="text-[10px] text-blue-400">{session.metadata.sfxTrack.name}</span>
                                             )}
@@ -1077,7 +1079,7 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
 
                                 {/* Event Deletion Controls */}
                                 <div className="space-y-2">
-                                    <label className="text-xs text-white/70 font-semibold block">Delete Events</label>
+                                    <label className="text-xs text-white/70 font-semibold block">{t.studioDeleteEvents}</label>
                                     <div className="flex gap-2 flex-wrap">
                                         <button
                                             onClick={() => {
@@ -1106,7 +1108,7 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
 
                                 {/* Delete by Time Range */}
                                 <div className="space-y-2">
-                                    <label className="text-xs text-white/70 font-semibold block">Delete by Time Range</label>
+                                    <label className="text-xs text-white/70 font-semibold block">{t.studioDeleteByTimeRange}</label>
                                     <div className="flex gap-2 items-center flex-wrap">
                                         <input
                                             type="text"
@@ -1143,7 +1145,7 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
 
                                 {/* Split Session */}
                                 <div className="space-y-2">
-                                    <label className="text-xs text-white/70 font-semibold block">Split Session</label>
+                                    <label className="text-xs text-white/70 font-semibold block">{t.studioSplitSession}</label>
                                     <div className="flex gap-2 items-center flex-wrap">
                                         <button
                                             onClick={() => {
@@ -1185,10 +1187,10 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                                         }}
                                         className="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold transition-colors"
                                     >
-                                        Apply {speedFactor}x Speed
+                                        {(t.studioApplySpeed as (s: number) => string)(speedFactor)}
                                     </button>
                                     <p className="text-[10px] text-white/30 text-center">
-                                        Applies to range {formatTime(tempTrimStart)} - {formatTime(tempTrimEnd)}
+                                        {(t.studioAppliesRange as (a: string, b: string) => string)(formatTime(tempTrimStart), formatTime(tempTrimEnd))}
                                     </p>
                                 </div>
                             </div>

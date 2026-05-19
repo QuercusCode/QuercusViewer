@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Check, Grid2X2 } from 'lucide-react';
 import clsx from 'clsx';
+import { useTranslation } from '../lib/i18n';
 
 interface ViewportSelectorProps {
     isOpen: boolean;
@@ -11,6 +12,7 @@ interface ViewportSelectorProps {
 }
 
 export const ViewportSelector: React.FC<ViewportSelectorProps> = ({ isOpen, viewMode, actionName, onConfirm, onCancel }) => {
+    const { t } = useTranslation();
     const [selected, setSelected] = useState<boolean[]>([true, true, true, true]); // Max 4
 
     // Reset selection when opening
@@ -82,27 +84,27 @@ export const ViewportSelector: React.FC<ViewportSelectorProps> = ({ isOpen, view
             case 'dual':
                 return (
                     <div className={clsx(gridClasses, "flex")}>
-                        {renderItem(0, "Viewport 1", "w-1/2 h-full")}
-                        {renderItem(1, "Viewport 2", "w-1/2 h-full")}
+                        {renderItem(0, (t.vpViewport as (n: number) => string)(1), "w-1/2 h-full")}
+                        {renderItem(1, (t.vpViewport as (n: number) => string)(2), "w-1/2 h-full")}
                     </div>
                 );
             case 'triple':
                 return (
                     <div className={clsx(gridClasses, "flex flex-col")}>
-                        {renderItem(0, "Viewport 1", "w-full h-1/2")}
+                        {renderItem(0, (t.vpViewport as (n: number) => string)(1), "w-full h-1/2")}
                         <div className="flex w-full h-1/2 gap-2 mt-2">
-                            {renderItem(1, "Viewport 2", "w-1/2 h-full")}
-                            {renderItem(2, "Viewport 3", "w-1/2 h-full")}
+                            {renderItem(1, (t.vpViewport as (n: number) => string)(2), "w-1/2 h-full")}
+                            {renderItem(2, (t.vpViewport as (n: number) => string)(3), "w-1/2 h-full")}
                         </div>
                     </div>
                 );
             case 'quad':
                 return (
                     <div className={clsx(gridClasses, "grid grid-cols-2 grid-rows-2")}>
-                        {renderItem(0, "VP 1", "w-full h-full")}
-                        {renderItem(1, "VP 2", "w-full h-full")}
-                        {renderItem(2, "VP 3", "w-full h-full")}
-                        {renderItem(3, "VP 4", "w-full h-full")}
+                        {renderItem(0, (t.vpVP as (n: number) => string)(1), "w-full h-full")}
+                        {renderItem(1, (t.vpVP as (n: number) => string)(2), "w-full h-full")}
+                        {renderItem(2, (t.vpVP as (n: number) => string)(3), "w-full h-full")}
+                        {renderItem(3, (t.vpVP as (n: number) => string)(4), "w-full h-full")}
                     </div>
                 );
             default: return null;

@@ -1,5 +1,6 @@
 import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
+import { getT } from '../lib/i18n';
 
 export const startOnboardingTour = (onComplete?: () => void, onHighlight?: (elementId: string) => void, isChemical: boolean = false) => {
 
@@ -105,7 +106,8 @@ export const startOnboardingTour = (onComplete?: () => void, onHighlight?: (elem
         animate: true,
         steps: steps,
         onDestroyStarted: () => {
-            if (!driverObj.hasNextStep() || confirm("Are you sure you want to exit the tour?")) {
+            const t = getT();
+            if (!driverObj.hasNextStep() || confirm(t.tourExitConfirm as string)) {
                 driverObj.destroy();
                 if (onComplete) onComplete();
             }

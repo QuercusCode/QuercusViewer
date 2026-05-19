@@ -551,6 +551,64 @@ export const translations = {
         ssTableSettings: 'Table Settings', ssDataFormula: 'Data or formula...',
         // ImageEditorModal
         imgResetZoom: 'Reset Zoom', imgTypeLabels: 'Type labels...',
+        // StudioLayout
+        studioExitStudio: 'Exit Studio', studioUndoShortcut: 'Undo (Ctrl+Z)', studioRedoShortcut: 'Redo (Ctrl+Shift+Z)',
+        studioExportVideo: 'Export Video', studioSaveProject: 'Save Project', studioActionsBtn: 'Actions',
+        studioSplitBtn: 'Split', studioSpeedFX: 'Speed FX', studioSegmentSettings: 'Segment Settings',
+        studioFadeInOut: 'Fade In/Out', studioProjectTitlePlaceholder: 'Project Title', studioProjectNotes: 'Add project notes...',
+        studioNoThumbnail: 'No Thumbnail', studioCaptureFrame: 'Capture Frame',
+        studioFormat: 'Format', studioFramerate: 'Framerate', studioAspectRatio: 'Aspect Ratio',
+        studioQuality: 'Quality', studioAmbientOcclusion: 'Ambient Occlusion', studioHighResRender: 'High-Res Render (2x)',
+        studioBackground: 'Background', studioShowCursor: 'Show Cursor', studioWatermark: 'Watermark',
+        studioWatermarkTextPlaceholder: 'Watermark Text...', studioPosition: 'Position',
+        studioUploadLogo: 'Upload Logo', studioClearBtn: 'Clear', studioRemoveLogo: 'Remove Logo',
+        studioSelectImage: 'Select Image', studioChangeImage: 'Change Image',
+        studioOutputSettings: 'Output Settings', studioVisuals: 'Visuals', studioBranding: 'Branding',
+        studioOverlays: 'Overlays', studioStudioSettings: 'Studio Settings', studioTimelineTracks: 'Timeline Tracks',
+        studioAudioMixer: 'Audio Mixer', studioTextOverlays: 'Text Overlays', studioEditRecording: 'Edit Recording',
+        studioClipProperties: 'Clip Properties', studioProjectProperties: 'Project Properties',
+        studioDoneBtn: 'Done', studioProjectInfo: 'Project Info', studioThumbnail: 'Thumbnail',
+        studioTracksLabel: 'Tracks', studioAudioLabel: 'Audio', studioTextLabel: 'Text',
+        studioMP4Video: 'MP4 Video', studioWebMVideo: 'WebM Video', studioAnimatedGIF: 'Animated GIF',
+        studio24FPS: '24 FPS (Film)', studio30FPS: '30 FPS (Std)', studio60FPS: '60 FPS (HFR)',
+        studio169: '16:9 (Landscape)', studio916: '9:16 (Portrait)', studio11: '1:1 (Square)',
+        studioLow720p: 'Low (720p)', studioMedium1080p: 'Medium (1080p)', studioHigh4K: 'High (4K)',
+        studioMasterVolume: 'Master Volume', studioMusicSounds: 'Music & Sounds', studioSoundEffects: 'Sound Effects',
+        studioNoAudioClips: 'No audio clips added', studioNoTextOverlays: 'No text overlays added yet.',
+        studioAddTextHint: 'Click "Add Text" to start.', studioNoSegments: 'No segments in timeline',
+        studioDeleteRange: 'Delete Range', studioSplitSession: 'Split Session',
+        studioClearCamera: 'Clear Camera', studioClearCameraDesc: 'Removes all camera moves',
+        studioClearNotes: 'Clear Notes', studioClearNotesDesc: 'Removes all annotations',
+        studioDeleteEvents: 'Delete Events', studioDeleteByTimeRange: 'Delete by Time Range',
+        studioApplySpeed: (s: number) => `Apply ${s}x Speed`,
+        studioAppliesRange: (a: string, b: string) => `Applies to range ${a} - ${b}`,
+        studioClip: (n: number) => `Clip ${n}`,
+        // ChemicalSketcher
+        csEmptySketch: 'Empty Sketch', csEditStructure: 'Edit Structure', csDeleteStructure: 'Delete Structure',
+        csStartSketching: 'Start Sketching', csMolecularSketcher: 'Molecular Sketcher',
+        csDrawStructure: 'Draw your 2D structure below', csInitFailed: 'Initialization Failed',
+        csInitializing: 'Initializing JSME Sketcher...',
+        // CitationBlock
+        cbInsertCitation: 'Insert Citation', cbEditCitation: 'Edit citation', cbRemoveCitation: 'Remove citation',
+        cbRemoveBtn: 'Remove',
+        // CodeCell
+        ccPythonKernel: 'Python Kernel', ccRunCell: 'Run Cell', ccRunning: 'Running...',
+        ccOutput: 'Output', ccKernelNotInit: 'Kernel not initialized. Click "Run" to load Python.',
+        ccFailedLoad: 'Failed to load Python environment.', ccErrorLoad: 'Error loading Pyodide.',
+        ccExecFinished: 'Execution finished (no output).',
+        // MeasurementTable
+        mtReport: 'Structure Measurements Report', mtIndex: 'Index', mtDistance: 'Distance (A)',
+        mtAtom1: 'Atom 1', mtAtom2: 'Atom 2', mtDist: 'Dist.', mtFrom: 'From', mtTo: 'To',
+        mtDeleteMeasurement: 'Delete Measurement',
+        // PublicPortfolio
+        ppLoadingGallery: 'Loading Public Gallery...', ppGalleryUnavailable: 'Gallery Unavailable',
+        ppReturnHomepage: 'Return to Homepage', ppEmptyGallery: 'This public gallery is currently empty.',
+        ppOpenViewer: 'Open in Interactive Viewer', ppDownloadFile: 'Download File',
+        ppUploaded: 'Uploaded', ppResolution: 'Resolution', ppSize: 'Size',
+        // ViewportSelector
+        vpViewport: (n: number) => `Viewport ${n}`, vpVP: (n: number) => `VP ${n}`,
+        // TourGuide
+        tourExitConfirm: 'Are you sure you want to exit the tour?',
     },
     'Spanish (ES)': {
         nav: 'NAVEGACIÓN',
@@ -1017,6 +1075,64 @@ export const translations = {
         collapseSidebar: 'Colapsar Barra', expandSidebar: 'Expandir Barra',
         // InlineChart
         chartEditColors: 'Editar Colores', chartDeleteChart: 'Eliminar Gráfico',
+        // StudioLayout
+        studioExitStudio: 'Salir del Estudio', studioUndoShortcut: 'Deshacer (Ctrl+Z)', studioRedoShortcut: 'Rehacer (Ctrl+Shift+Z)',
+        studioExportVideo: 'Exportar Video', studioSaveProject: 'Guardar Proyecto', studioActionsBtn: 'Acciones',
+        studioSplitBtn: 'Dividir', studioSpeedFX: 'Efecto Velocidad', studioSegmentSettings: 'Ajustes del Segmento',
+        studioFadeInOut: 'Fade In/Out', studioProjectTitlePlaceholder: 'Título del Proyecto', studioProjectNotes: 'Agregar notas del proyecto...',
+        studioNoThumbnail: 'Sin Miniatura', studioCaptureFrame: 'Capturar Fotograma',
+        studioFormat: 'Formato', studioFramerate: 'Fotogramas por segundo', studioAspectRatio: 'Relación de Aspecto',
+        studioQuality: 'Calidad', studioAmbientOcclusion: 'Oclusión Ambiental', studioHighResRender: 'Renderizado Alta Resolución (2x)',
+        studioBackground: 'Fondo', studioShowCursor: 'Mostrar Cursor', studioWatermark: 'Marca de Agua',
+        studioWatermarkTextPlaceholder: 'Texto de marca de agua...', studioPosition: 'Posición',
+        studioUploadLogo: 'Subir Logotipo', studioClearBtn: 'Borrar', studioRemoveLogo: 'Quitar Logotipo',
+        studioSelectImage: 'Seleccionar Imagen', studioChangeImage: 'Cambiar Imagen',
+        studioOutputSettings: 'Configuración de Salida', studioVisuals: 'Visual', studioBranding: 'Branding',
+        studioOverlays: 'Superposiciones', studioStudioSettings: 'Ajustes del Estudio', studioTimelineTracks: 'Pistas de Línea de Tiempo',
+        studioAudioMixer: 'Mezclador de Audio', studioTextOverlays: 'Texto Superpuesto', studioEditRecording: 'Editar Grabación',
+        studioClipProperties: 'Propiedades del Clip', studioProjectProperties: 'Propiedades del Proyecto',
+        studioDoneBtn: 'Listo', studioProjectInfo: 'Info del Proyecto', studioThumbnail: 'Miniatura',
+        studioTracksLabel: 'Pistas', studioAudioLabel: 'Audio', studioTextLabel: 'Texto',
+        studioMP4Video: 'Video MP4', studioWebMVideo: 'Video WebM', studioAnimatedGIF: 'GIF Animado',
+        studio24FPS: '24 FPS (Cine)', studio30FPS: '30 FPS (Estándar)', studio60FPS: '60 FPS (Alta Velocidad)',
+        studio169: '16:9 (Horizontal)', studio916: '9:16 (Vertical)', studio11: '1:1 (Cuadrado)',
+        studioLow720p: 'Baja (720p)', studioMedium1080p: 'Media (1080p)', studioHigh4K: 'Alta (4K)',
+        studioMasterVolume: 'Volumen Maestro', studioMusicSounds: 'Música y Sonidos', studioSoundEffects: 'Efectos de Sonido',
+        studioNoAudioClips: 'No hay clips de audio', studioNoTextOverlays: 'No hay texto superpuesto aún.',
+        studioAddTextHint: 'Haz clic en "Añadir Texto" para comenzar.', studioNoSegments: 'No hay segmentos en la línea de tiempo',
+        studioDeleteRange: 'Eliminar Rango', studioSplitSession: 'Dividir Sesión',
+        studioClearCamera: 'Limpiar Cámara', studioClearCameraDesc: 'Elimina todos los movimientos de cámara',
+        studioClearNotes: 'Limpiar Notas', studioClearNotesDesc: 'Elimina todas las anotaciones',
+        studioDeleteEvents: 'Eliminar Eventos', studioDeleteByTimeRange: 'Eliminar por Rango de Tiempo',
+        studioApplySpeed: (s: number) => `Aplicar Velocidad ${s}x`,
+        studioAppliesRange: (a: string, b: string) => `Aplica al rango ${a} - ${b}`,
+        studioClip: (n: number) => `Clip ${n}`,
+        // ChemicalSketcher
+        csEmptySketch: 'Boceto Vacío', csEditStructure: 'Editar Estructura', csDeleteStructure: 'Eliminar Estructura',
+        csStartSketching: 'Comenzar a Dibujar', csMolecularSketcher: 'Dibujador Molecular',
+        csDrawStructure: 'Dibuje su estructura 2D a continuación', csInitFailed: 'Error de Inicialización',
+        csInitializing: 'Inicializando Dibujador JSME...',
+        // CitationBlock
+        cbInsertCitation: 'Insertar Cita', cbEditCitation: 'Editar cita', cbRemoveCitation: 'Eliminar cita',
+        cbRemoveBtn: 'Eliminar',
+        // CodeCell
+        ccPythonKernel: 'Núcleo Python', ccRunCell: 'Ejecutar Celda', ccRunning: 'Ejecutando...',
+        ccOutput: 'Salida', ccKernelNotInit: 'Núcleo no inicializado. Haz clic en "Ejecutar" para cargar Python.',
+        ccFailedLoad: 'No se pudo cargar el entorno Python.', ccErrorLoad: 'Error al cargar Pyodide.',
+        ccExecFinished: 'Ejecución finalizada (sin salida).',
+        // MeasurementTable
+        mtReport: 'Informe de Mediciones de Estructura', mtIndex: 'Índice', mtDistance: 'Distancia (Å)',
+        mtAtom1: 'Átomo 1', mtAtom2: 'Átomo 2', mtDist: 'Dist.', mtFrom: 'De', mtTo: 'A',
+        mtDeleteMeasurement: 'Eliminar Medición',
+        // PublicPortfolio
+        ppLoadingGallery: 'Cargando Galería Pública...', ppGalleryUnavailable: 'Galería No Disponible',
+        ppReturnHomepage: 'Volver a la Página Principal', ppEmptyGallery: 'Esta galería pública está vacía.',
+        ppOpenViewer: 'Abrir en Visor Interactivo', ppDownloadFile: 'Descargar Archivo',
+        ppUploaded: 'Subido', ppResolution: 'Resolución', ppSize: 'Tamaño',
+        // ViewportSelector
+        vpViewport: (n: number) => `Ventana ${n}`, vpVP: (n: number) => `VP ${n}`,
+        // TourGuide
+        tourExitConfirm: '¿Seguro que quieres salir del tour?',
         chartCapturing: 'Capturando Alta Resolución...', chartDownloadPNG: 'Descargar PNG (Listo para Publicación)',
         // LabReportTemplate
         lrAuthor: 'Autor', lrReportID: 'ID de Informe', lrDateCreated: 'Fecha de Creación', lrStatus: 'Estado', lrVerifiedAnalysis: 'Análisis Verificado',
@@ -1503,6 +1619,64 @@ export const translations = {
         collapseSidebar: 'Réduire le Panneau', expandSidebar: 'Agrandir le Panneau',
         // InlineChart
         chartEditColors: 'Modifier les Couleurs', chartDeleteChart: 'Supprimer le Graphique',
+        // StudioLayout
+        studioExitStudio: 'Quitter le Studio', studioUndoShortcut: 'Annuler (Ctrl+Z)', studioRedoShortcut: 'Rétablir (Ctrl+Shift+Z)',
+        studioExportVideo: 'Exporter la Vidéo', studioSaveProject: 'Enregistrer le Projet', studioActionsBtn: 'Actions',
+        studioSplitBtn: 'Diviser', studioSpeedFX: 'Effet Vitesse', studioSegmentSettings: 'Paramètres du Segment',
+        studioFadeInOut: 'Fondu Entrant/Sortant', studioProjectTitlePlaceholder: 'Titre du Projet', studioProjectNotes: 'Ajouter des notes de projet...',
+        studioNoThumbnail: 'Pas de Miniature', studioCaptureFrame: 'Capturer le Cadre',
+        studioFormat: 'Format', studioFramerate: 'Fréquence d\'images', studioAspectRatio: 'Ratio d\'Aspect',
+        studioQuality: 'Qualité', studioAmbientOcclusion: 'Occlusion Ambiante', studioHighResRender: 'Rendu Haute Résolution (2x)',
+        studioBackground: 'Arrière-plan', studioShowCursor: 'Afficher le Curseur', studioWatermark: 'Filigrane',
+        studioWatermarkTextPlaceholder: 'Texte du filigrane...', studioPosition: 'Position',
+        studioUploadLogo: 'Téléverser un Logo', studioClearBtn: 'Effacer', studioRemoveLogo: 'Supprimer le Logo',
+        studioSelectImage: 'Sélectionner une Image', studioChangeImage: 'Changer l\'Image',
+        studioOutputSettings: 'Paramètres de Sortie', studioVisuals: 'Visuels', studioBranding: 'Identité Visuelle',
+        studioOverlays: 'Superpositions', studioStudioSettings: 'Paramètres du Studio', studioTimelineTracks: 'Pistes de la Chronologie',
+        studioAudioMixer: 'Table de Mixage', studioTextOverlays: 'Textes Superposés', studioEditRecording: 'Modifier l\'Enregistrement',
+        studioClipProperties: 'Propriétés du Clip', studioProjectProperties: 'Propriétés du Projet',
+        studioDoneBtn: 'Terminé', studioProjectInfo: 'Infos du Projet', studioThumbnail: 'Miniature',
+        studioTracksLabel: 'Pistes', studioAudioLabel: 'Audio', studioTextLabel: 'Texte',
+        studioMP4Video: 'Vidéo MP4', studioWebMVideo: 'Vidéo WebM', studioAnimatedGIF: 'GIF Animé',
+        studio24FPS: '24 IPS (Cinéma)', studio30FPS: '30 IPS (Standard)', studio60FPS: '60 IPS (HFR)',
+        studio169: '16:9 (Paysage)', studio916: '9:16 (Portrait)', studio11: '1:1 (Carré)',
+        studioLow720p: 'Basse (720p)', studioMedium1080p: 'Moyenne (1080p)', studioHigh4K: 'Haute (4K)',
+        studioMasterVolume: 'Volume Maître', studioMusicSounds: 'Musique et Sons', studioSoundEffects: 'Effets Sonores',
+        studioNoAudioClips: 'Aucun clip audio ajouté', studioNoTextOverlays: 'Aucun texte superposé pour l\'instant.',
+        studioAddTextHint: 'Cliquez sur "Ajouter du texte" pour commencer.', studioNoSegments: 'Aucun segment dans la chronologie',
+        studioDeleteRange: 'Supprimer la Plage', studioSplitSession: 'Diviser la Session',
+        studioClearCamera: 'Réinitialiser la Caméra', studioClearCameraDesc: 'Supprime tous les mouvements de caméra',
+        studioClearNotes: 'Effacer les Notes', studioClearNotesDesc: 'Supprime toutes les annotations',
+        studioDeleteEvents: 'Supprimer les Événements', studioDeleteByTimeRange: 'Supprimer par Plage de Temps',
+        studioApplySpeed: (s: number) => `Appliquer Vitesse ${s}x`,
+        studioAppliesRange: (a: string, b: string) => `S'applique à la plage ${a} - ${b}`,
+        studioClip: (n: number) => `Clip ${n}`,
+        // ChemicalSketcher
+        csEmptySketch: 'Esquisse Vide', csEditStructure: 'Modifier la Structure', csDeleteStructure: 'Supprimer la Structure',
+        csStartSketching: 'Commencer à Dessiner', csMolecularSketcher: 'Dessinateur Moléculaire',
+        csDrawStructure: 'Dessinez votre structure 2D ci-dessous', csInitFailed: 'Échec d\'Initialisation',
+        csInitializing: 'Initialisation du Dessinateur JSME...',
+        // CitationBlock
+        cbInsertCitation: 'Insérer une Citation', cbEditCitation: 'Modifier la citation', cbRemoveCitation: 'Supprimer la citation',
+        cbRemoveBtn: 'Supprimer',
+        // CodeCell
+        ccPythonKernel: 'Noyau Python', ccRunCell: 'Exécuter la Cellule', ccRunning: 'En cours d\'exécution...',
+        ccOutput: 'Sortie', ccKernelNotInit: 'Noyau non initialisé. Cliquez sur "Exécuter" pour charger Python.',
+        ccFailedLoad: 'Impossible de charger l\'environnement Python.', ccErrorLoad: 'Erreur lors du chargement de Pyodide.',
+        ccExecFinished: 'Exécution terminée (aucune sortie).',
+        // MeasurementTable
+        mtReport: 'Rapport de Mesures de Structure', mtIndex: 'Index', mtDistance: 'Distance (Å)',
+        mtAtom1: 'Atome 1', mtAtom2: 'Atome 2', mtDist: 'Dist.', mtFrom: 'De', mtTo: 'À',
+        mtDeleteMeasurement: 'Supprimer la Mesure',
+        // PublicPortfolio
+        ppLoadingGallery: 'Chargement de la Galerie Publique...', ppGalleryUnavailable: 'Galerie Indisponible',
+        ppReturnHomepage: 'Retour à la Page d\'Accueil', ppEmptyGallery: 'Cette galerie publique est vide.',
+        ppOpenViewer: 'Ouvrir dans le Visionneur Interactif', ppDownloadFile: 'Télécharger le Fichier',
+        ppUploaded: 'Téléversé', ppResolution: 'Résolution', ppSize: 'Taille',
+        // ViewportSelector
+        vpViewport: (n: number) => `Fenêtre ${n}`, vpVP: (n: number) => `VP ${n}`,
+        // TourGuide
+        tourExitConfirm: 'Êtes-vous sûr de vouloir quitter la visite ?',
         chartCapturing: 'Capture Haute Résolution...', chartDownloadPNG: 'Télécharger PNG (Prêt pour Publication)',
         // LabReportTemplate
         lrAuthor: 'Auteur', lrReportID: 'ID du Rapport', lrDateCreated: 'Date de Création', lrStatus: 'Statut', lrVerifiedAnalysis: 'Analyse Vérifiée',
@@ -1989,6 +2163,64 @@ export const translations = {
         collapseSidebar: 'Seitenleiste einklappen', expandSidebar: 'Seitenleiste ausklappen',
         // InlineChart
         chartEditColors: 'Farben bearbeiten', chartDeleteChart: 'Diagramm löschen',
+        // StudioLayout
+        studioExitStudio: 'Studio Verlassen', studioUndoShortcut: 'Rückgängig (Strg+Z)', studioRedoShortcut: 'Wiederholen (Strg+Umsch+Z)',
+        studioExportVideo: 'Video Exportieren', studioSaveProject: 'Projekt Speichern', studioActionsBtn: 'Aktionen',
+        studioSplitBtn: 'Teilen', studioSpeedFX: 'Geschwindigkeitseffekt', studioSegmentSettings: 'Segmenteinstellungen',
+        studioFadeInOut: 'Einblenden/Ausblenden', studioProjectTitlePlaceholder: 'Projekttitel', studioProjectNotes: 'Projektnotizen hinzufügen...',
+        studioNoThumbnail: 'Kein Vorschaubild', studioCaptureFrame: 'Bild Aufnehmen',
+        studioFormat: 'Format', studioFramerate: 'Bildrate', studioAspectRatio: 'Seitenverhältnis',
+        studioQuality: 'Qualität', studioAmbientOcclusion: 'Umgebungsokklusion', studioHighResRender: 'Hochauflösung (2x)',
+        studioBackground: 'Hintergrund', studioShowCursor: 'Cursor Anzeigen', studioWatermark: 'Wasserzeichen',
+        studioWatermarkTextPlaceholder: 'Wasserzeichentext...', studioPosition: 'Position',
+        studioUploadLogo: 'Logo Hochladen', studioClearBtn: 'Löschen', studioRemoveLogo: 'Logo Entfernen',
+        studioSelectImage: 'Bild Auswählen', studioChangeImage: 'Bild Ändern',
+        studioOutputSettings: 'Ausgabeeinstellungen', studioVisuals: 'Visualisierung', studioBranding: 'Branding',
+        studioOverlays: 'Überlagerungen', studioStudioSettings: 'Studio-Einstellungen', studioTimelineTracks: 'Zeitachsenspuren',
+        studioAudioMixer: 'Audiomixer', studioTextOverlays: 'Textüberlagerungen', studioEditRecording: 'Aufnahme Bearbeiten',
+        studioClipProperties: 'Clip-Eigenschaften', studioProjectProperties: 'Projekteigenschaften',
+        studioDoneBtn: 'Fertig', studioProjectInfo: 'Projektinfo', studioThumbnail: 'Vorschaubild',
+        studioTracksLabel: 'Spuren', studioAudioLabel: 'Audio', studioTextLabel: 'Text',
+        studioMP4Video: 'MP4-Video', studioWebMVideo: 'WebM-Video', studioAnimatedGIF: 'Animiertes GIF',
+        studio24FPS: '24 BPS (Film)', studio30FPS: '30 BPS (Standard)', studio60FPS: '60 BPS (HFR)',
+        studio169: '16:9 (Querformat)', studio916: '9:16 (Hochformat)', studio11: '1:1 (Quadrat)',
+        studioLow720p: 'Niedrig (720p)', studioMedium1080p: 'Mittel (1080p)', studioHigh4K: 'Hoch (4K)',
+        studioMasterVolume: 'Gesamtlautstärke', studioMusicSounds: 'Musik & Töne', studioSoundEffects: 'Soundeffekte',
+        studioNoAudioClips: 'Keine Audio-Clips hinzugefügt', studioNoTextOverlays: 'Noch keine Textüberlagerungen.',
+        studioAddTextHint: 'Klicken Sie auf "Text hinzufügen", um zu beginnen.', studioNoSegments: 'Keine Segmente in der Zeitachse',
+        studioDeleteRange: 'Bereich Löschen', studioSplitSession: 'Sitzung Teilen',
+        studioClearCamera: 'Kamera Zurücksetzen', studioClearCameraDesc: 'Entfernt alle Kamerabewegungen',
+        studioClearNotes: 'Notizen Löschen', studioClearNotesDesc: 'Entfernt alle Anmerkungen',
+        studioDeleteEvents: 'Ereignisse Löschen', studioDeleteByTimeRange: 'Nach Zeitbereich Löschen',
+        studioApplySpeed: (s: number) => `Geschwindigkeit ${s}x Anwenden`,
+        studioAppliesRange: (a: string, b: string) => `Gilt für Bereich ${a} - ${b}`,
+        studioClip: (n: number) => `Clip ${n}`,
+        // ChemicalSketcher
+        csEmptySketch: 'Leere Skizze', csEditStructure: 'Struktur Bearbeiten', csDeleteStructure: 'Struktur Löschen',
+        csStartSketching: 'Zeichnen Beginnen', csMolecularSketcher: 'Molekularer Zeichner',
+        csDrawStructure: 'Zeichnen Sie Ihre 2D-Struktur unten', csInitFailed: 'Initialisierungsfehler',
+        csInitializing: 'JSME-Zeichner wird initialisiert...',
+        // CitationBlock
+        cbInsertCitation: 'Zitat Einfügen', cbEditCitation: 'Zitat Bearbeiten', cbRemoveCitation: 'Zitat Entfernen',
+        cbRemoveBtn: 'Entfernen',
+        // CodeCell
+        ccPythonKernel: 'Python-Kernel', ccRunCell: 'Zelle Ausführen', ccRunning: 'Wird ausgeführt...',
+        ccOutput: 'Ausgabe', ccKernelNotInit: 'Kernel nicht initialisiert. Klicken Sie auf "Ausführen" zum Laden von Python.',
+        ccFailedLoad: 'Python-Umgebung konnte nicht geladen werden.', ccErrorLoad: 'Fehler beim Laden von Pyodide.',
+        ccExecFinished: 'Ausführung beendet (keine Ausgabe).',
+        // MeasurementTable
+        mtReport: 'Struktur-Messbericht', mtIndex: 'Index', mtDistance: 'Abstand (Å)',
+        mtAtom1: 'Atom 1', mtAtom2: 'Atom 2', mtDist: 'Abst.', mtFrom: 'Von', mtTo: 'Bis',
+        mtDeleteMeasurement: 'Messung Löschen',
+        // PublicPortfolio
+        ppLoadingGallery: 'Öffentliche Galerie wird geladen...', ppGalleryUnavailable: 'Galerie Nicht Verfügbar',
+        ppReturnHomepage: 'Zur Startseite', ppEmptyGallery: 'Diese öffentliche Galerie ist leer.',
+        ppOpenViewer: 'Im Interaktiven Viewer Öffnen', ppDownloadFile: 'Datei Herunterladen',
+        ppUploaded: 'Hochgeladen', ppResolution: 'Auflösung', ppSize: 'Größe',
+        // ViewportSelector
+        vpViewport: (n: number) => `Ansicht ${n}`, vpVP: (n: number) => `VP ${n}`,
+        // TourGuide
+        tourExitConfirm: 'Möchten Sie die Tour wirklich beenden?',
         chartCapturing: 'Hochauflösend erfassen...', chartDownloadPNG: 'PNG herunterladen (Publikationsbereit)',
         // LabReportTemplate
         lrAuthor: 'Autor', lrReportID: 'Bericht-ID', lrDateCreated: 'Erstellungsdatum', lrStatus: 'Status', lrVerifiedAnalysis: 'Verifizierte Analyse',
@@ -2305,6 +2537,64 @@ export const translations = {
         collapseSidebar: 'Recolher Painel', expandSidebar: 'Expandir Painel',
         // InlineChart
         chartEditColors: 'Editar Cores', chartDeleteChart: 'Excluir Gráfico',
+        // StudioLayout
+        studioExitStudio: 'Sair do Estúdio', studioUndoShortcut: 'Desfazer (Ctrl+Z)', studioRedoShortcut: 'Refazer (Ctrl+Shift+Z)',
+        studioExportVideo: 'Exportar Vídeo', studioSaveProject: 'Salvar Projeto', studioActionsBtn: 'Ações',
+        studioSplitBtn: 'Dividir', studioSpeedFX: 'Efeito de Velocidade', studioSegmentSettings: 'Configurações do Segmento',
+        studioFadeInOut: 'Fade Entrada/Saída', studioProjectTitlePlaceholder: 'Título do Projeto', studioProjectNotes: 'Adicionar notas do projeto...',
+        studioNoThumbnail: 'Sem Miniatura', studioCaptureFrame: 'Capturar Quadro',
+        studioFormat: 'Formato', studioFramerate: 'Taxa de Quadros', studioAspectRatio: 'Proporção de Aspecto',
+        studioQuality: 'Qualidade', studioAmbientOcclusion: 'Oclusão Ambiental', studioHighResRender: 'Renderização Alta Resolução (2x)',
+        studioBackground: 'Fundo', studioShowCursor: 'Mostrar Cursor', studioWatermark: 'Marca d\'água',
+        studioWatermarkTextPlaceholder: 'Texto da marca d\'água...', studioPosition: 'Posição',
+        studioUploadLogo: 'Enviar Logotipo', studioClearBtn: 'Limpar', studioRemoveLogo: 'Remover Logotipo',
+        studioSelectImage: 'Selecionar Imagem', studioChangeImage: 'Alterar Imagem',
+        studioOutputSettings: 'Configurações de Saída', studioVisuals: 'Visual', studioBranding: 'Marca',
+        studioOverlays: 'Sobreposições', studioStudioSettings: 'Configurações do Estúdio', studioTimelineTracks: 'Faixas da Linha do Tempo',
+        studioAudioMixer: 'Mixer de Áudio', studioTextOverlays: 'Texto Sobreposto', studioEditRecording: 'Editar Gravação',
+        studioClipProperties: 'Propriedades do Clip', studioProjectProperties: 'Propriedades do Projeto',
+        studioDoneBtn: 'Concluído', studioProjectInfo: 'Info do Projeto', studioThumbnail: 'Miniatura',
+        studioTracksLabel: 'Faixas', studioAudioLabel: 'Áudio', studioTextLabel: 'Texto',
+        studioMP4Video: 'Vídeo MP4', studioWebMVideo: 'Vídeo WebM', studioAnimatedGIF: 'GIF Animado',
+        studio24FPS: '24 QPS (Cinema)', studio30FPS: '30 QPS (Padrão)', studio60FPS: '60 QPS (HFR)',
+        studio169: '16:9 (Paisagem)', studio916: '9:16 (Retrato)', studio11: '1:1 (Quadrado)',
+        studioLow720p: 'Baixa (720p)', studioMedium1080p: 'Média (1080p)', studioHigh4K: 'Alta (4K)',
+        studioMasterVolume: 'Volume Mestre', studioMusicSounds: 'Música e Sons', studioSoundEffects: 'Efeitos Sonoros',
+        studioNoAudioClips: 'Nenhum clip de áudio adicionado', studioNoTextOverlays: 'Nenhum texto sobreposto ainda.',
+        studioAddTextHint: 'Clique em "Adicionar Texto" para começar.', studioNoSegments: 'Nenhum segmento na linha do tempo',
+        studioDeleteRange: 'Excluir Intervalo', studioSplitSession: 'Dividir Sessão',
+        studioClearCamera: 'Limpar Câmera', studioClearCameraDesc: 'Remove todos os movimentos de câmera',
+        studioClearNotes: 'Limpar Notas', studioClearNotesDesc: 'Remove todas as anotações',
+        studioDeleteEvents: 'Excluir Eventos', studioDeleteByTimeRange: 'Excluir por Intervalo de Tempo',
+        studioApplySpeed: (s: number) => `Aplicar Velocidade ${s}x`,
+        studioAppliesRange: (a: string, b: string) => `Aplica ao intervalo ${a} - ${b}`,
+        studioClip: (n: number) => `Clip ${n}`,
+        // ChemicalSketcher
+        csEmptySketch: 'Esboço Vazio', csEditStructure: 'Editar Estrutura', csDeleteStructure: 'Excluir Estrutura',
+        csStartSketching: 'Começar a Desenhar', csMolecularSketcher: 'Desenhador Molecular',
+        csDrawStructure: 'Desenhe sua estrutura 2D abaixo', csInitFailed: 'Falha na Inicialização',
+        csInitializing: 'Inicializando Desenhador JSME...',
+        // CitationBlock
+        cbInsertCitation: 'Inserir Citação', cbEditCitation: 'Editar citação', cbRemoveCitation: 'Remover citação',
+        cbRemoveBtn: 'Remover',
+        // CodeCell
+        ccPythonKernel: 'Kernel Python', ccRunCell: 'Executar Célula', ccRunning: 'Executando...',
+        ccOutput: 'Saída', ccKernelNotInit: 'Kernel não inicializado. Clique em "Executar" para carregar Python.',
+        ccFailedLoad: 'Falha ao carregar o ambiente Python.', ccErrorLoad: 'Erro ao carregar Pyodide.',
+        ccExecFinished: 'Execução concluída (sem saída).',
+        // MeasurementTable
+        mtReport: 'Relatório de Medições de Estrutura', mtIndex: 'Índice', mtDistance: 'Distância (Å)',
+        mtAtom1: 'Átomo 1', mtAtom2: 'Átomo 2', mtDist: 'Dist.', mtFrom: 'De', mtTo: 'Para',
+        mtDeleteMeasurement: 'Excluir Medição',
+        // PublicPortfolio
+        ppLoadingGallery: 'Carregando Galeria Pública...', ppGalleryUnavailable: 'Galeria Indisponível',
+        ppReturnHomepage: 'Voltar à Página Inicial', ppEmptyGallery: 'Esta galeria pública está vazia.',
+        ppOpenViewer: 'Abrir no Visualizador Interativo', ppDownloadFile: 'Baixar Arquivo',
+        ppUploaded: 'Enviado', ppResolution: 'Resolução', ppSize: 'Tamanho',
+        // ViewportSelector
+        vpViewport: (n: number) => `Janela ${n}`, vpVP: (n: number) => `VP ${n}`,
+        // TourGuide
+        tourExitConfirm: 'Tem certeza de que deseja sair do tour?',
         chartCapturing: 'Capturando Alta Resolução...', chartDownloadPNG: 'Baixar PNG (Pronto para Publicação)',
         // LabReportTemplate
         lrAuthor: 'Autor', lrReportID: 'ID do Relatório', lrDateCreated: 'Data de Criação', lrStatus: 'Status', lrVerifiedAnalysis: 'Análise Verificada',
@@ -2623,6 +2913,64 @@ export const translations = {
         collapseSidebar: 'साइडबार संकुचित करें', expandSidebar: 'साइडबार विस्तारित करें',
         // InlineChart
         chartEditColors: 'रंग संपादित करें', chartDeleteChart: 'चार्ट हटाएं',
+        // StudioLayout
+        studioExitStudio: 'स्टूडियो से बाहर निकलें', studioUndoShortcut: 'पूर्ववत (Ctrl+Z)', studioRedoShortcut: 'फिर से करें (Ctrl+Shift+Z)',
+        studioExportVideo: 'वीडियो निर्यात करें', studioSaveProject: 'प्रोजेक्ट सहेजें', studioActionsBtn: 'क्रियाएं',
+        studioSplitBtn: 'विभाजित करें', studioSpeedFX: 'गति प्रभाव', studioSegmentSettings: 'सेगमेंट सेटिंग्स',
+        studioFadeInOut: 'फेड इन/आउट', studioProjectTitlePlaceholder: 'प्रोजेक्ट शीर्षक', studioProjectNotes: 'प्रोजेक्ट नोट्स जोड़ें...',
+        studioNoThumbnail: 'कोई थंबनेल नहीं', studioCaptureFrame: 'फ्रेम कैप्चर करें',
+        studioFormat: 'प्रारूप', studioFramerate: 'फ्रेम दर', studioAspectRatio: 'आस्पेक्ट रेशियो',
+        studioQuality: 'गुणवत्ता', studioAmbientOcclusion: 'परिवेश छाया', studioHighResRender: 'उच्च-रिज़ॉल्यूशन रेंडर (2x)',
+        studioBackground: 'पृष्ठभूमि', studioShowCursor: 'कर्सर दिखाएं', studioWatermark: 'वॉटरमार्क',
+        studioWatermarkTextPlaceholder: 'वॉटरमार्क टेक्स्ट...', studioPosition: 'स्थिति',
+        studioUploadLogo: 'लोगो अपलोड करें', studioClearBtn: 'साफ करें', studioRemoveLogo: 'लोगो हटाएं',
+        studioSelectImage: 'छवि चुनें', studioChangeImage: 'छवि बदलें',
+        studioOutputSettings: 'आउटपुट सेटिंग्स', studioVisuals: 'दृश्य', studioBranding: 'ब्रांडिंग',
+        studioOverlays: 'ओवरले', studioStudioSettings: 'स्टूडियो सेटिंग्स', studioTimelineTracks: 'टाइमलाइन ट्रैक',
+        studioAudioMixer: 'ऑडियो मिक्सर', studioTextOverlays: 'टेक्स्ट ओवरले', studioEditRecording: 'रिकॉर्डिंग संपादित करें',
+        studioClipProperties: 'क्लिप गुण', studioProjectProperties: 'प्रोजेक्ट गुण',
+        studioDoneBtn: 'पूर्ण', studioProjectInfo: 'प्रोजेक्ट जानकारी', studioThumbnail: 'थंबनेल',
+        studioTracksLabel: 'ट्रैक', studioAudioLabel: 'ऑडियो', studioTextLabel: 'टेक्स्ट',
+        studioMP4Video: 'MP4 वीडियो', studioWebMVideo: 'WebM वीडियो', studioAnimatedGIF: 'एनिमेटेड GIF',
+        studio24FPS: '24 FPS (फिल्म)', studio30FPS: '30 FPS (मानक)', studio60FPS: '60 FPS (HFR)',
+        studio169: '16:9 (लैंडस्केप)', studio916: '9:16 (पोर्ट्रेट)', studio11: '1:1 (वर्गाकार)',
+        studioLow720p: 'कम (720p)', studioMedium1080p: 'मध्यम (1080p)', studioHigh4K: 'उच्च (4K)',
+        studioMasterVolume: 'मास्टर वॉल्यूम', studioMusicSounds: 'संगीत और ध्वनि', studioSoundEffects: 'ध्वनि प्रभाव',
+        studioNoAudioClips: 'कोई ऑडियो क्लिप नहीं जोड़े गए', studioNoTextOverlays: 'अभी कोई टेक्स्ट ओवरले नहीं।',
+        studioAddTextHint: '"टेक्स्ट जोड़ें" पर क्लिक करें।', studioNoSegments: 'टाइमलाइन में कोई सेगमेंट नहीं',
+        studioDeleteRange: 'रेंज हटाएं', studioSplitSession: 'सत्र विभाजित करें',
+        studioClearCamera: 'कैमरा साफ करें', studioClearCameraDesc: 'सभी कैमरा मूवमेंट हटाता है',
+        studioClearNotes: 'नोट्स साफ करें', studioClearNotesDesc: 'सभी एनोटेशन हटाता है',
+        studioDeleteEvents: 'इवेंट हटाएं', studioDeleteByTimeRange: 'समय सीमा के अनुसार हटाएं',
+        studioApplySpeed: (s: number) => `${s}x गति लागू करें`,
+        studioAppliesRange: (a: string, b: string) => `रेंज ${a} - ${b} पर लागू`,
+        studioClip: (n: number) => `क्लिप ${n}`,
+        // ChemicalSketcher
+        csEmptySketch: 'खाली स्केच', csEditStructure: 'संरचना संपादित करें', csDeleteStructure: 'संरचना हटाएं',
+        csStartSketching: 'स्केचिंग शुरू करें', csMolecularSketcher: 'आणविक स्केचर',
+        csDrawStructure: 'नीचे अपनी 2D संरचना बनाएं', csInitFailed: 'आरंभीकरण विफल',
+        csInitializing: 'JSME स्केचर आरंभ हो रहा है...',
+        // CitationBlock
+        cbInsertCitation: 'उद्धरण डालें', cbEditCitation: 'उद्धरण संपादित करें', cbRemoveCitation: 'उद्धरण हटाएं',
+        cbRemoveBtn: 'हटाएं',
+        // CodeCell
+        ccPythonKernel: 'Python कर्नेल', ccRunCell: 'सेल चलाएं', ccRunning: 'चल रहा है...',
+        ccOutput: 'आउटपुट', ccKernelNotInit: 'कर्नेल आरंभ नहीं। Python लोड करने के लिए "चलाएं" पर क्लिक करें।',
+        ccFailedLoad: 'Python परिवेश लोड करने में विफल।', ccErrorLoad: 'Pyodide लोड करने में त्रुटि।',
+        ccExecFinished: 'निष्पादन समाप्त (कोई आउटपुट नहीं)।',
+        // MeasurementTable
+        mtReport: 'संरचना माप रिपोर्ट', mtIndex: 'सूचकांक', mtDistance: 'दूरी (Å)',
+        mtAtom1: 'परमाणु 1', mtAtom2: 'परमाणु 2', mtDist: 'दूरी', mtFrom: 'से', mtTo: 'तक',
+        mtDeleteMeasurement: 'माप हटाएं',
+        // PublicPortfolio
+        ppLoadingGallery: 'सार्वजनिक गैलरी लोड हो रही है...', ppGalleryUnavailable: 'गैलरी अनुपलब्ध',
+        ppReturnHomepage: 'मुखपृष्ठ पर वापस जाएं', ppEmptyGallery: 'यह सार्वजनिक गैलरी खाली है।',
+        ppOpenViewer: 'इंटरैक्टिव व्यूअर में खोलें', ppDownloadFile: 'फ़ाइल डाउनलोड करें',
+        ppUploaded: 'अपलोड किया', ppResolution: 'रिज़ॉल्यूशन', ppSize: 'आकार',
+        // ViewportSelector
+        vpViewport: (n: number) => `व्यूपोर्ट ${n}`, vpVP: (n: number) => `VP ${n}`,
+        // TourGuide
+        tourExitConfirm: 'क्या आप टूर से बाहर निकलना चाहते हैं?',
         chartCapturing: 'उच्च-रिज़ॉल्यूशन कैप्चर हो रहा है...', chartDownloadPNG: 'PNG डाउनलोड करें (प्रकाशन योग्य)',
         // LabReportTemplate
         lrAuthor: 'लेखक', lrReportID: 'रिपोर्ट आईडी', lrDateCreated: 'निर्माण तिथि', lrStatus: 'स्थिति', lrVerifiedAnalysis: 'सत्यापित विश्लेषण',
@@ -2961,6 +3309,64 @@ export const translations = {
         ssTableSettings: '表格设置', ssDataFormula: '数据或公式...',
         // ImageEditorModal
         imgResetZoom: '重置缩放', imgTypeLabels: '输入标签...',
+        // StudioLayout
+        studioExitStudio: '退出工作室', studioUndoShortcut: '撤销 (Ctrl+Z)', studioRedoShortcut: '重做 (Ctrl+Shift+Z)',
+        studioExportVideo: '导出视频', studioSaveProject: '保存项目', studioActionsBtn: '操作',
+        studioSplitBtn: '分割', studioSpeedFX: '速度效果', studioSegmentSettings: '片段设置',
+        studioFadeInOut: '淡入/淡出', studioProjectTitlePlaceholder: '项目标题', studioProjectNotes: '添加项目备注...',
+        studioNoThumbnail: '无缩略图', studioCaptureFrame: '捕获帧',
+        studioFormat: '格式', studioFramerate: '帧率', studioAspectRatio: '宽高比',
+        studioQuality: '质量', studioAmbientOcclusion: '环境光遮蔽', studioHighResRender: '高分辨率渲染 (2x)',
+        studioBackground: '背景', studioShowCursor: '显示光标', studioWatermark: '水印',
+        studioWatermarkTextPlaceholder: '水印文字...', studioPosition: '位置',
+        studioUploadLogo: '上传徽标', studioClearBtn: '清除', studioRemoveLogo: '移除徽标',
+        studioSelectImage: '选择图片', studioChangeImage: '更换图片',
+        studioOutputSettings: '输出设置', studioVisuals: '视觉效果', studioBranding: '品牌',
+        studioOverlays: '叠加层', studioStudioSettings: '工作室设置', studioTimelineTracks: '时间轴轨道',
+        studioAudioMixer: '音频混合器', studioTextOverlays: '文字叠加', studioEditRecording: '编辑录制',
+        studioClipProperties: '片段属性', studioProjectProperties: '项目属性',
+        studioDoneBtn: '完成', studioProjectInfo: '项目信息', studioThumbnail: '缩略图',
+        studioTracksLabel: '轨道', studioAudioLabel: '音频', studioTextLabel: '文字',
+        studioMP4Video: 'MP4 视频', studioWebMVideo: 'WebM 视频', studioAnimatedGIF: '动画 GIF',
+        studio24FPS: '24 FPS（电影）', studio30FPS: '30 FPS（标准）', studio60FPS: '60 FPS（高帧率）',
+        studio169: '16:9（横屏）', studio916: '9:16（竖屏）', studio11: '1:1（正方形）',
+        studioLow720p: '低（720p）', studioMedium1080p: '中（1080p）', studioHigh4K: '高（4K）',
+        studioMasterVolume: '主音量', studioMusicSounds: '音乐与音效', studioSoundEffects: '声音效果',
+        studioNoAudioClips: '未添加音频片段', studioNoTextOverlays: '尚未添加文字叠加。',
+        studioAddTextHint: '点击"添加文字"开始。', studioNoSegments: '时间轴中没有片段',
+        studioDeleteRange: '删除范围', studioSplitSession: '分割会话',
+        studioClearCamera: '清除摄像机', studioClearCameraDesc: '移除所有摄像机移动',
+        studioClearNotes: '清除注释', studioClearNotesDesc: '移除所有标注',
+        studioDeleteEvents: '删除事件', studioDeleteByTimeRange: '按时间范围删除',
+        studioApplySpeed: (s: number) => `应用 ${s}x 速度`,
+        studioAppliesRange: (a: string, b: string) => `应用于范围 ${a} - ${b}`,
+        studioClip: (n: number) => `片段 ${n}`,
+        // ChemicalSketcher
+        csEmptySketch: '空白草图', csEditStructure: '编辑结构', csDeleteStructure: '删除结构',
+        csStartSketching: '开始绘制', csMolecularSketcher: '分子绘制器',
+        csDrawStructure: '在下方绘制您的 2D 结构', csInitFailed: '初始化失败',
+        csInitializing: '正在初始化 JSME 绘制器...',
+        // CitationBlock
+        cbInsertCitation: '插入引用', cbEditCitation: '编辑引用', cbRemoveCitation: '移除引用',
+        cbRemoveBtn: '移除',
+        // CodeCell
+        ccPythonKernel: 'Python 内核', ccRunCell: '运行单元格', ccRunning: '运行中...',
+        ccOutput: '输出', ccKernelNotInit: '内核未初始化。点击"运行"加载 Python。',
+        ccFailedLoad: '无法加载 Python 环境。', ccErrorLoad: '加载 Pyodide 时出错。',
+        ccExecFinished: '执行完成（无输出）。',
+        // MeasurementTable
+        mtReport: '结构测量报告', mtIndex: '索引', mtDistance: '距离 (Å)',
+        mtAtom1: '原子 1', mtAtom2: '原子 2', mtDist: '距离', mtFrom: '从', mtTo: '到',
+        mtDeleteMeasurement: '删除测量',
+        // PublicPortfolio
+        ppLoadingGallery: '正在加载公共画廊...', ppGalleryUnavailable: '画廊不可用',
+        ppReturnHomepage: '返回首页', ppEmptyGallery: '此公共画廊目前为空。',
+        ppOpenViewer: '在交互式查看器中打开', ppDownloadFile: '下载文件',
+        ppUploaded: '已上传', ppResolution: '分辨率', ppSize: '大小',
+        // ViewportSelector
+        vpViewport: (n: number) => `视口 ${n}`, vpVP: (n: number) => `VP ${n}`,
+        // TourGuide
+        tourExitConfirm: '您确定要退出导览吗？',
     },
 };
 
@@ -2973,6 +3379,18 @@ const CODE_TO_LANG: Record<string, string> = {
     hi: 'Hindi (HI)',
     zh: 'Chinese (ZH)',
 };
+
+/** Non-hook version for use in plain functions (e.g. TourGuide) */
+export function getT() {
+    const code = (i18next.language || 'en').slice(0, 2);
+    const langKey = CODE_TO_LANG[code] || 'English (US)';
+    const t = translations[langKey as keyof typeof translations] || translations['English (US)'];
+    return new Proxy(t, {
+        get(target, prop: string) {
+            return target[prop as keyof typeof target] || translations['English (US)'][prop as keyof typeof translations['English (US)']] || prop;
+        }
+    });
+}
 
 export function useTranslation() {
     const [, forceUpdate] = useState(0);

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { getPublicCollection, getDownloadUrl, type Collection, type Structure } from '../../lib/structuresService';
 import { Loader2, Folder, ExternalLink, Download, Globe, Beaker, Dna } from 'lucide-react';
+import { useTranslation } from '../../lib/i18n';
 
 // Re-use some constants for visual consistency
 const COLOR_CLASSES: Record<string, string> = {
@@ -25,6 +26,7 @@ const TYPE_BADGE: Record<string, string> = {
 };
 
 export const PublicPortfolio: React.FC = () => {
+    const { t } = useTranslation();
     const { collectionId } = useParams();
     const navigate = useNavigate();
 
@@ -77,7 +79,7 @@ export const PublicPortfolio: React.FC = () => {
         return (
             <div className="min-h-screen bg-neutral-950 flex flex-col items-center justify-center text-white">
                 <Loader2 className="w-8 h-8 text-blue-500 animate-spin mb-4" />
-                <p className="text-neutral-400 animate-pulse">Loading Public Gallery...</p>
+                <p className="text-neutral-400 animate-pulse">{t.ppLoadingGallery}</p>
             </div>
         );
     }
@@ -89,10 +91,10 @@ export const PublicPortfolio: React.FC = () => {
                     <div className="w-16 h-16 bg-neutral-900 rounded-2xl flex items-center justify-center mx-auto border border-neutral-800 shadow-xl">
                         <Folder className="w-8 h-8 text-neutral-500" />
                     </div>
-                    <h1 className="text-2xl font-bold bg-gradient-to-br from-white to-neutral-500 bg-clip-text text-transparent">Gallery Unavailable</h1>
+                    <h1 className="text-2xl font-bold bg-gradient-to-br from-white to-neutral-500 bg-clip-text text-transparent">{t.ppGalleryUnavailable}</h1>
                     <p className="text-neutral-400 text-sm">{error || 'This folder may be private, deleted, or you might have the wrong link.'}</p>
                     <div className="pt-4">
-                        <Link to="/" className="text-blue-400 hover:text-blue-300 transition-colors text-sm font-medium">Return to Homepage</Link>
+                        <Link to="/" className="text-blue-400 hover:text-blue-300 transition-colors text-sm font-medium">{t.ppReturnHomepage}</Link>
                     </div>
                 </div>
             </div>
@@ -130,7 +132,7 @@ export const PublicPortfolio: React.FC = () => {
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
                 {structures.length === 0 ? (
                     <div className="text-center py-32 border border-dashed border-neutral-800 rounded-3xl bg-neutral-900/20">
-                        <p className="text-neutral-500">This public gallery is currently empty.</p>
+                        <p className="text-neutral-500">{t.ppEmptyGallery}</p>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -176,14 +178,14 @@ export const PublicPortfolio: React.FC = () => {
                                             <button
                                                 onClick={() => handleOpenInViewer(structure)}
                                                 className="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center hover:bg-blue-400 hover:scale-110 transition-all shadow-lg shadow-blue-500/30"
-                                                title="Open in Interactive Viewer"
+                                                title={t.ppOpenViewer as string}
                                             >
                                                 <ExternalLink className="w-4 h-4 ml-0.5" />
                                             </button>
                                             <button
                                                 onClick={() => handleDownload(structure)}
                                                 className="w-10 h-10 rounded-full bg-neutral-800 text-white flex items-center justify-center hover:bg-neutral-700 hover:scale-110 transition-all shadow-lg border border-neutral-700"
-                                                title="Download File"
+                                                title={t.ppDownloadFile as string}
                                             >
                                                 <Download className="w-4 h-4" />
                                             </button>
@@ -198,17 +200,17 @@ export const PublicPortfolio: React.FC = () => {
 
                                         <div className="mt-auto grid grid-cols-2 gap-x-2 gap-y-3 pt-3 border-t border-neutral-800/60">
                                             <div>
-                                                <p className="text-[9px] text-neutral-500 uppercase tracking-wider font-semibold mb-0.5">Uploaded</p>
+                                                <p className="text-[9px] text-neutral-500 uppercase tracking-wider font-semibold mb-0.5">{t.ppUploaded}</p>
                                                 <p className="text-xs text-neutral-300">{new Date(structure.created_at).toLocaleDateString()}</p>
                                             </div>
                                             {(structure.metadata?.resolution != null) ? (
                                                 <div>
-                                                    <p className="text-[9px] text-neutral-500 uppercase tracking-wider font-semibold mb-0.5">Resolution</p>
+                                                    <p className="text-[9px] text-neutral-500 uppercase tracking-wider font-semibold mb-0.5">{t.ppResolution}</p>
                                                     <p className="text-xs text-neutral-300">{structure.metadata.resolution.toFixed(2)} Å</p>
                                                 </div>
                                             ) : (
                                                 <div>
-                                                    <p className="text-[9px] text-neutral-500 uppercase tracking-wider font-semibold mb-0.5">Size</p>
+                                                    <p className="text-[9px] text-neutral-500 uppercase tracking-wider font-semibold mb-0.5">{t.ppSize}</p>
                                                     <p className="text-xs text-neutral-300">{structure.file_size != null ? `${(structure.file_size / 1024).toFixed(0)} KB` : 'Unknown'}</p>
                                                 </div>
                                             )}
