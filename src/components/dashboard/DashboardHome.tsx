@@ -8,6 +8,7 @@ import {
 import { useAuth } from '../../lib/AuthContext';
 import { listStructures, getActivityLog, type Structure, type ActivityLog, type ActivityAction } from '../../lib/structuresService';
 import { useTimezone, formatTime } from '../../lib/timezoneUtils';
+import { useTranslation } from '../../lib/i18n';
 
 function formatBytes(b: number | null) {
     if (!b) return '0 B';
@@ -129,6 +130,7 @@ function StatCard({ label, value, sub, icon: Icon, borderColor, iconBg, iconColo
 const STORAGE_LIMIT_MB = 500;
 
 function StorageBar({ totalBytes }: { totalBytes: number }) {
+    const { t } = useTranslation();
     const usedMB = totalBytes / 1048576;
     const pct = Math.min((usedMB / STORAGE_LIMIT_MB) * 100, 100);
     const color = pct > 85 ? 'bg-red-500' : pct > 65 ? 'bg-amber-500' : 'bg-blue-500';
@@ -136,19 +138,19 @@ function StorageBar({ totalBytes }: { totalBytes: number }) {
     return (
         <div className="bg-[var(--bg-header)] border border-[var(--border-main)] rounded-2xl p-5 space-y-4">
             <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold uppercase tracking-widest text-[var(--text-muted)]">Storage</span>
-                <span className="ml-auto text-[11px] text-[var(--text-muted)]">{STORAGE_LIMIT_MB} MB limit</span>
+                <span className="text-xs font-semibold uppercase tracking-widest text-[var(--text-muted)]">{t.dashHomeStorage as string}</span>
+                <span className="ml-auto text-[11px] text-[var(--text-muted)]">{(t.dashHomeMBLimit as (mb: number) => string)(STORAGE_LIMIT_MB)}</span>
             </div>
             <div className="space-y-2">
                 <div className="flex justify-between text-xs">
-                    <span className="text-[var(--text-secondary)] font-medium">{formatBytes(totalBytes)} used</span>
+                    <span className="text-[var(--text-secondary)] font-medium">{formatBytes(totalBytes)} {t.dashHomeUsed as string}</span>
                     <span className="text-[var(--text-muted)]">{pct.toFixed(1)}%</span>
                 </div>
                 <div className="h-1.5 bg-[var(--input-bg)] rounded-full overflow-hidden">
                     <div className={`h-full rounded-full transition-all duration-700 ${color}`} style={{ width: `${pct}%` }} />
                 </div>
                 <div className="text-[11px] text-[var(--text-muted)]">
-                    {(STORAGE_LIMIT_MB - usedMB).toFixed(1)} MB remaining
+                    {(t.dashHomeRemaining as (mb: string) => string)(`${(STORAGE_LIMIT_MB - usedMB).toFixed(1)} MB`)}
                 </div>
             </div>
         </div>
@@ -159,15 +161,16 @@ function StorageBar({ totalBytes }: { totalBytes: number }) {
 
 function QuickActions() {
     const navigate = useNavigate();
+    const { t } = useTranslation();
     const actions = [
-        { label: 'Open 3D Viewer', icon: Atom, action: () => navigate('/'), accent: 'hover:border-blue-500/40 hover:bg-blue-500/5 hover:text-blue-400' },
-        { label: 'My Structures', icon: FolderOpen, action: () => navigate('/dashboard/structures'), accent: 'hover:border-emerald-500/40 hover:bg-emerald-500/5 hover:text-emerald-400' },
-        { label: 'Activity Log', icon: Activity, action: () => navigate('/dashboard/activity'), accent: 'hover:border-violet-500/40 hover:bg-violet-500/5 hover:text-violet-400' },
+        { label: t.dashHomeOpen3DViewer as string, icon: Atom, action: () => navigate('/'), accent: 'hover:border-blue-500/40 hover:bg-blue-500/5 hover:text-blue-400' },
+        { label: t.myStructures as string, icon: FolderOpen, action: () => navigate('/dashboard/structures'), accent: 'hover:border-emerald-500/40 hover:bg-emerald-500/5 hover:text-emerald-400' },
+        { label: t.dashHomeActivityLog as string, icon: Activity, action: () => navigate('/dashboard/activity'), accent: 'hover:border-violet-500/40 hover:bg-violet-500/5 hover:text-violet-400' },
     ];
     return (
         <div className="bg-[var(--bg-header)] border border-[var(--border-main)] rounded-2xl p-5 space-y-3">
             <span className="text-xs font-semibold uppercase tracking-widest text-[var(--text-muted)] flex items-center gap-2">
-                <Zap className="w-3.5 h-3.5 text-yellow-400" /> Quick Actions
+                <Zap className="w-3.5 h-3.5 text-yellow-400" /> {t.dashHomeQuickActions as string}
             </span>
             <div className="space-y-1.5">
                 {actions.map(({ label, icon: Icon, action, accent }) => (
@@ -186,6 +189,7 @@ function QuickActions() {
 // ─── Top Structures ────────────────────────────────────────────────
 
 function TopStructures({ structures }: { structures: Structure[] }) {
+    const { t } = useTranslation();
     const top = [...structures]
         .filter(s => (s.view_count ?? 0) > 0)
         .sort((a, b) => (b.view_count ?? 0) - (a.view_count ?? 0))
@@ -197,10 +201,10 @@ function TopStructures({ structures }: { structures: Structure[] }) {
         <div className="bg-[var(--bg-header)] border border-[var(--border-main)] rounded-2xl p-5 space-y-4">
             <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold uppercase tracking-widest text-[var(--text-muted)] flex items-center gap-2">
-                    <TrendingUp className="w-3.5 h-3.5 text-emerald-400" /> Most Viewed
+                    <TrendingUp className="w-3.5 h-3.5 text-emerald-400" /> {t.dashHomeMostViewed as string}
                 </span>
                 <Link to="/dashboard/structures" className="text-[11px] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors">
-                    All structures →
+                    {t.dashHomeAllStructures as string}
                 </Link>
             </div>
             <div className="space-y-3">
@@ -230,17 +234,27 @@ function TopStructures({ structures }: { structures: Structure[] }) {
 // ─── Recent Activity Feed ─────────────────────────────────────────
 
 function RecentFeed({ logs, timezone }: { logs: ActivityLog[], timezone: string }) {
+    const { t } = useTranslation();
     const recent = logs.slice(0, 8);
     if (recent.length === 0) return null;
+
+    const ACTION_LABELS: Record<ActivityAction, string> = {
+        upload: t.dashHomeActUploaded as string,
+        open: t.dashHomeActOpened as string,
+        share: t.dashHomeActShared as string,
+        delete: t.dashHomeActDeleted as string,
+        import_rcsb: t.dashHomeActImported as string,
+        duplicate: t.dashHomeActDuplicated as string,
+    };
 
     return (
         <div className="bg-[var(--bg-header)] border border-[var(--border-main)] rounded-2xl p-5 space-y-4">
             <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold uppercase tracking-widest text-[var(--text-muted)] flex items-center gap-2">
-                    <Clock className="w-3.5 h-3.5" /> Recent Activity
+                    <Clock className="w-3.5 h-3.5" /> {t.dashHomeRecentActivity as string}
                 </span>
                 <Link to="/dashboard/activity" className="text-[11px] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors">
-                    Full log →
+                    {t.dashHomeFullLog as string}
                 </Link>
             </div>
             <div className="divide-y divide-[var(--border-main)]">
@@ -253,7 +267,7 @@ function RecentFeed({ logs, timezone }: { logs: ActivityLog[], timezone: string 
                                 <Icon className={`w-3 h-3 ${cfg.color}`} />
                             </div>
                             <div className="flex-1 min-w-0">
-                                <span className="text-[11px] text-[var(--text-muted)]">{cfg.label} </span>
+                                <span className="text-[11px] text-[var(--text-muted)]">{ACTION_LABELS[log.action] ?? cfg.label} </span>
                                 {log.structure_name && (
                                     <span className="text-[11px] text-[var(--text-secondary)] font-medium truncate">{log.structure_name}</span>
                                 )}
@@ -272,12 +286,13 @@ function RecentFeed({ logs, timezone }: { logs: ActivityLog[], timezone: string 
 // ─── Starred Structures ───────────────────────────────────────────
 
 function StarredRow({ structures }: { structures: Structure[] }) {
+    const { t } = useTranslation();
     const starred = structures.filter(s => s.starred).slice(0, 4);
     if (starred.length === 0) return null;
     return (
         <div className="bg-[var(--bg-header)] border border-[var(--border-main)] rounded-2xl p-5 space-y-4">
             <span className="text-xs font-semibold uppercase tracking-widest text-[var(--text-muted)] flex items-center gap-2">
-                <Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400" /> Starred
+                <Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400" /> {t.starred as string}
             </span>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {starred.map(s => (
@@ -298,6 +313,7 @@ function StarredRow({ structures }: { structures: Structure[] }) {
 
 export const DashboardHome = () => {
     const { user } = useAuth();
+    const { t } = useTranslation();
     const timezone = useTimezone();
     const [structures, setStructures] = useState<Structure[]>([]);
     const [logs, setLogs] = useState<ActivityLog[]>([]);
@@ -326,9 +342,9 @@ export const DashboardHome = () => {
     const greeting = () => {
         const h = new Date().toLocaleString('en-US', { timeZone: timezone, hour: 'numeric', hour12: false });
         const hour = parseInt(h, 10);
-        if (hour < 12) return 'Good morning';
-        if (hour < 18) return 'Good afternoon';
-        return 'Good evening';
+        if (hour < 12) return t.dashHomeGoodMorning as string;
+        if (hour < 18) return t.dashHomeGoodAfternoon as string;
+        return t.dashHomeGoodEvening as string;
     };
 
     const displayName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Scientist';
@@ -348,22 +364,22 @@ export const DashboardHome = () => {
                 <div>
                     <p className="text-xs text-[var(--text-muted)] uppercase tracking-widest font-medium">{greeting()}</p>
                     <h1 className="text-2xl font-bold text-[var(--text-primary)] tracking-tight mt-0.5">{displayName}</h1>
-                    <p className="text-xs text-[var(--text-muted)] mt-1">Here's a snapshot of your structure library.</p>
+                    <p className="text-xs text-[var(--text-muted)] mt-1">{t.dashHomeLibrarySnapshot as string}</p>
                 </div>
                 <Link
                     to="/dashboard/structures"
                     className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-xl transition-colors shrink-0 shadow-lg shadow-blue-500/20"
                 >
-                    <Plus className="w-4 h-4" /> <span className="hidden sm:inline">New Structure</span>
+                    <Plus className="w-4 h-4" /> <span className="hidden sm:inline">{t.dashHomeNewStructure as string}</span>
                 </Link>
             </div>
 
             {/* Stats Row */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                 <StatCard
-                    label="Structures"
+                    label={t.dashHomeStatStructures as string}
                     value={structures.length}
-                    sub={`${structures.filter(s => s.starred).length} starred`}
+                    sub={(t.dashHomeStatStarred as (n: number) => string)(structures.filter(s => s.starred).length)}
                     icon={Database}
                     borderColor="border-l-blue-500"
                     iconBg="bg-blue-500/10"
@@ -373,9 +389,9 @@ export const DashboardHome = () => {
                     trend={uploadsTrend}
                 />
                 <StatCard
-                    label="Storage Used"
+                    label={t.dashHomeStatStorageUsed as string}
                     value={formatBytes(totalBytes)}
-                    sub="of 500 MB"
+                    sub={t.dashHomeStatOf500MB as string}
                     icon={TrendingUp}
                     borderColor="border-l-emerald-500"
                     iconBg="bg-emerald-500/10"
@@ -383,9 +399,9 @@ export const DashboardHome = () => {
                     sparkColor="text-emerald-400"
                 />
                 <StatCard
-                    label="Total Opens"
+                    label={t.dashHomeStatTotalOpens as string}
                     value={totalOpens}
-                    sub="all time"
+                    sub={t.dashHomeStatAllTime as string}
                     icon={Eye}
                     borderColor="border-l-violet-500"
                     iconBg="bg-violet-500/10"
@@ -395,9 +411,9 @@ export const DashboardHome = () => {
                     trend={opensTrend}
                 />
                 <StatCard
-                    label="This Week"
+                    label={t.dashHomeStatThisWeek as string}
                     value={weekOpens}
-                    sub="opens in last 7 days"
+                    sub={t.dashHomeStatThisWeekDesc as string}
                     icon={Activity}
                     borderColor="border-l-amber-500"
                     iconBg="bg-amber-500/10"
@@ -419,11 +435,11 @@ export const DashboardHome = () => {
                                 <Dna className="w-7 h-7 text-[var(--text-muted)]" />
                             </div>
                             <div>
-                                <p className="text-sm font-medium text-[var(--text-secondary)]">No structures yet</p>
-                                <p className="text-xs text-[var(--text-muted)] mt-1">Upload your first structure or import from RCSB PDB.</p>
+                                <p className="text-sm font-medium text-[var(--text-secondary)]">{t.emptyStructures as string}</p>
+                                <p className="text-xs text-[var(--text-muted)] mt-1">{t.emptyStructuresDesc as string}</p>
                             </div>
                             <Link to="/dashboard/structures" className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg transition-colors">
-                                <Plus className="w-4 h-4" /> Get Started
+                                <Plus className="w-4 h-4" /> {t.dashHomeGetStarted as string}
                             </Link>
                         </div>
                     )}

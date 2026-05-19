@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MessageSquare, Send, Minimize2 } from 'lucide-react';
 import type { ChatMessage } from '../types';
+import { useTranslation } from '../lib/i18n';
 
 interface SessionChatProps {
     messages: ChatMessage[];
@@ -11,6 +12,7 @@ interface SessionChatProps {
 }
 
 export function SessionChat({ messages, onSendMessage, myPeerId, isOpen, setIsOpen }: SessionChatProps) {
+    const { t } = useTranslation();
     const [inputText, setInputText] = useState('');
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -40,7 +42,7 @@ export function SessionChat({ messages, onSendMessage, myPeerId, isOpen, setIsOp
             <div className="flex items-center justify-between p-3 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-white/5">
                 <div className="flex items-center gap-2">
                     <MessageSquare className="w-4 h-4 text-blue-500" />
-                    <span className="font-semibold text-sm">Session Chat</span>
+                    <span className="font-semibold text-sm">{t.chatTitle as string}</span>
                     <span className="text-xs text-neutral-500 px-2 py-0.5 bg-neutral-200 dark:bg-white/10 rounded-full">
                         {messages.length}
                     </span>
@@ -60,7 +62,7 @@ export function SessionChat({ messages, onSendMessage, myPeerId, isOpen, setIsOp
                 {messages.length === 0 && (
                     <div className="flex flex-col items-center justify-center h-full text-neutral-400 space-y-2">
                         <MessageSquare className="w-8 h-8 opacity-20" />
-                        <p className="text-xs">No messages yet. Say hello!</p>
+                        <p className="text-xs">{t.chatNoMessages as string}</p>
                     </div>
                 )}
 
@@ -110,7 +112,7 @@ export function SessionChat({ messages, onSendMessage, myPeerId, isOpen, setIsOp
                         type="text"
                         value={inputText}
                         onChange={(e) => setInputText(e.target.value)}
-                        placeholder="Type a message..."
+                        placeholder={t.chatPlaceholder as string}
                         className="w-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-full pl-4 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
                     />
                     <button

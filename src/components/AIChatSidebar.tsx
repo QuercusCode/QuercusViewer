@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Send, X, Sparkles, Loader2, Paperclip, FileText, File, XCircle } from 'lucide-react';
 import { sendChatMessage, type ChatMessageRequest, type ChatAttachment } from '../services/aiService';
 import type { PDBMetadata } from '../types';
+import { useTranslation } from '../lib/i18n';
 
 interface AttachmentFile {
     id: string;
@@ -21,6 +22,7 @@ interface AIChatSidebarProps {
 }
 
 export const AIChatSidebar: React.FC<AIChatSidebarProps> = ({ isOpen, onClose, pdbId, pdbMetadata }) => {
+    const { t } = useTranslation();
     const [messages, setMessages] = useState<ChatMessageRequest[]>([
         { role: 'assistant', content: "Hello! I'm Quercus AI. Ask me anything about the loaded structure, your saved library, or upload images, PDFs, and data files for analysis." }
     ]);
@@ -224,7 +226,7 @@ export const AIChatSidebar: React.FC<AIChatSidebarProps> = ({ isOpen, onClose, p
             {/* Drag overlay */}
             {isDragging && (
                 <div className="absolute inset-0 z-10 border-2 border-dashed border-indigo-500 bg-indigo-500/10 flex items-center justify-center pointer-events-none rounded-t-2xl md:rounded-none">
-                    <p className="text-indigo-300 text-sm font-medium">Drop files here</p>
+                    <p className="text-indigo-300 text-sm font-medium">{t.aiDropFiles as string}</p>
                 </div>
             )}
 
@@ -314,7 +316,7 @@ export const AIChatSidebar: React.FC<AIChatSidebarProps> = ({ isOpen, onClose, p
                 <div className="flex items-end gap-2 bg-neutral-900 border border-neutral-700 focus-within:border-indigo-500 rounded-xl px-3 py-2 transition-colors duration-150">
                     <button
                         onClick={() => fileInputRef.current?.click()}
-                        title="Attach file (images, PDF, CSV, TSV)"
+                        title={t.aiAttachFile as string}
                         className="text-neutral-500 hover:text-indigo-400 transition-colors shrink-0 pb-0.5"
                     >
                         <Paperclip className="w-4 h-4" />
@@ -325,7 +327,7 @@ export const AIChatSidebar: React.FC<AIChatSidebarProps> = ({ isOpen, onClose, p
                         value={inputValue}
                         onChange={e => setInputValue(e.target.value)}
                         onKeyDown={handleKeyDown}
-                        placeholder="Ask about your structures…"
+                        placeholder={t.aiAskPlaceholder as string}
                         disabled={isLoading}
                         className="flex-1 bg-transparent text-sm text-white placeholder-neutral-600 resize-none focus:outline-none leading-5 py-0.5"
                     />

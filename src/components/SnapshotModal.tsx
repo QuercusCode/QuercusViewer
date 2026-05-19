@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Check, Image, Zap, Target, Sparkles } from 'lucide-react';
 import clsx from 'clsx';
+import { useTranslation } from '../lib/i18n';
 
 interface SnapshotModalProps {
     isOpen: boolean;
@@ -10,6 +11,7 @@ interface SnapshotModalProps {
 }
 
 export const SnapshotModal: React.FC<SnapshotModalProps> = ({ isOpen, viewMode, onConfirm, onCancel }) => {
+    const { t } = useTranslation();
     const [selectedViewports, setSelectedViewports] = useState<boolean[]>([true, true, true, true]);
     const [selectedQuality, setSelectedQuality] = useState(2); // Default to High (2x)
     const [transparentBackground, setTransparentBackground] = useState(true); // Default to transparent
@@ -120,10 +122,10 @@ export const SnapshotModal: React.FC<SnapshotModalProps> = ({ isOpen, viewMode, 
                 <div className="p-5 border-b border-white/10 bg-gradient-to-r from-gray-900 to-black">
                     <h3 className="text-lg font-bold text-white flex items-center gap-2">
                         <Image className="text-blue-400" size={18} />
-                        Take Snapshot
+                        {t.snapTitle as string}
                     </h3>
                     <p className="text-xs text-gray-400 mt-1">
-                        {isMultiView ? 'Select viewports and quality' : 'Select image quality'}
+                        {isMultiView ? (t.snapSubtitleMulti as string) : (t.snapSubtitleSingle as string)}
                     </p>
                 </div>
 
@@ -134,8 +136,8 @@ export const SnapshotModal: React.FC<SnapshotModalProps> = ({ isOpen, viewMode, 
                     {isMultiView && (
                         <div className="space-y-3">
                             <div className="flex items-center justify-between">
-                                <h4 className="text-sm font-bold text-white">Select Viewports</h4>
-                                <span className="text-xs text-gray-500">{selectedCount} selected</span>
+                                <h4 className="text-sm font-bold text-white">{t.snapSelectViewports as string}</h4>
+                                <span className="text-xs text-gray-500">{(t.snapSelected as (n: number) => string)(selectedCount)}</span>
                             </div>
                             {renderViewportGrid()}
                         </div>
@@ -143,7 +145,7 @@ export const SnapshotModal: React.FC<SnapshotModalProps> = ({ isOpen, viewMode, 
 
                     {/* Quality Selection */}
                     <div className="space-y-3">
-                        <h4 className="text-sm font-bold text-white">Image Quality</h4>
+                        <h4 className="text-sm font-bold text-white">{t.snapImageQuality as string}</h4>
                         <div className="grid grid-cols-2 gap-2">
                             {qualityOptions.map((option) => (
                                 <button
@@ -183,7 +185,7 @@ export const SnapshotModal: React.FC<SnapshotModalProps> = ({ isOpen, viewMode, 
 
                     {/* Transparent Background Toggle */}
                     <div className="space-y-3">
-                        <h4 className="text-sm font-bold text-white">Background</h4>
+                        <h4 className="text-sm font-bold text-white">{t.snapBackground as string}</h4>
                         <button
                             onClick={() => setTransparentBackground(!transparentBackground)}
                             className={clsx(
@@ -198,9 +200,9 @@ export const SnapshotModal: React.FC<SnapshotModalProps> = ({ isOpen, viewMode, 
                                     "font-bold text-sm mb-1",
                                     transparentBackground ? "text-purple-400" : "text-white"
                                 )}>
-                                    Transparent Background
+                                    {t.embedTransparentBg as string}
                                 </div>
-                                <div className="text-[10px] text-gray-500">Removes background for compositing</div>
+                                <div className="text-[10px] text-gray-500">{t.snapTransparentBgDesc as string}</div>
                             </div>
                             <div className={clsx(
                                 "w-12 h-6 rounded-full transition-colors relative",
@@ -221,14 +223,14 @@ export const SnapshotModal: React.FC<SnapshotModalProps> = ({ isOpen, viewMode, 
                         onClick={onCancel}
                         className="px-4 py-2 rounded-lg text-sm text-gray-400 hover:text-white hover:bg-white/5 transition-colors font-medium"
                     >
-                        Cancel
+                        {t.cancelBtn as string}
                     </button>
                     <button
                         onClick={handleConfirm}
                         disabled={selectedCount === 0}
                         className="px-6 py-2 rounded-lg text-sm bg-blue-600 text-white font-bold hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-900/20 transition-all active:scale-95"
                     >
-                        Capture {selectedCount > 1 ? `${selectedCount} Snapshots` : 'Snapshot'}
+                        {(t.snapCapture as (n: number) => string)(selectedCount)}
                     </button>
                 </div>
             </div>
