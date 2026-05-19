@@ -4,6 +4,7 @@ import type { ChainInfo, ColorPalette, PDBMetadata } from '../types';
 import { generateProteinReport } from '../utils/pdfGenerator';
 import { getInteractionType } from '../utils/interactionUtils';
 import { getPaletteColor } from '../utils/colorUtils';
+import { useTranslation } from '../lib/i18n';
 
 interface ContactMapProps {
     isOpen: boolean;
@@ -39,6 +40,7 @@ export const ContactMap: React.FC<ContactMapProps> = ({
     getLigandInteractions,
     pdbAccession
 }) => {
+    const { t } = useTranslation();
     const mapCanvasRef = useRef<HTMLCanvasElement>(null);
     const overlayCanvasRef = useRef<HTMLCanvasElement>(null);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -775,9 +777,9 @@ export const ContactMap: React.FC<ContactMapProps> = ({
                             <Maximize className="w-5 h-5" />
                         </div>
                         <div>
-                            <h3 className="font-bold text-lg">Contact Map</h3>
+                            <h3 className="font-bold text-lg">{t.contactMap as string}</h3>
                             <p className="text-xs opacity-60">
-                                {distanceData ? `${distanceData.size} Residues • ${distanceData.labels.length > 0 ? new Set(distanceData.labels.map(l => l.chain)).size : 0} Chains` : 'Loading Map...'}
+                                {distanceData ? (t.cmResiduesChains as (res: number, chains: number) => string)(distanceData.size, distanceData.labels.length > 0 ? new Set(distanceData.labels.map(l => l.chain)).size : 0) : t.cmLoadingMap as string}
                             </p>
                         </div>
                     </div>
@@ -797,21 +799,21 @@ export const ContactMap: React.FC<ContactMapProps> = ({
                                 className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isLightMode ? 'bg-white border border-neutral-300 shadow-sm hover:bg-neutral-50 text-neutral-700' : 'bg-neutral-800 hover:bg-neutral-700 text-neutral-300'}`}
                             >
                                 <FileText className="w-4 h-4" />
-                                <span className="hidden sm:inline">Export CSV</span>
+                                <span className="hidden sm:inline">{t.exportCSV as string}</span>
                             </button>
                             <button
                                 onClick={handleDownloadClick}
                                 className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isLightMode ? 'bg-neutral-100 hover:bg-neutral-200 text-neutral-600' : 'bg-neutral-800 hover:bg-neutral-700 text-neutral-300'}`}
                             >
                                 <BookOpen className="w-4 h-4" />
-                                <span className="hidden sm:inline">PDF Report</span>
+                                <span className="hidden sm:inline">{t.cmPdfReport as string}</span>
                             </button>
                             <button
                                 onClick={handleDownload}
                                 className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isLightMode ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-blue-600 hover:bg-blue-500 text-white'}`}
                             >
                                 <Download className="w-4 h-4" />
-                                <span className="hidden sm:inline">Save Image</span>
+                                <span className="hidden sm:inline">{t.cmSaveImage as string}</span>
                             </button>
                             <div className={`w-px h-6 mx-2 ${isLightMode ? 'bg-neutral-200' : 'bg-neutral-700'}`} />
                         </div>
@@ -829,7 +831,7 @@ export const ContactMap: React.FC<ContactMapProps> = ({
                             <div className={`absolute inset-0 flex items-center justify-center z-10 ${isLightMode ? 'bg-white/80' : 'bg-black/80'}`}>
                                 <div className="flex flex-col items-center gap-3">
                                     <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full" />
-                                    <span className={`text-sm font-medium ${isLightMode ? 'text-blue-600' : 'text-blue-400'}`}>Computing Interactions...</span>
+                                    <span className={`text-sm font-medium ${isLightMode ? 'text-blue-600' : 'text-blue-400'}`}>{t.cmComputingInteractions as string}</span>
                                 </div>
                             </div>
                         ) : distanceData && (
@@ -938,7 +940,7 @@ export const ContactMap: React.FC<ContactMapProps> = ({
                                 }}
                             >
                                 <div className={`flex items-center justify-between pb-2 border-b ${isLightMode ? 'border-neutral-200/50' : 'border-neutral-700/50'}`}>
-                                    <span className="text-[10px] font-bold uppercase opacity-50 tracking-wider">Interaction</span>
+                                    <span className="text-[10px] font-bold uppercase opacity-50 tracking-wider">{t.cmInteraction as string}</span>
                                     <span className={`text-sm font-bold ${distanceData.matrix[hoverPos.i][hoverPos.j] < 5 ? 'text-blue-500' : 'opacity-70'}`}>
                                         {distanceData.matrix[hoverPos.i][hoverPos.j].toFixed(2)} Å
                                     </span>
@@ -952,8 +954,8 @@ export const ContactMap: React.FC<ContactMapProps> = ({
                                     ) : null;
                                 })()}
                                 <div className="grid grid-cols-2 gap-4 pt-2">
-                                    <div><span className="text-[10px] opacity-50 uppercase">Residue 1</span><div className="font-mono text-sm"><span className="text-blue-500 font-bold mr-1">{distanceData?.labels[hoverPos.i].chain}</span>{distanceData?.labels[hoverPos.i].label}</div></div>
-                                    <div className="text-right"><span className="text-[10px] opacity-50 uppercase">Residue 2</span><div className="font-mono text-sm"><span className="text-blue-500 font-bold mr-1">{distanceData?.labels[hoverPos.j].chain}</span>{distanceData?.labels[hoverPos.j].label}</div></div>
+                                    <div><span className="text-[10px] opacity-50 uppercase">{t.cmResidue1 as string}</span><div className="font-mono text-sm"><span className="text-blue-500 font-bold mr-1">{distanceData?.labels[hoverPos.i].chain}</span>{distanceData?.labels[hoverPos.i].label}</div></div>
+                                    <div className="text-right"><span className="text-[10px] opacity-50 uppercase">{t.cmResidue2 as string}</span><div className="font-mono text-sm"><span className="text-blue-500 font-bold mr-1">{distanceData?.labels[hoverPos.j].chain}</span>{distanceData?.labels[hoverPos.j].label}</div></div>
                                 </div>
                             </div>
                         )}
@@ -976,42 +978,42 @@ export const ContactMap: React.FC<ContactMapProps> = ({
 
                         {/* Mobile Actions (Hidden on Desktop) */}
                         <div className="md:hidden p-3 border-b border-neutral-100 dark:border-neutral-800 space-y-2">
-                            <h4 className="text-xs font-bold uppercase opacity-50 tracking-wider">Actions</h4>
+                            <h4 className="text-xs font-bold uppercase opacity-50 tracking-wider">{t.cmActions as string}</h4>
                             <div className="grid grid-cols-2 gap-2">
                                 <button
                                     onClick={handleDownloadClick}
                                     className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${isLightMode ? 'bg-blue-600 text-white' : 'bg-blue-600 text-white'}`}
                                 >
                                     <BookOpen className="w-4 h-4" />
-                                    <span>PDF Report</span>
+                                    <span>{t.cmPdfReport as string}</span>
                                 </button>
                                 <button
                                     onClick={handleDownload}
                                     className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${isLightMode ? 'bg-neutral-100 text-neutral-600' : 'bg-neutral-800 text-neutral-300'}`}
                                 >
                                     <Download className="w-4 h-4" />
-                                    <span>Image</span>
+                                    <span>{t.cmImageBtn as string}</span>
                                 </button>
                                 <button
                                     onClick={handleDownloadCSV}
                                     className={`col-span-2 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${isLightMode ? 'bg-neutral-100 text-neutral-600' : 'bg-neutral-800 text-neutral-300'}`}
                                 >
                                     <FileText className="w-4 h-4" />
-                                    <span>Export CSV</span>
+                                    <span>{t.exportCSV as string}</span>
                                 </button>
                                 <button
                                     onClick={toggleARMode}
                                     className={`col-span-2 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all ${isARMode ? 'bg-purple-600 text-white animate-pulse' : (isLightMode ? 'bg-neutral-100 text-neutral-600' : 'bg-neutral-800 text-neutral-300')}`}
                                 >
                                     <Smartphone className="w-4 h-4" />
-                                    <span>{isARMode ? 'AR Mode Active (Tilt to Pan)' : 'Enable AR Pan'}</span>
+                                    <span>{isARMode ? t.cmARModeActive as string : t.cmEnableARPan as string}</span>
                                 </button>
                             </div>
                         </div>
 
                         {/* Section: View & Zoom */}
                         <div className="p-3 border-b border-neutral-100 dark:border-neutral-800 space-y-3">
-                            <h4 className="text-xs font-bold uppercase opacity-50 tracking-wider">View Options</h4>
+                            <h4 className="text-xs font-bold uppercase opacity-50 tracking-wider">{t.cmViewOptions as string}</h4>
 
                             <div className={`flex items-center justify-between p-1 rounded-lg mb-3 ${isLightMode ? 'bg-neutral-100' : 'bg-neutral-800'}`}>
                                 <button onClick={() => setScale(s => Math.max(1, s - 1))} className="p-1.5 hover:bg-white dark:hover:bg-neutral-700 rounded-md transition-all"><ZoomOut className="w-4 h-4" /></button>
@@ -1025,7 +1027,7 @@ export const ContactMap: React.FC<ContactMapProps> = ({
                                 onClick={() => setShowGrid(!showGrid)}
                                 className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-colors ${showGrid ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400' : 'hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-500'}`}
                             >
-                                <div className="flex items-center gap-2"><Grid3X3 className="w-4 h-4" /> Show Grid</div>
+                                <div className="flex items-center gap-2"><Grid3X3 className="w-4 h-4" /> {t.cmShowGrid as string}</div>
                                 {showGrid && <Check className="w-3 h-3" />}
                             </button>
 
@@ -1033,48 +1035,48 @@ export const ContactMap: React.FC<ContactMapProps> = ({
                                 onClick={() => setShowIntraChain(!showIntraChain)}
                                 className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-colors ${!showIntraChain ? 'bg-purple-50 text-purple-600 ring-1 ring-purple-200 dark:bg-purple-900/20 dark:text-purple-400 dark:ring-purple-900' : 'hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-500'}`}
                             >
-                                <div className="flex items-center gap-2"><Maximize className="w-4 h-4" /> Interface Focus</div>
+                                <div className="flex items-center gap-2"><Maximize className="w-4 h-4" /> {t.cmInterfaceFocus as string}</div>
                                 {!showIntraChain && <Check className="w-3 h-3" />}
                             </button>
                         </div>
 
                         {/* Section: Map Legend */}
                         <div className="p-3 border-b border-neutral-100 dark:border-neutral-800 space-y-3">
-                            <h4 className="text-xs font-bold uppercase opacity-50 tracking-wider">Map Legend</h4>
+                            <h4 className="text-xs font-bold uppercase opacity-50 tracking-wider">{t.cmMapLegend as string}</h4>
 
                             {/* Secondary Structure */}
                             <div className="grid grid-cols-2 gap-2">
                                 <div className={`flex items-center gap-2 px-2 py-1.5 rounded border ${isLightMode ? 'bg-red-50 border-red-100' : 'bg-red-900/10 border-red-900/20'}`}>
                                     <div className="w-3 h-3 rounded-full bg-red-500" />
-                                    <span className="text-[10px] font-medium opacity-80">Helix</span>
+                                    <span className="text-[10px] font-medium opacity-80">{t.cmHelix as string}</span>
                                 </div>
                                 <div className={`flex items-center gap-2 px-2 py-1.5 rounded border ${isLightMode ? 'bg-yellow-50 border-yellow-100' : 'bg-yellow-900/10 border-yellow-900/20'}`}>
                                     <div className="w-3 h-3 rounded-full bg-yellow-500" />
-                                    <span className="text-[10px] font-medium opacity-80">Sheet</span>
+                                    <span className="text-[10px] font-medium opacity-80">{t.cmSheet as string}</span>
                                 </div>
                                 <div className={`flex items-center gap-2 px-2 py-1.5 rounded border ${isLightMode ? 'bg-pink-50 border-pink-100' : 'bg-pink-900/10 border-pink-900/20'}`}>
                                     <div className="w-3 h-3 rounded-full bg-pink-400" />
-                                    <span className="text-[10px] font-medium opacity-80">3-10 Helix</span>
+                                    <span className="text-[10px] font-medium opacity-80">{t.cmHelix310 as string}</span>
                                 </div>
                                 <div className={`flex items-center gap-2 px-2 py-1.5 rounded border ${isLightMode ? 'bg-purple-50 border-purple-100' : 'bg-purple-900/10 border-purple-900/20'}`}>
                                     <div className="w-3 h-3 rounded-full bg-purple-500" />
-                                    <span className="text-[10px] font-medium opacity-80">Pi Helix</span>
+                                    <span className="text-[10px] font-medium opacity-80">{t.cmPiHelix as string}</span>
                                 </div>
                                 <div className={`flex items-center gap-2 px-2 py-1.5 rounded border ${isLightMode ? 'bg-blue-50 border-blue-100' : 'bg-blue-900/10 border-blue-900/20'}`}>
                                     <div className="w-3 h-3 rounded-full bg-blue-200" />
-                                    <span className="text-[10px] font-medium opacity-80">Turn</span>
+                                    <span className="text-[10px] font-medium opacity-80">{t.cmTurn as string}</span>
                                 </div>
                                 <div className={`flex items-center gap-2 px-2 py-1.5 rounded border ${isLightMode ? 'bg-neutral-50 border-neutral-100' : 'bg-neutral-900/10 border-neutral-900/20'}`}>
                                     <div className={`w-3 h-3 rounded-full border ${isLightMode ? 'bg-white border-neutral-300' : 'bg-neutral-950 border-neutral-700'}`} />
-                                    <span className="text-[10px] font-medium opacity-80">Coil</span>
+                                    <span className="text-[10px] font-medium opacity-80">{t.cmCoil as string}</span>
                                 </div>
                             </div>
 
                             {/* Contact Distance */}
                             <div className={`p-2 rounded border flex flex-col gap-1.5 ${isLightMode ? 'bg-neutral-50 border-neutral-100' : 'bg-neutral-800/50 border-neutral-800'}`}>
                                 <div className="flex items-center justify-between text-[10px] opacity-70">
-                                    <span>Close (&lt;{contactThreshold}Å)</span>
-                                    <span>Distal (&lt;{proximalThreshold}Å)</span>
+                                    <span>{(t.cmClose as (x: number) => string)(contactThreshold)}</span>
+                                    <span>{(t.cmDistal as (x: number) => string)(proximalThreshold)}</span>
                                 </div>
                                 <div className="h-2 w-full rounded-full bg-gradient-to-r from-blue-800 via-blue-400 to-neutral-200 dark:from-blue-600 dark:via-blue-900 dark:to-neutral-800" />
                             </div>
@@ -1083,8 +1085,8 @@ export const ContactMap: React.FC<ContactMapProps> = ({
                         {/* Section: Filters */}
                         <div className={`p-3 border-b border-neutral-100 dark:border-neutral-800 space-y-3 ${filters.all ? '' : 'bg-blue-50/50 dark:bg-blue-900/10'}`}>
                             <div className="flex items-center justify-between">
-                                <h4 className="text-xs font-bold uppercase opacity-50 tracking-wider">Interaction Filters</h4>
-                                {!filters.all && <button onClick={() => setFilters({ ...filters, all: true })} className="text-[10px] text-blue-500 hover:underline">Reset All</button>}
+                                <h4 className="text-xs font-bold uppercase opacity-50 tracking-wider">{t.cmInteractionFilters as string}</h4>
+                                {!filters.all && <button onClick={() => setFilters({ ...filters, all: true })} className="text-[10px] text-blue-500 hover:underline">{t.cmResetAll as string}</button>}
                             </div>
 
                             <label className={`flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-colors ${filters.all ? (isLightMode ? 'bg-neutral-100 font-medium' : 'bg-neutral-800 font-medium') : 'hover:bg-neutral-50 dark:hover:bg-neutral-800/50'}`}>
@@ -1097,15 +1099,15 @@ export const ContactMap: React.FC<ContactMapProps> = ({
                                     />
                                     {filters.all && <Check className="w-3 h-3" />}
                                 </div>
-                                <span className="text-xs">Show All Interactions</span>
+                                <span className="text-xs">{t.cmShowAllInteractions as string}</span>
                             </label>
 
                             <div className="grid grid-cols-1 gap-1 pl-2 border-l-2 border-neutral-100 dark:border-neutral-800 ml-2">
                                 {[
-                                    { id: 'saltBridge', label: 'Salt Bridge', color: 'bg-red-500', activeClass: 'text-red-600 bg-red-50 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-900/30' },
-                                    { id: 'disulfide', label: 'Disulfide Bond', color: 'bg-yellow-500', activeClass: 'text-yellow-600 bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-400 dark:border-yellow-900/30' },
-                                    { id: 'hydrophobic', label: 'Hydrophobic', color: 'bg-green-500', activeClass: 'text-green-600 bg-green-50 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-900/30' },
-                                    { id: 'piStacking', label: 'Pi-Stacking', color: 'bg-purple-500', activeClass: 'text-purple-600 bg-purple-50 border-purple-200 dark:bg-purple-900/20 dark:text-purple-400 dark:border-purple-900/30' },
+                                    { id: 'saltBridge', label: t.cmSaltBridge as string, color: 'bg-red-500', activeClass: 'text-red-600 bg-red-50 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-900/30' },
+                                    { id: 'disulfide', label: t.cmDisulfideBond as string, color: 'bg-yellow-500', activeClass: 'text-yellow-600 bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-400 dark:border-yellow-900/30' },
+                                    { id: 'hydrophobic', label: t.cmHydrophobic as string, color: 'bg-green-500', activeClass: 'text-green-600 bg-green-50 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-900/30' },
+                                    { id: 'piStacking', label: t.cmPiStacking as string, color: 'bg-purple-500', activeClass: 'text-purple-600 bg-purple-50 border-purple-200 dark:bg-purple-900/20 dark:text-purple-400 dark:border-purple-900/30' },
                                 ].map((f) => (
                                     <label key={f.id} className={`flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-all border border-transparent ${filters[f.id as keyof typeof filters] ? f.activeClass : 'opacity-60 hover:opacity-100 hover:bg-neutral-50 dark:hover:bg-neutral-800/50'}`}>
                                         <div className={`w-4 h-4 rounded border flex items-center justify-center ${filters[f.id as keyof typeof filters] ? `border-current` : 'border-neutral-300 dark:border-neutral-600'}`}>
@@ -1129,11 +1131,11 @@ export const ContactMap: React.FC<ContactMapProps> = ({
 
                         {/* Section: Sensitivity */}
                         <div className="p-3 space-y-4">
-                            <h4 className="text-xs font-bold uppercase opacity-50 tracking-wider">Map Sensitivity</h4>
+                            <h4 className="text-xs font-bold uppercase opacity-50 tracking-wider">{t.cmMapSensitivity as string}</h4>
 
                             <div className="space-y-3">
                                 <div className="flex items-center justify-between">
-                                    <label className="text-xs font-bold">Contact Threshold</label>
+                                    <label className="text-xs font-bold">{t.cmContactThreshold as string}</label>
                                     <span className="text-xs font-mono text-blue-500">{contactThreshold} Å</span>
                                 </div>
                                 <input
@@ -1143,12 +1145,12 @@ export const ContactMap: React.FC<ContactMapProps> = ({
                                     onChange={(e) => setContactThreshold(Number(e.target.value))}
                                     className="w-full h-1.5 bg-neutral-200 rounded-lg appearance-none cursor-pointer dark:bg-neutral-700 accent-blue-500"
                                 />
-                                <p className="text-[10px] opacity-50">Defines close contacts (Dark Blue).</p>
+                                <p className="text-[10px] opacity-50">{t.cmContactThresholdDesc as string}</p>
                             </div>
 
                             <div className="space-y-3">
                                 <div className="flex items-center justify-between">
-                                    <label className="text-xs font-bold">Proximal Threshold</label>
+                                    <label className="text-xs font-bold">{t.cmProximalThreshold as string}</label>
                                     <span className="text-xs font-mono opacity-70">{proximalThreshold} Å</span>
                                 </div>
                                 <input
@@ -1158,7 +1160,7 @@ export const ContactMap: React.FC<ContactMapProps> = ({
                                     onChange={(e) => setProximalThreshold(Number(e.target.value))}
                                     className="w-full h-1.5 bg-neutral-200 rounded-lg appearance-none cursor-pointer dark:bg-neutral-700 accent-neutral-500"
                                 />
-                                <p className="text-[10px] opacity-50">Defines nearby residues (Light Blue).</p>
+                                <p className="text-[10px] opacity-50">{t.cmProximalThresholdDesc as string}</p>
                             </div>
                         </div>
 
@@ -1170,9 +1172,9 @@ export const ContactMap: React.FC<ContactMapProps> = ({
             {showReportNameModal && (
                 <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/50 backdrop-blur-sm">
                     <div className={`p-6 rounded-lg shadow-xl w-96 ${isLightMode ? 'bg-white text-gray-900' : 'bg-neutral-800 text-white'} border border-gray-600`}>
-                        <h3 className="text-lg font-bold mb-4">Name Your Report</h3>
+                        <h3 className="text-lg font-bold mb-4">{t.cmNameYourReport as string}</h3>
                         <p className={`text-sm mb-4 ${isLightMode ? 'text-gray-600' : 'text-gray-400'}`}>
-                            Enter a custom name for the PDF file and report title.
+                            {t.cmReportNameDesc as string}
                         </p>
 
                         <input
@@ -1180,7 +1182,7 @@ export const ContactMap: React.FC<ContactMapProps> = ({
                             value={reportNameInput}
                             onChange={(e) => setReportNameInput(e.target.value)}
                             className={`w-full p-2 rounded mb-6 border ${isLightMode ? 'bg-gray-50 border-gray-300 text-gray-900' : 'bg-neutral-700 border-gray-600 text-white'} focus:ring-2 focus:ring-blue-500 outline-none`}
-                            placeholder="My Protein Analysis"
+                            placeholder={t.cmReportNamePlaceholder as string}
                         />
 
                         <div className="flex justify-end gap-3">
@@ -1188,13 +1190,13 @@ export const ContactMap: React.FC<ContactMapProps> = ({
                                 onClick={() => setShowReportNameModal(false)}
                                 className={`px-4 py-2 rounded text-sm ${isLightMode ? 'text-gray-600 hover:bg-gray-100' : 'text-gray-300 hover:bg-neutral-700'}`}
                             >
-                                Cancel
+                                {t.cancelBtn as string}
                             </button>
                             <button
                                 onClick={confirmDownload}
                                 className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium shadow"
                             >
-                                Generate PDF
+                                {t.cmGeneratePDF as string}
                             </button>
                         </div>
                     </div>
