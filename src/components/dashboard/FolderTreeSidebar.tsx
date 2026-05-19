@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Database, Folder, Plus, Pencil, Trash2, Check, X, Loader2, ChevronRight, ChevronDown, Clock, Pin, Globe } from 'lucide-react';
 import { createCollection, renameCollection, deleteCollection, type Collection, type Structure } from '../../lib/structuresService';
 import { DOT } from './CollectionsSidebar'; // reuse colors
+import { useTranslation } from '../../lib/i18n';
 
 interface Props {
     userId: string;
@@ -26,6 +27,7 @@ export function FolderTreeSidebar({
     onSelect, onCreated, onRenamed, onDeleted, onDropStructure,
     recentStructures, pinnedCollectionIds, onOpenStructure, onClose
 }: Props) {
+    const { t } = useTranslation();
     // Tree state
     const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 
@@ -87,7 +89,7 @@ export function FolderTreeSidebar({
     };
 
     const handleDelete = async (id: string) => {
-        if (!confirm('Delete this folder? Nested items will become uncategorized.')) return;
+        if (!confirm(t.confirmDeleteFolder as string)) return;
         try { await deleteCollection(id); onDeleted(id); if (activeCollection === id) onSelect(null); }
         catch { /* ignore */ }
     };
@@ -167,7 +169,7 @@ export function FolderTreeSidebar({
         <div className="bg-[var(--input-bg)] border border-[var(--border-main)] rounded-lg p-2.5 space-y-2 relative shadow-xl z-10 w-full mt-1 overflow-hidden pointer-events-auto">
             <input ref={inputRef} value={newName} onChange={e => setNewName(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') handleCreate(); if (e.key === 'Escape') setCreatingInId(null); }}
-                placeholder="Folder name…"
+                placeholder={t.folderNamePlaceholder as string}
                 className="w-full bg-[var(--bg-header)] text-xs text-[var(--text-primary)] placeholder-neutral-500 px-2.5 py-1.5 rounded border border-[var(--border-main)] focus:border-blue-500/50 outline-none" />
 
             <div className="flex flex-wrap gap-1">
@@ -180,7 +182,7 @@ export function FolderTreeSidebar({
             <div className="flex gap-1 pt-1">
                 <button onClick={handleCreate} disabled={saving || !newName.trim()}
                     className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded text-xs">
-                    {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />} Add
+                    {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />} {t.addBtn as string}
                 </button>
                 <button onClick={() => { setCreatingInId(null); setNewName(''); }} className="px-2 text-[var(--text-muted)] hover:text-[var(--text-primary)] bg-[var(--input-bg)] rounded hover:bg-[var(--input-bg)]">
                     <X className="w-3.5 h-3.5" />
@@ -193,7 +195,7 @@ export function FolderTreeSidebar({
             <div className="w-64 shrink-0 flex flex-col h-full sm:h-[calc(100vh-8rem)] sm:sticky sm:top-2 bg-[var(--bg-header)] sm:border border-[var(--border-main)] sm:rounded-2xl sm:shadow-sm overflow-hidden backdrop-blur-xl sm:backdrop-blur-none transition-all">
                 {/* Header Actions */}
                 <div className="p-4 flex items-center justify-between">
-                <p className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-widest">Projects</p>
+                <p className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-widest">{t.projects as string}</p>
                 <div className="flex items-center gap-1">
                     <button onClick={() => setCreatingInId('root')} className="p-1 text-[var(--text-muted)] hover:text-[var(--text-primary)] rounded-md hover:bg-[var(--input-bg)] transition-colors">
                         <Plus className="w-4 h-4" />

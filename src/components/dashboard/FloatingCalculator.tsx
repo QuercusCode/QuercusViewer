@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Zap, X, Move, Info } from 'lucide-react';
 import { performCalculation } from '../../lib/calcUtils';
+import { useTranslation } from '../../lib/i18n';
 
 interface FloatingCalculatorProps {
   onClose: () => void;
 }
 
 export const FloatingCalculator: React.FC<FloatingCalculatorProps> = ({ onClose }) => {
+  const { t } = useTranslation();
   const [type, setType] = useState<'dilution' | 'molarity' | 'basic'>('dilution');
   const [values, setValues] = useState<Record<string, string>>({});
   const [targetField, setTargetField] = useState<string | null>(null);
@@ -97,7 +99,7 @@ export const FloatingCalculator: React.FC<FloatingCalculatorProps> = ({ onClose 
         setResult(evalResult.toString());
         setDisplay(evalResult.toString());
       } catch {
-        setResult('Error');
+        setResult(t.calcError as string);
       }
     } else if (key === 'C') {
       setDisplay('');

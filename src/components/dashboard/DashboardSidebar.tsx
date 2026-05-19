@@ -63,7 +63,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isCollapsed,
                     <button 
                         onClick={onToggle}
                         className="p-1.5 hover:bg-[var(--input-bg)] rounded-md text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
-                        title="Collapse Sidebar"
+                        title={t.collapseSidebar as string}
                     >
                         <PanelLeftClose className="w-4 h-4" />
                     </button>
@@ -75,7 +75,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isCollapsed,
                     <button 
                         onClick={onToggle}
                         className="p-1.5 bg-[var(--bg-header)] border border-[var(--border-main)] rounded-full text-[var(--text-muted)] hover:text-blue-400 hover:border-blue-500/30 transition-all shadow-xl active:scale-95"
-                        title="Expand Sidebar"
+                        title={t.expandSidebar as string}
                     >
                         <PanelLeftOpen className="w-3.5 h-3.5" />
                     </button>

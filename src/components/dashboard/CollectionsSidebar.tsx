@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { FolderOpen, Folder, Plus, Pencil, Trash2, Check, X, Loader2 } from 'lucide-react';
 import { createCollection, renameCollection, deleteCollection, type Collection } from '../../lib/structuresService';
+import { useTranslation } from '../../lib/i18n';
 
 const COLORS = ['blue', 'violet', 'emerald', 'orange', 'pink', 'amber', 'cyan', 'rose'];
 
@@ -42,6 +43,7 @@ export function CollectionsSidebar({
     userId, collections, activeCollection, counts, uncategorizedCount,
     onSelect, onCreated, onRenamed, onDeleted,
 }: Props) {
+    const { t } = useTranslation();
     const [creating, setCreating] = useState(false);
     const [newName, setNewName] = useState('');
     const [newColor, setNewColor] = useState('blue');
@@ -71,21 +73,21 @@ export function CollectionsSidebar({
     };
 
     const handleDelete = async (id: string) => {
-        if (!confirm('Delete this collection? Structures will become uncategorized.')) return;
+        if (!confirm(t.confirmDeleteCollection as string)) return;
         try { await deleteCollection(id); onDeleted(id); if (activeCollection === id) onSelect(null); }
         catch { /* ignore */ }
     };
 
     return (
         <div className="w-48 shrink-0 space-y-1">
-            <p className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider px-2 mb-2">Collections</p>
+            <p className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider px-2 mb-2">{t.collectionsTitle as string}</p>
 
             {/* All structures */}
             <button onClick={() => onSelect(null)}
                 className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-sm transition-all
                     ${activeCollection === null ? 'bg-[var(--input-bg)] text-[var(--text-primary)]' : 'text-[var(--text-secondary)] hover:bg-[var(--input-bg)] hover:text-[var(--text-primary)]'}`}>
                 <FolderOpen className="w-4 h-4 shrink-0" />
-                <span className="truncate flex-1 text-left">All structures</span>
+                <span className="truncate flex-1 text-left">{t.collectionsAllStructures as string}</span>
                 <span className="text-[10px] text-[var(--text-muted)]">{counts['__all__'] ?? 0}</span>
             </button>
 
@@ -95,7 +97,7 @@ export function CollectionsSidebar({
                     className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-sm transition-all
                         ${activeCollection === '__none__' ? 'bg-[var(--input-bg)] text-[var(--text-primary)]' : 'text-[var(--text-secondary)] hover:bg-[var(--input-bg)] hover:text-[var(--text-primary)]'}`}>
                     <Folder className="w-4 h-4 shrink-0 text-[var(--text-muted)]" />
-                    <span className="truncate flex-1 text-left">Uncategorized</span>
+                    <span className="truncate flex-1 text-left">{t.uncategorized as string}</span>
                     <span className="text-[10px] text-[var(--text-muted)]">{uncategorizedCount}</span>
                 </button>
             )}
@@ -142,7 +144,7 @@ export function CollectionsSidebar({
                 <div className="bg-[var(--input-bg)] border border-[var(--border-main)] rounded-xl p-3 space-y-2">
                     <input ref={inputRef} value={newName} onChange={e => setNewName(e.target.value)}
                         onKeyDown={e => { if (e.key === 'Enter') handleCreate(); if (e.key === 'Escape') setCreating(false); }}
-                        placeholder="Collection name…"
+                        placeholder={t.collectionNamePlaceholder as string}
                         className="w-full bg-[var(--input-bg)] text-xs text-[var(--text-primary)] placeholder-neutral-500 px-2.5 py-1.5 rounded-lg outline-none border border-transparent focus:border-blue-500/50" />
                     <div className="flex flex-wrap gap-1.5">
                         {COLORS.map(col => (
@@ -153,7 +155,7 @@ export function CollectionsSidebar({
                     <div className="flex gap-1">
                         <button onClick={handleCreate} disabled={saving || !newName.trim()}
                             className="flex-1 flex items-center justify-center gap-1 py-1 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-lg text-xs transition-colors">
-                            {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}Create
+                            {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}{t.createBtn as string}
                         </button>
                         <button onClick={() => { setCreating(false); setNewName(''); }} className="px-2 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors">
                             <X className="w-3.5 h-3.5" />

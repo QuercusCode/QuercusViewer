@@ -3,12 +3,14 @@ import { ExternalLink, Dna, Loader2, Database, FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { type Structure } from '../../lib/structuresService';
+import { useTranslation } from '../../lib/i18n';
 
 interface StructurePreviewCardProps {
   structureId: string;
 }
 
 export const StructurePreviewCard: React.FC<StructurePreviewCardProps> = ({ structureId }) => {
+  const { t } = useTranslation();
   const [structure, setStructure] = useState<Structure | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -46,7 +48,7 @@ export const StructurePreviewCard: React.FC<StructurePreviewCardProps> = ({ stru
     return (
       <div className="my-4 w-full max-w-md p-4 bg-red-500/5 border border-red-500/20 rounded-2xl text-red-400 text-sm flex items-center gap-3">
         <Database className="w-5 h-5 flex-shrink-0" />
-        <p>Structure not found or deleted.</p>
+        <p>{t.previewNotFound as string}</p>
       </div>
     );
   }

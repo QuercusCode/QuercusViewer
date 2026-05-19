@@ -6,6 +6,7 @@ import {
 import { useAuth } from '../../lib/AuthContext';
 import { getActivityLog, type ActivityLog, type ActivityAction } from '../../lib/structuresService';
 import { useTimezone, formatTime } from '../../lib/timezoneUtils';
+import { useTranslation } from '../../lib/i18n';
 
 // ─── Helpers ──────────────────────────────────────────────────────
 
@@ -29,7 +30,7 @@ const ACTION_CONFIG: Record<ActivityAction, { label: string; icon: React.Element
 };
 
 // Group consecutive logs by date (timezone-aware)
-function groupByDate(logs: ActivityLog[], timezone: string) {
+function groupByDate(logs: ActivityLog[], timezone: string, todayStr: string, yesterdayStr: string) {
     const groups: { date: string; items: ActivityLog[] }[] = [];
 
     const todayLabel = new Date().toLocaleDateString(undefined, { timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit' });
@@ -41,8 +42,8 @@ function groupByDate(logs: ActivityLog[], timezone: string) {
         const dLabel = d.toLocaleDateString(undefined, { timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit' });
 
         let label: string;
-        if (dLabel === todayLabel) label = 'Today';
-        else if (dLabel === yesterdayLabel) label = 'Yesterday';
+        if (dLabel === todayLabel) label = todayStr;
+        else if (dLabel === yesterdayLabel) label = yesterdayStr;
         else label = d.toLocaleDateString(undefined, { timeZone: timezone, weekday: 'short', month: 'short', day: 'numeric' });
 
         const last = groups[groups.length - 1];
@@ -55,10 +56,20 @@ function groupByDate(logs: ActivityLog[], timezone: string) {
 // ─── Summary Stats Bar ────────────────────────────────────────────
 
 function StatsBar({ logs }: { logs: ActivityLog[] }) {
+    const { t } = useTranslation();
     const counts: Record<ActivityAction, number> = {
         upload: 0, open: 0, share: 0, delete: 0, import_rcsb: 0, duplicate: 0
     };
     for (const l of logs) counts[l.action] = (counts[l.action] ?? 0) + 1;
+
+    const ACTION_LABELS: Record<ActivityAction, string> = {
+        upload: t.dashHomeActUploaded as string,
+        open: t.dashHomeActOpened as string,
+        share: t.dashHomeActShared as string,
+        delete: t.dashHomeActDeleted as string,
+        import_rcsb: t.atImportedRCSB as string,
+        duplicate: t.dashHomeActDuplicated as string,
+    };
 
     const entries: { action: ActivityAction; count: number }[] = [
         { action: 'upload', count: counts.upload + counts.import_rcsb },
@@ -76,7 +87,7 @@ function StatsBar({ logs }: { logs: ActivityLog[] }) {
                         className={`rounded-xl border p-4 flex flex-col gap-1.5 ${cfg.bg}`}>
                         <Icon className={`w-4 h-4 ${cfg.color}`} />
                         <div className={`text-2xl font-bold tabular-nums ${cfg.color}`}>{count}</div>
-                        <div className="text-xs text-[var(--text-muted)] font-medium capitalize">{cfg.label}s</div>
+                        <div className="text-xs text-[var(--text-muted)] font-medium">{ACTION_LABELS[action]}</div>
                     </div>
                 );
             })}
@@ -87,6 +98,7 @@ function StatsBar({ logs }: { logs: ActivityLog[] }) {
 // ─── Main Component ───────────────────────────────────────────────
 
 export const ActivityTimeline = () => {
+    const { t } = useTranslation();
     const { user } = useAuth();
     const timezone = useTimezone();
     const [logs, setLogs] = useState<ActivityLog[]>([]);
@@ -101,7 +113,7 @@ export const ActivityTimeline = () => {
             const data = await getActivityLog(user.id, 100);
             setLogs(data);
         } catch (e: any) {
-            setError(e.message ?? 'Failed to load activity');
+            setError(e.message ?? t.atFailedLoad as string);
         } finally {
             setLoading(false);
         }
@@ -110,16 +122,25 @@ export const ActivityTimeline = () => {
     useEffect(() => { load(); }, [load]);
 
     const visible = filter === 'all' ? logs : logs.filter(l => l.action === filter);
-    const grouped = groupByDate(visible, timezone);
+    const grouped = groupByDate(visible, timezone, t.atToday as string, t.atYesterday as string);
+
+    const ACTION_LABELS: Record<ActivityAction, string> = {
+        upload: t.dashHomeActUploaded as string,
+        open: t.dashHomeActOpened as string,
+        share: t.dashHomeActShared as string,
+        delete: t.dashHomeActDeleted as string,
+        import_rcsb: t.atImportedRCSB as string,
+        duplicate: t.dashHomeActDuplicated as string,
+    };
 
     const FILTERS: { key: ActivityAction | 'all'; label: string }[] = [
-        { key: 'all', label: 'All' },
-        { key: 'upload', label: 'Uploads' },
-        { key: 'import_rcsb', label: 'RCSB' },
-        { key: 'open', label: 'Opens' },
-        { key: 'share', label: 'Shares' },
-        { key: 'duplicate', label: 'Duplicates' },
-        { key: 'delete', label: 'Deletes' },
+        { key: 'all', label: t.atFilterAll as string },
+        { key: 'upload', label: t.atFilterUploads as string },
+        { key: 'import_rcsb', label: t.atFilterRCSB as string },
+        { key: 'open', label: t.atFilterOpens as string },
+        { key: 'share', label: t.atFilterShares as string },
+        { key: 'duplicate', label: t.atFilterDuplicates as string },
+        { key: 'delete', label: t.atFilterDeletes as string },
     ];
 
     return (
@@ -130,10 +151,10 @@ export const ActivityTimeline = () => {
                 <div>
                     <h2 className="text-2xl font-bold text-[var(--text-primary)] flex items-center gap-2">
                         <Activity className="w-6 h-6 text-blue-400" />
-                        Activity Timeline
+                        {t.atTitle as string}
                     </h2>
                     <p className="text-sm text-[var(--text-muted)] mt-0.5">
-                        A log of your recent actions — opens, uploads, shares, and more.
+                        {t.atSubtitle as string}
                     </p>
                 </div>
                 <button onClick={load} disabled={loading}
@@ -176,7 +197,7 @@ export const ActivityTimeline = () => {
             {!loading && visible.length === 0 && (
                 <div className="text-center py-16 text-[var(--text-muted)]">
                     <Clock className="w-10 h-10 mx-auto mb-3 opacity-30" />
-                    <p className="text-sm">No activity yet — open or upload a structure to get started.</p>
+                    <p className="text-sm">{t.atEmpty as string}</p>
                 </div>
             )}
 
@@ -206,7 +227,7 @@ export const ActivityTimeline = () => {
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-baseline gap-2">
                                             <span className={`text-xs font-semibold uppercase tracking-wide ${cfg.color}`}>
-                                                {cfg.label}
+                                                {ACTION_LABELS[log.action] ?? cfg.label}
                                             </span>
                                             {log.structure_name && (
                                                 <span className="text-sm text-[var(--text-primary)] font-medium truncate" title={log.structure_name}>

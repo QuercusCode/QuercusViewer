@@ -3,6 +3,7 @@ import { ReactNodeViewRenderer, NodeViewWrapper } from '@tiptap/react';
 import type { NodeViewProps } from '@tiptap/react';
 import { Calculator, Zap, Trash2, Info } from 'lucide-react';
 import { performCalculation } from '../../lib/calcUtils';
+import { useTranslation } from '../../lib/i18n';
 
 // --- Tiptap Extension ---
 
@@ -243,6 +244,7 @@ interface CalcFieldProps {
 }
 
 const CalcField = ({ label, value, unit, onValueChange, onUnitChange, unitType, isTarget }: CalcFieldProps) => {
+  const { t } = useTranslation();
   const options = UNIT_OPTIONS[unitType as keyof typeof UNIT_OPTIONS] || [];
   
   return (
@@ -256,7 +258,7 @@ const CalcField = ({ label, value, unit, onValueChange, onUnitChange, unitType, 
         <input 
           type="text"
           value={value || ''}
-          placeholder={isTarget ? 'Calculating...' : 'Enter...'}
+          placeholder={isTarget ? t.calcCalculating as string : t.calcEnter as string}
           onChange={(e) => onValueChange(e.target.value)}
           className="w-full h-10 bg-transparent px-4 pr-16 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)]/30 focus:outline-none font-mono"
         />
