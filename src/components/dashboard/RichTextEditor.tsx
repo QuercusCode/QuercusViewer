@@ -68,6 +68,7 @@ import {
   AlignLeft, AlignCenter, AlignRight, BookOpen
 } from 'lucide-react';
 import type { Structure } from '../../lib/structuresService';
+import { useTranslation } from '../../lib/i18n';
 
 interface RichTextEditorProps {
   content: string;
@@ -213,6 +214,7 @@ export const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>
   allStructures = [],
   noteId
 }, ref) => {
+  const { t } = useTranslation();
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const { theme } = useTheme();
   const { user } = useAuth();
@@ -483,17 +485,17 @@ export const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>
       <div className="flex items-center flex-wrap gap-0.5 p-1 bg-[var(--bg-header)] border-b border-[var(--border-main)] sticky top-0 z-50 rounded-t-xl">
         {/* History */}
         <div className="flex items-center">
-          <ToolbarButton 
-            onClick={() => editor.chain().focus().undo().run()} 
+          <ToolbarButton
+            onClick={() => editor.chain().focus().undo().run()}
             disabled={!editor.can().undo()}
-            title="Undo"
+            title={t.rteUndo as string}
           >
             <Undo className="w-4 h-4" />
           </ToolbarButton>
-          <ToolbarButton 
-            onClick={() => editor.chain().focus().redo().run()} 
+          <ToolbarButton
+            onClick={() => editor.chain().focus().redo().run()}
             disabled={!editor.can().redo()}
-            title="Redo"
+            title={t.rteRedo as string}
           >
             <Redo className="w-4 h-4" />
           </ToolbarButton>
@@ -503,24 +505,24 @@ export const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>
 
         {/* Headings */}
         <div className="flex items-center">
-          <ToolbarButton 
-            onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} 
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
             isActive={editor.isActive('heading', { level: 1 })}
-            title="Heading 1"
+            title={t.rteH1 as string}
           >
             <Heading1 className="w-4 h-4" />
           </ToolbarButton>
-          <ToolbarButton 
-            onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} 
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
             isActive={editor.isActive('heading', { level: 2 })}
-            title="Heading 2"
+            title={t.rteH2 as string}
           >
             <Heading2 className="w-4 h-4" />
           </ToolbarButton>
-          <ToolbarButton 
-            onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} 
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
             isActive={editor.isActive('heading', { level: 3 })}
-            title="Heading 3"
+            title={t.rteH3 as string}
           >
             <Heading3 className="w-4 h-4" />
           </ToolbarButton>
@@ -530,9 +532,9 @@ export const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>
 
         {/* Media */}
         <div className="flex items-center">
-          <ToolbarButton 
-            onClick={() => fileInputRef.current?.click()} 
-            title="Upload Image"
+          <ToolbarButton
+            onClick={() => fileInputRef.current?.click()}
+            title={t.rteUploadImage as string}
           >
             <ImageIcon className="w-4 h-4" />
           </ToolbarButton>
@@ -549,38 +551,38 @@ export const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>
 
         {/* Basic Formatting */}
         <div className="flex items-center">
-          <ToolbarButton 
-            onClick={() => editor.chain().focus().toggleBold().run()} 
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleBold().run()}
             isActive={editor.isActive('bold')}
-            title="Bold"
+            title={t.rteBold as string}
           >
             <Bold className="w-4 h-4" />
           </ToolbarButton>
-          <ToolbarButton 
-            onClick={() => editor.chain().focus().toggleItalic().run()} 
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleItalic().run()}
             isActive={editor.isActive('italic')}
-            title="Italic"
+            title={t.rteItalic as string}
           >
             <Italic className="w-4 h-4" />
           </ToolbarButton>
-          <ToolbarButton 
-            onClick={() => editor.chain().focus().toggleUnderline().run()} 
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleUnderline().run()}
             isActive={editor.isActive('underline')}
-            title="Underline"
+            title={t.rteUnderline as string}
           >
             <UnderlineIcon className="w-4 h-4" />
           </ToolbarButton>
-          <ToolbarButton 
-            onClick={() => editor.chain().focus().toggleStrike().run()} 
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleStrike().run()}
             isActive={editor.isActive('strike')}
-            title="Strikethrough"
+            title={t.rteStrikethrough as string}
           >
             <Strikethrough className="w-4 h-4" />
           </ToolbarButton>
-          <ToolbarButton 
-            onClick={() => editor.chain().focus().toggleCode().run()} 
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleCode().run()}
             isActive={editor.isActive('code')}
-            title="Code"
+            title={t.rteCode as string}
           >
             <Code className="w-4 h-4" />
           </ToolbarButton>
@@ -590,10 +592,10 @@ export const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>
 
         {/* Links & Colors */}
         <div className="flex items-center">
-          <ToolbarButton 
-            onClick={setLink} 
+          <ToolbarButton
+            onClick={setLink}
             isActive={editor.isActive('link')}
-            title="Link"
+            title={t.rteLink as string}
           >
             <LinkIcon className="w-4 h-4" />
           </ToolbarButton>
@@ -640,7 +642,7 @@ export const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>
                 className="w-full flex items-center justify-center gap-2 px-2 py-1.5 text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--input-bg)] rounded transition-colors"
               >
                 <Eraser className="w-3 h-3" />
-                <span>Clear highlight</span>
+                <span>{t.rteClearHighlight}</span>
               </button>
             </div>
           </Dropdown>
@@ -667,7 +669,7 @@ export const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>
                 className="w-full mt-3 flex items-center justify-center gap-2 px-2 py-1.5 text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--input-bg)] rounded transition-colors"
               >
                 <Eraser className="w-3 h-3" />
-                <span>Reset to default</span>
+                <span>{t.rteResetDefault}</span>
               </button>
             </div>
           </Dropdown>
@@ -677,24 +679,24 @@ export const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>
 
         {/* Alignment */}
         <div className="flex items-center">
-          <ToolbarButton 
-            onClick={() => editor.chain().focus().setTextAlign('left').run()} 
+          <ToolbarButton
+            onClick={() => editor.chain().focus().setTextAlign('left').run()}
             isActive={editor.isActive({ textAlign: 'left' })}
-            title="Align Left"
+            title={t.rteAlignLeft as string}
           >
             <AlignLeft className="w-4 h-4" />
           </ToolbarButton>
-          <ToolbarButton 
-            onClick={() => editor.chain().focus().setTextAlign('center').run()} 
+          <ToolbarButton
+            onClick={() => editor.chain().focus().setTextAlign('center').run()}
             isActive={editor.isActive({ textAlign: 'center' })}
-            title="Align Center"
+            title={t.rteAlignCenter as string}
           >
             <AlignCenter className="w-4 h-4" />
           </ToolbarButton>
-          <ToolbarButton 
-            onClick={() => editor.chain().focus().setTextAlign('right').run()} 
+          <ToolbarButton
+            onClick={() => editor.chain().focus().setTextAlign('right').run()}
             isActive={editor.isActive({ textAlign: 'right' })}
-            title="Align Right"
+            title={t.rteAlignRight as string}
           >
             <AlignRight className="w-4 h-4" />
           </ToolbarButton>
@@ -704,17 +706,17 @@ export const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>
 
         {/* Scripts */}
         <div className="flex items-center">
-          <ToolbarButton 
-            onClick={() => editor.chain().focus().toggleSubscript().run()} 
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleSubscript().run()}
             isActive={editor.isActive('subscript')}
-            title="Subscript"
+            title={t.rteSubscript as string}
           >
             <SubscriptIcon className="w-4 h-4" />
           </ToolbarButton>
-          <ToolbarButton 
-            onClick={() => editor.chain().focus().toggleSuperscript().run()} 
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleSuperscript().run()}
             isActive={editor.isActive('superscript')}
-            title="Superscript"
+            title={t.rteSuperscript as string}
           >
             <SuperscriptIcon className="w-4 h-4" />
           </ToolbarButton>
@@ -724,24 +726,24 @@ export const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>
 
         {/* Lists */}
         <div className="flex items-center">
-          <ToolbarButton 
-            onClick={() => editor.chain().focus().toggleBulletList().run()} 
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleBulletList().run()}
             isActive={editor.isActive('bulletList')}
-            title="Bullet List"
+            title={t.rteBulletList as string}
           >
             <List className="w-4 h-4" />
           </ToolbarButton>
-          <ToolbarButton 
-            onClick={() => editor.chain().focus().toggleOrderedList().run()} 
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleOrderedList().run()}
             isActive={editor.isActive('orderedList')}
-            title="Numbered List"
+            title={t.rteNumberedList as string}
           >
             <ListOrdered className="w-4 h-4" />
           </ToolbarButton>
-          <ToolbarButton 
-            onClick={() => editor.chain().focus().toggleTaskList().run()} 
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleTaskList().run()}
             isActive={editor.isActive('taskList')}
-            title="Task List"
+            title={t.rteTaskList as string}
           >
             <CheckSquare className="w-4 h-4" />
           </ToolbarButton>
@@ -762,7 +764,7 @@ export const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>
                 className={`flex items-center gap-1.5 px-3 py-1 rounded-lg transition-colors cursor-pointer text-xs font-semibold ${activeMenu === 'scientific' ? 'bg-blue-500/30 text-blue-200' : 'bg-[var(--input-bg)] hover:bg-[var(--input-bg)]/80 text-[var(--text-secondary)]'}`}
               >
                 <FlaskConical className="w-3.5 h-3.5" />
-                <span>Insert</span>
+                <span>{t.rteInsert}</span>
                 <ChevronDown className="w-2.5 h-2.5 opacity-50" />
               </div>
             }
@@ -919,14 +921,14 @@ export const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>
                 className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-[var(--text-secondary)] hover:bg-[var(--input-bg)] rounded-md transition-colors"
               >
                 <Eraser className="w-3.5 h-3.5 opacity-50" />
-                <span>Clear formatting</span>
+                <span>{t.rteClearFormatting}</span>
               </button>
               <button 
                 onClick={() => editor.chain().focus().clearContent().run()}
                 className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-red-400/70 hover:bg-red-500/10 hover:text-red-400 rounded-md transition-colors"
               >
                 <Eraser className="w-3.5 h-3.5 opacity-50" />
-                <span>Clear all content</span>
+                <span>{t.rteClearAllContent}</span>
               </button>
             </div>
           </Dropdown>

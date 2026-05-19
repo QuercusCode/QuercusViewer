@@ -3,16 +3,18 @@ import html2canvas from 'html2canvas'
 import { Node, mergeAttributes } from '@tiptap/core'
 import { ReactNodeViewRenderer, NodeViewWrapper } from '@tiptap/react'
 import type { NodeViewProps } from '@tiptap/react'
-import { 
-  LineChart, Line, BarChart, Bar, XAxis, YAxis, 
+import {
+  LineChart, Line, BarChart, Bar, XAxis, YAxis,
   CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   ReferenceLine, ScatterChart, Scatter, ZAxis
 } from 'recharts'
 import { Trash2, BarChart2, TrendingUp, Palette, X, Download, Zap } from 'lucide-react'
+import { useTranslation } from '../../lib/i18n'
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#ef4444', '#06b6d4', '#84cc16'];
 
 const InlineChartComponent = ({ node, updateAttributes, deleteNode }: NodeViewProps) => {
+  const { t } = useTranslation()
   const { data, type, title, xAxis, yAxes, customColors, showTrendLine, showStatistics } = node.attrs
   const [showColorEditor, setShowColorEditor] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
@@ -151,7 +153,7 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: NodeViewPr
               <button 
                 onClick={() => setShowColorEditor(!showColorEditor)}
                 className={`p-1.5 rounded-lg transition-all ${showColorEditor ? 'bg-blue-600 text-white' : 'bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-white'}`}
-                title="Edit Colors"
+                title={t.chartEditColors as string}
               >
                 <Palette className="w-3.5 h-3.5" />
               </button>
@@ -159,7 +161,7 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: NodeViewPr
               {showColorEditor && (
                 <div className="absolute top-full right-0 mt-2 w-64 bg-[var(--bg-main)] border border-[var(--border-main)] rounded-xl shadow-2xl p-4 animate-in fade-in slide-in-from-top-2">
                   <div className="flex items-center justify-between mb-3 pb-2 border-b border-[var(--border-main)]">
-                    <span className="text-[10px] font-bold text-[var(--text-primary)] uppercase tracking-tight">Edit Colors</span>
+                    <span className="text-[10px] font-bold text-[var(--text-primary)] uppercase tracking-tight">{t.chartEditColors}</span>
                     <button onClick={() => setShowColorEditor(false)} className="text-[var(--text-muted)] hover:text-[var(--text-primary)]">
                       <X className="w-3 h-3" />
                     </button>
@@ -198,7 +200,7 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: NodeViewPr
             <button 
               onClick={() => deleteNode()}
               className="p-1.5 bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white rounded-lg transition-all"
-              title="Delete Chart"
+              title={t.chartDeleteChart as string}
             >
               <Trash2 className="w-3.5 h-3.5" />
             </button>
@@ -313,7 +315,7 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: NodeViewPr
             className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500 hover:text-white text-blue-400 text-[10px] font-bold rounded-lg border border-blue-500/20 transition-all disabled:opacity-50"
           >
             {isExporting ? <span className="animate-spin text-xs">⌛</span> : <Download className="w-3.5 h-3.5" />}
-            {isExporting ? 'Capturing High-Res...' : 'Download PNG (Publication Ready)'}
+            {isExporting ? t.chartCapturing : t.chartDownloadPNG}
           </button>
         </div>
 

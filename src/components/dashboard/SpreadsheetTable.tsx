@@ -4,13 +4,15 @@ import { Table } from '@tiptap/extension-table'
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react'
 import {
   Trash2, Download, Settings,
-  Bold, Italic, Underline as UnderlineIcon, Strikethrough, 
+  Bold, Italic, Underline as UnderlineIcon, Strikethrough,
   AlignLeft, AlignCenter, AlignRight, Link as LinkIcon, Type,
   ChevronDown, Activity, BarChart2, Plus, X, TrendingUp
 } from 'lucide-react'
+import { useTranslation } from '../../lib/i18n'
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#ef4444', '#06b6d4', '#84cc16'];
 const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode, updateAttributes }: NodeViewProps) => {
+  const { t } = useTranslation();
   const [rowCount, setRowCount] = useState(1);
   const [activeCell, setActiveCell] = useState<string | null>(null);
   const [cellValue, setCellValue] = useState("");
@@ -512,14 +514,14 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode, updateAtt
             <button
               onMouseDown={downloadCSV}
               className={`p-1.5 rounded transition-colors ${copiedCSV ? 'bg-green-100 text-green-600' : 'hover:bg-neutral-100 text-neutral-500'}`}
-              title="Download CSV"
+              title={t.ssDownloadCSV as string}
             >
               <Download className="w-3.5 h-3.5" />
             </button>
             <button
               onMouseDown={(e) => { e.preventDefault(); setShowStatsPanel(s => !s); }}
               className={`p-1.5 rounded transition-colors ${showStatsPanel ? 'bg-blue-100 text-blue-600' : 'hover:bg-neutral-100 text-neutral-500'}`}
-              title="Column Statistics"
+              title={t.ssColumnStats as string}
             >
               <Activity className="w-3.5 h-3.5" />
             </button>
@@ -527,7 +529,7 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode, updateAtt
             <button
               onClick={(e) => { e.preventDefault(); deleteNode(); }}
               className="p-1.5 hover:bg-red-50 text-neutral-400 hover:text-red-500 rounded transition-colors"
-              title="Remove Spreadsheet"
+              title={t.ssRemoveSpreadsheet as string}
             >
               <Trash2 className="w-3.5 h-3.5" />
             </button>
@@ -548,7 +550,7 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode, updateAtt
             <button
               onMouseDown={(e) => { e.preventDefault(); setShowFontMenu(s => !s); setShowSettings(false); }}
               className={`flex items-center gap-1 pl-1.5 pr-1 py-1 rounded transition-colors ${showFontMenu ? 'bg-neutral-200 text-neutral-900' : 'hover:bg-neutral-200 text-neutral-700'}`}
-              title="Font Size"
+              title={t.ssFontSize as string}
             >
               <Type className="w-3.5 h-3.5" />
               <ChevronDown className="w-2.5 h-2.5 opacity-50" />
@@ -581,7 +583,7 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode, updateAtt
               className={`flex items-center gap-1.5 px-3 py-1.5 ml-1 rounded-lg transition-all text-[10px] font-bold ${showChartPreview ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30' : 'bg-blue-50 text-blue-600 hover:bg-blue-100'}`}
             >
               <BarChart2 className="w-3.5 h-3.5" />
-              <span>Visualize</span>
+              <span>{t.ssVisualize}</span>
               <ChevronDown className={`w-3 h-3 transition-transform ${showChartPreview ? 'rotate-180' : ''}`} />
             </button>
 
@@ -623,7 +625,7 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode, updateAtt
                         className="w-full h-8 bg-neutral-50 border border-neutral-200 rounded px-2 text-[10px] font-bold text-neutral-700 outline-none focus:border-blue-500/50"
                       >
                         {Array.from({ length: cols }).map((_, i) => (
-                          <option key={i} value={i}>Column {letters[i] || i + 1}</option>
+                          <option key={i} value={i}>{(t.ssColumn as (n: string | number) => string)(letters[i] || i + 1)}</option>
                         ))}
                       </select>
                     </div>
@@ -670,7 +672,7 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode, updateAtt
                       >
                         <div className="flex items-center gap-2">
                           <TrendingUp className="w-3.5 h-3.5" />
-                          <span>Show Trend Line (Regression)</span>
+                          <span>{t.ssShowTrendLine}</span>
                         </div>
                         <div className={`w-3 h-3 rounded-full ${chartConfig.showTrendLine ? 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]' : 'bg-neutral-200'}`} />
                       </button>
@@ -681,7 +683,7 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode, updateAtt
                       >
                         <div className="flex items-center gap-2">
                           <Activity className="w-3.5 h-3.5" />
-                          <span>Show Statistics (Avg/Stdev)</span>
+                          <span>{t.ssShowStats}</span>
                         </div>
                         <div className={`w-3 h-3 rounded-full ${chartConfig.showStatistics ? 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]' : 'bg-neutral-200'}`} />
                       </button>
@@ -730,7 +732,7 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode, updateAtt
             <button
               onMouseDown={(e) => { e.preventDefault(); setShowSettings(s => !s); setShowFontMenu(false); }}
               className={`p-1.5 rounded transition-colors ${showSettings ? 'bg-neutral-200 text-neutral-900' : 'hover:bg-neutral-200 text-neutral-700'}`}
-              title="Table Settings"
+              title={t.ssTableSettings as string}
             >
               <Settings className="w-3.5 h-3.5" />
             </button>
@@ -778,7 +780,7 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode, updateAtt
           </div>
           <input 
             type="text" 
-            placeholder="Data or formula..." 
+            placeholder={t.ssDataFormula as string}
             className="flex-1 bg-transparent border-none focus:outline-none text-xs text-neutral-700 placeholder:text-neutral-300"
             value={cellValue}
             readOnly

@@ -1,11 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { 
-  X, Crop, Pencil, Type, Save, 
+import {
+  X, Crop, Pencil, Type, Save,
   ChevronRight, Undo2, Redo2,
   Square, Circle, ArrowUpRight, Eraser,
   SlidersHorizontal, Maximize2,
   Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight
 } from 'lucide-react';
+import { useTranslation } from '../../lib/i18n';
 
 interface ImageEditorModalProps {
   src: string;
@@ -17,6 +18,7 @@ type EditorStage = 'crop' | 'annotate' | 'adjust' | 'meta';
 type AnnotateTool = 'brush' | 'eraser' | 'text' | 'rect' | 'circle' | 'arrow';
 
 export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ src, onSave, onClose }) => {
+  const { t } = useTranslation();
   const [stage, setStage] = useState<EditorStage>('crop');
   const [annotateTool, setAnnotateTool] = useState<AnnotateTool>('brush');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -503,7 +505,7 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ src, onSave,
               <span className="text-[10px] text-neutral-500 font-mono">{Math.round(scale * 100)}%</span>
             </div>
 
-            <ToolButton onClick={() => { setScale(1); setOffset({ x: 0, y: 0 }); }} title="Reset Zoom">
+            <ToolButton onClick={() => { setScale(1); setOffset({ x: 0, y: 0 }); }} title={t.imgResetZoom as string}>
               <Maximize2 className="w-4 h-4 opacity-50" />
             </ToolButton>
           <div className="flex-1 hidden md:block" />
@@ -582,7 +584,7 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ src, onSave,
                         onKeyUp={(e) => e.stopPropagation()}
                         onKeyPress={(e) => e.stopPropagation()}
                         className="bg-transparent border-b border-blue-500 text-white outline-none py-1 min-w-[200px] text-lg" 
-                        placeholder="Type labels..." 
+                        placeholder={t.imgTypeLabels as string}
                         style={{ fontFamily, fontWeight: isBold ? 'bold' : 'normal', fontStyle: isItalic ? 'italic' : 'normal', textDecoration: isUnderline ? 'underline' : 'none', textAlign }}
                       />
                       <div className="flex justify-between items-center gap-2">

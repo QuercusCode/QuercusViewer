@@ -529,6 +529,28 @@ export const translations = {
         calcError: 'Error', calcCalculating: 'Calculating...', calcEnter: 'Enter...',
         previewNotFound: 'Structure not found or deleted.',
         collapseSidebar: 'Collapse Sidebar', expandSidebar: 'Expand Sidebar',
+        // InlineChart
+        chartEditColors: 'Edit Colors', chartDeleteChart: 'Delete Chart',
+        chartCapturing: 'Capturing High-Res...', chartDownloadPNG: 'Download PNG (Publication Ready)',
+        // LabReportTemplate
+        lrAuthor: 'Author', lrReportID: 'Report ID', lrDateCreated: 'Date Created', lrStatus: 'Status', lrVerifiedAnalysis: 'Verified Analysis',
+        // RichTextEditor
+        rteUndo: 'Undo', rteRedo: 'Redo',
+        rteH1: 'Heading 1', rteH2: 'Heading 2', rteH3: 'Heading 3',
+        rteUploadImage: 'Upload Image', rteBold: 'Bold', rteItalic: 'Italic', rteUnderline: 'Underline', rteStrikethrough: 'Strikethrough', rteCode: 'Code', rteLink: 'Link',
+        rteClearHighlight: 'Clear highlight', rteResetDefault: 'Reset to default',
+        rteAlignLeft: 'Align Left', rteAlignCenter: 'Align Center', rteAlignRight: 'Align Right',
+        rteSubscript: 'Subscript', rteSuperscript: 'Superscript',
+        rteBulletList: 'Bullet List', rteNumberedList: 'Numbered List', rteTaskList: 'Task List',
+        rteInsert: 'Insert', rteClearFormatting: 'Clear formatting', rteClearAllContent: 'Clear all content',
+        // SpreadsheetTable
+        ssDownloadCSV: 'Download CSV', ssColumnStats: 'Column Statistics', ssRemoveSpreadsheet: 'Remove Spreadsheet',
+        ssFontSize: 'Font Size', ssVisualize: 'Visualize',
+        ssColumn: (n: string | number) => `Column ${n}`,
+        ssShowTrendLine: 'Show Trend Line (Regression)', ssShowStats: 'Show Statistics (Avg/Stdev)',
+        ssTableSettings: 'Table Settings', ssDataFormula: 'Data or formula...',
+        // ImageEditorModal
+        imgResetZoom: 'Reset Zoom', imgTypeLabels: 'Type labels...',
     },
     'Spanish (ES)': {
         nav: 'NAVEGACIÓN',
@@ -993,6 +1015,28 @@ export const translations = {
         calcError: 'Error', calcCalculating: 'Calculando...', calcEnter: 'Ingresar...',
         previewNotFound: 'Estructura no encontrada o eliminada.',
         collapseSidebar: 'Colapsar Barra', expandSidebar: 'Expandir Barra',
+        // InlineChart
+        chartEditColors: 'Editar Colores', chartDeleteChart: 'Eliminar Gráfico',
+        chartCapturing: 'Capturando Alta Resolución...', chartDownloadPNG: 'Descargar PNG (Listo para Publicación)',
+        // LabReportTemplate
+        lrAuthor: 'Autor', lrReportID: 'ID de Informe', lrDateCreated: 'Fecha de Creación', lrStatus: 'Estado', lrVerifiedAnalysis: 'Análisis Verificado',
+        // RichTextEditor
+        rteUndo: 'Deshacer', rteRedo: 'Rehacer',
+        rteH1: 'Encabezado 1', rteH2: 'Encabezado 2', rteH3: 'Encabezado 3',
+        rteUploadImage: 'Subir Imagen', rteBold: 'Negrita', rteItalic: 'Cursiva', rteUnderline: 'Subrayado', rteStrikethrough: 'Tachado', rteCode: 'Código', rteLink: 'Enlace',
+        rteClearHighlight: 'Quitar resaltado', rteResetDefault: 'Restablecer predeterminado',
+        rteAlignLeft: 'Alinear Izquierda', rteAlignCenter: 'Centrar', rteAlignRight: 'Alinear Derecha',
+        rteSubscript: 'Subíndice', rteSuperscript: 'Superíndice',
+        rteBulletList: 'Lista con viñetas', rteNumberedList: 'Lista numerada', rteTaskList: 'Lista de tareas',
+        rteInsert: 'Insertar', rteClearFormatting: 'Borrar formato', rteClearAllContent: 'Borrar todo el contenido',
+        // SpreadsheetTable
+        ssDownloadCSV: 'Descargar CSV', ssColumnStats: 'Estadísticas de Columna', ssRemoveSpreadsheet: 'Eliminar Hoja',
+        ssFontSize: 'Tamaño de Fuente', ssVisualize: 'Visualizar',
+        ssColumn: (n: string | number) => `Columna ${n}`,
+        ssShowTrendLine: 'Mostrar Línea de Tendencia (Regresión)', ssShowStats: 'Mostrar Estadísticas (Prom/Desv)',
+        ssTableSettings: 'Configuración de Tabla', ssDataFormula: 'Datos o fórmula...',
+        // ImageEditorModal
+        imgResetZoom: 'Restablecer Zoom', imgTypeLabels: 'Escribir etiquetas...',
     },
     'French (FR)': {
         nav: 'NAVIGATION',
@@ -1457,6 +1501,28 @@ export const translations = {
         calcError: 'Erreur', calcCalculating: 'Calcul en cours...', calcEnter: 'Entrer...',
         previewNotFound: 'Structure introuvable ou supprimée.',
         collapseSidebar: 'Réduire le Panneau', expandSidebar: 'Agrandir le Panneau',
+        // InlineChart
+        chartEditColors: 'Modifier les Couleurs', chartDeleteChart: 'Supprimer le Graphique',
+        chartCapturing: 'Capture Haute Résolution...', chartDownloadPNG: 'Télécharger PNG (Prêt pour Publication)',
+        // LabReportTemplate
+        lrAuthor: 'Auteur', lrReportID: 'ID du Rapport', lrDateCreated: 'Date de Création', lrStatus: 'Statut', lrVerifiedAnalysis: 'Analyse Vérifiée',
+        // RichTextEditor
+        rteUndo: 'Annuler', rteRedo: 'Rétablir',
+        rteH1: 'Titre 1', rteH2: 'Titre 2', rteH3: 'Titre 3',
+        rteUploadImage: 'Téléverser une Image', rteBold: 'Gras', rteItalic: 'Italique', rteUnderline: 'Souligné', rteStrikethrough: 'Barré', rteCode: 'Code', rteLink: 'Lien',
+        rteClearHighlight: 'Effacer la surbrillance', rteResetDefault: 'Réinitialiser par défaut',
+        rteAlignLeft: 'Aligner à Gauche', rteAlignCenter: 'Centrer', rteAlignRight: 'Aligner à Droite',
+        rteSubscript: 'Indice', rteSuperscript: 'Exposant',
+        rteBulletList: 'Liste à puces', rteNumberedList: 'Liste numérotée', rteTaskList: 'Liste de tâches',
+        rteInsert: 'Insérer', rteClearFormatting: 'Effacer la mise en forme', rteClearAllContent: 'Effacer tout le contenu',
+        // SpreadsheetTable
+        ssDownloadCSV: 'Télécharger CSV', ssColumnStats: 'Statistiques de Colonne', ssRemoveSpreadsheet: 'Supprimer la Feuille',
+        ssFontSize: 'Taille de Police', ssVisualize: 'Visualiser',
+        ssColumn: (n: string | number) => `Colonne ${n}`,
+        ssShowTrendLine: 'Afficher la Courbe de Tendance (Régression)', ssShowStats: 'Afficher les Statistiques (Moy/Écart)',
+        ssTableSettings: 'Paramètres du Tableau', ssDataFormula: 'Données ou formule...',
+        // ImageEditorModal
+        imgResetZoom: 'Réinitialiser le Zoom', imgTypeLabels: 'Saisir les étiquettes...',
     },
     'German (DE)': {
         nav: 'NAVIGATION',
@@ -1921,6 +1987,28 @@ export const translations = {
         calcError: 'Fehler', calcCalculating: 'Berechnet...', calcEnter: 'Eingeben...',
         previewNotFound: 'Struktur nicht gefunden oder gelöscht.',
         collapseSidebar: 'Seitenleiste einklappen', expandSidebar: 'Seitenleiste ausklappen',
+        // InlineChart
+        chartEditColors: 'Farben bearbeiten', chartDeleteChart: 'Diagramm löschen',
+        chartCapturing: 'Hochauflösend erfassen...', chartDownloadPNG: 'PNG herunterladen (Publikationsbereit)',
+        // LabReportTemplate
+        lrAuthor: 'Autor', lrReportID: 'Bericht-ID', lrDateCreated: 'Erstellungsdatum', lrStatus: 'Status', lrVerifiedAnalysis: 'Verifizierte Analyse',
+        // RichTextEditor
+        rteUndo: 'Rückgängig', rteRedo: 'Wiederholen',
+        rteH1: 'Überschrift 1', rteH2: 'Überschrift 2', rteH3: 'Überschrift 3',
+        rteUploadImage: 'Bild hochladen', rteBold: 'Fett', rteItalic: 'Kursiv', rteUnderline: 'Unterstrichen', rteStrikethrough: 'Durchgestrichen', rteCode: 'Code', rteLink: 'Link',
+        rteClearHighlight: 'Hervorhebung entfernen', rteResetDefault: 'Standard wiederherstellen',
+        rteAlignLeft: 'Linksbündig', rteAlignCenter: 'Zentriert', rteAlignRight: 'Rechtsbündig',
+        rteSubscript: 'Tiefgestellt', rteSuperscript: 'Hochgestellt',
+        rteBulletList: 'Aufzählungsliste', rteNumberedList: 'Nummerierte Liste', rteTaskList: 'Aufgabenliste',
+        rteInsert: 'Einfügen', rteClearFormatting: 'Formatierung löschen', rteClearAllContent: 'Gesamten Inhalt löschen',
+        // SpreadsheetTable
+        ssDownloadCSV: 'CSV herunterladen', ssColumnStats: 'Spaltenstatistiken', ssRemoveSpreadsheet: 'Tabelle entfernen',
+        ssFontSize: 'Schriftgröße', ssVisualize: 'Visualisieren',
+        ssColumn: (n: string | number) => `Spalte ${n}`,
+        ssShowTrendLine: 'Trendlinie anzeigen (Regression)', ssShowStats: 'Statistiken anzeigen (Durchschn./Stabw.)',
+        ssTableSettings: 'Tabelleneinstellungen', ssDataFormula: 'Daten oder Formel...',
+        // ImageEditorModal
+        imgResetZoom: 'Zoom zurücksetzen', imgTypeLabels: 'Beschriftungen eingeben...',
     },
     'Portuguese (PT)': {
         nav: 'NAVEGAÇÃO', app: 'APP',
@@ -2215,6 +2303,28 @@ export const translations = {
         calcError: 'Erro', calcCalculating: 'Calculando...', calcEnter: 'Inserir...',
         previewNotFound: 'Estrutura não encontrada ou excluída.',
         collapseSidebar: 'Recolher Painel', expandSidebar: 'Expandir Painel',
+        // InlineChart
+        chartEditColors: 'Editar Cores', chartDeleteChart: 'Excluir Gráfico',
+        chartCapturing: 'Capturando Alta Resolução...', chartDownloadPNG: 'Baixar PNG (Pronto para Publicação)',
+        // LabReportTemplate
+        lrAuthor: 'Autor', lrReportID: 'ID do Relatório', lrDateCreated: 'Data de Criação', lrStatus: 'Status', lrVerifiedAnalysis: 'Análise Verificada',
+        // RichTextEditor
+        rteUndo: 'Desfazer', rteRedo: 'Refazer',
+        rteH1: 'Título 1', rteH2: 'Título 2', rteH3: 'Título 3',
+        rteUploadImage: 'Enviar Imagem', rteBold: 'Negrito', rteItalic: 'Itálico', rteUnderline: 'Sublinhado', rteStrikethrough: 'Tachado', rteCode: 'Código', rteLink: 'Link',
+        rteClearHighlight: 'Remover destaque', rteResetDefault: 'Redefinir padrão',
+        rteAlignLeft: 'Alinhar à Esquerda', rteAlignCenter: 'Centralizar', rteAlignRight: 'Alinhar à Direita',
+        rteSubscript: 'Subscrito', rteSuperscript: 'Sobrescrito',
+        rteBulletList: 'Lista com marcadores', rteNumberedList: 'Lista numerada', rteTaskList: 'Lista de tarefas',
+        rteInsert: 'Inserir', rteClearFormatting: 'Limpar formatação', rteClearAllContent: 'Limpar todo o conteúdo',
+        // SpreadsheetTable
+        ssDownloadCSV: 'Baixar CSV', ssColumnStats: 'Estatísticas de Coluna', ssRemoveSpreadsheet: 'Remover Planilha',
+        ssFontSize: 'Tamanho da Fonte', ssVisualize: 'Visualizar',
+        ssColumn: (n: string | number) => `Coluna ${n}`,
+        ssShowTrendLine: 'Mostrar Linha de Tendência (Regressão)', ssShowStats: 'Mostrar Estatísticas (Méd/Desv)',
+        ssTableSettings: 'Configurações da Tabela', ssDataFormula: 'Dados ou fórmula...',
+        // ImageEditorModal
+        imgResetZoom: 'Redefinir Zoom', imgTypeLabels: 'Digitar rótulos...',
     },
     'Hindi (HI)': {
         nav: 'नेविगेशन', app: 'ऐप',
@@ -2511,6 +2621,28 @@ export const translations = {
         calcError: 'त्रुटि', calcCalculating: 'गणना हो रही है...', calcEnter: 'दर्ज करें...',
         previewNotFound: 'संरचना नहीं मिली या हटाई गई।',
         collapseSidebar: 'साइडबार संकुचित करें', expandSidebar: 'साइडबार विस्तारित करें',
+        // InlineChart
+        chartEditColors: 'रंग संपादित करें', chartDeleteChart: 'चार्ट हटाएं',
+        chartCapturing: 'उच्च-रिज़ॉल्यूशन कैप्चर हो रहा है...', chartDownloadPNG: 'PNG डाउनलोड करें (प्रकाशन योग्य)',
+        // LabReportTemplate
+        lrAuthor: 'लेखक', lrReportID: 'रिपोर्ट आईडी', lrDateCreated: 'निर्माण तिथि', lrStatus: 'स्थिति', lrVerifiedAnalysis: 'सत्यापित विश्लेषण',
+        // RichTextEditor
+        rteUndo: 'पूर्ववत करें', rteRedo: 'फिर से करें',
+        rteH1: 'शीर्षक 1', rteH2: 'शीर्षक 2', rteH3: 'शीर्षक 3',
+        rteUploadImage: 'छवि अपलोड करें', rteBold: 'बोल्ड', rteItalic: 'इटैलिक', rteUnderline: 'रेखांकित', rteStrikethrough: 'स्ट्राइकथ्रू', rteCode: 'कोड', rteLink: 'लिंक',
+        rteClearHighlight: 'हाइलाइट हटाएं', rteResetDefault: 'डिफ़ॉल्ट पर रीसेट करें',
+        rteAlignLeft: 'बाएं संरेखित', rteAlignCenter: 'केंद्र संरेखित', rteAlignRight: 'दाएं संरेखित',
+        rteSubscript: 'सबस्क्रिप्ट', rteSuperscript: 'सुपरस्क्रिप्ट',
+        rteBulletList: 'बुलेट सूची', rteNumberedList: 'क्रमांकित सूची', rteTaskList: 'कार्य सूची',
+        rteInsert: 'डालें', rteClearFormatting: 'फ़ॉर्मेटिंग साफ करें', rteClearAllContent: 'सभी सामग्री साफ करें',
+        // SpreadsheetTable
+        ssDownloadCSV: 'CSV डाउनलोड करें', ssColumnStats: 'कॉलम सांख्यिकी', ssRemoveSpreadsheet: 'स्प्रेडशीट हटाएं',
+        ssFontSize: 'फ़ॉन्ट आकार', ssVisualize: 'विज़ुअलाइज़ करें',
+        ssColumn: (n: string | number) => `कॉलम ${n}`,
+        ssShowTrendLine: 'ट्रेंड लाइन दिखाएं (रिग्रेशन)', ssShowStats: 'सांख्यिकी दिखाएं (औसत/मानक विचलन)',
+        ssTableSettings: 'तालिका सेटिंग्स', ssDataFormula: 'डेटा या सूत्र...',
+        // ImageEditorModal
+        imgResetZoom: 'ज़ूम रीसेट करें', imgTypeLabels: 'लेबल टाइप करें...',
     },
     'Chinese (ZH)': {
         nav: '导航', app: '应用',
@@ -2807,6 +2939,28 @@ export const translations = {
         calcError: '错误', calcCalculating: '计算中...', calcEnter: '输入...',
         previewNotFound: '结构未找到或已删除。',
         collapseSidebar: '收起侧边栏', expandSidebar: '展开侧边栏',
+        // InlineChart
+        chartEditColors: '编辑颜色', chartDeleteChart: '删除图表',
+        chartCapturing: '正在捕获高分辨率...', chartDownloadPNG: '下载 PNG（适合发表）',
+        // LabReportTemplate
+        lrAuthor: '作者', lrReportID: '报告编号', lrDateCreated: '创建日期', lrStatus: '状态', lrVerifiedAnalysis: '已验证分析',
+        // RichTextEditor
+        rteUndo: '撤销', rteRedo: '重做',
+        rteH1: '标题 1', rteH2: '标题 2', rteH3: '标题 3',
+        rteUploadImage: '上传图片', rteBold: '粗体', rteItalic: '斜体', rteUnderline: '下划线', rteStrikethrough: '删除线', rteCode: '代码', rteLink: '链接',
+        rteClearHighlight: '清除高亮', rteResetDefault: '恢复默认',
+        rteAlignLeft: '左对齐', rteAlignCenter: '居中', rteAlignRight: '右对齐',
+        rteSubscript: '下标', rteSuperscript: '上标',
+        rteBulletList: '无序列表', rteNumberedList: '有序列表', rteTaskList: '任务列表',
+        rteInsert: '插入', rteClearFormatting: '清除格式', rteClearAllContent: '清除所有内容',
+        // SpreadsheetTable
+        ssDownloadCSV: '下载 CSV', ssColumnStats: '列统计', ssRemoveSpreadsheet: '删除表格',
+        ssFontSize: '字体大小', ssVisualize: '可视化',
+        ssColumn: (n: string | number) => `列 ${n}`,
+        ssShowTrendLine: '显示趋势线（回归）', ssShowStats: '显示统计（均值/标准差）',
+        ssTableSettings: '表格设置', ssDataFormula: '数据或公式...',
+        // ImageEditorModal
+        imgResetZoom: '重置缩放', imgTypeLabels: '输入标签...',
     },
 };
 

@@ -3,6 +3,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import type { Structure } from '../../lib/structuresService';
+import { useTranslation } from '../../lib/i18n';
 
 interface LabReportTemplateProps {
   title: string;
@@ -261,6 +262,7 @@ const renderResizableImage = (payload: string, key: any, forceBase64 = false) =>
  */
 export const LabReportTemplate = forwardRef<HTMLDivElement, LabReportTemplateProps>(
   ({ title, content, date, author, id, allStructures = [] }, ref) => {
+    const { t } = useTranslation();
     return (
       <div 
         ref={ref}
@@ -345,20 +347,20 @@ export const LabReportTemplate = forwardRef<HTMLDivElement, LabReportTemplatePro
             margin: '0 auto'
           }}>
             <div>
-              <p style={{ fontSize: '9pt', color: '#94a3b8', fontWeight: 'bold', textTransform: 'uppercase', margin: '0 0 0.25rem 0' }}>Author</p>
+              <p style={{ fontSize: '9pt', color: '#94a3b8', fontWeight: 'bold', textTransform: 'uppercase', margin: '0 0 0.25rem 0' }}>{t.lrAuthor}</p>
               <p style={{ fontWeight: '600', color: '#1e293b', margin: 0 }}>{author}</p>
             </div>
             <div>
-              <p style={{ fontSize: '9pt', color: '#94a3b8', fontWeight: 'bold', textTransform: 'uppercase', margin: '0 0 0.25rem 0' }}>Report ID</p>
+              <p style={{ fontSize: '9pt', color: '#94a3b8', fontWeight: 'bold', textTransform: 'uppercase', margin: '0 0 0.25rem 0' }}>{t.lrReportID}</p>
               <p style={{ fontWeight: '600', color: '#1e293b', margin: 0 }}>{id}</p>
             </div>
             <div>
-              <p style={{ fontSize: '9pt', color: '#94a3b8', fontWeight: 'bold', textTransform: 'uppercase', margin: '0 0 0.25rem 0' }}>Date Created</p>
+              <p style={{ fontSize: '9pt', color: '#94a3b8', fontWeight: 'bold', textTransform: 'uppercase', margin: '0 0 0.25rem 0' }}>{t.lrDateCreated}</p>
               <p style={{ fontWeight: '600', color: '#1e293b', margin: 0 }}>{new Date(date).toLocaleDateString()}</p>
             </div>
             <div>
-              <p style={{ fontSize: '9pt', color: '#94a3b8', fontWeight: 'bold', textTransform: 'uppercase', margin: '0 0 0.25rem 0' }}>Status</p>
-              <p style={{ fontWeight: '600', color: '#1e293b', margin: 0 }}>Verified Analysis</p>
+              <p style={{ fontSize: '9pt', color: '#94a3b8', fontWeight: 'bold', textTransform: 'uppercase', margin: '0 0 0.25rem 0' }}>{t.lrStatus}</p>
+              <p style={{ fontWeight: '600', color: '#1e293b', margin: 0 }}>{t.lrVerifiedAnalysis}</p>
             </div>
           </div>
 
