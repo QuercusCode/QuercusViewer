@@ -2,10 +2,12 @@ import React, { useRef, useState, useEffect, Suspense, lazy } from 'react';
 import { NodeViewWrapper } from '@tiptap/react';
 import type { NodeViewProps } from '@tiptap/react';
 import { Pencil, Maximize2 } from 'lucide-react';
+import { useTranslation } from '../../lib/i18n';
 // Lazy load the editor to prevent it from crashing the main bundle load
 const ImageEditorModal = lazy(() => import('./ImageEditorModal').then(module => ({ default: module.ImageEditorModal })));
 
 const ResizableImageComponent: React.FC<NodeViewProps> = ({ node, updateAttributes, selected }) => {
+  const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
   const [isResizing, setIsResizing] = useState(false);
   const [showEditor, setShowEditor] = useState(false);
@@ -72,7 +74,7 @@ const ResizableImageComponent: React.FC<NodeViewProps> = ({ node, updateAttribut
           <button
             onClick={() => setShowEditor(true)}
             className="p-1.5 bg-black/60 hover:bg-black/80 text-white rounded-lg backdrop-blur-sm border border-white/10 transition-colors"
-            title="Edit Image"
+            title={t.imgEditImage as string}
           >
             <Pencil className="w-4 h-4" />
           </button>

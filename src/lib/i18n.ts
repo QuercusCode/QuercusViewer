@@ -550,7 +550,7 @@ export const translations = {
         ssShowTrendLine: 'Show Trend Line (Regression)', ssShowStats: 'Show Statistics (Avg/Stdev)',
         ssTableSettings: 'Table Settings', ssDataFormula: 'Data or formula...',
         // ImageEditorModal
-        imgResetZoom: 'Reset Zoom', imgTypeLabels: 'Type labels...',
+        imgResetZoom: 'Reset Zoom', imgTypeLabels: 'Type labels...', imgEditImage: 'Edit Image',
         // StudioLayout
         studioExitStudio: 'Exit Studio', studioUndoShortcut: 'Undo (Ctrl+Z)', studioRedoShortcut: 'Redo (Ctrl+Shift+Z)',
         studioExportVideo: 'Export Video', studioSaveProject: 'Save Project', studioActionsBtn: 'Actions',
@@ -1152,7 +1152,7 @@ export const translations = {
         ssShowTrendLine: 'Mostrar Línea de Tendencia (Regresión)', ssShowStats: 'Mostrar Estadísticas (Prom/Desv)',
         ssTableSettings: 'Configuración de Tabla', ssDataFormula: 'Datos o fórmula...',
         // ImageEditorModal
-        imgResetZoom: 'Restablecer Zoom', imgTypeLabels: 'Escribir etiquetas...',
+        imgResetZoom: 'Restablecer Zoom', imgTypeLabels: 'Escribir etiquetas...', imgEditImage: 'Editar Imagen',
     },
     'French (FR)': {
         nav: 'NAVIGATION',
@@ -1696,7 +1696,7 @@ export const translations = {
         ssShowTrendLine: 'Afficher la Courbe de Tendance (Régression)', ssShowStats: 'Afficher les Statistiques (Moy/Écart)',
         ssTableSettings: 'Paramètres du Tableau', ssDataFormula: 'Données ou formule...',
         // ImageEditorModal
-        imgResetZoom: 'Réinitialiser le Zoom', imgTypeLabels: 'Saisir les étiquettes...',
+        imgResetZoom: 'Réinitialiser le Zoom', imgTypeLabels: 'Saisir les étiquettes...', imgEditImage: "Modifier l'Image",
     },
     'German (DE)': {
         nav: 'NAVIGATION',
@@ -2240,7 +2240,7 @@ export const translations = {
         ssShowTrendLine: 'Trendlinie anzeigen (Regression)', ssShowStats: 'Statistiken anzeigen (Durchschn./Stabw.)',
         ssTableSettings: 'Tabelleneinstellungen', ssDataFormula: 'Daten oder Formel...',
         // ImageEditorModal
-        imgResetZoom: 'Zoom zurücksetzen', imgTypeLabels: 'Beschriftungen eingeben...',
+        imgResetZoom: 'Zoom zurücksetzen', imgTypeLabels: 'Beschriftungen eingeben...', imgEditImage: 'Bild Bearbeiten',
     },
     'Portuguese (PT)': {
         nav: 'NAVEGAÇÃO', app: 'APP',
@@ -2614,7 +2614,7 @@ export const translations = {
         ssShowTrendLine: 'Mostrar Linha de Tendência (Regressão)', ssShowStats: 'Mostrar Estatísticas (Méd/Desv)',
         ssTableSettings: 'Configurações da Tabela', ssDataFormula: 'Dados ou fórmula...',
         // ImageEditorModal
-        imgResetZoom: 'Redefinir Zoom', imgTypeLabels: 'Digitar rótulos...',
+        imgResetZoom: 'Redefinir Zoom', imgTypeLabels: 'Digitar rótulos...', imgEditImage: 'Editar Imagem',
     },
     'Hindi (HI)': {
         nav: 'नेविगेशन', app: 'ऐप',
@@ -2990,7 +2990,7 @@ export const translations = {
         ssShowTrendLine: 'ट्रेंड लाइन दिखाएं (रिग्रेशन)', ssShowStats: 'सांख्यिकी दिखाएं (औसत/मानक विचलन)',
         ssTableSettings: 'तालिका सेटिंग्स', ssDataFormula: 'डेटा या सूत्र...',
         // ImageEditorModal
-        imgResetZoom: 'ज़ूम रीसेट करें', imgTypeLabels: 'लेबल टाइप करें...',
+        imgResetZoom: 'ज़ूम रीसेट करें', imgTypeLabels: 'लेबल टाइप करें...', imgEditImage: 'छवि संपादित करें',
     },
     'Chinese (ZH)': {
         nav: '导航', app: '应用',
@@ -3308,7 +3308,7 @@ export const translations = {
         ssShowTrendLine: '显示趋势线（回归）', ssShowStats: '显示统计（均值/标准差）',
         ssTableSettings: '表格设置', ssDataFormula: '数据或公式...',
         // ImageEditorModal
-        imgResetZoom: '重置缩放', imgTypeLabels: '输入标签...',
+        imgResetZoom: '重置缩放', imgTypeLabels: '输入标签...', imgEditImage: '编辑图片',
         // StudioLayout
         studioExitStudio: '退出工作室', studioUndoShortcut: '撤销 (Ctrl+Z)', studioRedoShortcut: '重做 (Ctrl+Shift+Z)',
         studioExportVideo: '导出视频', studioSaveProject: '保存项目', studioActionsBtn: '操作',
