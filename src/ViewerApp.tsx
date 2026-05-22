@@ -2931,7 +2931,7 @@ function App() {
                 <NotebookPen className={`w-4 h-4 ${isNotebookOpen ? 'animate-pulse' : ''}`} />
                 <span className="hidden md:inline">{t.notebookLabel as string}</span>
               </button>
-              <LanguageSwitcher />
+              <div className="hidden md:block"><LanguageSwitcher /></div>
               {user ? (
                 <Link
                   to="/dashboard"
@@ -2942,8 +2942,9 @@ function App() {
                   <span className="hidden sm:inline">{t.dashboardLabel as string}</span>
                 </Link>
               ) : (
-                <Link to="/auth" className={`flex items-center h-10 px-4 rounded-full text-sm font-medium transition-colors border shadow-lg backdrop-blur-md ${isLightMode ? 'bg-white/80 border-black/10 text-gray-700 hover:bg-white' : 'bg-neutral-900/80 border-white/10 text-neutral-300 hover:text-white hover:bg-neutral-800'}`}>
-                  {t.logInLabel as string}
+                <Link to="/auth" className={`flex items-center gap-2 h-10 px-4 rounded-full text-sm font-medium transition-colors border shadow-lg backdrop-blur-md ${isLightMode ? 'bg-white/80 border-black/10 text-gray-700 hover:bg-white' : 'bg-neutral-900/80 border-white/10 text-neutral-300 hover:text-white hover:bg-neutral-800'}`}>
+                  <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  <span className="hidden sm:inline">{t.logInLabel as string}</span>
                 </Link>
               )}
             </div>
@@ -2969,8 +2970,9 @@ function App() {
                     ${isMobileMenuOpen ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-100 md:translate-x-0'}
                     ${isSidebarCollapsed ? 'md:w-0 md:overflow-hidden md:opacity-0' : 'md:w-80 md:opacity-100'}
                 `}>
-                  {/* Mobile Close Button */}
-                  <div className="md:hidden absolute top-4 right-4 z-50">
+                  {/* Mobile Close Button + Language Switcher */}
+                  <div className="md:hidden absolute top-4 right-4 z-50 flex items-center gap-2">
+                    <LanguageSwitcher />
                     <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 text-white/50 hover:text-white">
                       <X size={24} />
                     </button>
