@@ -2907,8 +2907,8 @@ function App() {
               visualizerEngine === 'molstar'
                 ? (isAiChatOpen ? 'right-[324px] md:right-[392px]' : 'right-4 md:right-8')
                 : (chains.length > 0
-                    ? (isAiChatOpen ? 'right-[512px] md:right-[576px]' : 'right-[192px] md:right-[288px]')
-                    : (isAiChatOpen ? 'right-[324px] md:right-[392px]' : 'right-[192px]'))
+                    ? (isAiChatOpen ? 'right-[562px] md:right-[628px]' : 'right-[240px] md:right-[340px]')
+                    : (isAiChatOpen ? 'right-[374px] md:right-[442px]' : 'right-[240px]'))
             }`}>
               <button
                 onClick={() => setIsNotebookOpen(!isNotebookOpen)}
