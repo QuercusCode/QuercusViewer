@@ -2921,8 +2921,8 @@ function App() {
               visualizerEngine === 'molstar'
                 ? (isAiChatOpen ? 'right-[324px] md:right-[392px]' : 'right-4 md:right-8')
                 : (chains.length > 0
-                    ? (isAiChatOpen ? 'right-[512px] md:right-[628px]' : 'right-[192px] md:right-[340px]')
-                    : (isAiChatOpen ? 'right-[324px] md:right-[442px]' : 'right-[192px] md:right-[240px]'))
+                    ? (isAiChatOpen ? 'right-[512px] md:right-[628px]' : 'right-[110px] md:right-[340px]')
+                    : (isAiChatOpen ? 'right-[324px] md:right-[442px]' : 'right-[110px] md:right-[240px]'))
             }`}>
               <button
                 onClick={() => setIsNotebookOpen(!isNotebookOpen)}
@@ -2931,7 +2931,7 @@ function App() {
                 <NotebookPen className={`w-4 h-4 ${isNotebookOpen ? 'animate-pulse' : ''}`} />
                 <span className="hidden md:inline">{t.notebookLabel as string}</span>
               </button>
-              <div className="hidden md:block"><LanguageSwitcher /></div>
+              <LanguageSwitcher compact />
               {user ? (
                 <Link
                   to="/dashboard"
@@ -2970,9 +2970,8 @@ function App() {
                     ${isMobileMenuOpen ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-100 md:translate-x-0'}
                     ${isSidebarCollapsed ? 'md:w-0 md:overflow-hidden md:opacity-0' : 'md:w-80 md:opacity-100'}
                 `}>
-                  {/* Mobile Close Button + Language Switcher */}
-                  <div className="md:hidden absolute top-4 right-4 z-50 flex items-center gap-2">
-                    <LanguageSwitcher />
+                  {/* Mobile Close Button */}
+                  <div className="md:hidden absolute top-4 right-4 z-50">
                     <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 text-white/50 hover:text-white">
                       <X size={24} />
                     </button>
