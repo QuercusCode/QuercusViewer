@@ -78,6 +78,7 @@ import { uploadStructure } from './lib/structuresService';
 import { addRecentStructure } from './lib/recentStructures';
 import { useTranslation } from './lib/i18n';
 import { LanguageSwitcher } from './components/landing/LanguageSwitcher';
+import { EmbedToolbar } from './components/EmbedToolbar';
 
 const deepEqual = (a: any, b: any): boolean => {
   if (a === b) return true;
@@ -3683,13 +3684,29 @@ function App() {
         )
       }
 
+      {/* Embed Mode Toolbar — functional controls overlay */}
+      {isEmbedMode && !isCleanMode && (
+        <EmbedToolbar
+          pdbId={pdbId}
+          proteinTitle={proteinTitle}
+          representation={representation}
+          setRepresentation={setRepresentation}
+          coloring={coloring}
+          setColoring={setColoring}
+          isSpinning={isSpinning}
+          setIsSpinning={setIsSpinning}
+          onResetView={() => viewerRefs[0].current?.resetCamera()}
+          isLightMode={isLightMode}
+        />
+      )}
+
       {/* Embed Mode Attribution - Viral Loop - Mobile Optimized */}
       {
         isEmbedMode && (
           <a
             href="https://quercusviewer.com"
             target="_blank"
-            rel="noopener noreferrer" // Moved to bottom-left, smaller size, logo icon
+            rel="noopener noreferrer"
             className="fixed bottom-2 left-2 md:bottom-3 md:left-3 z-50 px-1.5 py-0.5 md:px-2 md:py-1 bg-black/80 backdrop-blur-md text-white text-[9px] md:text-[10px] font-bold rounded-full shadow-lg border border-white/20 hover:scale-105 transition-transform flex items-center gap-1 md:gap-1.5"
           >
             <img src="logo/icon-white.png" alt="Q" className="w-3 h-3 md:w-3.5 md:h-3.5" />
