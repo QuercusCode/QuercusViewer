@@ -579,6 +579,11 @@ export const Controls: React.FC<ControlsProps> = ({
     const sessionInputRef = useRef<HTMLInputElement>(null);
     const [localPdbId, setLocalPdbId] = React.useState(pdbId);
 
+    // AlphaFold isoform/fragment picker state
+    type AfVariant = { accession: string; pdbUrl: string; label: string; fragment: number };
+    const [afVariants, setAfVariants] = useState<AfVariant[] | null>(null);
+    const [afLookupLoading, setAfLookupLoading] = useState(false);
+
     // Recording State
     const [recordDuration, setRecordDuration] = useState(4000);
 
@@ -727,13 +732,55 @@ export const Controls: React.FC<ControlsProps> = ({
     }, [highlightedResidue, viewSequenceChain]);
 
 
+    const loadAlphaFoldId = (id: string) => {
+        setRepresentation('cartoon');
+        setColoring('bfactor');
+        setPdbId(id);
+        setAfVariants(null);
+    };
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+
         if (dataSource === 'alphafold') {
-            setRepresentation('cartoon');
-            setColoring('bfactor'); // Show pLDDT confidence coloring
+            const id = localPdbId.trim().toUpperCase();
+
+            // If user already specified an isoform (P00533-2) or fragment (P00533::F2), load directly
+            const isSpecific = /^[A-Z0-9]+-\d+$/.test(id) || id.includes('::F');
+            if (isSpecific) { loadAlphaFoldId(id); return; }
+
+            // Otherwise query the API to discover all available isoforms/fragments
+            setAfLookupLoading(true);
+            setAfVariants(null);
+            fetch(`https://alphafold.ebi.ac.uk/api/prediction/${id}`)
+                .then(r => r.ok ? r.json() : Promise.reject())
+                .then((data: { uniprotAccession: string; pdbUrl: string; uniprotDescription?: string }[]) => {
+                    if (!data || data.length === 0) { loadAlphaFoldId(id); return; }
+                    if (data.length === 1) { loadAlphaFoldId(id); return; }
+
+                    // Build variant list
+                    const variants: AfVariant[] = data.map(d => {
+                        // Extract fragment number from pdbUrl (e.g. AF-P00533-F1-model -> 1)
+                        const frag = parseInt(d.pdbUrl.match(/-F(\d+)-model/)?.[1] ?? '1', 10);
+                        const isoSuffix = d.uniprotAccession.match(/-(\d+)$/)?.[1];
+                        const accessionId = isoSuffix
+                            ? (frag > 1 ? `${d.uniprotAccession}::F${frag}` : d.uniprotAccession)
+                            : (frag > 1 ? `${id}::F${frag}` : id);
+
+                        let label = 'Canonical';
+                        if (isoSuffix) label = `Isoform ${isoSuffix}`;
+                        if (frag > 1) label += ` · Fragment ${frag}`;
+
+                        return { accession: accessionId, pdbUrl: d.pdbUrl, label, fragment: frag };
+                    });
+                    setAfVariants(variants);
+                })
+                .catch(() => loadAlphaFoldId(id))
+                .finally(() => setAfLookupLoading(false));
+            return;
         }
-        setPdbId(localPdbId.trim().toUpperCase());
+
+        setPdbId(localPdbId.trim());
     };
 
 
@@ -897,7 +944,7 @@ export const Controls: React.FC<ControlsProps> = ({
                             <div className={`grid grid-cols-3 gap-1 p-1 rounded-xl border ${isLightMode ? 'bg-neutral-100/50 border-neutral-200' : 'bg-black/20 border-white/5'}`}>
                                 <button
                                     type="button"
-                                    onClick={() => setDataSource('pdb')}
+                                    onClick={() => { setDataSource('pdb'); setAfVariants(null); }}
                                     className={`text-xs font-bold py-1.5 rounded-lg transition-all ${dataSource === 'pdb'
                                         ? 'bg-blue-600 text-white shadow-md shadow-blue-900/20'
                                         : `${subtleText} hover:bg-black/5 dark:hover:bg-white/5 opacity-70 hover:opacity-100`
@@ -907,7 +954,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                 </button>
                                 <button
                                     type="button"
-                                    onClick={() => setDataSource('alphafold')}
+                                    onClick={() => { setDataSource('alphafold'); setAfVariants(null); }}
                                     className={`text-xs font-bold py-1.5 rounded-lg transition-all ${dataSource === 'alphafold'
                                         ? 'bg-violet-600 text-white shadow-md shadow-violet-900/20'
                                         : `${subtleText} hover:bg-black/5 dark:hover:bg-white/5 opacity-70 hover:opacity-100`
@@ -917,7 +964,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                 </button>
                                 <button
                                     type="button"
-                                    onClick={() => setDataSource('pubchem')}
+                                    onClick={() => { setDataSource('pubchem'); setAfVariants(null); }}
                                     className={`text-xs font-bold py-1.5 rounded-lg transition-all ${dataSource === 'pubchem'
                                         ? 'bg-indigo-600 text-white shadow-md shadow-indigo-900/20'
                                         : `${subtleText} hover:bg-black/5 dark:hover:bg-white/5 opacity-70 hover:opacity-100`
@@ -1003,11 +1050,54 @@ export const Controls: React.FC<ControlsProps> = ({
                                         <Star className={`w-4 h-4 ${isFavorite ? 'fill-white' : ''}`} />
                                     </button>
                                 )}
-                                <button type="submit" className="px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors font-medium">
+                                <button
+                                    type="submit"
+                                    disabled={afLookupLoading}
+                                    className={`px-3 py-2 text-white rounded-lg transition-colors font-medium flex items-center gap-1.5 ${
+                                        dataSource === 'alphafold'
+                                            ? 'bg-violet-600 hover:bg-violet-500'
+                                            : 'bg-blue-600 hover:bg-blue-500'
+                                    } disabled:opacity-60 disabled:cursor-not-allowed`}
+                                >
+                                    {afLookupLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
                                     {t.loadBtn as string}
                                 </button>
                             </div>
                         </form>
+
+                        {/* AlphaFold isoform/fragment picker */}
+                        {dataSource === 'alphafold' && afLookupLoading && (
+                            <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-violet-500/20 bg-violet-500/5 text-xs text-violet-400">
+                                <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" />
+                                Looking up isoforms…
+                            </div>
+                        )}
+                        {dataSource === 'alphafold' && afVariants && afVariants.length > 0 && (
+                            <div className={`rounded-xl border overflow-hidden ${isLightMode ? 'border-violet-200 bg-violet-50/60' : 'border-violet-500/20 bg-violet-500/5'}`}>
+                                <div className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest flex items-center justify-between ${isLightMode ? 'text-violet-600 border-b border-violet-200' : 'text-violet-400 border-b border-violet-500/20'}`}>
+                                    <span>Available predictions</span>
+                                    <button type="button" onClick={() => setAfVariants(null)} className="hover:opacity-70 transition-opacity">
+                                        <X className="w-3 h-3" />
+                                    </button>
+                                </div>
+                                <div className="flex flex-col divide-y divide-violet-500/10">
+                                    {afVariants.map((v) => (
+                                        <button
+                                            key={v.accession}
+                                            type="button"
+                                            onClick={() => { setLocalPdbId(v.accession); loadAlphaFoldId(v.accession); }}
+                                            className={`w-full flex items-center justify-between px-3 py-2 text-xs transition-colors text-left group ${isLightMode ? 'hover:bg-violet-100 text-neutral-700' : 'hover:bg-violet-500/10 text-neutral-200'}`}
+                                        >
+                                            <div>
+                                                <span className={`font-bold ${v.label === 'Canonical' ? (isLightMode ? 'text-violet-700' : 'text-violet-300') : ''}`}>{v.label}</span>
+                                                <span className={`ml-2 font-mono text-[10px] ${isLightMode ? 'text-neutral-400' : 'text-neutral-500'}`}>{v.accession}</span>
+                                            </div>
+                                            <span className={`text-[10px] px-1.5 py-0.5 rounded bg-violet-500/10 text-violet-400 group-hover:bg-violet-500/20 transition-colors`}>Load</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
 
                         <div className="grid grid-cols-2 gap-2">
                             <button

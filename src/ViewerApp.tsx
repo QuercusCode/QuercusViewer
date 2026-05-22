@@ -1519,7 +1519,13 @@ function App() {
     activeController.setMeasurements([]);
 
     if (activeController.dataSource === 'alphafold') {
-      activeController.setProteinTitle(`AlphaFold Prediction: ${id}`);
+      // Build a human-readable title: handle isoforms (P00533-2) and fragments (P00533::F2)
+      const fragMatch = id.match(/^(.+)::F(\d+)$/);
+      const isoMatch = id.match(/^([A-Z0-9]+)-(\d+)$/);
+      let afTitle = `AlphaFold: ${id}`;
+      if (fragMatch) afTitle = `AlphaFold: ${fragMatch[1]} (Fragment ${fragMatch[2]})`;
+      else if (isoMatch) afTitle = `AlphaFold: ${isoMatch[1]} (Isoform ${isoMatch[2]})`;
+      activeController.setProteinTitle(afTitle);
       activeController.setColoring('bfactor'); // Show pLDDT confidence by default
       activeController.setRepresentation('cartoon');
       addToHistory(id, 'alphafold');

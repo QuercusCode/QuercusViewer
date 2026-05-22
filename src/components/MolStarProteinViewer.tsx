@@ -209,7 +209,13 @@ export const MolStarProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerPr
         if (source === 'pdb' || source === 'rcsb') {
             url = `https://files.rcsb.org/download/${id}.cif`;
         } else if (source === 'alphafold') {
-            url = `https://alphafold.ebi.ac.uk/files/AF-${id}-F1-model_v6.cif`;
+            // Support fragment notation: "P00533::F2" and isoforms: "P00533-2"
+            const fragMatch = id.match(/^(.+)::F(\d+)$/);
+            if (fragMatch) {
+                url = `https://alphafold.ebi.ac.uk/files/AF-${fragMatch[1]}-F${fragMatch[2]}-model_v6.cif`;
+            } else {
+                url = `https://alphafold.ebi.ac.uk/files/AF-${id}-F1-model_v6.cif`;
+            }
         } else if (source === 'pubchem') {
             // For simplicity, using one format, maybe SDF or CIF if available
             url = `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/${id}/record/SDF/?record_type=3d`;
