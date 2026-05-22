@@ -1879,7 +1879,10 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
 
 
                     if (currentPdbId) {
-                        const cleanId = String(currentPdbId).trim().toLowerCase();
+                        // AlphaFold UniProt IDs are case-sensitive (uppercase) — don't lowercase them
+                        const cleanId = dataSource === 'alphafold'
+                            ? String(currentPdbId).trim().toUpperCase()
+                            : String(currentPdbId).trim().toLowerCase();
                         // PDB IDs are 4 chars. PubChem CIDs can be 1+ digits.
                         if (dataSource === 'pdb' && cleanId.length < 3) return null;
                         if (dataSource === 'pubchem' && cleanId.length < 1) return null;
@@ -1933,8 +1936,14 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                                 }
                             }
 
-                            // Propagate error for PDB
-                            if (isMounted.current) setError("Failed to fetch structure.");
+                            // Propagate error for PDB / AlphaFold
+                            if (isMounted.current) {
+                                if (dataSource === 'alphafold') {
+                                    setError(`AlphaFold structure not found for UniProt ID "${cleanId}". Please check the ID and try again.`);
+                                } else {
+                                    setError("Failed to fetch structure.");
+                                }
+                            }
                             return null;
                         }
                     }
