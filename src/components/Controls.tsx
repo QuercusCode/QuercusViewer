@@ -729,7 +729,11 @@ export const Controls: React.FC<ControlsProps> = ({
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        setPdbId(localPdbId);
+        if (dataSource === 'alphafold') {
+            setRepresentation('cartoon');
+            setColoring('bfactor'); // Show pLDDT confidence coloring
+        }
+        setPdbId(localPdbId.trim().toUpperCase());
     };
 
 
@@ -890,7 +894,7 @@ export const Controls: React.FC<ControlsProps> = ({
                     <div className="space-y-3 mb-2" id="upload-section">
                         <form onSubmit={handleSubmit} className="flex flex-col gap-2">
                             {/* Datasource Selector */}
-                            <div className={`grid grid-cols-2 gap-1 p-1 rounded-xl border ${isLightMode ? 'bg-neutral-100/50 border-neutral-200' : 'bg-black/20 border-white/5'}`}>
+                            <div className={`grid grid-cols-3 gap-1 p-1 rounded-xl border ${isLightMode ? 'bg-neutral-100/50 border-neutral-200' : 'bg-black/20 border-white/5'}`}>
                                 <button
                                     type="button"
                                     onClick={() => setDataSource('pdb')}
@@ -900,6 +904,16 @@ export const Controls: React.FC<ControlsProps> = ({
                                         }`}
                                 >
                                     RCSB PDB
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setDataSource('alphafold')}
+                                    className={`text-xs font-bold py-1.5 rounded-lg transition-all ${dataSource === 'alphafold'
+                                        ? 'bg-violet-600 text-white shadow-md shadow-violet-900/20'
+                                        : `${subtleText} hover:bg-black/5 dark:hover:bg-white/5 opacity-70 hover:opacity-100`
+                                        }`}
+                                >
+                                    AlphaFold
                                 </button>
                                 <button
                                     type="button"
@@ -923,16 +937,18 @@ export const Controls: React.FC<ControlsProps> = ({
                                             const val = e.target.value;
                                             setLocalPdbId(val);
 
-                                            // Smart Database Detection
-                                            const clean = val.trim();
-                                            if (clean) {
-                                                // Heuristic: PDB IDs are 4 chars, start with digit 1-9, and usually contain a letter.
-                                                // Everything else (Pure numbers, Names, longer IDs) is likely PubChem.
-                                                const isPdbLikely = /^[1-9][a-zA-Z0-9]{3}$/.test(clean) && /[a-zA-Z]/.test(clean);
-                                                if (isPdbLikely) {
-                                                    setDataSource('pdb');
-                                                } else {
-                                                    setDataSource('pubchem');
+                                            // Smart Database Detection (skip when user explicitly chose AlphaFold)
+                                            if (dataSource !== 'alphafold') {
+                                                const clean = val.trim();
+                                                if (clean) {
+                                                    // Heuristic: PDB IDs are 4 chars, start with digit 1-9, and usually contain a letter.
+                                                    // Everything else (Pure numbers, Names, longer IDs) is likely PubChem.
+                                                    const isPdbLikely = /^[1-9][a-zA-Z0-9]{3}$/.test(clean) && /[a-zA-Z]/.test(clean);
+                                                    if (isPdbLikely) {
+                                                        setDataSource('pdb');
+                                                    } else {
+                                                        setDataSource('pubchem');
+                                                    }
                                                 }
                                             }
                                         }}
@@ -940,7 +956,8 @@ export const Controls: React.FC<ControlsProps> = ({
                                         onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
                                         placeholder={
                                             dataSource === 'pubchem' ? "Search PubChem CID (e.g. 2244)" :
-                                                "Search PDB ID (e.g. 1crn)"
+                                            dataSource === 'alphafold' ? "UniProt ID (e.g. P00533)" :
+                                            "Search PDB ID (e.g. 1crn)"
                                         }
                                         className={`w-full rounded-lg pl-9 pr-3 py-2 border outline-none transition-all ${inputBg}`}
                                     />
@@ -965,7 +982,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                     >
                                                         <span className="font-mono font-medium">{item.id}</span>
                                                         <span className={`text-[10px] px-1.5 py-0.5 rounded border ${isLightMode ? 'text-neutral-400 group-hover:text-neutral-500 bg-neutral-100 border-neutral-200' : 'text-neutral-400 group-hover:text-neutral-500 bg-neutral-900 border-neutral-700'}`}>
-                                                            {item.dataSource === 'pdb' ? 'PDB' : 'CHEM'}
+                                                            {item.dataSource === 'pdb' ? 'PDB' : item.dataSource === 'alphafold' ? 'AF' : 'CHEM'}
                                                         </span>
                                                     </button>
                                                 ))}

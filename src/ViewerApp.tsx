@@ -1514,15 +1514,22 @@ function App() {
 
     activeController.setPdbId(id);
     activeController.setFile(null);
-    activeController.setProteinTitle(null);
     activeController.setChains([]);
     activeController.setHighlightedResidue(null);
     activeController.setMeasurements([]);
 
-    // Reset representation to cartoon (default) when changing structures
-    // This prevents ball+stick from persisting from chemical loads
-    if (activeController.representation === 'ball+stick') {
+    if (activeController.dataSource === 'alphafold') {
+      activeController.setProteinTitle(`AlphaFold Prediction: ${id}`);
+      activeController.setColoring('bfactor'); // Show pLDDT confidence by default
       activeController.setRepresentation('cartoon');
+      addToHistory(id, 'alphafold');
+    } else {
+      activeController.setProteinTitle(null);
+      // Reset representation to cartoon (default) when changing structures
+      // This prevents ball+stick from persisting from chemical loads
+      if (activeController.representation === 'ball+stick') {
+        activeController.setRepresentation('cartoon');
+      }
     }
   };
 
