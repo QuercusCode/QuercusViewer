@@ -155,7 +155,7 @@ export function HUD({ hoveredResidue, pdbMetadata, pdbId, isLightMode, isEmbedMo
             )}
 
             {/* Bottom Center HUD Container */}
-            <div className={`absolute bottom-28 md:bottom-6 left-1/2 -translate-x-1/2 z-10 pointer-events-none select-none transition-all duration-300 font-sans flex flex-col items-center gap-3 w-full px-4`}>
+            <div className={`absolute ${isEmbedMode ? 'bottom-14' : 'bottom-28 md:bottom-6'} left-1/2 -translate-x-1/2 z-10 pointer-events-none select-none transition-all duration-300 font-sans flex flex-col items-center gap-3 w-full px-4`}>
 
 
 
@@ -174,8 +174,8 @@ export function HUD({ hoveredResidue, pdbMetadata, pdbId, isLightMode, isEmbedMo
                     </div>
                 )}
 
-                {/* Main Control Pill */}
-                {(peerSession?.isConnected || onToggleAiChat || onToggleNotes) && (
+                {/* Main Control Pill — hidden in embed mode */}
+                {!isEmbedMode && (peerSession?.isConnected || onToggleAiChat || onToggleNotes) && (
                     <div className={`pointer-events-auto backdrop-blur-md rounded-full border ${borderColor} ${bgColor} shadow-lg px-4 py-2 flex items-center justify-center gap-2 animate-in slide-in-from-bottom-2 mx-auto`}>
 
                         {/* Desktop: Reactions Inline */}
@@ -301,7 +301,8 @@ export function HUD({ hoveredResidue, pdbMetadata, pdbId, isLightMode, isEmbedMo
                 )}
 
                 {/* Minimal Capsule (Bottom Center) - Only show if we have content */}
-                {(effectiveResidue || structTitle) && (
+                {/* In embed mode: only show when hovering (EmbedToolbar shows the idle title) */}
+                {(effectiveResidue || (!isEmbedMode && structTitle)) && (
                     <div className={`backdrop-blur-md rounded-full border ${borderColor} ${bgColor} shadow-sm px-4 md:px-6 py-2 flex items-center justify-center min-w-[240px] transition-all duration-300 ease-out overflow-hidden mt-1`}>
                         <div className="relative flex items-center justify-center">
                             {/* Residue Info View - Fades In/Out */}
