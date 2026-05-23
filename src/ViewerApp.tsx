@@ -12,6 +12,7 @@ import { parseURLState, getShareableURL } from './utils/urlManager';
 
 import LibraryModal from './components/LibraryModal';
 import { ShareModal } from './components/ShareModal';
+import { AssignmentBuilderModal } from './components/AssignmentBuilderModal';
 import { SequenceTrack } from './components/SequenceTrack';
 import { DragDropOverlay } from './components/DragDropOverlay';
 import { GalleryModal } from './components/GalleryModal';
@@ -26,6 +27,7 @@ import { Settings } from './components/Settings';
 import { SessionChat } from './components/SessionChat';
 import { AIChatSidebar } from './components/AIChatSidebar';
 import { NotesPanel } from './components/NotesPanel';
+import { AssignmentOverlay } from './components/AssignmentOverlay';
 import { OFFLINE_LIBRARY } from './data/library';
 import { fetchPubChemMetadata } from './utils/pdbUtils';
 import { useTheme } from './lib/ThemeContext';
@@ -129,6 +131,7 @@ function App() {
   // Feature: Nametags
   const [userName, setUserName] = useState<string | null>(null);
   const [isIdentityModalOpen, setIsIdentityModalOpen] = useState(false);
+  const [isAssignmentBuilderOpen, setIsAssignmentBuilderOpen] = useState(false);
   const [isNotebookOpen, setIsNotebookOpen] = useState(false);
 
   // ...
@@ -2824,6 +2827,7 @@ function App() {
             isNotesOpen={isNotesOpen}
             onToggleNotes={() => setIsNotesOpen(!isNotesOpen)}
             onOpenSettings={() => setIsSettingsOpen(true)}
+            onOpenAssignmentBuilder={() => setIsAssignmentBuilderOpen(true)}
           />
 
           <AIChatSidebar isOpen={isAiChatOpen} onClose={() => setIsAiChatOpen(false)} pdbId={pdbId} pdbMetadata={pdbMetadata} />
@@ -3631,6 +3635,28 @@ function App() {
         isLightMode={isLightMode}
       />
 
+      <AssignmentBuilderModal
+        isOpen={isAssignmentBuilderOpen}
+        onClose={() => setIsAssignmentBuilderOpen(false)}
+        isLightMode={isLightMode}
+        highlightedResidue={hoveredResidue}
+        generateBaseUrl={() => {
+          return getShareableURL(viewMode, controllers.map((ctrl, index) => ({
+            pdbId: ctrl.pdbId,
+            representation: ctrl.representation,
+            coloring: ctrl.coloring,
+            isSpinning: ctrl.isSpinning,
+            showLigands: ctrl.showLigands,
+            showSurface: ctrl.showSurface,
+            showIons: ctrl.showIons,
+            customColors: ctrl.customColors,
+            customBackgroundColor: ctrl.customBackgroundColor,
+            dataSource: ctrl.dataSource,
+            orientation: viewerRefs[index].current?.getOrientation()
+          })));
+        }}
+      />
+
 
 
       <LandingOverlay
@@ -3717,6 +3743,15 @@ function App() {
       }
 
       <div className={`absolute inset-0 pointer-events-none transition-opacity duration-300 ${isLightMode ? 'opacity-0' : 'opacity-100 bg-[radial-gradient(circle_at_50%_50%,rgba(50,50,80,0.2),rgba(0,0,0,0))]'}`} />
+
+      {activeController.assignmentPayload && (
+        <AssignmentOverlay
+          assignment={activeController.assignmentPayload}
+          selectedResidue={activeController.highlightedResidue}
+          isLightMode={isLightMode}
+          onResetSelection={() => activeController.setHighlightedResidue(null)}
+        />
+      )}
       </div>
 
       {upgradeModalTarget && (

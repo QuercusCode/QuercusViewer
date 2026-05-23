@@ -269,3 +269,11 @@ export interface NotebookEntry {
     created_at: string;
     updated_at: string;
 }
+
+export interface AssignmentPayload {
+    question: string;
+    successMessage: string;
+    targetChain: string;
+    targetResNo: number;
+    targetAtomName?: string;
+}

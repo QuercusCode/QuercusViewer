@@ -72,6 +72,8 @@ export interface StructureController {
     handleUpload: (file: File, isCif?: boolean, preservePdbId?: boolean) => void;
     handleResetView: () => void;
     resetKey: number; // Used to trigger re-renders/resets in the viewer
+
+    assignmentPayload?: import('../types').AssignmentPayload;
 }
 
 export const useStructureController = (initialState: any = {}): StructureController => {
@@ -129,6 +131,8 @@ export const useStructureController = (initialState: any = {}): StructureControl
 
     // Custom Transparency
     const [customTransparency, setCustomTransparency] = useState<CustomTransparencyRule[]>([]);
+
+    const [assignmentPayload] = useState<import('../types').AssignmentPayload | undefined>(initialState.assignmentPayload);
 
     // -- Handlers --
 
@@ -227,6 +231,7 @@ export const useStructureController = (initialState: any = {}): StructureControl
         overlays, setOverlays, addOverlay, removeOverlay, toggleOverlay,
         handleUpload,
         handleResetView,
-        resetKey
+        resetKey,
+        assignmentPayload
     };
 };

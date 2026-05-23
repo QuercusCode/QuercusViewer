@@ -13,6 +13,7 @@ export interface AppState {
     measurements?: { atom1: any, atom2: any, distance: number }[];
     customBackgroundColor?: string | null;
     dataSource?: DataSource; // Added for chemical structures
+    assignmentPayload?: import('../types').AssignmentPayload;
 }
 
 export interface MultiViewState {
@@ -83,6 +84,13 @@ export const getShareableURL = (viewMode: string, viewports: AppState[]): string
 
         if (state.customBackgroundColor) {
             params.set(p('bg'), encodeURIComponent(state.customBackgroundColor));
+        }
+
+        if (state.assignmentPayload) {
+            try {
+                const b64 = btoa(JSON.stringify(state.assignmentPayload));
+                params.set(p('assign'), b64);
+            } catch (e) { }
         }
     };
 
@@ -163,6 +171,11 @@ export const parseURLState = (): MultiViewState => {
 
         const bg = params.get(p('bg'));
         if (bg) state.customBackgroundColor = decodeURIComponent(bg);
+
+        const assign = params.get(p('assign'));
+        if (assign) {
+            try { state.assignmentPayload = JSON.parse(atob(assign)); } catch (e) { }
+        }
 
         return state;
     };
