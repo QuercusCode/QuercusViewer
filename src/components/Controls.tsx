@@ -311,6 +311,8 @@ interface ControlsProps {
     setIsMeasurementMode: (mode: boolean) => void;
     isPublicationMode: boolean;
     onTogglePublicationMode: () => void;
+    isTeachingMode?: boolean;
+    setIsTeachingMode?: (v: boolean) => void;
     onShare: () => void;
     onToggleMeasurement?: () => void;
     measurements: Measurement[]; // Use imported Measurement type
@@ -467,6 +469,8 @@ export const Controls: React.FC<ControlsProps> = ({
     setIsSpinning,
     isCleanMode,
     setIsCleanMode,
+    isTeachingMode,
+    setIsTeachingMode,
     onSaveSession,
     onLoadSession,
     onToggleContactMap,
@@ -1467,6 +1471,24 @@ export const Controls: React.FC<ControlsProps> = ({
                                                 residueindex: "Rainbow gradient by residue position."
                                             } as Record<string, string>)[coloring]}
                                         </p>
+
+                                        {/* Modes */}
+                                        {setIsTeachingMode && (
+                                            <div className="col-span-2 space-y-2 pt-2 border-t border-white/5">
+                                                <div className="flex items-center justify-between">
+                                                    <label className={`text-[10px] font-bold uppercase tracking-wider ${subtleText}`}>Teaching Mode</label>
+                                                    <button
+                                                        onClick={() => setIsTeachingMode(!isTeachingMode)}
+                                                        className={`w-10 h-5 rounded-full transition-all duration-300 relative shadow-inner ${isTeachingMode ? 'bg-indigo-600' : 'bg-neutral-500/50'}`}
+                                                    >
+                                                        <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-md transition-transform duration-300 ${isTeachingMode ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                                                    </button>
+                                                </div>
+                                                <p className={`text-[9px] opacity-70 leading-relaxed ${subtleText}`}>
+                                                    Enable interactive quizzes and assignments.
+                                                </p>
+                                            </div>
+                                        )}
 
                                         {/* Background Controls */}
                                         <div className="col-span-2 space-y-2 pt-2 border-t border-white/5">

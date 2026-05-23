@@ -3014,6 +3014,8 @@ function App() {
                     setIsMeasurementMode={setIsMeasurementMode}
                     isPublicationMode={isPublicationMode}
                     onTogglePublicationMode={togglePublicationMode}
+                    isTeachingMode={isTeachingMode}
+                    setIsTeachingMode={setIsTeachingMode}
                     onClearMeasurements={() => {
                       lastLocalMeasurementUpdate.current = Date.now();
                       setMeasurements([]);
