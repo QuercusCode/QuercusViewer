@@ -32,6 +32,13 @@ export const getShareableURL = (viewMode: string, viewports: AppState[]): string
         params.set('view', viewMode);
     }
 
+    // Preserve 'struct' parameter for database-loaded structures
+    const currentParams = new URLSearchParams(window.location.search);
+    const structId = currentParams.get('struct');
+    if (structId && viewMode === 'single') {
+        params.set('struct', structId);
+    }
+
     // Helper to set params with optional prefix
     const setParams = (prefix: string, state: AppState) => {
         const p = (key: string) => prefix ? `${prefix}_${key}` : key;
@@ -129,9 +136,10 @@ export const parseURLState = (): MultiViewState => {
         const state: Partial<AppState> = {};
 
         const pdb = params.get(p('pdb'));
-        if (!pdb) return null; // No PDB = empty viewport (unless we want to support empty views?)
+        const hasAssign = params.get(p('assign')) || params.get('assign');
+        if (!pdb && !hasAssign) return null; // No PDB and no assignment = empty viewport
 
-        state.pdbId = pdb;
+        state.pdbId = pdb || undefined;
         state.representation = (params.get(p('rep')) as any) || 'cartoon';
         state.coloring = (params.get(p('color')) as any) || 'chainid';
 
