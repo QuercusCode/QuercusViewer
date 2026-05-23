@@ -1338,6 +1338,7 @@ function App() {
   // handleResetView and handleUpload extracted to hook
 
   const [isPublicationMode, setIsPublicationMode] = useState(false);
+  const [isTeachingMode, setIsTeachingMode] = useState(false);
 
   // Store previous theme to restore after exiting Publication Mode
   const previousThemeRef = useRef(isLightMode);
@@ -2828,6 +2829,7 @@ function App() {
             onToggleNotes={() => setIsNotesOpen(!isNotesOpen)}
             onOpenSettings={() => setIsSettingsOpen(true)}
             onOpenAssignmentBuilder={() => setIsAssignmentBuilderOpen(true)}
+            isTeachingMode={isTeachingMode}
           />
 
           <AIChatSidebar isOpen={isAiChatOpen} onClose={() => setIsAiChatOpen(false)} pdbId={pdbId} pdbMetadata={pdbMetadata} />
@@ -2908,6 +2910,8 @@ function App() {
             setVisualizerEngine={setVisualizerEngine}
             isOpen={isSettingsOpen}
             onClose={() => setIsSettingsOpen(false)}
+            isTeachingMode={isTeachingMode}
+            setIsTeachingMode={setIsTeachingMode}
           />
         </>
       )}

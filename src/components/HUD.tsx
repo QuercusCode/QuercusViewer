@@ -29,9 +29,10 @@ interface HUDProps {
     onToggleNotes?: () => void;
     onOpenSettings?: () => void;
     onOpenAssignmentBuilder?: () => void;
+    isTeachingMode?: boolean;
 }
 
-export function HUD({ hoveredResidue, pdbMetadata, pdbId, isLightMode, isEmbedMode = false, peerSession, remoteHoveredResidue, isHost, remoteUserName, peerNames = {}, controllerId, isCameraSynced, onToggleCameraSync, userName, unreadCount = 0, isChatOpen = false, onToggleChat, isAiChatOpen = false, onToggleAiChat, isNotesOpen = false, onToggleNotes, onOpenSettings, onOpenAssignmentBuilder }: HUDProps) {
+export function HUD({ hoveredResidue, pdbMetadata, pdbId, isLightMode, isEmbedMode = false, peerSession, remoteHoveredResidue, isHost, remoteUserName, peerNames = {}, controllerId, isCameraSynced, onToggleCameraSync, userName, unreadCount = 0, isChatOpen = false, onToggleChat, isAiChatOpen = false, onToggleAiChat, isNotesOpen = false, onToggleNotes, onOpenSettings, onOpenAssignmentBuilder, isTeachingMode = false }: HUDProps) {
     const { t } = useTranslation();
     const textColor = isLightMode ? 'text-gray-800' : 'text-gray-200';
     const bgColor = isLightMode ? 'bg-white/80' : 'bg-black/80';
@@ -176,7 +177,7 @@ export function HUD({ hoveredResidue, pdbMetadata, pdbId, isLightMode, isEmbedMo
                 )}
 
                 {/* Main Control Pill — hidden in embed mode */}
-                {!isEmbedMode && (peerSession?.isConnected || onToggleAiChat || onToggleNotes || onOpenAssignmentBuilder) && (
+                {!isEmbedMode && (peerSession?.isConnected || onToggleAiChat || onToggleNotes || (isTeachingMode && onOpenAssignmentBuilder)) && (
                     <div className={`pointer-events-auto backdrop-blur-md rounded-full border ${borderColor} ${bgColor} shadow-lg px-4 py-2 flex items-center justify-center gap-2 animate-in slide-in-from-bottom-2 mx-auto`}>
 
                         {/* Desktop: Reactions Inline */}
@@ -240,7 +241,7 @@ export function HUD({ hoveredResidue, pdbMetadata, pdbId, isLightMode, isEmbedMo
                                         {t.aiBtn as string}
                                     </button>
                                 )}
-                                {onOpenAssignmentBuilder && (
+                                {isTeachingMode && onOpenAssignmentBuilder && (
                                     <button
                                         onClick={onOpenAssignmentBuilder}
                                         className={`relative text-[10px] font-bold px-4 py-1.5 md:px-2 md:py-1 rounded-full flex items-center gap-2 transition-colors shadow-sm ${isLightMode ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-green-500/20 text-green-300 hover:bg-green-500/30'}`}

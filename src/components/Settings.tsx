@@ -11,6 +11,8 @@ interface SettingsProps {
     setSsao: (v: boolean) => void;
     visualizerEngine: 'ngl' | 'molstar';
     setVisualizerEngine: (v: 'ngl' | 'molstar') => void;
+    isTeachingMode: boolean;
+    setIsTeachingMode: (v: boolean) => void;
     isOpen: boolean;
     onClose: () => void;
 }
@@ -20,6 +22,7 @@ export function Settings({
     quality, setQuality,
     ssao, setSsao,
     visualizerEngine, setVisualizerEngine,
+    isTeachingMode, setIsTeachingMode,
     isOpen, onClose
 }: SettingsProps) {
     const { t } = useTranslation();
@@ -84,6 +87,15 @@ export function Settings({
                                 className={`w-14 h-7 rounded-full transition-all duration-300 relative shadow-inner ${!isLightMode ? 'bg-indigo-600' : 'bg-neutral-200'}`}
                             >
                                 <div className={`absolute top-1 w-5 h-5 rounded-full bg-white shadow-md transition-transform duration-300 ${!isLightMode ? 'translate-x-8' : 'translate-x-1'}`} />
+                            </button>
+                        </div>
+                        <div className="flex items-center justify-between p-1">
+                            <span className="text-sm font-medium">Teaching Mode</span>
+                            <button
+                                onClick={() => setIsTeachingMode(!isTeachingMode)}
+                                className={`w-14 h-7 rounded-full transition-all duration-300 relative shadow-inner ${isTeachingMode ? 'bg-indigo-600' : 'bg-neutral-200'}`}
+                            >
+                                <div className={`absolute top-1 w-5 h-5 rounded-full bg-white shadow-md transition-transform duration-300 ${isTeachingMode ? 'translate-x-8' : 'translate-x-1'}`} />
                             </button>
                         </div>
                     </div>
