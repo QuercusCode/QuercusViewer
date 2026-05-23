@@ -1,0 +1,95 @@
+{
+  "nav": {
+    "features": "Funktionen",
+    "workflow": "Arbeitsablauf",
+    "faq": "FAQ",
+    "github": "GitHub",
+    "launch": "Viewer Starten"
+  },
+  "hero": {
+    "badge": "OPEN SOURCE · BROWSERBASIERT · WebGL",
+    "subtitle": "Professionelle 3D-Molekularstrukturanalyse",
+    "description": "Visualisieren, analysieren und arbeiten Sie an Protein- und chemischen Strukturen mit Rendering in Publikationsqualität — direkt in Ihrem Browser.",
+    "cta_launch": "Viewer Starten",
+    "cta_source": "Quellcode ansehen",
+    "stat_molecules": "Moleküle",
+    "stat_views": "Gleichzeitige Ansichten",
+    "stat_install": "Installation erforderlich"
+  },
+  "features": {
+    "label": "FÄHIGKEITEN",
+    "title": "Alles, was Sie für die Strukturanalyse benötigen",
+    "desc": "Eine komplette Suite von Tools zur Visualisierung, Analyse und Zusammenarbeit von Protein- und Molekülstrukturen.",
+    "import_title": "Universeller Import",
+    "import_desc": "Laden Sie direkt von RCSB PDB und PubChem, durchsuchen Sie eine kuratierte Bibliothek oder ziehen Sie lokale .pdb, .cif, .sdf, .mol Dateien per Drag-and-Drop herein.",
+    "multiview_title": "Multi-View-Analyse",
+    "multiview_desc": "Vergleichen Sie bis zu 4 Strukturen nebeneinander. Führen Sie Strukturüberlagerungen durch und analysieren Sie synchronisierte 2D-Kontaktkarten.",
+    "collab_title": "Live-Zusammenarbeit",
+    "collab_desc": "Starten Sie eine Live-Sitzung, um 3D-Ansichten, Kamerabewegungen und Darstellungen mit entfernten Kollegen zu synchronisieren.",
+    "studio_title": "Studio & Export",
+    "studio_desc": "Nehmen Sie Keyframe-Animationen auf, exportieren Sie hochauflösende Bilder in Publikationsqualität und erstellen Sie PDF-Zusammenfassungsberichte.",
+    "styling_title": "Erweitertes Styling",
+    "styling_desc": "Schichten Sie mehrere Darstellungen mit benutzerdefinierter Färbung basierend auf B-Faktor, Hydrophobizität oder Restbereichen.",
+    "access_title": "Zugänglich & Schnell",
+    "access_desc": "Benutzeroberflächen-Designs, Unterstützung der OpenDyslexic-Schriftart sowie dauerhafter Verlauf und Favoriten für einen personalisierten Arbeitsbereich."
+  },
+  "workflow": {
+    "label": "ARBEITSABLAUF",
+    "title": "Drei Schritte zur Erkenntnis",
+    "s1_title": "Suchen oder Importieren",
+    "s1_desc": "Finden Sie Strukturen aus RCSB PDB, PubChem oder importieren Sie lokale Dateien per Drag-and-Drop. Durchsuchen Sie über 1000 kuratierte Moleküle.",
+    "s2_title": "Visualisieren & Analysieren",
+    "s2_desc": "Wenden Sie Cartoon-, Oberflächen-, Kugel-und-Stab-Darstellungen an. Messen Sie Entfernungen, vergleichen Sie Strukturen nebeneinander.",
+    "s3_title": "Zusammenarbeiten & Exportieren",
+    "s3_desc": "Teilen Sie Live-Sitzungen mit Kollegen. Exportieren Sie hochauflösende Bilder, nehmen Sie Animationen auf, erstellen Sie PDF-Berichte."
+  },
+  "faq": {
+    "label": "FAQ",
+    "title": "Häufige Fragen",
+    "desc": "Alles, was Sie wissen müssen, bevor Sie beginnen.",
+    "q1": "Funktioniert es offline?",
+    "a1": "Quercus Viewer läuft vollständig in Ihrem Browser mit WebGL — kein serverseitiges Rendering. Sobald die Seite geladen ist, können Sie lokale .pdb, .cif, .sdf und .mol Dateien ohne Internetverbindung öffnen. Das Abrufen von Strukturen von RCSB PDB oder PubChem erfordert jedoch eine Verbindung.",
+    "q2": "Welche Dateiformate werden unterstützt?",
+    "a2": "Sie können PDB (.pdb), mmCIF (.cif), SDF (.sdf) und MOL (.mol) Dateien per Drag-and-Drop oder Dateiauswahl laden. Entfernte Quellen umfassen RCSB PDB (über Zugriffscode), PubChem (über Verbindungs-ID oder -Name) und direkte URL. Ein Export ist als PNG-Screenshots und PDF-Berichte möglich.",
+    "q3": "Sind meine Daten privat? Werden hochgeladene Dateien an einen Server gesendet?",
+    "a3": "Lokale Dateien, die Sie per Drag-and-Drop ablegen, werden vollständig in Ihrem Browser gelesen — sie werden niemals auf einen Server hochgeladen. Nur RCSB/PubChem-Suchen stellen ausgehende Anfragen, die direkt an die jeweiligen öffentlichen APIs gehen. Ihre Sitzungsdaten werden nur im Speicher Ihres Browsers gespeichert, es sei denn, Sie speichern sie ausdrücklich auf Ihrem Quercus-Dashboard.",
+    "q4": "Wie viele Strukturen kann ich gleichzeitig anzeigen?",
+    "a4": "Quercus Viewer unterstützt bis zu vier gleichzeitige nebeneinanderliegende Ansichten zum Strukturvergleich und zur Überlagerung. Die Anzahl der Ansichten kann jederzeit über die Seitenleiste gewechselt werden, ohne dass Ihre Strukturen neu geladen werden müssen.",
+    "q5": "Muss ich etwas installieren?",
+    "a5": "Es ist keine Installation erforderlich — Quercus Viewer ist eine progressive Web-App, die in jedem modernen Browser mit WebGL-Unterstützung (Chrome, Firefox, Edge, Safari) läuft. Es gibt keine Desktop-App, kein Plugin und keine Befehlszeileneinrichtung.",
+    "q6": "Ist der Quellcode Open Source?",
+    "a6": "Ja. Quercus Viewer wird unter der MIT-Lizenz veröffentlicht und der vollständige Quellcode ist auf GitHub verfügbar. Es steht Ihnen frei, ihn selbst zu hosten, zu forken oder beizutragen. Die Rendering-Engine NGL Viewer, auf der er aufbaut, ist ebenfalls Open Source (MIT)."
+  },
+  "newsletter": {
+    "title": "Bleiben Sie auf dem Laufenden",
+    "desc": "Lassen Sie sich über neue Funktionen, Updates und Veröffentlichungen informieren.",
+    "placeholder": "ihre@email.de",
+    "button": "Abonnieren",
+    "success": "Sie sind auf der Liste!",
+    "fine_print": "Kein Spam. Jederzeit abbestellbar."
+  },
+  "preview": {
+    "label": "Vorschau",
+    "title": "Sehen Sie es in Aktion",
+    "card1_title": "3D-Struktur-Viewer",
+    "card1_desc": "Interaktives WebGL-Ansichtsfenster mit Echtzeit-Drehung, Zoom und Atom-Level-Hover-Informationen.",
+    "card2_title": "Multi-View-Analyse",
+    "card2_desc": "Vergleichen Sie bis zu vier Strukturen gleichzeitig mit synchronisierter Kamerasteuerung und Überlagerungen.",
+    "card3_title": "Studio-Modus",
+    "card3_desc": "Erstellen Sie Keyframe-Animationen, passen Sie die Beleuchtung an und exportieren Sie Rendern und Berichte in Publikationsqualität."
+  },
+  "techbar": {
+    "built_with": "Erstellt mit"
+  },
+  "footer": {
+    "license": "MIT Lizenz",
+    "engine": "3D Engine: NGL Viewer"
+  },
+  "cookie": {
+    "title": "Cookie-Einstellungen",
+    "desc": "Wir verwenden Analyse-Cookies, um den Quercus Viewer zu verbessern. Sie können sich jederzeit abmelden.",
+    "privacy": "Datenschutzrichtlinie",
+    "accept": "Akzeptieren",
+    "decline": "Ablehnen"
+  }
+}

@@ -8,6 +8,7 @@ import pt from './locales/pt.json';
 import es from './locales/es.json';
 import hi from './locales/hi.json';
 import zh from './locales/zh.json';
+import de from './locales/de.json';
 
 i18n
   .use(LanguageDetector)
@@ -20,9 +21,10 @@ i18n
       es: { translation: es },
       hi: { translation: hi },
       zh: { translation: zh },
+      de: { translation: de },
     },
     fallbackLng: 'en',
-    supportedLngs: ['en', 'fr', 'pt', 'es', 'hi', 'zh'],
+    supportedLngs: ['en', 'fr', 'pt', 'es', 'hi', 'zh', 'de'],
     interpolation: { escapeValue: false },
     detection: {
       order: ['localStorage', 'navigator'],

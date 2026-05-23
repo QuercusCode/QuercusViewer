@@ -34,7 +34,7 @@ export default defineConfig({
         ]
       },
       workbox: {
-        maximumFileSizeToCacheInBytes: 10 * 1024 * 1024 // 10 MiB to accommodate large Mol* chunks
+        maximumFileSizeToCacheInBytes: 15 * 1024 * 1024 // 15 MiB to accommodate large Mol* chunks
       }
     })
   ],

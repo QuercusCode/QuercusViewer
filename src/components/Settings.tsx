@@ -71,7 +71,7 @@ export function Settings({
                         <div className="flex flex-col gap-1.5">
                             <span className="text-sm font-medium pl-1">Language</span>
                             <select 
-                                value={i18next.language.slice(0, 2)} 
+                                value={(i18next.language || 'en').slice(0, 2)} 
                                 onChange={(e) => i18next.changeLanguage(e.target.value)}
                                 className={`w-full p-2.5 rounded-xl border ${borderColor} ${inputBg} text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none`}
                             >
