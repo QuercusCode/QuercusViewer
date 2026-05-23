@@ -177,7 +177,7 @@ export function HUD({ hoveredResidue, pdbMetadata, pdbId, isLightMode, isEmbedMo
                 )}
 
                 {/* Main Control Pill — hidden in embed mode */}
-                {!isEmbedMode && (peerSession?.isConnected || onToggleAiChat || onToggleNotes || (isTeachingMode && onOpenAssignmentBuilder)) && (
+                {!isEmbedMode && (peerSession?.isConnected || onToggleAiChat || onToggleNotes || (isTeachingMode && onOpenAssignmentBuilder) || onOpenSettings) && (
                     <div className={`pointer-events-auto backdrop-blur-md rounded-full border ${borderColor} ${bgColor} shadow-lg px-4 py-2 flex items-center justify-center gap-2 animate-in slide-in-from-bottom-2 mx-auto`}>
 
                         {/* Desktop: Reactions Inline */}
@@ -249,6 +249,16 @@ export function HUD({ hoveredResidue, pdbMetadata, pdbId, isLightMode, isEmbedMo
                                     >
                                         <Target className="w-4 h-4 md:w-3 md:h-3" />
                                         Quiz
+                                    </button>
+                                )}
+                                {onOpenSettings && (
+                                    <button
+                                        onClick={onOpenSettings}
+                                        className={`relative text-[10px] font-bold px-4 py-1.5 md:px-2 md:py-1 rounded-full flex items-center gap-2 transition-colors shadow-sm ${isLightMode ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' : 'bg-amber-500/20 text-amber-300 hover:bg-amber-500/30'}`}
+                                        title={t.openSettingsTitle as string}
+                                    >
+                                        <Wrench className="w-4 h-4 md:w-3 md:h-3" />
+                                        Settings
                                     </button>
                                 )}
                             </div>
