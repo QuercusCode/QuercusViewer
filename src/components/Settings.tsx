@@ -23,6 +23,8 @@ interface SettingsProps {
     setReducedMotion: (v: boolean) => void;
     visualAccessibility: string;
     setVisualAccessibility: (v: string) => void;
+    onUpdateDefaultStyle: (style: string) => void;
+    onUpdateDefaultColor: (color: string) => void;
 }
 
 export function Settings({
@@ -35,7 +37,8 @@ export function Settings({
     uiScale, setUiScale,
     autoHideHUD, setAutoHideHUD,
     reducedMotion, setReducedMotion,
-    visualAccessibility, setVisualAccessibility
+    visualAccessibility, setVisualAccessibility,
+    onUpdateDefaultStyle, onUpdateDefaultColor
 }: SettingsProps) {
     const { t } = useTranslation();
 
@@ -73,7 +76,12 @@ export function Settings({
                                 className={`w-full p-2.5 rounded-xl border ${borderColor} ${inputBg} text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none`}
                             >
                                 <option value="en">English (US)</option>
-                                <option value="zh">中文 (Chinese)</option>
+                                <option value="es">Spanish (ES)</option>
+                                <option value="fr">French (FR)</option>
+                                <option value="de">German (DE)</option>
+                                <option value="pt">Portuguese (PT)</option>
+                                <option value="hi">Hindi (HI)</option>
+                                <option value="zh">Chinese (ZH)</option>
                             </select>
                         </div>
 
@@ -81,7 +89,10 @@ export function Settings({
                             <span className="text-sm font-medium pl-1">Default Startup Style</span>
                             <select 
                                 defaultValue={localStorage.getItem('defaultMoleculeStyle') || 'cartoon'} 
-                                onChange={(e) => localStorage.setItem('defaultMoleculeStyle', e.target.value)}
+                                onChange={(e) => {
+                                    localStorage.setItem('defaultMoleculeStyle', e.target.value);
+                                    onUpdateDefaultStyle(e.target.value);
+                                }}
                                 className={`w-full p-2.5 rounded-xl border ${borderColor} ${inputBg} text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none`}
                             >
                                 <option value="cartoon">Cartoon</option>
@@ -97,7 +108,10 @@ export function Settings({
                             <span className="text-sm font-medium pl-1">Default Startup Color</span>
                             <select 
                                 defaultValue={localStorage.getItem('defaultColorScheme') || 'chainid'} 
-                                onChange={(e) => localStorage.setItem('defaultColorScheme', e.target.value)}
+                                onChange={(e) => {
+                                    localStorage.setItem('defaultColorScheme', e.target.value);
+                                    onUpdateDefaultColor(e.target.value);
+                                }}
                                 className={`w-full p-2.5 rounded-xl border ${borderColor} ${inputBg} text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none`}
                             >
                                 <option value="chainid">By Chain ID</option>

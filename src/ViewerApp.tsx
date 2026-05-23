@@ -2930,6 +2930,8 @@ function App() {
             setReducedMotion={setReducedMotion}
             visualAccessibility={visualAccessibility}
             setVisualAccessibility={setVisualAccessibility}
+            onUpdateDefaultStyle={(style) => setRepresentation(style as any)}
+            onUpdateDefaultColor={(color) => setColoring(color as any)}
           />
         </>
       )}
