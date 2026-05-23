@@ -144,18 +144,25 @@ function App() {
   // GRAPHICS SETTINGS
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   
-  // Map performance_mode to internal quality levels (Legacy: switched to Visual Accessibility)
+  // Map performance_mode to internal quality levels
   const [settings, setSettings] = useState<{ quality: 'low' | 'medium' | 'high'; ssao: boolean }>({
     quality: 'medium',
     ssao: true
   });
 
-  // Sync settings when user metadata changes (Legacy: switched to Visual Accessibility)
-  const visualAccessibility = user?.user_metadata?.visual_accessibility || 'none';
-
   const updateSetting = (key: keyof typeof settings, value: any) => {
     setSettings(prev => ({ ...prev, [key]: value }));
   };
+
+  // NEW UI PREFERENCES
+  const [uiScale, setUiScale] = useState<import('./types').UiScale>(() => (localStorage.getItem('uiScale') as import('./types').UiScale) || 'medium');
+  const [autoHideHUD, setAutoHideHUD] = useState<boolean>(() => localStorage.getItem('autoHideHUD') === 'true');
+  const [reducedMotion, setReducedMotion] = useState<boolean>(() => localStorage.getItem('reducedMotion') === 'true');
+  
+  // Sync accessibility with localStorage (fallback to user_metadata or 'none')
+  const [visualAccessibility, setVisualAccessibility] = useState<string>(() => 
+    localStorage.getItem('visualAccessibility') || user?.user_metadata?.visual_accessibility || 'none'
+  );
 
   // Prompt for name when connecting (if not set)
   useEffect(() => {
@@ -2599,13 +2606,15 @@ function App() {
 
       {/* Main Content Wrapper with Accessibility Filter */}
       <div 
-        className="w-full h-full flex flex-col relative"
+        className={`w-full h-full flex flex-col relative ui-scale-${uiScale} ${reducedMotion ? 'reduced-motion' : ''}`}
         style={{
           filter: visualAccessibility === 'achromatopsia' 
             ? 'grayscale(100%)' 
-            : visualAccessibility !== 'none' 
-              ? `url(#${visualAccessibility})` 
-              : 'none'
+            : visualAccessibility === 'high-contrast'
+              ? 'contrast(1.5) saturate(1.2)'
+              : visualAccessibility !== 'none' 
+                ? `url(#${visualAccessibility})` 
+                : 'none'
         }}
       >
       {/* Interaction Blocker for Static Embeds */}
@@ -2830,6 +2839,7 @@ function App() {
             onOpenSettings={() => setIsSettingsOpen(true)}
             onOpenAssignmentBuilder={() => setIsAssignmentBuilderOpen(true)}
             isTeachingMode={isTeachingMode}
+            autoHideHUD={autoHideHUD}
           />
 
           <AIChatSidebar isOpen={isAiChatOpen} onClose={() => setIsAiChatOpen(false)} pdbId={pdbId} pdbMetadata={pdbMetadata} />
@@ -2912,6 +2922,14 @@ function App() {
             onClose={() => setIsSettingsOpen(false)}
             isTeachingMode={isTeachingMode}
             setIsTeachingMode={setIsTeachingMode}
+            uiScale={uiScale}
+            setUiScale={setUiScale}
+            autoHideHUD={autoHideHUD}
+            setAutoHideHUD={setAutoHideHUD}
+            reducedMotion={reducedMotion}
+            setReducedMotion={setReducedMotion}
+            visualAccessibility={visualAccessibility}
+            setVisualAccessibility={setVisualAccessibility}
           />
         </>
       )}

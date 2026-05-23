@@ -148,6 +148,39 @@
     mask-image: linear-gradient(to right, black 85%, transparent 100%);
     -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
   }
+
+  /* UI Scaling */
+  .ui-scale-small {
+    font-size: 0.9rem;
+  }
+  
+  .ui-scale-small button, 
+  .ui-scale-small input,
+  .ui-scale-small select {
+    transform: scale(0.9);
+    transform-origin: center center;
+  }
+
+  .ui-scale-medium {
+    font-size: 1rem;
+  }
+
+  .ui-scale-large {
+    font-size: 1.1rem;
+  }
+  
+  .ui-scale-large button, 
+  .ui-scale-large input,
+  .ui-scale-large select {
+    transform: scale(1.1);
+    transform-origin: center center;
+  }
+
+  /* Reduced Motion */
+  .reduced-motion * {
+    animation: none !important;
+    transition: none !important;
+  }
 }
 
 /* Custom Scrollbar */

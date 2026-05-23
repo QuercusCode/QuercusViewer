@@ -30,9 +30,10 @@ interface HUDProps {
     onOpenSettings?: () => void;
     onOpenAssignmentBuilder?: () => void;
     isTeachingMode?: boolean;
+    autoHideHUD?: boolean;
 }
 
-export function HUD({ hoveredResidue, pdbMetadata, pdbId, isLightMode, isEmbedMode = false, peerSession, remoteHoveredResidue, isHost, remoteUserName, peerNames = {}, controllerId, isCameraSynced, onToggleCameraSync, userName, unreadCount = 0, isChatOpen = false, onToggleChat, isAiChatOpen = false, onToggleAiChat, isNotesOpen = false, onToggleNotes, onOpenSettings, onOpenAssignmentBuilder, isTeachingMode = false }: HUDProps) {
+export function HUD({ hoveredResidue, pdbMetadata, pdbId, isLightMode, isEmbedMode = false, peerSession, remoteHoveredResidue, isHost, remoteUserName, peerNames = {}, controllerId, isCameraSynced, onToggleCameraSync, userName, unreadCount = 0, isChatOpen = false, onToggleChat, isAiChatOpen = false, onToggleAiChat, isNotesOpen = false, onToggleNotes, onOpenSettings, onOpenAssignmentBuilder, isTeachingMode = false, autoHideHUD = false }: HUDProps) {
     const { t } = useTranslation();
     const textColor = isLightMode ? 'text-gray-800' : 'text-gray-200';
     const bgColor = isLightMode ? 'bg-white/80' : 'bg-black/80';
@@ -178,7 +179,7 @@ export function HUD({ hoveredResidue, pdbMetadata, pdbId, isLightMode, isEmbedMo
 
                 {/* Main Control Pill — hidden in embed mode */}
                 {!isEmbedMode && (peerSession?.isConnected || onToggleAiChat || onToggleNotes || (isTeachingMode && onOpenAssignmentBuilder) || onOpenSettings) && (
-                    <div className={`pointer-events-auto backdrop-blur-md rounded-full border ${borderColor} ${bgColor} shadow-lg px-4 py-2 flex items-center justify-center gap-2 animate-in slide-in-from-bottom-2 mx-auto`}>
+                    <div className={`pointer-events-auto backdrop-blur-md rounded-full border ${borderColor} ${bgColor} shadow-lg px-4 py-2 flex items-center justify-center gap-2 animate-in slide-in-from-bottom-2 mx-auto transition-all duration-300 ${autoHideHUD ? 'opacity-20 hover:opacity-100' : 'opacity-100'}`}>
 
                         {/* Desktop: Reactions Inline */}
                         {peerSession?.isConnected && (

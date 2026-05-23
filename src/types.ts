@@ -277,3 +277,19 @@ export interface AssignmentPayload {
     targetResNo: number;
     targetAtomName?: string;
 }
+export type UiScale = 'small' | 'medium' | 'large';
+
+export interface AppPreferences {
+    language: string;
+    uiScale: UiScale;
+    autoHideHUD: boolean;
+    reducedMotion: boolean;
+    visualAccessibility: 'none' | 'protanopia' | 'deuteranopia' | 'tritanopia' | 'achromatopsia' | 'high-contrast';
+}
+
+export interface StartupDefaults {
+    defaultMoleculeStyle: RepresentationType;
+    defaultColorScheme: ColoringType;
+    defaultTheme: 'light' | 'dark';
+}
+
