@@ -27,10 +27,16 @@ export const AssignmentOverlay: React.FC<AssignmentOverlayProps> = ({
     const handleSubmit = () => {
         if (!selectedResidue) return;
 
-        const isChainMatch = selectedResidue.chain === assignment.targetChain;
-        const isResNoMatch = selectedResidue.resNo === assignment.targetResNo;
+        const chain1 = String(selectedResidue.chain || '').trim();
+        const chain2 = String(assignment.targetChain || '').trim();
+        const isChainMatch = chain1 === chain2;
+        
+        const isResNoMatch = Number(selectedResidue.resNo) === Number(assignment.targetResNo);
+        
         // Optionally match atom name if specified, otherwise just residue match is fine
-        const isAtomMatch = assignment.targetAtomName ? selectedResidue.atomName === assignment.targetAtomName : true;
+        const isAtomMatch = assignment.targetAtomName 
+            ? String(selectedResidue.atomName || '').trim() === String(assignment.targetAtomName || '').trim() 
+            : true;
 
         if (isChainMatch && isResNoMatch && isAtomMatch) {
             setStatus('correct');
