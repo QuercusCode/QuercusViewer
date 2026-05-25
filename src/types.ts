@@ -278,10 +278,25 @@ export interface AssignmentPayload {
     targetAtomName?: string;
 }
 
+export interface SlideAnnotation {
+    id: string;
+    text: string;
+    x: number; // 0–100 percentage of canvas width
+    y: number; // 0–100 percentage of canvas height
+    color?: string;
+}
+
+export interface SlideQuiz {
+    question: string;
+    options: string[];
+    correctIndex: number;
+}
+
 export interface StoryboardSlide {
     id: string;
     title: string;
     description: string;
+    speakerNotes?: string;
     cameraOrientation?: any;
     representation?: RepresentationType;
     coloring?: ColoringType;
@@ -289,11 +304,14 @@ export interface StoryboardSlide {
     selectedResidue?: ResidueInfo | null;
     showSurface?: boolean;
     showLigands?: boolean;
+    quiz?: SlideQuiz;
+    annotations?: SlideAnnotation[];
 }
 
 export interface StoryboardPayload {
     title: string;
     slides: StoryboardSlide[];
+    autoPlaySeconds?: number; // 0 = disabled, >0 = auto-advance interval
 }
 
 export type UiScale = 'small' | 'medium' | 'large';
