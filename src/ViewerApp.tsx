@@ -140,6 +140,8 @@ function App() {
   const [isStoryboardBuilderOpen, setIsStoryboardBuilderOpen] = useState(false);
   const [activeStoryboard, setActiveStoryboard] = useState<import('./types').StoryboardPayload | null>(initialUrlState.viewports[0]?.storyboardPayload || null);
   const [currentSlideIndex, setCurrentSlideIndex] = useState<number>(initialUrlState.viewports[0]?.storyboardSlideIndex || 0);
+  // Guard: the auto-apply of the initial slide must happen ONCE only — never again after the user starts navigating
+  const hasAppliedInitialSlideRef = useRef(false);
   const [isNotebookOpen, setIsNotebookOpen] = useState(false);
 
   // ...
@@ -1583,18 +1585,21 @@ function App() {
     }
   }, [activeStoryboard, activeController, activeViewIndex]);
 
-  // Apply initial slide view when storyboard loads
+  // Apply the initial slide view ONCE when the storyboard first becomes available.
+  // The hasAppliedInitialSlideRef guard ensures this never fires again — even if activeStoryboard
+  // reference changes due to re-renders — so the user's slide position is never reset.
   useEffect(() => {
-    if (activeStoryboard && activeStoryboard.slides?.length > 0) {
-      // Use the slide index that was parsed from the URL (e.g. when a shared link is opened)
-      const initialIndex = initialUrlState.viewports[0]?.storyboardSlideIndex || 0;
-      const clampedIndex = Math.min(initialIndex, activeStoryboard.slides.length - 1);
-      const timer = setTimeout(() => {
-        handleSlideChange(clampedIndex);
-      }, 1200); // 1.2s delay to ensure PDB structure is loaded and canvas is ready
-      return () => clearTimeout(timer);
-    }
-  }, [activeStoryboard]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (hasAppliedInitialSlideRef.current) return; // ← ONE-SHOT GUARD: never run twice
+    if (!activeStoryboard || !activeStoryboard.slides?.length) return;
+
+    hasAppliedInitialSlideRef.current = true;
+    const initialIndex = initialUrlState.viewports[0]?.storyboardSlideIndex || 0;
+    const clampedIndex = Math.min(initialIndex, activeStoryboard.slides.length - 1);
+    const timer = setTimeout(() => {
+      handleSlideChange(clampedIndex);
+    }, 1200); // wait for PDB structure to finish loading before applying camera/rep
+    return () => clearTimeout(timer);
+  }); // No dependency array — runs after every render, but the ref guard makes it a no-op after first run
 
   const handlePdbIdChange = (id: string) => {
 
