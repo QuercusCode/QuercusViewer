@@ -13,6 +13,8 @@ import { parseURLState, getShareableURL } from './utils/urlManager';
 import LibraryModal from './components/LibraryModal';
 import { ShareModal } from './components/ShareModal';
 import { AssignmentBuilderModal } from './components/AssignmentBuilderModal';
+import { StoryboardBuilderModal } from './components/StoryboardBuilderModal';
+import { StoryboardOverlay } from './components/StoryboardOverlay';
 import { SequenceTrack } from './components/SequenceTrack';
 import { DragDropOverlay } from './components/DragDropOverlay';
 import { GalleryModal } from './components/GalleryModal';
@@ -96,6 +98,9 @@ const deepEqual = (a: any, b: any): boolean => {
 
 function App() {
   const { t } = useTranslation();
+  
+  // Parse Global URL State Once
+  const initialUrlState = useMemo(() => parseURLState(), []);
 
   // Set page title for the viewer route
   useEffect(() => {
@@ -132,6 +137,9 @@ function App() {
   const [userName, setUserName] = useState<string | null>(null);
   const [isIdentityModalOpen, setIsIdentityModalOpen] = useState(false);
   const [isAssignmentBuilderOpen, setIsAssignmentBuilderOpen] = useState(false);
+  const [isStoryboardBuilderOpen, setIsStoryboardBuilderOpen] = useState(false);
+  const [activeStoryboard, setActiveStoryboard] = useState<import('./types').StoryboardPayload | null>(initialUrlState.viewports[0]?.storyboardPayload || null);
+  const [currentSlideIndex, setCurrentSlideIndex] = useState<number>(0);
   const [isNotebookOpen, setIsNotebookOpen] = useState(false);
 
   // ...
@@ -302,8 +310,7 @@ function App() {
     }
   }, []);
   
-  // Parse Global URL State Once
-  const initialUrlState = useMemo(() => parseURLState(), []);
+
 
   // --- State: Multi-View Controllers (array of 4) ---
   const defaultRep = user?.user_metadata?.default_rendering || 'cartoon';
@@ -1521,6 +1528,58 @@ function App() {
       }, 500);
     }
   }, [addToHistory, controllers, initialUrlState]);
+
+  const handleSlideChange = useCallback((index: number) => {
+    if (!activeStoryboard) return;
+    setCurrentSlideIndex(index);
+    const slide = activeStoryboard.slides[index];
+    if (!slide) return;
+
+    // Apply visualization parameters
+    if (slide.representation) {
+      activeController.setRepresentation(slide.representation);
+    }
+    if (slide.coloring) {
+      activeController.setColoring(slide.coloring);
+    }
+    if (slide.customColors) {
+      activeController.setCustomColors(slide.customColors);
+    } else {
+      activeController.setCustomColors([]);
+    }
+    if (slide.showSurface !== undefined) {
+      activeController.setShowSurface(slide.showSurface);
+    }
+    if (slide.showLigands !== undefined) {
+      activeController.setShowLigands(slide.showLigands);
+    }
+    if (slide.selectedResidue !== undefined) {
+      activeController.setHighlightedResidue(slide.selectedResidue);
+      if (slide.selectedResidue) {
+        viewerRefs[activeViewIndex].current?.highlightResidue(slide.selectedResidue.chain, slide.selectedResidue.resNo);
+      } else {
+        viewerRefs[activeViewIndex].current?.clearHighlight?.();
+      }
+    }
+
+    // Apply Camera orientation
+    if (slide.cameraOrientation) {
+      const viewerRef = viewerRefs[activeViewIndex]?.current;
+      if (viewerRef) {
+        viewerRef.setOrientation(slide.cameraOrientation);
+      }
+    }
+  }, [activeStoryboard, activeController, activeViewIndex]);
+
+  // Apply initial slide view when storyboard loads
+  useEffect(() => {
+    if (activeStoryboard && activeStoryboard.slides?.length > 0) {
+      const timer = setTimeout(() => {
+        handleSlideChange(0);
+      }, 1200); // 1.2s delay to ensure PDB structure is loaded and canvas is ready
+      return () => clearTimeout(timer);
+    }
+  }, [activeStoryboard, handleSlideChange]);
 
   const handlePdbIdChange = (id: string) => {
 
@@ -2838,6 +2897,7 @@ function App() {
             onToggleNotes={() => setIsNotesOpen(!isNotesOpen)}
             onOpenSettings={() => setIsSettingsOpen(true)}
             onOpenAssignmentBuilder={() => setIsAssignmentBuilderOpen(true)}
+            onOpenStoryboardBuilder={() => setIsStoryboardBuilderOpen(true)}
             isTeachingMode={isTeachingMode}
             autoHideHUD={autoHideHUD}
           />
@@ -3683,6 +3743,23 @@ function App() {
         }}
       />
 
+      <StoryboardBuilderModal
+        isOpen={isStoryboardBuilderOpen}
+        onClose={() => setIsStoryboardBuilderOpen(false)}
+        isLightMode={isLightMode}
+        getCurrentViewerState={() => ({
+          cameraOrientation: viewerRefs[activeViewIndex].current?.getOrientation(),
+          representation: activeController.representation,
+          coloring: activeController.coloring,
+          customColors: activeController.customColors,
+          selectedResidue: activeController.highlightedResidue,
+          showSurface: activeController.showSurface,
+          showLigands: activeController.showLigands,
+          pdbId: activeController.pdbId,
+          dataSource: activeController.dataSource
+        })}
+      />
+
 
 
       <LandingOverlay
@@ -3776,6 +3853,16 @@ function App() {
           selectedResidue={activeController.highlightedResidue}
           isLightMode={isLightMode}
           onResetSelection={() => activeController.setHighlightedResidue(null)}
+        />
+      )}
+
+      {activeStoryboard && (
+        <StoryboardOverlay
+          storyboard={activeStoryboard}
+          currentSlideIndex={currentSlideIndex}
+          isLightMode={isLightMode}
+          onSlideChange={handleSlideChange}
+          onExit={() => setActiveStoryboard(null)}
         />
       )}
       </div>

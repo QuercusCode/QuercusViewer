@@ -1,4 +1,4 @@
-import type { RepresentationType, ColoringType, CustomColorRule } from '../types';
+import type { RepresentationType, ColoringType, CustomColorRule, StoryboardPayload } from '../types';
 import type { DataSource } from '../utils/pdbUtils';
 
 export interface AppState {
@@ -14,6 +14,7 @@ export interface AppState {
     customBackgroundColor?: string | null;
     dataSource?: DataSource; // Added for chemical structures
     assignmentPayload?: import('../types').AssignmentPayload;
+    storyboardPayload?: StoryboardPayload;
 }
 
 export interface MultiViewState {
@@ -99,6 +100,14 @@ export const getShareableURL = (viewMode: string, viewports: AppState[]): string
                 params.set(p('assign'), b64);
             } catch (e) { }
         }
+
+        if (state.storyboardPayload) {
+            try {
+                const jsonStr = JSON.stringify(state.storyboardPayload);
+                const b64 = btoa(unescape(encodeURIComponent(jsonStr)));
+                params.set(p('story'), b64);
+            } catch (e) { console.warn("Storyboard serialization failed", e); }
+        }
     };
 
     // Encode states
@@ -136,8 +145,8 @@ export const parseURLState = (): MultiViewState => {
         const state: Partial<AppState> = {};
 
         const pdb = params.get(p('pdb'));
-        const hasAssign = params.get(p('assign')) || params.get('assign');
-        if (!pdb && !hasAssign) return null; // No PDB and no assignment = empty viewport
+        const hasAssign = params.get(p('assign')) || params.get('assign') || params.get(p('story')) || params.get('story');
+        if (!pdb && !hasAssign) return null; // No PDB and no assignment/story = empty viewport
 
         state.pdbId = pdb || undefined;
         state.representation = (params.get(p('rep')) as any) || 'cartoon';
@@ -183,6 +192,14 @@ export const parseURLState = (): MultiViewState => {
         const assign = params.get(p('assign'));
         if (assign) {
             try { state.assignmentPayload = JSON.parse(atob(assign)); } catch (e) { }
+        }
+
+        const story = params.get(p('story'));
+        if (story) {
+            try {
+                const decodedStr = decodeURIComponent(escape(atob(story)));
+                state.storyboardPayload = JSON.parse(decodedStr);
+            } catch (e) { console.warn("Storyboard deserialization failed", e); }
         }
 
         return state;

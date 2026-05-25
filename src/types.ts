@@ -277,6 +277,25 @@ export interface AssignmentPayload {
     targetResNo: number;
     targetAtomName?: string;
 }
+
+export interface StoryboardSlide {
+    id: string;
+    title: string;
+    description: string;
+    cameraOrientation?: any;
+    representation?: RepresentationType;
+    coloring?: ColoringType;
+    customColors?: CustomColorRule[];
+    selectedResidue?: ResidueInfo | null;
+    showSurface?: boolean;
+    showLigands?: boolean;
+}
+
+export interface StoryboardPayload {
+    title: string;
+    slides: StoryboardSlide[];
+}
+
 export type UiScale = 'small' | 'medium' | 'large';
 
 export interface AppPreferences {

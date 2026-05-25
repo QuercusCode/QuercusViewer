@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from 'react';
 import type { ResidueInfo, PDBMetadata } from '../types';
 import type { PeerSession } from '../hooks/usePeerSession';
-import { Eye, Wrench, Lock, Unlock, Mic, MicOff, PhoneOff, MessageSquare, Sparkles, StickyNote, Target } from 'lucide-react';
+import { Eye, Wrench, Lock, Unlock, Mic, MicOff, PhoneOff, MessageSquare, Sparkles, StickyNote, Target, BookOpen } from 'lucide-react';
 import { useTranslation } from '../lib/i18n';
 
 interface HUDProps {
@@ -29,11 +29,12 @@ interface HUDProps {
     onToggleNotes?: () => void;
     onOpenSettings?: () => void;
     onOpenAssignmentBuilder?: () => void;
+    onOpenStoryboardBuilder?: () => void;
     isTeachingMode?: boolean;
     autoHideHUD?: boolean;
 }
 
-export function HUD({ hoveredResidue, pdbMetadata, pdbId, isLightMode, isEmbedMode = false, peerSession, remoteHoveredResidue, isHost, remoteUserName, peerNames = {}, controllerId, isCameraSynced, onToggleCameraSync, userName, unreadCount = 0, isChatOpen = false, onToggleChat, isAiChatOpen = false, onToggleAiChat, isNotesOpen = false, onToggleNotes, onOpenSettings, onOpenAssignmentBuilder, isTeachingMode = false, autoHideHUD = false }: HUDProps) {
+export function HUD({ hoveredResidue, pdbMetadata, pdbId, isLightMode, isEmbedMode = false, peerSession, remoteHoveredResidue, isHost, remoteUserName, peerNames = {}, controllerId, isCameraSynced, onToggleCameraSync, userName, unreadCount = 0, isChatOpen = false, onToggleChat, isAiChatOpen = false, onToggleAiChat, isNotesOpen = false, onToggleNotes, onOpenSettings, onOpenAssignmentBuilder, onOpenStoryboardBuilder, isTeachingMode = false, autoHideHUD = false }: HUDProps) {
     const { t } = useTranslation();
     const textColor = isLightMode ? 'text-gray-800' : 'text-gray-200';
     const bgColor = isLightMode ? 'bg-white/80' : 'bg-black/80';
@@ -178,7 +179,7 @@ export function HUD({ hoveredResidue, pdbMetadata, pdbId, isLightMode, isEmbedMo
                 )}
 
                 {/* Main Control Pill — hidden in embed mode */}
-                {!isEmbedMode && (peerSession?.isConnected || onToggleAiChat || onToggleNotes || (isTeachingMode && onOpenAssignmentBuilder) || onOpenSettings) && (
+                {!isEmbedMode && (peerSession?.isConnected || onToggleAiChat || onToggleNotes || (isTeachingMode && (onOpenAssignmentBuilder || onOpenStoryboardBuilder)) || onOpenSettings) && (
                     <div className={`pointer-events-auto backdrop-blur-md rounded-full border ${borderColor} ${bgColor} shadow-lg px-4 py-2 flex items-center justify-center gap-2 animate-in slide-in-from-bottom-2 mx-auto transition-all duration-300 ${autoHideHUD ? 'opacity-20 hover:opacity-100' : 'opacity-100'}`}>
 
                         {/* Desktop: Reactions Inline */}
@@ -197,7 +198,7 @@ export function HUD({ hoveredResidue, pdbMetadata, pdbId, isLightMode, isEmbedMo
                         )}
 
                         {/* Chat Toggles */}
-                        {(onToggleChat || onToggleAiChat || onToggleNotes || onOpenAssignmentBuilder) && (
+                        {(onToggleChat || onToggleAiChat || onToggleNotes || onOpenAssignmentBuilder || onOpenStoryboardBuilder) && (
                             <div className={`flex items-center gap-2 ${peerSession?.isConnected ? 'border-r border-gray-500/20 pr-2' : ''}`}>
                                 {onToggleNotes && (
                                     <button
@@ -250,6 +251,16 @@ export function HUD({ hoveredResidue, pdbMetadata, pdbId, isLightMode, isEmbedMo
                                     >
                                         <Target className="w-4 h-4 md:w-3 md:h-3" />
                                         Quiz
+                                    </button>
+                                )}
+                                {isTeachingMode && onOpenStoryboardBuilder && (
+                                    <button
+                                        onClick={onOpenStoryboardBuilder}
+                                        className={`relative text-[10px] font-bold px-4 py-1.5 md:px-2 md:py-1 rounded-full flex items-center gap-2 transition-colors shadow-sm ${isLightMode ? 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200' : 'bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30'}`}
+                                        title="Create Storyboard"
+                                    >
+                                        <BookOpen className="w-4 h-4 md:w-3 md:h-3" />
+                                        Story
                                     </button>
                                 )}
                                 {onOpenSettings && (
