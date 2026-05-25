@@ -27,15 +27,19 @@ export const AssignmentOverlay: React.FC<AssignmentOverlayProps> = ({
     const handleSubmit = () => {
         if (!selectedResidue) return;
 
-        const chain1 = String(selectedResidue.chain || '').trim();
-        const chain2 = String(assignment.targetChain || '').trim();
+        const chain1 = String(selectedResidue.chain || '').trim().toLowerCase();
+        const chain2 = String(assignment.targetChain || '').trim().toLowerCase();
         const isChainMatch = chain1 === chain2;
         
-        const isResNoMatch = Number(selectedResidue.resNo) === Number(assignment.targetResNo);
+        const res1 = String(selectedResidue.resNo || '').trim().toLowerCase();
+        const res2 = String(assignment.targetResNo || '').trim().toLowerCase();
+        const isResNoMatch = res1 === res2;
         
         // Optionally match atom name if specified, otherwise just residue match is fine
-        const isAtomMatch = assignment.targetAtomName 
-            ? String(selectedResidue.atomName || '').trim() === String(assignment.targetAtomName || '').trim() 
+        // Handle cases where JSON.stringify/parse or URL encoding creates literal "null" or "undefined" strings
+        const targetAtomStr = String(assignment.targetAtomName || '').trim().toLowerCase();
+        const isAtomMatch = (targetAtomStr && targetAtomStr !== 'null' && targetAtomStr !== 'undefined')
+            ? String(selectedResidue.atomName || '').trim().toLowerCase() === targetAtomStr
             : true;
 
         if (isChainMatch && isResNoMatch && isAtomMatch) {
