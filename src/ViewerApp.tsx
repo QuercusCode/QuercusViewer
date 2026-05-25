@@ -139,7 +139,7 @@ function App() {
   const [isAssignmentBuilderOpen, setIsAssignmentBuilderOpen] = useState(false);
   const [isStoryboardBuilderOpen, setIsStoryboardBuilderOpen] = useState(false);
   const [activeStoryboard, setActiveStoryboard] = useState<import('./types').StoryboardPayload | null>(initialUrlState.viewports[0]?.storyboardPayload || null);
-  const [currentSlideIndex, setCurrentSlideIndex] = useState<number>(0);
+  const [currentSlideIndex, setCurrentSlideIndex] = useState<number>(initialUrlState.viewports[0]?.storyboardSlideIndex || 0);
   const [isNotebookOpen, setIsNotebookOpen] = useState(false);
 
   // ...
@@ -1535,6 +1535,18 @@ function App() {
     const slide = activeStoryboard.slides[index];
     if (!slide) return;
 
+    // Persist slide index in URL so share links & refreshes remember the position
+    try {
+      const currentParams = new URLSearchParams(window.location.search);
+      if (index > 0) {
+        currentParams.set('si', String(index));
+      } else {
+        currentParams.delete('si');
+      }
+      const newUrl = `${window.location.pathname}?${currentParams.toString()}`;
+      window.history.replaceState(null, '', newUrl);
+    } catch (e) { /* ignore */ }
+
     // Apply visualization parameters
     if (slide.representation) {
       activeController.setRepresentation(slide.representation);
@@ -1574,12 +1586,15 @@ function App() {
   // Apply initial slide view when storyboard loads
   useEffect(() => {
     if (activeStoryboard && activeStoryboard.slides?.length > 0) {
+      // Use the slide index that was parsed from the URL (e.g. when a shared link is opened)
+      const initialIndex = initialUrlState.viewports[0]?.storyboardSlideIndex || 0;
+      const clampedIndex = Math.min(initialIndex, activeStoryboard.slides.length - 1);
       const timer = setTimeout(() => {
-        handleSlideChange(0);
+        handleSlideChange(clampedIndex);
       }, 1200); // 1.2s delay to ensure PDB structure is loaded and canvas is ready
       return () => clearTimeout(timer);
     }
-  }, [activeStoryboard, handleSlideChange]);
+  }, [activeStoryboard]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handlePdbIdChange = (id: string) => {
 

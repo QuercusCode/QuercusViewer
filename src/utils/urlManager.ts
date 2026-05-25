@@ -15,6 +15,7 @@ export interface AppState {
     dataSource?: DataSource; // Added for chemical structures
     assignmentPayload?: import('../types').AssignmentPayload;
     storyboardPayload?: StoryboardPayload;
+    storyboardSlideIndex?: number;
 }
 
 export interface MultiViewState {
@@ -108,6 +109,10 @@ export const getShareableURL = (viewMode: string, viewports: AppState[]): string
                 params.set(p('story'), b64);
             } catch (e) { console.warn("Storyboard serialization failed", e); }
         }
+
+        if (state.storyboardSlideIndex !== undefined && state.storyboardSlideIndex > 0) {
+            params.set(p('si'), String(state.storyboardSlideIndex));
+        }
     };
 
     // Encode states
@@ -200,6 +205,12 @@ export const parseURLState = (): MultiViewState => {
                 const decodedStr = decodeURIComponent(escape(atob(story)));
                 state.storyboardPayload = JSON.parse(decodedStr);
             } catch (e) { console.warn("Storyboard deserialization failed", e); }
+        }
+
+        const si = params.get(p('si'));
+        if (si) {
+            const parsed = parseInt(si, 10);
+            if (!isNaN(parsed) && parsed >= 0) state.storyboardSlideIndex = parsed;
         }
 
         return state;
