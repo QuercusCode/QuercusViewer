@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { ChevronLeft, ChevronRight, X, Play, Pause, Check, HelpCircle, Tag } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, Play, Pause, Check, HelpCircle } from 'lucide-react';
 import type { StoryboardPayload } from '../types';
 
 interface StoryboardOverlayProps {

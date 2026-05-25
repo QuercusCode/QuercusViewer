@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import {
     X, Check, Copy, Camera, Plus, Trash2, ChevronUp, ChevronDown,
     Code, Sparkles, BookOpen, Copy as Duplicate, FileDown, FileUp,
-    Link, Play, Pause, HelpCircle, Tag, StickyNote, ChevronRight,
+    Link, Play, HelpCircle, Tag, StickyNote,
     AlertCircle, CheckCircle2
 } from 'lucide-react';
 import type { StoryboardPayload, StoryboardSlide, SlideQuiz, SlideAnnotation } from '../types';
