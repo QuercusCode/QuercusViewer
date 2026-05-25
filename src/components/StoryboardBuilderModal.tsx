@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import {
     X, Check, Copy, Camera, Plus, Trash2, ChevronUp, ChevronDown,
-    Code, Sparkles, BookOpen, Copy as Duplicate, FileDown, FileUp,
+    Code, Sparkles, BookOpen, Copy as Duplicate, FileDown, FileUp, FileText,
     Link, Play, HelpCircle, Tag, StickyNote,
     AlertCircle, CheckCircle2
 } from 'lucide-react';
@@ -169,6 +169,180 @@ export const StoryboardBuilderModal: React.FC<StoryboardBuilderModalProps> = ({
         URL.revokeObjectURL(url);
     };
 
+    const handleExportPDF = () => {
+        const payload = getPayload();
+        const date = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+        const mdToHtml = (text: string) => {
+            if (!text) return '';
+            return text
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .split('\n')
+                .map(line => {
+                    const t = line.trim();
+                    if (t.startsWith('- ') || t.startsWith('* ')) return `<li>${t.substring(2)}</li>`;
+                    return t ? `<p>${line}</p>` : '';
+                })
+                .join('')
+                .replace(/(<li>.*?<\/li>)+/gs, match => `<ul>${match}</ul>`);
+        };
+
+        const slidesHtml = payload.slides.map((slide, i) => {
+            const quizHtml = slide.quiz ? `
+                <div class="quiz-block">
+                    <div class="quiz-label">❓ Quiz Question</div>
+                    <div class="quiz-question">${slide.quiz.question}</div>
+                    <ul class="quiz-options">
+                        ${slide.quiz.options.filter(o => o.trim()).map((opt, oi) => `
+                            <li class="quiz-option ${oi === slide.quiz!.correctIndex ? 'correct' : ''}">
+                                ${oi === slide.quiz!.correctIndex ? '✅' : '○'} ${opt}
+                            </li>
+                        `).join('')}
+                    </ul>
+                </div>` : '';
+
+            const notesHtml = slide.speakerNotes ? `
+                <div class="notes-block">
+                    <div class="notes-label">🗒️ Speaker Notes</div>
+                    <div class="notes-content">${slide.speakerNotes.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br/>')}</div>
+                </div>` : '';
+
+            const annotationsHtml = slide.annotations?.length ? `
+                <div class="annotations-block">
+                    <div class="annotations-label">🏷️ Floating Labels</div>
+                    <ul>${slide.annotations.map(a => `<li><span style="color:${a.color || '#6366f1'}">${a.text}</span> — position (${a.x}%, ${a.y}%)</li>`).join('')}</ul>
+                </div>` : '';
+
+            return `
+                <div class="slide-page">
+                    <div class="slide-number">Slide ${i + 1} of ${payload.slides.length}</div>
+                    <h2 class="slide-title">${slide.title}</h2>
+                    <div class="slide-description">${mdToHtml(slide.description)}</div>
+                    <div class="viewer-placeholder">
+                        <div class="viewer-inner">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="1.5">
+                                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                                <path d="M2 17l10 5 10-5"/>
+                                <path d="M2 12l10 5 10-5"/>
+                            </svg>
+                            <span>3D Viewer — ${slide.cameraOrientation ? 'view captured' : 'default orientation'}</span>
+                            ${slide.representation ? `<span class="rep-badge">${slide.representation}</span>` : ''}
+                        </div>
+                    </div>
+                    ${quizHtml}
+                    ${annotationsHtml}
+                    ${notesHtml}
+                </div>`;
+        }).join('');
+
+        const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>${payload.title}</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #fff; color: #111; }
+
+        /* Cover page */
+        .cover {
+            min-height: 100vh;
+            display: flex; flex-direction: column; justify-content: center; align-items: flex-start;
+            padding: 80px 72px;
+            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4f46e5 100%);
+            color: white;
+            page-break-after: always;
+        }
+        .cover-badge { font-size: 11px; font-weight: 900; letter-spacing: .2em; text-transform: uppercase; opacity: .6; margin-bottom: 24px; }
+        .cover-title { font-size: 52px; font-weight: 900; line-height: 1.1; margin-bottom: 20px; }
+        .cover-meta { font-size: 14px; opacity: .55; margin-top: 48px; }
+        .cover-count { font-size: 18px; font-weight: 700; opacity: .8; }
+
+        /* Slide pages */
+        .slide-page {
+            min-height: 100vh;
+            padding: 56px 72px;
+            display: flex; flex-direction: column; gap: 24px;
+            page-break-after: always;
+            border-top: 5px solid #4f46e5;
+        }
+        .slide-number { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .15em; color: #6366f1; }
+        .slide-title { font-size: 36px; font-weight: 900; color: #111; line-height: 1.15; }
+        .slide-description { font-size: 15px; line-height: 1.75; color: #374151; }
+        .slide-description p { margin-bottom: 8px; }
+        .slide-description ul { padding-left: 20px; margin-bottom: 8px; }
+        .slide-description li { margin-bottom: 4px; }
+        .slide-description strong { font-weight: 700; }
+        .slide-description em { font-style: italic; }
+
+        /* 3D view placeholder */
+        .viewer-placeholder {
+            border: 2px dashed #c7d2fe;
+            border-radius: 16px;
+            background: #f5f3ff;
+            padding: 32px;
+            display: flex; justify-content: center;
+            min-height: 220px;
+        }
+        .viewer-inner {
+            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+            color: #6366f1; font-size: 13px; font-weight: 600; text-align: center;
+        }
+        .rep-badge {
+            background: #ede9fe; color: #5b21b6; font-size: 11px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: .1em; padding: 3px 10px; border-radius: 999px;
+        }
+
+        /* Quiz */
+        .quiz-block { background: #faf5ff; border: 1.5px solid #e9d5ff; border-radius: 12px; padding: 20px 24px; }
+        .quiz-label { font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: .15em; color: #7c3aed; margin-bottom: 8px; }
+        .quiz-question { font-size: 15px; font-weight: 700; color: #1f2937; margin-bottom: 14px; }
+        .quiz-options { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+        .quiz-option {
+            padding: 10px 16px; border-radius: 8px; font-size: 13px; font-weight: 600;
+            border: 1.5px solid #e5e7eb; color: #374151;
+        }
+        .quiz-option.correct { background: #f0fdf4; border-color: #22c55e; color: #166534; }
+
+        /* Notes */
+        .notes-block { background: #fffbeb; border: 1.5px solid #fcd34d; border-radius: 12px; padding: 20px 24px; }
+        .notes-label { font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: .15em; color: #b45309; margin-bottom: 8px; }
+        .notes-content { font-size: 13px; color: #78350f; line-height: 1.7; }
+
+        /* Annotations */
+        .annotations-block { background: #fff7ed; border: 1.5px solid #fed7aa; border-radius: 12px; padding: 16px 20px; }
+        .annotations-label { font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: .15em; color: #c2410c; margin-bottom: 8px; }
+        .annotations-block ul { list-style: disc; padding-left: 18px; font-size: 13px; color: #7c2d12; line-height: 1.8; }
+
+        @media print {
+            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .slide-page, .cover { page-break-after: always; }
+        }
+    </style>
+</head>
+<body>
+    <div class="cover">
+        <div class="cover-badge">Molecular Storyboard · Quercus Viewer</div>
+        <h1 class="cover-title">${payload.title}</h1>
+        <div class="cover-count">${payload.slides.length} slide${payload.slides.length !== 1 ? 's' : ''}${payload.autoPlaySeconds ? ` · Auto-play ${payload.autoPlaySeconds}s` : ''}</div>
+        <div class="cover-meta">Exported ${date}</div>
+    </div>
+    ${slidesHtml}
+    <script>
+        window.onload = () => { window.print(); window.onafterprint = () => window.close(); };
+    <\/script>
+</body>
+</html>`;
+
+        const win = window.open('', '_blank');
+        if (win) {
+            win.document.write(html);
+            win.document.close();
+        }
+    };
+
     const handleImportJSON = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -271,6 +445,10 @@ export const StoryboardBuilderModal: React.FC<StoryboardBuilderModalProps> = ({
                         </div>
                         <div className="flex items-center gap-2">
                             {/* Export/Import */}
+                            <button onClick={handleExportPDF} title="Export storyboard as PDF"
+                                className={`p-2 rounded-xl border transition-all text-xs font-bold flex items-center gap-1.5 ${isLightMode ? 'bg-red-50 border-red-200 text-red-700 hover:bg-red-100' : 'bg-red-900/30 border-red-800 text-red-300 hover:bg-red-900/50'}`}>
+                                <FileText className="w-4 h-4" /> PDF
+                            </button>
                             <button onClick={handleExportJSON} title="Export storyboard as JSON"
                                 className={`p-2 rounded-xl border transition-all text-xs font-bold flex items-center gap-1.5 ${isLightMode ? 'bg-white border-neutral-200 text-neutral-700 hover:bg-neutral-50' : 'bg-neutral-800 border-neutral-700 text-neutral-300 hover:bg-neutral-750'}`}>
                                 <FileDown className="w-4 h-4" /> Export
