@@ -3,7 +3,8 @@ import {
     X, Check, Copy, Camera, Plus, Trash2, ChevronUp, ChevronDown,
     Code, Sparkles, BookOpen, Copy as Duplicate, FileDown, FileUp, FileText,
     Link, Play, HelpCircle, Tag, StickyNote,
-    AlertCircle, CheckCircle2, Loader2, Mic, Volume2, Film, Square
+    AlertCircle, CheckCircle2, Loader2, Mic, Volume2, Film, Square,
+    Presentation
 } from 'lucide-react';
 import type { StoryboardPayload, StoryboardSlide, SlideQuiz, SlideAnnotation } from '../types';
 import { getShareableURL } from '../utils/urlManager';
@@ -455,6 +456,310 @@ export const StoryboardBuilderModal: React.FC<StoryboardBuilderModalProps> = ({
         }
     };
 
+    const handleExportPPTX = async () => {
+        try {
+            const pptxModule = await import('pptxgenjs');
+            const PptxGenJS = pptxModule.default || pptxModule;
+            const pres = new PptxGenJS();
+            
+            pres.layout = 'LAYOUT_16x9';
+            
+            // 1. Cover Slide
+            const coverSlide = pres.addSlide();
+            coverSlide.addShape('rect', {
+                x: 0,
+                y: 0,
+                w: 10,
+                h: 5.625,
+                fill: { color: '1E1B4B' }
+            });
+            
+            coverSlide.addText(storyTitle, {
+                x: 0.8,
+                y: 1.8,
+                w: 8.4,
+                h: 1.5,
+                fontSize: 32,
+                fontFace: 'Arial',
+                color: 'FFFFFF',
+                bold: true,
+                align: 'center',
+                valign: 'middle'
+            });
+            
+            coverSlide.addText('Molecular Storyboard • Quercus Viewer', {
+                x: 0.8,
+                y: 3.3,
+                w: 8.4,
+                h: 0.4,
+                fontSize: 14,
+                fontFace: 'Arial',
+                color: '818CF8',
+                bold: true,
+                align: 'center'
+            });
+            
+            const date = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+            const slideCountText = `${slides.length} slide${slides.length !== 1 ? 's' : ''}`;
+            coverSlide.addText(`Exported on ${date} • ${slideCountText}`, {
+                x: 0.8,
+                y: 4.5,
+                w: 8.4,
+                h: 0.4,
+                fontSize: 11,
+                fontFace: 'Arial',
+                color: '9CA3AF',
+                align: 'center'
+            });
+            
+            // Helper to strip markdown formatting characters
+            const cleanMarkdown = (text: string) => {
+                if (!text) return '';
+                return text
+                    .replace(/\*\*(.*?)\*\*/g, '$1')
+                    .replace(/\*(.*?)\*/g, '$1')
+                    .replace(/_+(.*?)_+/g, '$1')
+                    .replace(/`+(.*?)`+/g, '$1');
+            };
+            
+            // Helper to split description lines into paragraph formatting objects
+            const parseDescription = (desc: string) => {
+                if (!desc) return [];
+                const lines = desc.split('\n');
+                return lines.map((line, i) => {
+                    const trimmed = line.trim();
+                    const isBullet = trimmed.startsWith('- ') || trimmed.startsWith('* ');
+                    const textContent = isBullet ? trimmed.substring(2) : line;
+                    return {
+                        text: cleanMarkdown(textContent),
+                        options: {
+                            bullet: isBullet ? true : undefined,
+                            breakLine: i < lines.length - 1
+                        }
+                    };
+                });
+            };
+            
+            // Helper to clean base64 image data URL (strips the 'data:' prefix)
+            const cleanBase64 = (dataUrl: string) => {
+                if (dataUrl.startsWith('data:')) {
+                    return dataUrl.substring(5);
+                }
+                return dataUrl;
+            };
+            
+            // 2. Content Slides
+            slides.forEach((s, index) => {
+                const slide = pres.addSlide();
+                
+                // Add Slide Number
+                slide.addText(`Slide ${index + 1} of ${slides.length}`, {
+                    x: 0.5,
+                    y: 0.3,
+                    w: 9.0,
+                    h: 0.25,
+                    fontSize: 10,
+                    fontFace: 'Arial',
+                    color: '6366F1',
+                    bold: true
+                });
+                
+                const hasScreenshot = !!s.screenshot;
+                
+                if (hasScreenshot) {
+                    // Title
+                    slide.addText(s.title || 'Untitled Slide', {
+                        x: 0.5,
+                        y: 0.6,
+                        w: 4.5,
+                        h: 0.6,
+                        fontSize: 20,
+                        fontFace: 'Arial',
+                        color: '111827',
+                        bold: true,
+                        valign: 'middle'
+                    });
+                    
+                    // Description
+                    const descRuns = parseDescription(s.description);
+                    if (descRuns.length > 0) {
+                        slide.addText(descRuns, {
+                            x: 0.5,
+                            y: 1.3,
+                            w: 4.5,
+                            h: 2.2,
+                            fontSize: 11,
+                            fontFace: 'Arial',
+                            color: '374151',
+                            valign: 'top'
+                        });
+                    }
+                    
+                    // Quiz (if any)
+                    if (s.quiz) {
+                        slide.addShape('rect', {
+                            x: 0.5,
+                            y: 3.6,
+                            w: 4.5,
+                            h: 1.6,
+                            fill: { color: 'FAF5FF' },
+                            line: { color: 'E9D5FF', width: 1 }
+                        });
+                        
+                        slide.addText("❓ Quiz: " + s.quiz.question, {
+                            x: 0.6,
+                            y: 3.7,
+                            w: 4.3,
+                            h: 0.4,
+                            fontSize: 10,
+                            fontFace: 'Arial',
+                            color: '7C3AED',
+                            bold: true,
+                            valign: 'top'
+                        });
+                        
+                        const quizRuns = s.quiz.options.filter(o => o.trim()).map((opt, oi) => {
+                            const isCorrect = oi === s.quiz!.correctIndex;
+                            return {
+                                text: `${isCorrect ? '✅' : '○'} ${opt}`,
+                                options: {
+                                    breakLine: oi < s.quiz!.options.length - 1,
+                                    bold: isCorrect,
+                                    color: isCorrect ? '166534' : '374151'
+                                }
+                            };
+                        });
+                        
+                        if (quizRuns.length > 0) {
+                            slide.addText(quizRuns, {
+                                x: 0.6,
+                                y: 4.1,
+                                w: 4.3,
+                                h: 1.0,
+                                fontSize: 9,
+                                fontFace: 'Arial',
+                                valign: 'top'
+                            });
+                        }
+                    }
+                    
+                    // Screenshot Image
+                    slide.addImage({
+                        data: cleanBase64(s.screenshot!),
+                        x: 5.2,
+                        y: 0.6,
+                        w: 4.3,
+                        h: 3.2
+                    });
+                    
+                    // Annotations/Labels on top of image
+                    if (s.annotations && s.annotations.length > 0) {
+                        s.annotations.forEach(a => {
+                            const posX = 5.2 + (a.x / 100) * 4.3;
+                            const posY = 0.6 + (a.y / 100) * 3.2;
+                            slide.addText(a.text, {
+                                x: Math.max(5.2, Math.min(9.3, posX - 0.5)),
+                                y: Math.max(0.6, Math.min(3.6, posY - 0.15)),
+                                w: 1.0,
+                                h: 0.3,
+                                fontSize: 8,
+                                fontFace: 'Arial',
+                                color: (a.color || '#FFFFFF').replace('#', ''),
+                                bold: true,
+                                align: 'center',
+                                valign: 'middle'
+                            });
+                        });
+                    }
+                } else {
+                    // Full-width Layout
+                    slide.addText(s.title || 'Untitled Slide', {
+                        x: 0.8,
+                        y: 0.6,
+                        w: 8.4,
+                        h: 0.6,
+                        fontSize: 24,
+                        fontFace: 'Arial',
+                        color: '111827',
+                        bold: true,
+                        valign: 'middle'
+                    });
+                    
+                    const descRuns = parseDescription(s.description);
+                    if (descRuns.length > 0) {
+                        slide.addText(descRuns, {
+                            x: 0.8,
+                            y: 1.3,
+                            w: 8.4,
+                            h: 2.0,
+                            fontSize: 12,
+                            fontFace: 'Arial',
+                            color: '374151',
+                            valign: 'top'
+                        });
+                    }
+                    
+                    if (s.quiz) {
+                        slide.addShape('rect', {
+                            x: 0.8,
+                            y: 3.5,
+                            w: 8.4,
+                            h: 1.6,
+                            fill: { color: 'FAF5FF' },
+                            line: { color: 'E9D5FF', width: 1 }
+                        });
+                        
+                        slide.addText("❓ Quiz: " + s.quiz.question, {
+                            x: 1.0,
+                            y: 3.6,
+                            w: 8.0,
+                            h: 0.4,
+                            fontSize: 11,
+                            fontFace: 'Arial',
+                            color: '7C3AED',
+                            bold: true,
+                            valign: 'top'
+                        });
+                        
+                        const quizRuns = s.quiz.options.filter(o => o.trim()).map((opt, oi) => {
+                            const isCorrect = oi === s.quiz!.correctIndex;
+                            return {
+                                text: `${isCorrect ? '✅' : '○'} ${opt}`,
+                                options: {
+                                    breakLine: oi < s.quiz!.options.length - 1,
+                                    bold: isCorrect,
+                                    color: isCorrect ? '166534' : '374151'
+                                }
+                            };
+                        });
+                        
+                        if (quizRuns.length > 0) {
+                            slide.addText(quizRuns, {
+                                x: 1.0,
+                                y: 4.0,
+                                w: 8.0,
+                                h: 1.0,
+                                fontSize: 10,
+                                fontFace: 'Arial',
+                                valign: 'top'
+                            });
+                        }
+                    }
+                }
+                
+                // Add Speaker Notes
+                if (s.speakerNotes) {
+                    slide.addNotes(s.speakerNotes);
+                }
+            });
+            
+            pres.writeFile({ fileName: `${storyTitle.replace(/\s+/g, '_')}.storyboard.pptx` });
+        } catch (error) {
+            console.error('Error generating PPTX:', error);
+            alert('Failed to generate PPTX presentation.');
+        }
+    };
+
     const handleImportJSON = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -560,6 +865,10 @@ export const StoryboardBuilderModal: React.FC<StoryboardBuilderModalProps> = ({
                             <button onClick={handleExportPDF} title="Export storyboard as PDF"
                                 className={`p-2 rounded-xl border transition-all text-xs font-bold flex items-center gap-1.5 ${isLightMode ? 'bg-red-50 border-red-200 text-red-700 hover:bg-red-100' : 'bg-red-900/30 border-red-800 text-red-300 hover:bg-red-900/50'}`}>
                                 <FileText className="w-4 h-4" /> PDF
+                            </button>
+                            <button onClick={handleExportPPTX} title="Export storyboard as PowerPoint"
+                                className={`p-2 rounded-xl border transition-all text-xs font-bold flex items-center gap-1.5 ${isLightMode ? 'bg-orange-50 border-orange-200 text-orange-700 hover:bg-orange-100' : 'bg-orange-900/30 border-orange-800 text-orange-300 hover:bg-orange-900/50'}`}>
+                                <Presentation className="w-4 h-4" /> PPTX
                             </button>
                             <button onClick={handleExportJSON} title="Export storyboard as JSON"
                                 className={`p-2 rounded-xl border transition-all text-xs font-bold flex items-center gap-1.5 ${isLightMode ? 'bg-white border-neutral-200 text-neutral-700 hover:bg-neutral-50' : 'bg-neutral-800 border-neutral-700 text-neutral-300 hover:bg-neutral-750'}`}>
