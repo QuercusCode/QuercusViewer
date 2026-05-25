@@ -150,7 +150,7 @@ export interface ProteinViewerRef {
     focusResidue: (chain: string, resNo: number) => void;
     highlightAtom: (serial: number) => void;
     getOrientation: () => any;
-    setOrientation: (orientation: any) => void;
+    setOrientation: (orientation: any, duration?: number) => void;
     getPdbBlob: () => Blob | null; // Method to extract current structure as blob
     container: HTMLDivElement | null; // Expose container for canvas access
     openAlignmentView: () => void; // Added for Sequence Alignment
@@ -1099,19 +1099,26 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
             }
             return orientation;
         },
-        setOrientation: (orientation: any) => {
+        setOrientation: (orientation: any, duration?: number) => {
             if (!stageRef.current || !stageRef.current.viewerControls || !orientation) return;
             try {
-                // If it's a plain array, NGL should handle it
                 // Mark as programmatic to avoid infinite loop with onCameraChange
                 stageRef.current.isProgrammaticRotate = true;
-                stageRef.current.viewerControls.orient(orientation);
-                // Reset flag after a short delay or next tick
+                if (duration && duration > 0 && stageRef.current.animationControls) {
+                    stageRef.current.animationControls.orient(orientation, duration);
+                } else {
+                    stageRef.current.viewerControls.orient(orientation);
+                }
+                // Reset flag after transition completes
                 setTimeout(() => {
                     if (stageRef.current) stageRef.current.isProgrammaticRotate = false;
-                }, 50);
+                }, (duration || 50) + 100);
             } catch (e) {
                 console.warn("Failed to set orientation:", e);
+                // Fallback to instantaneous orientation
+                try {
+                    stageRef.current.viewerControls.orient(orientation);
+                } catch (e2) {}
             }
         },
         resetCamera: () => {

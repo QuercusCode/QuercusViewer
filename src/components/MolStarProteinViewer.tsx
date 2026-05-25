@@ -652,8 +652,10 @@ export const MolStarProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerPr
             // Return simplified camera state
             return pluginRef.current?.canvas3d?.camera.getSnapshot();
         },
-        setOrientation: (snapshot: any) => {
-            if (snapshot) pluginRef.current?.canvas3d?.camera.setState(snapshot);
+        setOrientation: (snapshot: any, durationMs?: number) => {
+            if (snapshot && pluginRef.current?.canvas3d?.camera) {
+                pluginRef.current.canvas3d.camera.setState(snapshot, durationMs ?? 0);
+            }
         },
         getPdbBlob: () => null,
         restoreMeasurements: () => { },

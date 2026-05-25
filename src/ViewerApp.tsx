@@ -15,6 +15,7 @@ import { ShareModal } from './components/ShareModal';
 import { AssignmentBuilderModal } from './components/AssignmentBuilderModal';
 import { StoryboardBuilderModal } from './components/StoryboardBuilderModal';
 import { StoryboardOverlay } from './components/StoryboardOverlay';
+import { DrawingCanvas } from './components/DrawingCanvas';
 import { SequenceTrack } from './components/SequenceTrack';
 import { DragDropOverlay } from './components/DragDropOverlay';
 import { GalleryModal } from './components/GalleryModal';
@@ -143,6 +144,19 @@ function App() {
   // Guard: the auto-apply of the initial slide must happen ONCE only — never again after the user starts navigating
   const hasAppliedInitialSlideRef = useRef(false);
   const [isNotebookOpen, setIsNotebookOpen] = useState(false);
+  // Drawing Canvas and transitions
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [drawingColor, setDrawingColor] = useState('#ef4444');
+  const [clearDrawingTrigger, setClearDrawingTrigger] = useState(0);
+  const slideActionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (slideActionTimerRef.current) {
+        clearTimeout(slideActionTimerRef.current);
+      }
+    };
+  }, []);
 
   // ...
 
@@ -1537,6 +1551,18 @@ function App() {
     const slide = activeStoryboard.slides[index];
     if (!slide) return;
 
+    // Clear previous timer & disable rocking/spinning
+    if (slideActionTimerRef.current) {
+      clearTimeout(slideActionTimerRef.current);
+      slideActionTimerRef.current = null;
+    }
+    activeController.setIsSpinning(false);
+    activeController.setIsRocking(false);
+
+    // Disable drawing mode and clear canvas on slide change
+    setIsDrawing(false);
+    setClearDrawingTrigger(Date.now());
+
     // Persist slide index in URL so share links & refreshes remember the position
     try {
       const currentParams = new URLSearchParams(window.location.search);
@@ -1576,14 +1602,25 @@ function App() {
       }
     }
 
-    // Apply Camera orientation
+    // Apply Camera orientation with transition duration
     if (slide.cameraOrientation) {
       const viewerRef = viewerRefs[activeViewIndex]?.current;
       if (viewerRef) {
-        viewerRef.setOrientation(slide.cameraOrientation);
+        const duration = slide.transitionDurationMs ?? 1000;
+        viewerRef.setOrientation(slide.cameraOrientation, duration);
+
+        if (slide.loadAction && slide.loadAction !== 'none') {
+          slideActionTimerRef.current = setTimeout(() => {
+            if (slide.loadAction === 'spin') {
+              activeController.setIsSpinning(true);
+            } else if (slide.loadAction === 'rock') {
+              activeController.setIsRocking(true);
+            }
+          }, duration);
+        }
       }
     }
-  }, [activeStoryboard, activeController, activeViewIndex]);
+  }, [activeStoryboard, activeController, activeViewIndex, setIsDrawing, setClearDrawingTrigger]);
 
   // Apply the initial slide view ONCE when the storyboard first becomes available.
   // The hasAppliedInitialSlideRef guard ensures this never fires again — even if activeStoryboard
@@ -3397,93 +3434,102 @@ function App() {
                             </div>
                           </div>
                         ) : (
-                          <ViewerComponent
-                            ref={ref}
-                            pdbId={ctrl.pdbId}
-                            dataSource={ctrl.dataSource}
-                            file={ctrl.file || undefined}
-                            fileType={ctrl.fileType}
-                            isLightMode={isLightMode}
-                            isSpinning={controllers[index].isSpinning}
-                            isRocking={controllers[index].isRocking}
-                            // Interactive if: Not connected OR Is Host OR Not Synced OR Is Active Controller
-                            isInteractive={!peerSession.isConnected || peerSession.isHost || !isCameraSynced || (!!controllerId && controllerId === peerSession.peerId)}
-                            representation={ctrl.representation}
-                            showSurface={ctrl.showSurface}
-                            showLigands={ctrl.showLigands}
-                            showIons={ctrl.showIons}
-                            coloring={ctrl.coloring}
-                            customColors={ctrl.customColors}
-                            chainStyles={ctrl.chainStyles}
-                            customStyles={ctrl.customStyles}
-                            customTransparency={ctrl.customTransparency}
-                            smoothSheetEnabled={ctrl.smoothSheetEnabled}
-                            palette={colorPalette}
-                            backgroundColor={
-                              (isStudioMode && recorder.session?.metadata?.settings?.backgroundColor !== undefined)
-                                ? recorder.session.metadata.settings.backgroundColor
-                                : (ctrl.customBackgroundColor || (isLightMode ? 'white' : 'black'))
-                            }
-                            measurementTextColor={measurementTextColorMode}
-                            overlays={ctrl.overlays}
+                          <>
+                            <ViewerComponent
+                              ref={ref}
+                              pdbId={ctrl.pdbId}
+                              dataSource={ctrl.dataSource}
+                              file={ctrl.file || undefined}
+                              fileType={ctrl.fileType}
+                              isLightMode={isLightMode}
+                              isSpinning={controllers[index].isSpinning}
+                              isRocking={controllers[index].isRocking}
+                              // Interactive if: Not connected OR Is Host OR Not Synced OR Is Active Controller
+                              isInteractive={!peerSession.isConnected || peerSession.isHost || !isCameraSynced || (!!controllerId && controllerId === peerSession.peerId)}
+                              representation={ctrl.representation}
+                              showSurface={ctrl.showSurface}
+                              showLigands={ctrl.showLigands}
+                              showIons={ctrl.showIons}
+                              coloring={ctrl.coloring}
+                              customColors={ctrl.customColors}
+                              chainStyles={ctrl.chainStyles}
+                              customStyles={ctrl.customStyles}
+                              customTransparency={ctrl.customTransparency}
+                              smoothSheetEnabled={ctrl.smoothSheetEnabled}
+                              palette={colorPalette}
+                              backgroundColor={
+                                (isStudioMode && recorder.session?.metadata?.settings?.backgroundColor !== undefined)
+                                  ? recorder.session.metadata.settings.backgroundColor
+                                  : (ctrl.customBackgroundColor || (isLightMode ? 'white' : 'black'))
+                              }
+                              measurementTextColor={measurementTextColorMode}
+                              overlays={ctrl.overlays}
 
-                            initialOrientation={index === 0 ? embedOrientation : undefined}
+                              initialOrientation={index === 0 ? embedOrientation : undefined}
 
-                            // Layout Sync (from Mol*)
-                            isMultiView={viewMode !== 'single'}
-                            onLayoutChange={setIsMolStarSidebarExpanded}
-                            // Live Session: Broadcast camera changes if active view and connected
-                            onCameraChange={index === 0 && peerSession.isConnected ? (orient: any) => {
-                              // Pass the Chalk: Only broadcast if I am allowed
-                              if (controllerId && controllerId !== peerSession.peerId) return;
-                              peerSession.broadcastCamera(orient);
-                            } : undefined}
-
-
-                            onStructureLoaded={(info: any) => handleLoad(info, ctrl)}
-                            onAtomClick={(info: any) => handleAtomClick(info, index)}
-                            isMeasurementMode={isMeasurementMode}
-                            measurements={ctrl.measurements}
-                            onAddMeasurement={(m: any) => {
-                              // LOCK: Mark local update to prevent overwrite by stale remote state
-                              lastLocalMeasurementUpdate.current = Date.now();
-                              ctrl.setMeasurements([...ctrl.measurements, m]);
-                              ctrl.setIsMeasurementPanelOpen(true);
-                              setActiveViewIndex(index);
-                            }}
-                            onHover={setHoveredResidue}
-                            // Live Session Features
-                            annotations={annotations}
-                            onAddAnnotation={handleAddAnnotation}
-                            remoteHoveredResidue={remoteHoveredResidue}
+                              // Layout Sync (from Mol*)
+                              isMultiView={viewMode !== 'single'}
+                              onLayoutChange={setIsMolStarSidebarExpanded}
+                              // Live Session: Broadcast camera changes if active view and connected
+                              onCameraChange={index === 0 && peerSession.isConnected ? (orient: any) => {
+                                // Pass the Chalk: Only broadcast if I am allowed
+                                if (controllerId && controllerId !== peerSession.peerId) return;
+                                peerSession.broadcastCamera(orient);
+                              } : undefined}
 
 
+                              onStructureLoaded={(info: any) => handleLoad(info, ctrl)}
+                              onAtomClick={(info: any) => handleAtomClick(info, index)}
+                              isMeasurementMode={isMeasurementMode}
+                              measurements={ctrl.measurements}
+                              onAddMeasurement={(m: any) => {
+                                // LOCK: Mark local update to prevent overwrite by stale remote state
+                                lastLocalMeasurementUpdate.current = Date.now();
+                                ctrl.setMeasurements([...ctrl.measurements, m]);
+                                ctrl.setIsMeasurementPanelOpen(true);
+                                setActiveViewIndex(index);
+                              }}
+                              onHover={setHoveredResidue}
+                              // Live Session Features
+                              annotations={annotations}
+                              onAddAnnotation={handleAddAnnotation}
+                              remoteHoveredResidue={remoteHoveredResidue}
 
-                            // Action bindings for this viewport
-                            quality={
-                              (isStudioMode && recorder.session?.metadata?.settings?.exportQuality)
-                                ? recorder.session.metadata.settings.exportQuality
-                                : (isPublicationMode ? 'high' : settings.quality)
-                            }
-                            enableAmbientOcclusion={
-                              (isStudioMode && recorder.session?.metadata?.settings?.ssao !== undefined)
-                                ? recorder.session.metadata.settings.ssao
-                                : settings.ssao
-                            }
-                            pixelRatio={
-                              (isStudioMode && recorder.session?.metadata?.settings?.resolutionScale !== undefined)
-                                ? recorder.session.metadata.settings.resolutionScale
-                                : undefined
-                            }
-                            showCursor={
-                              isStudioMode
-                                ? (recorder.session?.metadata?.settings?.showCursor ?? true)
-                                : true
-                            }
-                            resetCamera={ctrl.resetKey}
-                            disableScroll={!isScrollEnabled} // Scroll Protection
 
-                          />
+
+                              // Action bindings for this viewport
+                              quality={
+                                (isStudioMode && recorder.session?.metadata?.settings?.exportQuality)
+                                  ? recorder.session.metadata.settings.exportQuality
+                                  : (isPublicationMode ? 'high' : settings.quality)
+                              }
+                              enableAmbientOcclusion={
+                                (isStudioMode && recorder.session?.metadata?.settings?.ssao !== undefined)
+                                  ? recorder.session.metadata.settings.ssao
+                                  : settings.ssao
+                              }
+                              pixelRatio={
+                                (isStudioMode && recorder.session?.metadata?.settings?.resolutionScale !== undefined)
+                                  ? recorder.session.metadata.settings.resolutionScale
+                                  : undefined
+                              }
+                              showCursor={
+                                isStudioMode
+                                  ? (recorder.session?.metadata?.settings?.showCursor ?? true)
+                                  : true
+                              }
+                              resetCamera={ctrl.resetKey}
+                              disableScroll={!isScrollEnabled} // Scroll Protection
+
+                            />
+                            {activeStoryboard && (
+                              <DrawingCanvas
+                                isActive={isDrawing && isActive}
+                                color={drawingColor}
+                                clearTrigger={clearDrawingTrigger}
+                              />
+                            )}
+                          </>
                         )}
                       </div>
                     </div>
@@ -3915,6 +3961,11 @@ function App() {
           isLightMode={isLightMode}
           onSlideChange={handleSlideChange}
           onExit={() => setActiveStoryboard(null)}
+          isDrawing={isDrawing}
+          setIsDrawing={setIsDrawing}
+          drawingColor={drawingColor}
+          setDrawingColor={setDrawingColor}
+          onClearDrawing={() => setClearDrawingTrigger(Date.now())}
         />
       )}
       </div>

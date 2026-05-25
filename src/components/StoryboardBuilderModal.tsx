@@ -3,7 +3,7 @@ import {
     X, Check, Copy, Camera, Plus, Trash2, ChevronUp, ChevronDown,
     Code, Sparkles, BookOpen, Copy as Duplicate, FileDown, FileUp, FileText,
     Link, Play, HelpCircle, Tag, StickyNote,
-    AlertCircle, CheckCircle2, Loader2
+    AlertCircle, CheckCircle2, Loader2, Mic, Volume2, Film, Square
 } from 'lucide-react';
 import type { StoryboardPayload, StoryboardSlide, SlideQuiz, SlideAnnotation } from '../types';
 import { getShareableURL } from '../utils/urlManager';
@@ -28,7 +28,7 @@ interface StoryboardBuilderModalProps {
     };
 }
 
-type ActiveTab = 'content' | 'quiz' | 'notes' | 'annotations';
+type ActiveTab = 'content' | 'quiz' | 'notes' | 'annotations' | 'audio' | 'transition';
 
 export const StoryboardBuilderModal: React.FC<StoryboardBuilderModalProps> = ({
     isOpen,
@@ -55,6 +55,86 @@ export const StoryboardBuilderModal: React.FC<StoryboardBuilderModalProps> = ({
     const [importUrlSuccess, setImportUrlSuccess] = useState(false);
     const [isCapturing, setIsCapturing] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const [isRecording, setIsRecording] = useState(false);
+    const [recordingTime, setRecordingTime] = useState(0);
+    const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+    const audioChunksRef = useRef<Blob[]>([]);
+    const recordingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+    // Stop recording on slide change or close
+    React.useEffect(() => {
+        return () => {
+            if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+                try {
+                    mediaRecorderRef.current.stop();
+                } catch (e) {}
+            }
+            if (recordingIntervalRef.current) {
+                clearInterval(recordingIntervalRef.current);
+            }
+            setIsRecording(false);
+        };
+    }, [activeSlideId, isOpen]);
+
+    const startRecording = async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            audioChunksRef.current = [];
+            const mediaRecorder = new MediaRecorder(stream);
+            mediaRecorderRef.current = mediaRecorder;
+
+            mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    audioChunksRef.current.push(event.data);
+                }
+            };
+
+            mediaRecorder.onstop = () => {
+                const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    updateSlide(activeSlideId, { audioNarration: reader.result as string });
+                };
+                reader.readAsDataURL(audioBlob);
+                stream.getTracks().forEach(track => track.stop());
+            };
+
+            mediaRecorder.start();
+            setIsRecording(true);
+            setRecordingTime(0);
+
+            recordingIntervalRef.current = setInterval(() => {
+                setRecordingTime(prev => prev + 1);
+            }, 1000);
+        } catch (err) {
+            console.error('Error starting audio recording:', err);
+            alert('Could not access microphone. Please check permissions.');
+        }
+    };
+
+    const stopRecording = () => {
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+            try {
+                mediaRecorderRef.current.stop();
+            } catch (e) {}
+        }
+        setIsRecording(false);
+        if (recordingIntervalRef.current) {
+            clearInterval(recordingIntervalRef.current);
+            recordingIntervalRef.current = null;
+        }
+    };
+
+    const deleteRecording = () => {
+        updateSlide(activeSlideId, { audioNarration: undefined });
+    };
+
+    const formatTime = (secs: number) => {
+        const m = Math.floor(secs / 60);
+        const s = secs % 60;
+        return `${m}:${s < 10 ? '0' : ''}${s}`;
+    };
 
     if (!isOpen) return null;
 
@@ -559,9 +639,11 @@ export const StoryboardBuilderModal: React.FC<StoryboardBuilderModalProps> = ({
                                                         {s.title || 'Untitled'}
                                                     </span>
                                                     <div className="flex gap-1 mt-0.5">
-                                                        {s.cameraOrientation && <span className="text-[8px] bg-green-500/15 text-green-600 dark:text-green-400 px-1 rounded-full font-bold">📷</span>}
-                                                        {s.quiz && <span className="text-[8px] bg-purple-500/15 text-purple-600 dark:text-purple-400 px-1 rounded-full font-bold">❓</span>}
-                                                        {(s.annotations?.length || 0) > 0 && <span className="text-[8px] bg-orange-500/15 text-orange-600 dark:text-orange-400 px-1 rounded-full font-bold">🏷️</span>}
+                                                        {s.cameraOrientation && <span className="text-[8px] bg-green-500/15 text-green-600 dark:text-green-400 px-1 rounded-full font-bold" title="3D View captured">📷</span>}
+                                                        {s.quiz && <span className="text-[8px] bg-purple-500/15 text-purple-600 dark:text-purple-400 px-1 rounded-full font-bold" title="Quiz question added">❓</span>}
+                                                        {(s.annotations?.length || 0) > 0 && <span className="text-[8px] bg-orange-500/15 text-orange-600 dark:text-orange-400 px-1 rounded-full font-bold" title="Labels added">🏷️</span>}
+                                                        {s.audioNarration && <span className="text-[8px] bg-red-500/15 text-red-600 dark:text-red-400 px-1 rounded-full font-bold" title="Voice narration recorded">🎙️</span>}
+                                                        {s.loadAction && s.loadAction !== 'none' && <span className="text-[8px] bg-blue-500/15 text-blue-600 dark:text-blue-400 px-1 rounded-full font-bold" title="Camera transition animation">🎬</span>}
                                                     </div>
                                                 </div>
                                             </div>
@@ -607,6 +689,12 @@ export const StoryboardBuilderModal: React.FC<StoryboardBuilderModalProps> = ({
                                 </button>
                                 <button className={tabCls('annotations')} onClick={() => setActiveTab('annotations')}>
                                     <span className="flex items-center gap-1"><Tag className="w-3 h-3 inline" /> Labels</span>
+                                </button>
+                                <button className={tabCls('audio')} onClick={() => setActiveTab('audio')}>
+                                    <span className="flex items-center gap-1"><Mic className="w-3 h-3 inline" /> Audio</span>
+                                </button>
+                                <button className={tabCls('transition')} onClick={() => setActiveTab('transition')}>
+                                    <span className="flex items-center gap-1"><Film className="w-3 h-3 inline" /> Transition</span>
                                 </button>
                             </div>
 
@@ -780,6 +868,104 @@ export const StoryboardBuilderModal: React.FC<StoryboardBuilderModalProps> = ({
                                                     ))}
                                                 </div>
                                             )}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* ── Audio Tab ── */}
+                                {activeTab === 'audio' && (
+                                    <div className={`${card} space-y-4`}>
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <div className="text-xs font-bold flex items-center gap-1.5 text-red-500">
+                                                    <Mic className="w-3.5 h-3.5" /> Slide Voice Narration
+                                                </div>
+                                                <p className={`text-[10px] mt-0.5 ${isLightMode ? 'text-neutral-500' : 'text-neutral-400'}`}>
+                                                    Record a custom voice explanation that plays when students view this slide.
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        {activeSlide.audioNarration ? (
+                                            <div className={`p-4 rounded-xl border flex flex-col gap-3 ${isLightMode ? 'bg-neutral-50 border-neutral-200' : 'bg-black/20 border-neutral-800'}`}>
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-xs font-bold text-green-500 flex items-center gap-1">
+                                                        <Volume2 className="w-3.5 h-3.5" /> Recording Saved
+                                                    </span>
+                                                    <button onClick={deleteRecording}
+                                                        className="text-xs font-black text-red-500 hover:opacity-85 flex items-center gap-1">
+                                                        <Trash2 className="w-3.5 h-3.5" /> Delete Recording
+                                                    </button>
+                                                </div>
+                                                <audio src={activeSlide.audioNarration} controls className="w-full h-10 rounded-lg" />
+                                            </div>
+                                        ) : (
+                                            <div className={`p-6 rounded-xl border border-dashed flex flex-col items-center justify-center gap-4 ${isLightMode ? 'border-neutral-200 bg-neutral-50/50' : 'border-neutral-700 bg-black/5'}`}>
+                                                {isRecording ? (
+                                                    <div className="flex flex-col items-center gap-3">
+                                                        <div className="w-12 h-12 rounded-full bg-red-500/10 border-2 border-red-500 animate-pulse flex items-center justify-center text-red-500">
+                                                            <Mic className="w-6 h-6" />
+                                                        </div>
+                                                        <span className="text-sm font-black text-red-500">Recording... {formatTime(recordingTime)}</span>
+                                                        <button onClick={stopRecording}
+                                                            className="px-4 py-2 rounded-xl text-xs font-bold bg-neutral-800 text-white hover:bg-neutral-700 flex items-center gap-1.5 shadow-md">
+                                                            <Square className="w-3.5 h-3.5 fill-current" /> Stop Recording
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex flex-col items-center gap-3 text-center">
+                                                        <Mic className="w-10 h-10 text-neutral-400 opacity-40" />
+                                                        <div>
+                                                            <p className="text-xs font-bold">No audio narration yet</p>
+                                                            <p className={`text-[10px] ${isLightMode ? 'text-neutral-500' : 'text-neutral-400'}`}>Click record and explain this structural view in detail.</p>
+                                                        </div>
+                                                        <button onClick={startRecording}
+                                                            className="px-5 py-2.5 rounded-xl text-xs font-bold bg-red-600 text-white hover:bg-red-500 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-1.5 shadow-lg shadow-red-600/10">
+                                                            <Mic className="w-4 h-4" /> Start Recording
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* ── Transition Tab ── */}
+                                {activeTab === 'transition' && (
+                                    <div className={`${card} space-y-4`}>
+                                        <div>
+                                            <div className="text-xs font-bold flex items-center gap-1.5 text-blue-500">
+                                                <Film className="w-3.5 h-3.5" /> Viewport Transition
+                                            </div>
+                                            <p className={`text-[10px] mt-0.5 ${isLightMode ? 'text-neutral-500' : 'text-neutral-400'}`}>
+                                                Customize transition speeds and post-load camera actions for this slide.
+                                            </p>
+                                        </div>
+
+                                        <div className="space-y-4">
+                                            <div className="space-y-1">
+                                                <div className="flex justify-between items-center">
+                                                    <label className={labelCls}>Camera Move Duration (ms)</label>
+                                                    <span className="text-[10px] font-bold opacity-60">{(activeSlide.transitionDurationMs ?? 1000)}ms</span>
+                                                </div>
+                                                <input type="range" min={0} max={5000} step={100}
+                                                    value={activeSlide.transitionDurationMs ?? 1000}
+                                                    onChange={e => updateSlide(activeSlideId, { transitionDurationMs: Number(e.target.value) })}
+                                                    className="w-full h-1.5 accent-blue-500" />
+                                                <p className="text-[9px] opacity-40">Time taken to smoothly fly/rotate the camera to this slide's captured view.</p>
+                                            </div>
+
+                                            <div className="space-y-1">
+                                                <label className={labelCls}>Post-Load Action</label>
+                                                <select value={activeSlide.loadAction ?? 'none'}
+                                                    onChange={e => updateSlide(activeSlideId, { loadAction: e.target.value as any })}
+                                                    className={`${inputCls} py-2.5`}>
+                                                    <option value="none">None (Static View)</option>
+                                                    <option value="spin">Spin View once (Continuous rotate)</option>
+                                                    <option value="rock">Rock View (Subtle oscillation)</option>
+                                                </select>
+                                                <p className="text-[9px] opacity-40">Secondary camera movement that triggers once the camera finishes its initial fly-to transition.</p>
+                                            </div>
                                         </div>
                                     </div>
                                 )}

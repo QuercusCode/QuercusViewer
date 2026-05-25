@@ -307,6 +307,9 @@ export interface StoryboardSlide {
     showLigands?: boolean;
     quiz?: SlideQuiz;
     annotations?: SlideAnnotation[];
+    audioNarration?: string; // base64 data URL of recorded audio
+    transitionDurationMs?: number; // duration of transition in ms
+    loadAction?: 'none' | 'spin' | 'rock'; // post-load camera animations
 }
 
 export interface StoryboardPayload {
