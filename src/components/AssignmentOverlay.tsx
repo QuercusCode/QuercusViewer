@@ -114,7 +114,11 @@ export const AssignmentOverlay: React.FC<AssignmentOverlayProps> = ({
                         <XCircle className="w-12 h-12 text-red-500 mb-1" />
                         <h4 className="font-bold text-red-600 dark:text-red-400 text-xl">Not quite</h4>
                         <p className={`text-sm ${isLightMode ? 'text-neutral-700' : 'text-neutral-300'}`}>
-                            That is {selectedResidue?.resName} {selectedResidue?.resNo}. Try again!
+                            That is {selectedResidue?.resName} {selectedResidue?.resNo} (Chain {selectedResidue?.chain || '?'}). Try again!
+                        </p>
+                        <p className="text-[10px] opacity-50 mt-1 font-mono break-all max-w-[200px] text-center">
+                            Expected: {assignment.targetChain}:{assignment.targetResNo} <br/>
+                            Got: {selectedResidue?.chain}:{selectedResidue?.resNo}
                         </p>
                         <button 
                             onClick={handleRetry}
