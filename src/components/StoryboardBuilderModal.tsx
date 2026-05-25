@@ -3,7 +3,7 @@ import {
     X, Check, Copy, Camera, Plus, Trash2, ChevronUp, ChevronDown,
     Code, Sparkles, BookOpen, Copy as Duplicate, FileDown, FileUp, FileText,
     Link, Play, HelpCircle, Tag, StickyNote,
-    AlertCircle, CheckCircle2
+    AlertCircle, CheckCircle2, Loader2
 } from 'lucide-react';
 import type { StoryboardPayload, StoryboardSlide, SlideQuiz, SlideAnnotation } from '../types';
 import { getShareableURL } from '../utils/urlManager';
@@ -14,7 +14,7 @@ interface StoryboardBuilderModalProps {
     isOpen: boolean;
     onClose: () => void;
     isLightMode: boolean;
-    captureScreenshot: () => string | null; // returns canvas data URL
+    captureScreenshot: () => Promise<string | null> | string | null; // returns canvas data URL
     getCurrentViewerState: () => {
         cameraOrientation: any;
         representation: any;
@@ -53,6 +53,7 @@ export const StoryboardBuilderModal: React.FC<StoryboardBuilderModalProps> = ({
     const [importUrlInput, setImportUrlInput] = useState('');
     const [importUrlError, setImportUrlError] = useState('');
     const [importUrlSuccess, setImportUrlSuccess] = useState(false);
+    const [isCapturing, setIsCapturing] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     if (!isOpen) return null;
@@ -109,21 +110,28 @@ export const StoryboardBuilderModal: React.FC<StoryboardBuilderModalProps> = ({
         setSlides(prev => prev.map(s => s.id === id ? { ...s, ...patch } : s));
     };
 
-    const handleCaptureView = () => {
+    const handleCaptureView = async () => {
         const viewerState = getCurrentViewerState();
         if (!viewerState) return;
-        // Capture the live canvas as a screenshot
-        const screenshot = captureScreenshot();
-        updateSlide(activeSlideId, {
-            cameraOrientation: viewerState.cameraOrientation,
-            representation: viewerState.representation,
-            coloring: viewerState.coloring,
-            customColors: viewerState.customColors,
-            selectedResidue: viewerState.selectedResidue,
-            showSurface: viewerState.showSurface,
-            showLigands: viewerState.showLigands,
-            ...(screenshot ? { screenshot } : {})
-        });
+        setIsCapturing(true);
+        try {
+            // Capture the live canvas as a screenshot
+            const screenshot = await captureScreenshot();
+            updateSlide(activeSlideId, {
+                cameraOrientation: viewerState.cameraOrientation,
+                representation: viewerState.representation,
+                coloring: viewerState.coloring,
+                customColors: viewerState.customColors,
+                selectedResidue: viewerState.selectedResidue,
+                showSurface: viewerState.showSurface,
+                showLigands: viewerState.showLigands,
+                ...(screenshot ? { screenshot } : {})
+            });
+        } catch (e) {
+            console.error("Screenshot capture failed:", e);
+        } finally {
+            setIsCapturing(false);
+        }
     };
 
     // ── Quiz helpers ──────────────────────────────────────────────────────
@@ -350,8 +358,13 @@ export const StoryboardBuilderModal: React.FC<StoryboardBuilderModalProps> = ({
     </div>
     ${slidesHtml}
     <script>
-        window.onload = () => { window.print(); window.onafterprint = () => window.close(); };
-    <\/script>
+        window.onload = () => {
+            setTimeout(() => {
+                window.print();
+                window.onafterprint = () => window.close();
+            }, 500);
+        };
+    </script>
 </body>
 </html>`;
 
@@ -633,8 +646,17 @@ export const StoryboardBuilderModal: React.FC<StoryboardBuilderModalProps> = ({
                                                 )}
                                             </div>
                                             <button onClick={handleCaptureView}
-                                                className="px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all">
-                                                <Camera className="w-4 h-4" /> Capture State
+                                                disabled={isCapturing}
+                                                className="px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                                                {isCapturing ? (
+                                                    <>
+                                                        <Loader2 className="w-4 h-4 animate-spin" /> Capturing...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Camera className="w-4 h-4" /> Capture State
+                                                    </>
+                                                )}
                                             </button>
                                         </div>
                                     </>

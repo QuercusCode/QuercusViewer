@@ -3767,17 +3767,36 @@ function App() {
         isOpen={isStoryboardBuilderOpen}
         onClose={() => setIsStoryboardBuilderOpen(false)}
         isLightMode={isLightMode}
-        captureScreenshot={() => {
-          // Find the WebGL canvas rendered by the active viewer and capture it
-          const container = document.querySelector('.viewer-container, [data-viewer], canvas[data-engine]') as HTMLCanvasElement | null;
-          const canvas = container instanceof HTMLCanvasElement
-            ? container
-            : document.querySelector('canvas') as HTMLCanvasElement | null;
-          if (!canvas) return null;
+        captureScreenshot={async () => {
+          const viewer = viewerRefs[activeViewIndex]?.current;
+          if (!viewer) {
+            // Fallback to DOM canvas query if no viewer ref is loaded
+            const canvas = document.querySelector('canvas') as HTMLCanvasElement | null;
+            return canvas ? canvas.toDataURL('image/png') : null;
+          }
           try {
-            return canvas.toDataURL('image/png');
-          } catch {
-            return null;
+            // Request snapshot from the active viewer component
+            const blob = await viewer.getSnapshotBlob(1.5, false);
+            if (!blob) {
+              // Fallback
+              const canvas = document.querySelector('canvas') as HTMLCanvasElement | null;
+              return canvas ? canvas.toDataURL('image/png') : null;
+            }
+            return new Promise<string | null>((resolve) => {
+              const reader = new FileReader();
+              reader.onloadend = () => {
+                resolve(reader.result as string);
+              };
+              reader.onerror = () => {
+                resolve(null);
+              };
+              reader.readAsDataURL(blob);
+            });
+          } catch (e) {
+            console.error("Screenshot capture failed:", e);
+            // Fallback
+            const canvas = document.querySelector('canvas') as HTMLCanvasElement | null;
+            return canvas ? canvas.toDataURL('image/png') : null;
           }
         }}
         getCurrentViewerState={() => ({
