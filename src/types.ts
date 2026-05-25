@@ -297,6 +297,7 @@ export interface StoryboardSlide {
     title: string;
     description: string;
     speakerNotes?: string;
+    screenshot?: string; // base64 data URL of the 3D canvas at capture time
     cameraOrientation?: any;
     representation?: RepresentationType;
     coloring?: ColoringType;

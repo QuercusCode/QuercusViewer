@@ -3767,6 +3767,19 @@ function App() {
         isOpen={isStoryboardBuilderOpen}
         onClose={() => setIsStoryboardBuilderOpen(false)}
         isLightMode={isLightMode}
+        captureScreenshot={() => {
+          // Find the WebGL canvas rendered by the active viewer and capture it
+          const container = document.querySelector('.viewer-container, [data-viewer], canvas[data-engine]') as HTMLCanvasElement | null;
+          const canvas = container instanceof HTMLCanvasElement
+            ? container
+            : document.querySelector('canvas') as HTMLCanvasElement | null;
+          if (!canvas) return null;
+          try {
+            return canvas.toDataURL('image/png');
+          } catch {
+            return null;
+          }
+        }}
         getCurrentViewerState={() => ({
           cameraOrientation: viewerRefs[activeViewIndex].current?.getOrientation(),
           representation: activeController.representation,

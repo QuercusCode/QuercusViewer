@@ -14,6 +14,7 @@ interface StoryboardBuilderModalProps {
     isOpen: boolean;
     onClose: () => void;
     isLightMode: boolean;
+    captureScreenshot: () => string | null; // returns canvas data URL
     getCurrentViewerState: () => {
         cameraOrientation: any;
         representation: any;
@@ -33,6 +34,7 @@ export const StoryboardBuilderModal: React.FC<StoryboardBuilderModalProps> = ({
     isOpen,
     onClose,
     isLightMode,
+    captureScreenshot,
     getCurrentViewerState
 }) => {
     const [storyTitle, setStoryTitle] = useState('Protein Structure Walkthrough');
@@ -110,6 +112,8 @@ export const StoryboardBuilderModal: React.FC<StoryboardBuilderModalProps> = ({
     const handleCaptureView = () => {
         const viewerState = getCurrentViewerState();
         if (!viewerState) return;
+        // Capture the live canvas as a screenshot
+        const screenshot = captureScreenshot();
         updateSlide(activeSlideId, {
             cameraOrientation: viewerState.cameraOrientation,
             representation: viewerState.representation,
@@ -117,7 +121,8 @@ export const StoryboardBuilderModal: React.FC<StoryboardBuilderModalProps> = ({
             customColors: viewerState.customColors,
             selectedResidue: viewerState.selectedResidue,
             showSurface: viewerState.showSurface,
-            showLigands: viewerState.showLigands
+            showLigands: viewerState.showLigands,
+            ...(screenshot ? { screenshot } : {})
         });
     };
 
@@ -215,22 +220,26 @@ export const StoryboardBuilderModal: React.FC<StoryboardBuilderModalProps> = ({
                     <ul>${slide.annotations.map(a => `<li><span style="color:${a.color || '#6366f1'}">${a.text}</span> — position (${a.x}%, ${a.y}%)</li>`).join('')}</ul>
                 </div>` : '';
 
-            return `
-                <div class="slide-page">
-                    <div class="slide-number">Slide ${i + 1} of ${payload.slides.length}</div>
-                    <h2 class="slide-title">${slide.title}</h2>
-                    <div class="slide-description">${mdToHtml(slide.description)}</div>
-                    <div class="viewer-placeholder">
+            const viewerBlockHtml = slide.screenshot
+                ? `<img src="${slide.screenshot}" class="viewer-screenshot" alt="3D view of slide ${i + 1}" />`
+                : `<div class="viewer-placeholder">
                         <div class="viewer-inner">
                             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="1.5">
                                 <path d="M12 2L2 7l10 5 10-5-10-5z"/>
                                 <path d="M2 17l10 5 10-5"/>
                                 <path d="M2 12l10 5 10-5"/>
                             </svg>
-                            <span>3D Viewer — ${slide.cameraOrientation ? 'view captured' : 'default orientation'}</span>
+                            <span>3D Viewer — no screenshot captured</span>
                             ${slide.representation ? `<span class="rep-badge">${slide.representation}</span>` : ''}
                         </div>
-                    </div>
+                   </div>`;
+
+            return `
+                <div class="slide-page">
+                    <div class="slide-number">Slide ${i + 1} of ${payload.slides.length}</div>
+                    <h2 class="slide-title">${slide.title}</h2>
+                    <div class="slide-description">${mdToHtml(slide.description)}</div>
+                    ${viewerBlockHtml}
                     ${quizHtml}
                     ${annotationsHtml}
                     ${notesHtml}
@@ -277,14 +286,24 @@ export const StoryboardBuilderModal: React.FC<StoryboardBuilderModalProps> = ({
         .slide-description strong { font-weight: 700; }
         .slide-description em { font-style: italic; }
 
-        /* 3D view placeholder */
+        /* 3D screenshot */
+        .viewer-screenshot {
+            width: 100%;
+            border-radius: 16px;
+            border: 1.5px solid #e0e7ff;
+            max-height: 400px;
+            object-fit: contain;
+            background: #1e1b4b;
+        }
+
+        /* 3D view placeholder (no screenshot) */
         .viewer-placeholder {
             border: 2px dashed #c7d2fe;
             border-radius: 16px;
             background: #f5f3ff;
             padding: 32px;
             display: flex; justify-content: center;
-            min-height: 220px;
+            min-height: 160px;
         }
         .viewer-inner {
             display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
