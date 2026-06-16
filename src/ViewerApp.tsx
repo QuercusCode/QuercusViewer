@@ -1607,7 +1607,7 @@ function App() {
       const viewerRef = viewerRefs[activeViewIndex]?.current;
       if (viewerRef) {
         const duration = slide.transitionDurationMs ?? 1000;
-        viewerRef.setOrientation(slide.cameraOrientation, duration);
+        viewerRef.setOrientation(slide.cameraOrientation);
 
         if (slide.loadAction && slide.loadAction !== 'none') {
           slideActionTimerRef.current = setTimeout(() => {
