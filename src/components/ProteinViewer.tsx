@@ -2876,12 +2876,6 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                         if (thisChainExclusions.length > 0) {
                             selection += ` and not (${thisChainExclusions.join(' or ')})`;
                         }
-                        // Exclude nucleic residues from backbone-style reps (cartoon/ribbon/etc.):
-                        // the licorice overlay below handles them with full bond topology,
-                        // eliminating the thick-tube-to-ring visual gap.
-                        if (backboneStyles.has(repType) && !isChemical) {
-                            selection += ' and not nucleic';
-                        }
 
                         try { component.addRepresentation(repType as any, { ...globalParams, sele: selection }); } catch (err) { console.error("CRASH IN BASE RENDER:", err, repType, selection, globalParams); }
                     }
@@ -2968,11 +2962,12 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
             if (showLigands && !skipLigandOverlay) tryApply('ball+stick', 'element', 'ligand and not (water or ion)', { scale: 2.0 });
             if (showIons) tryApply('ball+stick', 'element', 'ion', { scale: 2.0 });
 
-            // For backbone-style representations (cartoon, ribbon, etc.), overlay licorice on nucleic acids
-            // so the actual chemical ring structures (aromatic hexagon/pentagon base rings) are visible
-            // instead of NGL's flat abstract "base plate" representation.
-            if (backboneStyles.has(repType)) {
-                tryApply('licorice', finalColor, 'nucleic', { scale: 0.8, opacity: 1.0 });
+            // Overlay licorice on nucleic base atoms + C1' for backbone-style reps.
+            // C1' is the sugar carbon that bridges the backbone to the base ring;
+            // including it connects the licorice ring structures to the cartoon backbone
+            // without a gap. Base ring atoms (not backbone) get the actual hex/pentagon chemistry.
+            if (backboneStyles.has(repType) && !isChemical) {
+                tryApply('licorice', finalColor, 'nucleic and (not backbone or .C1\')', { scale: 0.8, opacity: 1.0 });
             }
 
 
