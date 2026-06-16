@@ -2880,6 +2880,11 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                         });
 
                         let selection = chainName ? `:${chainName}` : "*";
+                        // Exclude nucleic residues from backbone-style reps — they are rendered
+                        // separately below with tube + licorice to show proper chemical ring structures
+                        if (backboneStyles.has(repType) && !isChemical) {
+                            selection += ' and not nucleic';
+                        }
                         if (thisChainExclusions.length > 0) {
                             selection += ` and not (${thisChainExclusions.join(' or ')})`;
                         }
@@ -2969,9 +2974,13 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
             if (showLigands && !skipLigandOverlay) tryApply('ball+stick', 'element', 'ligand and not (water or ion)', { scale: 2.0 });
             if (showIons) tryApply('ball+stick', 'element', 'ion', { scale: 2.0 });
 
-            // DNA/RNA Base Pairs (The "Steps" of the ladder)
-            // We use 'base' representation for all nucleic acids
-            tryApply('base', 'element', 'nucleic', { color: 'element', cylinderOnly: false });
+            // For backbone-style reps, render nucleic acids separately:
+            // - tube for the sugar-phosphate backbone (smooth, no flat base plates)
+            // - licorice for base atoms to show actual hexagon/pentagon ring chemistry
+            if (backboneStyles.has(repType) && !isChemical) {
+                tryApply('tube', finalColor, 'nucleic', { radiusSize: 0.5 });
+                tryApply('licorice', finalColor, 'nucleic and not backbone', { scale: 1.0 });
+            }
 
 
 
