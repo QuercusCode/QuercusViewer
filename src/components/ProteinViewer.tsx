@@ -150,7 +150,7 @@ export interface ProteinViewerRef {
     focusResidue: (chain: string, resNo: number) => void;
     highlightAtom: (serial: number) => void;
     getOrientation: () => any;
-    setOrientation: (orientation: any, duration?: number) => void;
+    setOrientation: (orientation: any) => void;
     getPdbBlob: () => Blob | null; // Method to extract current structure as blob
     container: HTMLDivElement | null; // Expose container for canvas access
     openAlignmentView: () => void; // Added for Sequence Alignment
@@ -1099,26 +1099,19 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
             }
             return orientation;
         },
-        setOrientation: (orientation: any, duration?: number) => {
+        setOrientation: (orientation: any) => {
             if (!stageRef.current || !stageRef.current.viewerControls || !orientation) return;
             try {
+                // If it's a plain array, NGL should handle it
                 // Mark as programmatic to avoid infinite loop with onCameraChange
                 stageRef.current.isProgrammaticRotate = true;
-                if (duration && duration > 0 && stageRef.current.animationControls) {
-                    stageRef.current.animationControls.orient(orientation, duration);
-                } else {
-                    stageRef.current.viewerControls.orient(orientation);
-                }
-                // Reset flag after transition completes
+                stageRef.current.viewerControls.orient(orientation);
+                // Reset flag after a short delay or next tick
                 setTimeout(() => {
                     if (stageRef.current) stageRef.current.isProgrammaticRotate = false;
-                }, (duration || 50) + 100);
+                }, 50);
             } catch (e) {
                 console.warn("Failed to set orientation:", e);
-                // Fallback to instantaneous orientation
-                try {
-                    stageRef.current.viewerControls.orient(orientation);
-                } catch (e2) {}
             }
         },
         resetCamera: () => {
@@ -2880,13 +2873,14 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                         });
 
                         let selection = chainName ? `:${chainName}` : "*";
-                        // Exclude nucleic residues from backbone-style reps — they are rendered
-                        // separately below with tube + licorice to show proper chemical ring structures
-                        if (backboneStyles.has(repType) && !isChemical) {
-                            selection += ' and not nucleic';
-                        }
                         if (thisChainExclusions.length > 0) {
                             selection += ` and not (${thisChainExclusions.join(' or ')})`;
+                        }
+                        // Exclude nucleic residues from backbone-style reps (cartoon/ribbon/etc.):
+                        // the licorice overlay below handles them with full bond topology,
+                        // eliminating the thick-tube-to-ring visual gap.
+                        if (backboneStyles.has(repType) && !isChemical) {
+                            selection += ' and not nucleic';
                         }
 
                         try { component.addRepresentation(repType as any, { ...globalParams, sele: selection }); } catch (err) { console.error("CRASH IN BASE RENDER:", err, repType, selection, globalParams); }
@@ -2974,12 +2968,11 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
             if (showLigands && !skipLigandOverlay) tryApply('ball+stick', 'element', 'ligand and not (water or ion)', { scale: 2.0 });
             if (showIons) tryApply('ball+stick', 'element', 'ion', { scale: 2.0 });
 
-            // For backbone-style reps, render nucleic acids separately:
-            // - tube for the sugar-phosphate backbone (smooth, no flat base plates)
-            // - licorice for base atoms to show actual hexagon/pentagon ring chemistry
-            if (backboneStyles.has(repType) && !isChemical) {
-                tryApply('tube', finalColor, 'nucleic', { radiusSize: 0.5 });
-                tryApply('licorice', finalColor, 'nucleic and not backbone', { scale: 1.0 });
+            // For backbone-style representations (cartoon, ribbon, etc.), overlay licorice on nucleic acids
+            // so the actual chemical ring structures (aromatic hexagon/pentagon base rings) are visible
+            // instead of NGL's flat abstract "base plate" representation.
+            if (backboneStyles.has(repType)) {
+                tryApply('licorice', finalColor, 'nucleic', { scale: 0.8, opacity: 1.0 });
             }
 
 
