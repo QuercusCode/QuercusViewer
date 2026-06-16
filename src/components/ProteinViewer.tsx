@@ -2876,6 +2876,11 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                         if (thisChainExclusions.length > 0) {
                             selection += ` and not (${thisChainExclusions.join(' or ')})`;
                         }
+                        // Exclude nucleic from cartoon — the backbone tube + licorice overlay below
+                        // handles them, keeping the backbone visible without the flat base-plate gap.
+                        if (backboneStyles.has(repType) && !isChemical) {
+                            selection += ' and not nucleic';
+                        }
 
                         try { component.addRepresentation(repType as any, { ...globalParams, sele: selection }); } catch (err) { console.error("CRASH IN BASE RENDER:", err, repType, selection, globalParams); }
                     }
@@ -2962,12 +2967,14 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
             if (showLigands && !skipLigandOverlay) tryApply('ball+stick', 'element', 'ligand and not (water or ion)', { scale: 2.0 });
             if (showIons) tryApply('ball+stick', 'element', 'ion', { scale: 2.0 });
 
-            // Overlay licorice on nucleic base atoms + C1' for backbone-style reps.
-            // C1' is the sugar carbon that bridges the backbone to the base ring;
-            // including it connects the licorice ring structures to the cartoon backbone
-            // without a gap. Base ring atoms (not backbone) get the actual hex/pentagon chemistry.
+            // For backbone-style reps: nucleic acids are excluded from cartoon above.
+            // Render them with a tube (smooth backbone through C4' — close to where rings branch)
+            // plus licorice for all nucleic atoms (full bond topology: backbone sticks + ring structures).
+            // The tube is thicker and dominates visually as the backbone; the licorice extends
+            // out from C4' through C1' to the base rings with no gap.
             if (backboneStyles.has(repType) && !isChemical) {
-                tryApply('licorice', finalColor, 'nucleic and (not backbone or .C1\')', { scale: 0.8, opacity: 1.0 });
+                tryApply('tube', finalColor, 'nucleic', { radiusSize: 0.4 });
+                tryApply('licorice', finalColor, 'nucleic', { scale: 0.6, opacity: 1.0 });
             }
 
 
