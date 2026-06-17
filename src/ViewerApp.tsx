@@ -2984,7 +2984,7 @@ function App() {
               if (isEmbedMode || isStudioMode) return null; // Hide Sidebar in Embed OR Studio Mode
 
               const isChemical = dataSource === 'pubchem' ||
-                (file && /\.(sdf|mol|cif)$/i.test(file.name));
+                (file && /\.(sdf|mol)$/i.test(file.name));
 
               return (
                 // Mobile: Absolute Overlay | Desktop: Relative Flow
