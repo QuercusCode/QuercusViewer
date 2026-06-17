@@ -3000,10 +3000,10 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                     tryApply('line', bbColor, 'nucleic and backbone', {});
                 }
 
-                // Bases: ring atoms + C1' to bridge the glycosidic bond (prevents gap)
+                // Bases: base ring atoms + sugar bridge (C4'→O4'→C1') so there's no gap from the tube
                 const bsParams: any = { opacity: 1.0 };
                 if (nucleicBaseStyle === 'licorice') bsParams.scale = 0.6;
-                tryApply(nucleicBaseStyle, bsColor, "nucleic and (not backbone or .C1')", bsParams);
+                tryApply(nucleicBaseStyle, bsColor, "nucleic and (not backbone or .C4' or .O4' or .C1')", bsParams);
             }
 
 
