@@ -745,6 +745,8 @@ function App() {
     nucleicBackboneColor, setNucleicBackboneColor,
     nucleicBaseStyle, setNucleicBaseStyle,
     nucleicBaseColor, setNucleicBaseColor,
+    nucleicBackboneOpacity, setNucleicBackboneOpacity,
+    nucleicBaseOpacity, setNucleicBaseOpacity,
     isSpinning, setIsSpinning,
     isRocking, setIsRocking,
     showSurface, setShowSurface,
@@ -3031,6 +3033,10 @@ function App() {
                     setNucleicBaseStyle={setNucleicBaseStyle}
                     nucleicBaseColor={nucleicBaseColor}
                     setNucleicBaseColor={setNucleicBaseColor}
+                    nucleicBackboneOpacity={nucleicBackboneOpacity}
+                    setNucleicBackboneOpacity={setNucleicBackboneOpacity}
+                    nucleicBaseOpacity={nucleicBaseOpacity}
+                    setNucleicBaseOpacity={setNucleicBaseOpacity}
                     onResetCamera={() => handleToolAction('reset')}
                     chains={chains}
                     ligands={ligands}
@@ -3344,6 +3350,8 @@ function App() {
                             nucleicBackboneColor={ctrl.nucleicBackboneColor}
                             nucleicBaseStyle={ctrl.nucleicBaseStyle}
                             nucleicBaseColor={ctrl.nucleicBaseColor}
+                            nucleicBackboneOpacity={ctrl.nucleicBackboneOpacity}
+                            nucleicBaseOpacity={ctrl.nucleicBaseOpacity}
                             palette={colorPalette}
                             backgroundColor={
                               (isStudioMode && recorder.session?.metadata?.settings?.backgroundColor !== undefined)
