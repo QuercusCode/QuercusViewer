@@ -29,6 +29,16 @@ export interface CustomTransparencyRule {
     opacity: number; // 0.0 to 1.0
 }
 
+export interface NucleicResidueRule {
+    id: string;
+    chain: string;
+    residues: string;
+    baseStyle?: string;
+    baseColor?: string;
+    backboneStyle?: string;
+    backboneColor?: string;
+}
+
 export interface AtomInfo {
     serial: number;
     name: string;
@@ -269,68 +279,3 @@ export interface NotebookEntry {
     created_at: string;
     updated_at: string;
 }
-
-export interface AssignmentPayload {
-    question: string;
-    successMessage: string;
-    targetChain: string;
-    targetResNo: number;
-    targetAtomName?: string;
-}
-
-export interface SlideAnnotation {
-    id: string;
-    text: string;
-    x: number; // 0–100 percentage of canvas width
-    y: number; // 0–100 percentage of canvas height
-    color?: string;
-}
-
-export interface SlideQuiz {
-    question: string;
-    options: string[];
-    correctIndex: number;
-}
-
-export interface StoryboardSlide {
-    id: string;
-    title: string;
-    description: string;
-    speakerNotes?: string;
-    screenshot?: string; // base64 data URL of the 3D canvas at capture time
-    cameraOrientation?: any;
-    representation?: RepresentationType;
-    coloring?: ColoringType;
-    customColors?: CustomColorRule[];
-    selectedResidue?: ResidueInfo | null;
-    showSurface?: boolean;
-    showLigands?: boolean;
-    quiz?: SlideQuiz;
-    annotations?: SlideAnnotation[];
-    audioNarration?: string; // base64 data URL of recorded audio
-    transitionDurationMs?: number; // duration of transition in ms
-    loadAction?: 'none' | 'spin' | 'rock'; // post-load camera animations
-}
-
-export interface StoryboardPayload {
-    title: string;
-    slides: StoryboardSlide[];
-    autoPlaySeconds?: number; // 0 = disabled, >0 = auto-advance interval
-}
-
-export type UiScale = 'small' | 'medium' | 'large';
-
-export interface AppPreferences {
-    language: string;
-    uiScale: UiScale;
-    autoHideHUD: boolean;
-    reducedMotion: boolean;
-    visualAccessibility: 'none' | 'protanopia' | 'deuteranopia' | 'tritanopia' | 'achromatopsia' | 'high-contrast';
-}
-
-export interface StartupDefaults {
-    defaultMoleculeStyle: RepresentationType;
-    defaultColorScheme: ColoringType;
-    defaultTheme: 'light' | 'dark';
-}
-
