@@ -2982,11 +2982,10 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
             if (backboneStyles.has(repType) && !isChemical) {
                 const mapNucCol = (c: ColoringType | undefined): string => {
                     if (!c) return finalColor;
-                    if (c === 'chainid') return 'chainindex';
-                    if (c === 'structure') return 'sstruc';
-                    if (c === 'hydrophobicity') return 'hydrophobicity';
-                    if (c === 'occupancy') return 'occupancy';
-                    return c as string;
+                    const s = c as string;
+                    if (s === 'chainid') return 'chainindex';
+                    if (s === 'structure') return 'sstruc';
+                    return s;
                 };
                 const bbColor = mapNucCol(nucleicBackboneColor);
                 const bsColor = mapNucCol(nucleicBaseColor);
