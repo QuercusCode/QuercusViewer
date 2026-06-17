@@ -69,14 +69,14 @@ export interface StructureController {
     setSmoothSheetEnabled: (enabled: boolean | ((prev: boolean) => boolean)) => void;
 
     // Nucleic Acid Independent Controls
-    nucleicBackboneStyle: 'tube' | 'ribbon' | 'licorice' | 'line';
-    setNucleicBackboneStyle: (s: 'tube' | 'ribbon' | 'licorice' | 'line') => void;
+    nucleicBackboneStyle: string;
+    setNucleicBackboneStyle: (s: string) => void;
     nucleicBackboneColor: ColoringType | undefined;
-    setNucleicBackboneColor: (c: ColoringType | undefined) => void; // undefined = same as structure
-    nucleicBaseStyle: 'licorice' | 'ball+stick' | 'spacefill';
-    setNucleicBaseStyle: (s: 'licorice' | 'ball+stick' | 'spacefill') => void;
+    setNucleicBackboneColor: (c: ColoringType | undefined) => void;
+    nucleicBaseStyle: string;
+    setNucleicBaseStyle: (s: string) => void;
     nucleicBaseColor: ColoringType | undefined;
-    setNucleicBaseColor: (c: ColoringType | undefined) => void; // undefined = same as structure
+    setNucleicBaseColor: (c: ColoringType | undefined) => void;
 
     // Actions
     handleUpload: (file: File, isCif?: boolean, preservePdbId?: boolean) => void;
@@ -102,9 +102,9 @@ export const useStructureController = (initialState: any = {}): StructureControl
     const [showIons, setShowIons] = useState(initialState.showIons ?? false);
     const [smoothSheetEnabled, setSmoothSheetEnabled] = useState(initialState.smoothSheetEnabled ?? false);
 
-    const [nucleicBackboneStyle, setNucleicBackboneStyle] = useState<'tube' | 'ribbon' | 'licorice' | 'line'>('tube');
+    const [nucleicBackboneStyle, setNucleicBackboneStyle] = useState<string>('tube');
     const [nucleicBackboneColor, setNucleicBackboneColor] = useState<ColoringType | undefined>(undefined);
-    const [nucleicBaseStyle, setNucleicBaseStyle] = useState<'licorice' | 'ball+stick' | 'spacefill'>('licorice');
+    const [nucleicBaseStyle, setNucleicBaseStyle] = useState<string>('licorice');
     const [nucleicBaseColor, setNucleicBaseColor] = useState<ColoringType | undefined>(undefined);
 
     const [customBackgroundColor, setCustomBackgroundColor] = useState<string | null>(null);
