@@ -2998,10 +2998,23 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                 const bbStyle = nucleicBackboneStyle || 'tube';
                 const bsStyle = nucleicBaseStyle || 'licorice';
 
+                // Build exclusion selections from per-residue rules so global rendering skips overridden residues
+                const bbExclusions: string[] = [];
+                const bsExclusions: string[] = [];
+                nucleicResidueRules.forEach(rule => {
+                    const cp = rule.chain === 'All' ? '' : `:${rule.chain}`;
+                    const rp = rule.residues ? (cp ? ` and ${rule.residues}` : rule.residues) : '';
+                    const frag = `(${cp}${rp})`;
+                    if (rule.backboneStyle) bbExclusions.push(frag);
+                    if (rule.baseStyle) bsExclusions.push(frag);
+                });
+                const bbExcl = bbExclusions.length > 0 ? ` and not (${bbExclusions.join(' or ')})` : '';
+                const bsExcl = bsExclusions.length > 0 ? ` and not (${bsExclusions.join(' or ')})` : '';
+
                 // Backbone rendering
                 const bbOp = nucleicBackboneOpacity / 100;
-                const bbSele = 'nucleic';
-                const bbBackboneSele = 'nucleic and backbone';
+                const bbSele = `nucleic${bbExcl}`;
+                const bbBackboneSele = `nucleic and backbone${bbExcl}`;
                 const bbBase: any = { opacity: bbOp };
                 if (bbStyle === 'tube') {
                     tryApply('tube', bbColor, bbSele, { ...bbBase, radiusSize: 0.4 });
@@ -3029,7 +3042,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
 
                 // Bases: ring atoms + sugar bridge (C4'→O4'→C1') so there's no gap from the tube
                 const bsOp = nucleicBaseOpacity / 100;
-                const baseSele = "nucleic and (not backbone or .C4' or .O4' or .C1')";
+                const baseSele = `nucleic and (not backbone or .C4' or .O4' or .C1')${bsExcl}`;
                 if (bsStyle !== 'none') {
                     const bsParams: any = { opacity: bsOp };
                     if (bsStyle === 'licorice') bsParams.scale = 0.6;
@@ -3039,7 +3052,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                     tryApply(bsStyle, bsColor, baseSele, bsParams);
                 }
 
-                // Per-residue nucleic overrides
+                // Per-residue nucleic overrides (rendered separately after exclusion from globals above)
                 nucleicResidueRules.forEach(rule => {
                     const chainPart = rule.chain === 'All' ? '' : `:${rule.chain}`;
                     const resPart = rule.residues ? (chainPart ? ` and ${rule.residues}` : rule.residues) : '';
