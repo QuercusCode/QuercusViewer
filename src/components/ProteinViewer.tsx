@@ -106,6 +106,12 @@ export interface ProteinViewerProps {
     // Layout
     isMultiView?: boolean;
     onLayoutChange?: (isExpanded: boolean) => void;
+
+    // Nucleic Acid Independent Controls
+    nucleicBackboneStyle?: 'tube' | 'ribbon' | 'licorice' | 'line';
+    nucleicBackboneColor?: ColoringType;
+    nucleicBaseStyle?: 'licorice' | 'ball+stick' | 'spacefill';
+    nucleicBaseColor?: ColoringType;
 }
 
 export interface ProteinViewerRef {
@@ -205,6 +211,10 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
     remoteHoveredResidue,
     pixelRatio,
     showCursor = true,
+    nucleicBackboneStyle = 'tube',
+    nucleicBackboneColor,
+    nucleicBaseStyle = 'licorice',
+    nucleicBaseColor,
 }: ProteinViewerProps, ref: React.Ref<ProteinViewerRef>) => {
 
     const [isAlignmentOpen, setIsAlignmentOpen] = React.useState(false);
@@ -2968,13 +2978,32 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
             if (showIons) tryApply('ball+stick', 'element', 'ion', { scale: 2.0 });
 
             // For backbone-style reps: nucleic acids are excluded from cartoon above.
-            // Render them with a tube (smooth backbone through C4' — close to where rings branch)
-            // plus licorice for all nucleic atoms (full bond topology: backbone sticks + ring structures).
-            // The tube is thicker and dominates visually as the backbone; the licorice extends
-            // out from C4' through C1' to the base rings with no gap.
+            // Backbone and bases are rendered independently so the user can style/color them separately.
             if (backboneStyles.has(repType) && !isChemical) {
-                tryApply('tube', finalColor, 'nucleic', { radiusSize: 0.4 });
-                tryApply('licorice', finalColor, 'nucleic', { scale: 0.6, opacity: 1.0 });
+                const mapNucCol = (c: ColoringType | undefined): string => {
+                    if (!c) return finalColor;
+                    if (c === 'chainid') return 'chainindex';
+                    if (c === 'secondary-structure' || c === 'structure') return 'sstruc';
+                    return c as string;
+                };
+                const bbColor = mapNucCol(nucleicBackboneColor);
+                const bsColor = mapNucCol(nucleicBaseColor);
+
+                // Backbone: tube traces through C4' atoms; licorice/line show explicit bonds
+                if (nucleicBackboneStyle === 'tube') {
+                    tryApply('tube', bbColor, 'nucleic', { radiusSize: 0.4 });
+                } else if (nucleicBackboneStyle === 'ribbon') {
+                    tryApply('ribbon', bbColor, 'nucleic', {});
+                } else if (nucleicBackboneStyle === 'licorice') {
+                    tryApply('licorice', bbColor, 'nucleic and backbone', { scale: 0.6 });
+                } else if (nucleicBackboneStyle === 'line') {
+                    tryApply('line', bbColor, 'nucleic and backbone', {});
+                }
+
+                // Bases: ring atoms + C1' to bridge the glycosidic bond (prevents gap)
+                const bsParams: any = { opacity: 1.0 };
+                if (nucleicBaseStyle === 'licorice') bsParams.scale = 0.6;
+                tryApply(nucleicBaseStyle, bsColor, "nucleic and (not backbone or .C1')", bsParams);
             }
 
 
@@ -3014,7 +3043,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
 
     useEffect(() => {
         updateRepresentation();
-    }, [representation, coloring, showSurface, showLigands, showIons, colorPalette, customColors, chainStyles, customStyles, customTransparency, smoothSheetEnabled]);
+    }, [representation, coloring, showSurface, showLigands, showIons, colorPalette, customColors, chainStyles, customStyles, customTransparency, smoothSheetEnabled, nucleicBackboneStyle, nucleicBackboneColor, nucleicBaseStyle, nucleicBaseColor]);
 
     useEffect(() => {
         if (stageRef.current) {
