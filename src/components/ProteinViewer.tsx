@@ -112,6 +112,8 @@ export interface ProteinViewerProps {
     nucleicBackboneColor?: ColoringType;
     nucleicBaseStyle?: string;
     nucleicBaseColor?: ColoringType;
+    nucleicBackboneOpacity?: number;
+    nucleicBaseOpacity?: number;
 }
 
 export interface ProteinViewerRef {
@@ -215,6 +217,8 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
     nucleicBackboneColor,
     nucleicBaseStyle = 'licorice',
     nucleicBaseColor,
+    nucleicBackboneOpacity = 100,
+    nucleicBaseOpacity = 100,
 }: ProteinViewerProps, ref: React.Ref<ProteinViewerRef>) => {
 
     const [isAlignmentOpen, setIsAlignmentOpen] = React.useState(false);
@@ -2993,40 +2997,43 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                 const bsStyle = nucleicBaseStyle || 'licorice';
 
                 // Backbone rendering
+                const bbOp = nucleicBackboneOpacity / 100;
                 const bbSele = 'nucleic';
                 const bbBackboneSele = 'nucleic and backbone';
+                const bbBase: any = { opacity: bbOp };
                 if (bbStyle === 'tube') {
-                    tryApply('tube', bbColor, bbSele, { radiusSize: 0.4 });
+                    tryApply('tube', bbColor, bbSele, { ...bbBase, radiusSize: 0.4 });
                 } else if (bbStyle === 'cartoon') {
-                    tryApply('cartoon', bbColor, bbSele, {});
+                    tryApply('cartoon', bbColor, bbSele, bbBase);
                 } else if (bbStyle === 'ribbon') {
-                    tryApply('ribbon', bbColor, bbSele, {});
+                    tryApply('ribbon', bbColor, bbSele, bbBase);
                 } else if (bbStyle === 'rope') {
-                    tryApply('rope', bbColor, bbSele, { smooth: 2 });
+                    tryApply('rope', bbColor, bbSele, { ...bbBase, smooth: 2 });
                 } else if (bbStyle === 'trace') {
-                    tryApply('trace', bbColor, bbSele, {});
+                    tryApply('trace', bbColor, bbSele, bbBase);
                 } else if (bbStyle === 'licorice') {
-                    tryApply('licorice', bbColor, bbBackboneSele, { scale: 0.6 });
+                    tryApply('licorice', bbColor, bbBackboneSele, { ...bbBase, scale: 0.6 });
                 } else if (bbStyle === 'ball+stick') {
-                    tryApply('ball+stick', bbColor, bbBackboneSele, { scale: 1.5 });
+                    tryApply('ball+stick', bbColor, bbBackboneSele, { ...bbBase, scale: 1.5 });
                 } else if (bbStyle === 'line') {
-                    tryApply('line', bbColor, bbBackboneSele, {});
+                    tryApply('line', bbColor, bbBackboneSele, bbBase);
                 } else if (bbStyle === 'spacefill') {
-                    tryApply('spacefill', bbColor, bbBackboneSele, {});
+                    tryApply('spacefill', bbColor, bbBackboneSele, bbBase);
                 } else if (bbStyle === 'surface') {
-                    tryApply('surface', bbColor, bbBackboneSele, { opacity: 0.7 });
+                    tryApply('surface', bbColor, bbBackboneSele, { opacity: Math.min(bbOp, 0.7) });
                 } else if (bbStyle === 'none') {
                     // no backbone rendered
                 }
 
                 // Bases: ring atoms + sugar bridge (C4'→O4'→C1') so there's no gap from the tube
+                const bsOp = nucleicBaseOpacity / 100;
                 const baseSele = "nucleic and (not backbone or .C4' or .O4' or .C1')";
                 if (bsStyle !== 'none') {
-                    const bsParams: any = { opacity: 1.0 };
+                    const bsParams: any = { opacity: bsOp };
                     if (bsStyle === 'licorice') bsParams.scale = 0.6;
                     else if (bsStyle === 'ball+stick') bsParams.scale = 1.5;
                     else if (bsStyle === 'hyperball') bsParams.scale = 1.0;
-                    else if (bsStyle === 'surface') bsParams.opacity = 0.7;
+                    else if (bsStyle === 'surface') bsParams.opacity = Math.min(bsOp, 0.7);
                     tryApply(bsStyle, bsColor, baseSele, bsParams);
                 }
             }
@@ -3068,7 +3075,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
 
     useEffect(() => {
         updateRepresentation();
-    }, [representation, coloring, showSurface, showLigands, showIons, colorPalette, customColors, chainStyles, customStyles, customTransparency, smoothSheetEnabled, nucleicBackboneStyle, nucleicBackboneColor, nucleicBaseStyle, nucleicBaseColor]);
+    }, [representation, coloring, showSurface, showLigands, showIons, colorPalette, customColors, chainStyles, customStyles, customTransparency, smoothSheetEnabled, nucleicBackboneStyle, nucleicBackboneColor, nucleicBaseStyle, nucleicBaseColor, nucleicBackboneOpacity, nucleicBaseOpacity]);
 
     useEffect(() => {
         if (stageRef.current) {
