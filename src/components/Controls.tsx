@@ -311,8 +311,6 @@ interface ControlsProps {
     setIsMeasurementMode: (mode: boolean) => void;
     isPublicationMode: boolean;
     onTogglePublicationMode: () => void;
-    isTeachingMode?: boolean;
-    setIsTeachingMode?: (v: boolean) => void;
     onShare: () => void;
     onToggleMeasurement?: () => void;
     measurements: Measurement[]; // Use imported Measurement type
@@ -414,6 +412,16 @@ interface ControlsProps {
 
     smoothSheetEnabled: boolean;
     setSmoothSheetEnabled?: (enabled: boolean | ((prev: boolean) => boolean)) => void;
+
+    // Nucleic Acid Independent Controls
+    nucleicBackboneStyle?: 'tube' | 'ribbon' | 'licorice' | 'line';
+    setNucleicBackboneStyle?: (s: 'tube' | 'ribbon' | 'licorice' | 'line') => void;
+    nucleicBackboneColor?: ColoringType;
+    setNucleicBackboneColor?: (c: ColoringType | undefined) => void;
+    nucleicBaseStyle?: 'licorice' | 'ball+stick' | 'spacefill';
+    setNucleicBaseStyle?: (s: 'licorice' | 'ball+stick' | 'spacefill') => void;
+    nucleicBaseColor?: ColoringType;
+    setNucleicBaseColor?: (c: ColoringType | undefined) => void;
 }
 
 export const Controls: React.FC<ControlsProps> = ({
@@ -469,8 +477,6 @@ export const Controls: React.FC<ControlsProps> = ({
     setIsSpinning,
     isCleanMode,
     setIsCleanMode,
-    isTeachingMode,
-    setIsTeachingMode,
     onSaveSession,
     onLoadSession,
     onToggleContactMap,
@@ -510,6 +516,14 @@ export const Controls: React.FC<ControlsProps> = ({
     setIsRocking,
     onQuickSave,
     quickSaving = false,
+    nucleicBackboneStyle = 'tube',
+    setNucleicBackboneStyle,
+    nucleicBackboneColor,
+    setNucleicBackboneColor,
+    nucleicBaseStyle = 'licorice',
+    setNucleicBaseStyle,
+    nucleicBaseColor,
+    setNucleicBaseColor,
 }) => {
     // i18n
     const { t } = useTranslation();
@@ -1472,24 +1486,6 @@ export const Controls: React.FC<ControlsProps> = ({
                                             } as Record<string, string>)[coloring]}
                                         </p>
 
-                                        {/* Modes */}
-                                        {setIsTeachingMode && (
-                                            <div className="col-span-2 space-y-2 pt-2 border-t border-white/5">
-                                                <div className="flex items-center justify-between">
-                                                    <label className={`text-[10px] font-bold uppercase tracking-wider ${subtleText}`}>Teaching Mode</label>
-                                                    <button
-                                                        onClick={() => setIsTeachingMode(!isTeachingMode)}
-                                                        className={`w-10 h-5 rounded-full transition-all duration-300 relative shadow-inner ${isTeachingMode ? 'bg-indigo-600' : 'bg-neutral-500/50'}`}
-                                                    >
-                                                        <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-md transition-transform duration-300 ${isTeachingMode ? 'translate-x-5' : 'translate-x-0.5'}`} />
-                                                    </button>
-                                                </div>
-                                                <p className={`text-[9px] opacity-70 leading-relaxed ${subtleText}`}>
-                                                    Enable interactive quizzes and assignments.
-                                                </p>
-                                            </div>
-                                        )}
-
                                         {/* Background Controls */}
                                         <div className="col-span-2 space-y-2 pt-2 border-t border-white/5">
                                             <label className={`text-[10px] font-bold uppercase tracking-wider block ${subtleText}`}>{t.backgroundLabel as string}</label>
@@ -1574,6 +1570,68 @@ export const Controls: React.FC<ControlsProps> = ({
                                                 )}
                                             </div>
                                         </div>
+
+                                        {/* DNA / RNA CONTROLS */}
+                                        {!isChemical && chains.some(c => c.type === 'nucleic') && (
+                                            <div className="col-span-2 pt-2 border-t border-white/5 space-y-2">
+                                                <label className={`text-[10px] font-bold uppercase tracking-wider block ${subtleText}`}>DNA / RNA</label>
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    <div>
+                                                        <label className={`text-[9px] uppercase tracking-wider mb-1 block opacity-60 ${subtleText}`}>Backbone Style</label>
+                                                        <select
+                                                            value={nucleicBackboneStyle}
+                                                            onChange={e => setNucleicBackboneStyle?.(e.target.value as any)}
+                                                            className={`w-full border rounded-lg px-2 py-2 text-xs outline-none ${inputBg}`}
+                                                        >
+                                                            <option value="tube">Tube</option>
+                                                            <option value="ribbon">Ribbon</option>
+                                                            <option value="licorice">Licorice</option>
+                                                            <option value="line">Line</option>
+                                                        </select>
+                                                    </div>
+                                                    <div>
+                                                        <label className={`text-[9px] uppercase tracking-wider mb-1 block opacity-60 ${subtleText}`}>Base Style</label>
+                                                        <select
+                                                            value={nucleicBaseStyle}
+                                                            onChange={e => setNucleicBaseStyle?.(e.target.value as any)}
+                                                            className={`w-full border rounded-lg px-2 py-2 text-xs outline-none ${inputBg}`}
+                                                        >
+                                                            <option value="licorice">Licorice</option>
+                                                            <option value="ball+stick">Ball & Stick</option>
+                                                            <option value="spacefill">Spacefill</option>
+                                                        </select>
+                                                    </div>
+                                                    <div>
+                                                        <label className={`text-[9px] uppercase tracking-wider mb-1 block opacity-60 ${subtleText}`}>Backbone Color</label>
+                                                        <select
+                                                            value={nucleicBackboneColor || ''}
+                                                            onChange={e => setNucleicBackboneColor?.(e.target.value ? e.target.value as ColoringType : undefined)}
+                                                            className={`w-full border rounded-lg px-2 py-2 text-xs outline-none ${inputBg}`}
+                                                        >
+                                                            <option value="">Same as structure</option>
+                                                            <option value="chainid">By Chain</option>
+                                                            <option value="element">Element (CPK)</option>
+                                                            <option value="bfactor">B-Factor</option>
+                                                            <option value="uniform">Uniform</option>
+                                                        </select>
+                                                    </div>
+                                                    <div>
+                                                        <label className={`text-[9px] uppercase tracking-wider mb-1 block opacity-60 ${subtleText}`}>Base Color</label>
+                                                        <select
+                                                            value={nucleicBaseColor || ''}
+                                                            onChange={e => setNucleicBaseColor?.(e.target.value ? e.target.value as ColoringType : undefined)}
+                                                            className={`w-full border rounded-lg px-2 py-2 text-xs outline-none ${inputBg}`}
+                                                        >
+                                                            <option value="">Same as structure</option>
+                                                            <option value="chainid">By Chain</option>
+                                                            <option value="element">Element (CPK)</option>
+                                                            <option value="bfactor">B-Factor</option>
+                                                            <option value="uniform">Uniform</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
 
                                         {/* ADVANCED COLORS WRAPPER */}
                                         {setCustomColors && (
