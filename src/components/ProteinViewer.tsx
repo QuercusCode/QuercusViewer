@@ -2983,7 +2983,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                 const mapNucCol = (c: ColoringType | undefined): string => {
                     if (!c) return finalColor;
                     if (c === 'chainid') return 'chainindex';
-                    if (c === 'secondary-structure' || c === 'structure') return 'sstruc';
+                    if (c === 'structure') return 'sstruc';
                     return c as string;
                 };
                 const bbColor = mapNucCol(nucleicBackboneColor);
