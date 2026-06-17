@@ -422,6 +422,10 @@ interface ControlsProps {
     setNucleicBaseStyle?: (s: string) => void;
     nucleicBaseColor?: ColoringType;
     setNucleicBaseColor?: (c: ColoringType | undefined) => void;
+    nucleicBackboneOpacity?: number;
+    setNucleicBackboneOpacity?: (v: number) => void;
+    nucleicBaseOpacity?: number;
+    setNucleicBaseOpacity?: (v: number) => void;
 }
 
 export const Controls: React.FC<ControlsProps> = ({
@@ -524,6 +528,10 @@ export const Controls: React.FC<ControlsProps> = ({
     setNucleicBaseStyle,
     nucleicBaseColor,
     setNucleicBaseColor,
+    nucleicBackboneOpacity = 100,
+    setNucleicBackboneOpacity,
+    nucleicBaseOpacity = 100,
+    setNucleicBaseOpacity,
 }) => {
     // i18n
     const { t } = useTranslation();
@@ -1647,6 +1655,30 @@ export const Controls: React.FC<ControlsProps> = ({
                                                             <option value="occupancy">Occupancy</option>
                                                             <option value="uniform">Uniform</option>
                                                         </select>
+                                                    </div>
+                                                    <div>
+                                                        <div className="flex justify-between">
+                                                            <label className={`text-[9px] uppercase tracking-wider opacity-60 ${subtleText}`}>Backbone Opacity</label>
+                                                            <span className={`text-[9px] font-mono ${subtleText}`}>{nucleicBackboneOpacity}%</span>
+                                                        </div>
+                                                        <input
+                                                            type="range" min="0" max="100"
+                                                            value={nucleicBackboneOpacity}
+                                                            onChange={e => setNucleicBackboneOpacity?.(Number(e.target.value))}
+                                                            className="w-full h-1.5 bg-neutral-700 rounded-lg appearance-none cursor-pointer"
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <div className="flex justify-between">
+                                                            <label className={`text-[9px] uppercase tracking-wider opacity-60 ${subtleText}`}>Base Opacity</label>
+                                                            <span className={`text-[9px] font-mono ${subtleText}`}>{nucleicBaseOpacity}%</span>
+                                                        </div>
+                                                        <input
+                                                            type="range" min="0" max="100"
+                                                            value={nucleicBaseOpacity}
+                                                            onChange={e => setNucleicBaseOpacity?.(Number(e.target.value))}
+                                                            className="w-full h-1.5 bg-neutral-700 rounded-lg appearance-none cursor-pointer"
+                                                        />
                                                     </div>
                                                 </div>
                                             </div>
