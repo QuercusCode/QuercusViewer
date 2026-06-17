@@ -414,12 +414,12 @@ interface ControlsProps {
     setSmoothSheetEnabled?: (enabled: boolean | ((prev: boolean) => boolean)) => void;
 
     // Nucleic Acid Independent Controls
-    nucleicBackboneStyle?: 'tube' | 'ribbon' | 'licorice' | 'line';
-    setNucleicBackboneStyle?: (s: 'tube' | 'ribbon' | 'licorice' | 'line') => void;
+    nucleicBackboneStyle?: string;
+    setNucleicBackboneStyle?: (s: string) => void;
     nucleicBackboneColor?: ColoringType;
     setNucleicBackboneColor?: (c: ColoringType | undefined) => void;
-    nucleicBaseStyle?: 'licorice' | 'ball+stick' | 'spacefill';
-    setNucleicBaseStyle?: (s: 'licorice' | 'ball+stick' | 'spacefill') => void;
+    nucleicBaseStyle?: string;
+    setNucleicBaseStyle?: (s: string) => void;
     nucleicBaseColor?: ColoringType;
     setNucleicBaseColor?: (c: ColoringType | undefined) => void;
 }
@@ -1580,25 +1580,34 @@ export const Controls: React.FC<ControlsProps> = ({
                                                         <label className={`text-[9px] uppercase tracking-wider mb-1 block opacity-60 ${subtleText}`}>Backbone Style</label>
                                                         <select
                                                             value={nucleicBackboneStyle}
-                                                            onChange={e => setNucleicBackboneStyle?.(e.target.value as any)}
+                                                            onChange={e => setNucleicBackboneStyle?.(e.target.value)}
                                                             className={`w-full border rounded-lg px-2 py-2 text-xs outline-none ${inputBg}`}
                                                         >
                                                             <option value="tube">Tube</option>
+                                                            <option value="cartoon">Cartoon</option>
                                                             <option value="ribbon">Ribbon</option>
+                                                            <option value="rope">Rope</option>
+                                                            <option value="trace">Trace</option>
                                                             <option value="licorice">Licorice</option>
+                                                            <option value="ball+stick">Ball & Stick</option>
+                                                            <option value="spacefill">Spacefill</option>
                                                             <option value="line">Line</option>
+                                                            <option value="none">Hidden</option>
                                                         </select>
                                                     </div>
                                                     <div>
                                                         <label className={`text-[9px] uppercase tracking-wider mb-1 block opacity-60 ${subtleText}`}>Base Style</label>
                                                         <select
                                                             value={nucleicBaseStyle}
-                                                            onChange={e => setNucleicBaseStyle?.(e.target.value as any)}
+                                                            onChange={e => setNucleicBaseStyle?.(e.target.value)}
                                                             className={`w-full border rounded-lg px-2 py-2 text-xs outline-none ${inputBg}`}
                                                         >
                                                             <option value="licorice">Licorice</option>
                                                             <option value="ball+stick">Ball & Stick</option>
+                                                            <option value="hyperball">Hyperball</option>
                                                             <option value="spacefill">Spacefill</option>
+                                                            <option value="line">Line</option>
+                                                            <option value="none">Hidden</option>
                                                         </select>
                                                     </div>
                                                     <div>
@@ -1610,8 +1619,12 @@ export const Controls: React.FC<ControlsProps> = ({
                                                         >
                                                             <option value="">Same as structure</option>
                                                             <option value="chainid">By Chain</option>
+                                                            <option value="resname">By Base (A/T/G/C/U)</option>
+                                                            <option value="residueindex">Rainbow</option>
                                                             <option value="element">Element (CPK)</option>
                                                             <option value="bfactor">B-Factor</option>
+                                                            <option value="hydrophobicity">Hydrophobicity</option>
+                                                            <option value="occupancy">Occupancy</option>
                                                             <option value="uniform">Uniform</option>
                                                         </select>
                                                     </div>
@@ -1624,8 +1637,12 @@ export const Controls: React.FC<ControlsProps> = ({
                                                         >
                                                             <option value="">Same as structure</option>
                                                             <option value="chainid">By Chain</option>
+                                                            <option value="resname">By Base (A/T/G/C/U)</option>
+                                                            <option value="residueindex">Rainbow</option>
                                                             <option value="element">Element (CPK)</option>
                                                             <option value="bfactor">B-Factor</option>
+                                                            <option value="hydrophobicity">Hydrophobicity</option>
+                                                            <option value="occupancy">Occupancy</option>
                                                             <option value="uniform">Uniform</option>
                                                         </select>
                                                     </div>
