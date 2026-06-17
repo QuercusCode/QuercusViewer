@@ -3013,6 +3013,8 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                     tryApply('line', bbColor, bbBackboneSele, {});
                 } else if (bbStyle === 'spacefill') {
                     tryApply('spacefill', bbColor, bbBackboneSele, {});
+                } else if (bbStyle === 'surface') {
+                    tryApply('surface', bbColor, bbBackboneSele, { opacity: 0.7 });
                 } else if (bbStyle === 'none') {
                     // no backbone rendered
                 }
@@ -3024,6 +3026,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                     if (bsStyle === 'licorice') bsParams.scale = 0.6;
                     else if (bsStyle === 'ball+stick') bsParams.scale = 1.5;
                     else if (bsStyle === 'hyperball') bsParams.scale = 1.0;
+                    else if (bsStyle === 'surface') bsParams.opacity = 0.7;
                     tryApply(bsStyle, bsColor, baseSele, bsParams);
                 }
             }
