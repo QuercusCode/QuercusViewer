@@ -37,7 +37,7 @@ import {
     Wrench,
     X
 } from 'lucide-react';
-import type { RepresentationType, ColoringType, ChainInfo, Snapshot, Movie, ColorPalette, PDBMetadata, CustomColorRule, CustomStyleRule, CustomTransparencyRule, Measurement } from '../types';
+import type { RepresentationType, ColoringType, ChainInfo, Snapshot, Movie, ColorPalette, PDBMetadata, CustomColorRule, CustomStyleRule, CustomTransparencyRule, Measurement, NucleicResidueRule } from '../types';
 import type { DataSource } from '../utils/pdbUtils';
 import type { HistoryItem } from '../hooks/useHistory';
 import { formatChemicalId } from '../utils/pdbUtils';
@@ -426,6 +426,8 @@ interface ControlsProps {
     setNucleicBackboneOpacity?: (v: number) => void;
     nucleicBaseOpacity?: number;
     setNucleicBaseOpacity?: (v: number) => void;
+    nucleicResidueRules?: NucleicResidueRule[];
+    setNucleicResidueRules?: (rules: NucleicResidueRule[] | ((prev: NucleicResidueRule[]) => NucleicResidueRule[])) => void;
 }
 
 export const Controls: React.FC<ControlsProps> = ({
@@ -532,6 +534,8 @@ export const Controls: React.FC<ControlsProps> = ({
     setNucleicBackboneOpacity,
     nucleicBaseOpacity = 100,
     setNucleicBaseOpacity,
+    nucleicResidueRules = [],
+    setNucleicResidueRules,
 }) => {
     // i18n
     const { t } = useTranslation();
@@ -569,6 +573,29 @@ export const Controls: React.FC<ControlsProps> = ({
         };
         setCustomStyles((prev: CustomStyleRule[]) => [...prev, newRule]);
         setCustomResStyleRange('');
+    };
+
+    // Per-residue nucleic acid styling
+    const [nucRuleChain, setNucRuleChain] = useState<string>("All");
+    const [nucRuleResidues, setNucRuleResidues] = useState<string>("");
+    const [nucRuleBaseStyle, setNucRuleBaseStyle] = useState<string>("");
+    const [nucRuleBaseColor, setNucRuleBaseColor] = useState<string>("");
+    const [nucRuleBackboneStyle, setNucRuleBackboneStyle] = useState<string>("");
+    const [nucRuleBackboneColor, setNucRuleBackboneColor] = useState<string>("");
+
+    const handleAddNucleicRule = () => {
+        if (!setNucleicResidueRules || !nucRuleResidues) return;
+        const newRule: NucleicResidueRule = {
+            id: crypto.randomUUID(),
+            chain: nucRuleChain,
+            residues: nucRuleResidues,
+            ...(nucRuleBaseStyle && { baseStyle: nucRuleBaseStyle }),
+            ...(nucRuleBaseColor && { baseColor: nucRuleBaseColor }),
+            ...(nucRuleBackboneStyle && { backboneStyle: nucRuleBackboneStyle }),
+            ...(nucRuleBackboneColor && { backboneColor: nucRuleBackboneColor }),
+        };
+        setNucleicResidueRules((prev: NucleicResidueRule[]) => [...prev, newRule]);
+        setNucRuleResidues('');
     };
 
     // State for Residue-Specific Coloring UI
@@ -1680,6 +1707,100 @@ export const Controls: React.FC<ControlsProps> = ({
                                                             className="w-full h-1.5 bg-neutral-700 rounded-lg appearance-none cursor-pointer"
                                                         />
                                                     </div>
+
+                                                    {/* Per-Residue Rules */}
+                                                    {setNucleicResidueRules && (
+                                                        <div className="col-span-2 pt-2 border-t border-white/5 space-y-2">
+                                                            <label className={`text-[9px] font-bold uppercase tracking-wider block ${subtleText} opacity-70`}>Per-Residue Override</label>
+                                                            <div className="grid grid-cols-2 gap-1.5">
+                                                                <select value={nucRuleChain} onChange={e => setNucRuleChain(e.target.value)} className={`border rounded-lg px-2 py-1.5 text-[10px] outline-none ${inputBg}`}>
+                                                                    <option value="All">All Chains</option>
+                                                                    {chains.filter(c => c.type === 'nucleic').map(c => (
+                                                                        <option key={c.name} value={c.name}>Chain {c.name}</option>
+                                                                    ))}
+                                                                </select>
+                                                                <input
+                                                                    value={nucRuleResidues}
+                                                                    onChange={e => setNucRuleResidues(e.target.value)}
+                                                                    placeholder="e.g. 1-10"
+                                                                    className={`border rounded-lg px-2 py-1.5 text-[10px] font-mono outline-none ${inputBg}`}
+                                                                />
+                                                                <select value={nucRuleBaseStyle} onChange={e => setNucRuleBaseStyle(e.target.value)} className={`border rounded-lg px-2 py-1.5 text-[10px] outline-none ${inputBg}`}>
+                                                                    <option value="">Base style...</option>
+                                                                    <option value="licorice">Licorice</option>
+                                                                    <option value="ball+stick">Ball & Stick</option>
+                                                                    <option value="hyperball">Hyperball</option>
+                                                                    <option value="spacefill">Spacefill</option>
+                                                                    <option value="surface">Surface</option>
+                                                                    <option value="line">Line</option>
+                                                                </select>
+                                                                <select value={nucRuleBaseColor} onChange={e => setNucRuleBaseColor(e.target.value)} className={`border rounded-lg px-2 py-1.5 text-[10px] outline-none ${inputBg}`}>
+                                                                    <option value="">Base color...</option>
+                                                                    <option value="chainid">By Chain</option>
+                                                                    <option value="resname">By Base</option>
+                                                                    <option value="residueindex">Rainbow</option>
+                                                                    <option value="element">Element</option>
+                                                                    <option value="bfactor">B-Factor</option>
+                                                                    <option value="uniform">Uniform</option>
+                                                                </select>
+                                                                <select value={nucRuleBackboneStyle} onChange={e => setNucRuleBackboneStyle(e.target.value)} className={`border rounded-lg px-2 py-1.5 text-[10px] outline-none ${inputBg}`}>
+                                                                    <option value="">Backbone style...</option>
+                                                                    <option value="tube">Tube</option>
+                                                                    <option value="cartoon">Cartoon</option>
+                                                                    <option value="ribbon">Ribbon</option>
+                                                                    <option value="licorice">Licorice</option>
+                                                                    <option value="ball+stick">Ball & Stick</option>
+                                                                    <option value="spacefill">Spacefill</option>
+                                                                    <option value="surface">Surface</option>
+                                                                    <option value="line">Line</option>
+                                                                </select>
+                                                                <select value={nucRuleBackboneColor} onChange={e => setNucRuleBackboneColor(e.target.value)} className={`border rounded-lg px-2 py-1.5 text-[10px] outline-none ${inputBg}`}>
+                                                                    <option value="">Backbone color...</option>
+                                                                    <option value="chainid">By Chain</option>
+                                                                    <option value="resname">By Base</option>
+                                                                    <option value="residueindex">Rainbow</option>
+                                                                    <option value="element">Element</option>
+                                                                    <option value="bfactor">B-Factor</option>
+                                                                    <option value="uniform">Uniform</option>
+                                                                </select>
+                                                            </div>
+                                                            <button
+                                                                onClick={handleAddNucleicRule}
+                                                                disabled={!nucRuleResidues}
+                                                                className="w-full py-1.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg text-[10px] font-bold transition-all shadow-sm active:scale-95 flex items-center justify-center"
+                                                            >
+                                                                <Plus size={12} className="mr-1" /> Add Rule
+                                                            </button>
+                                                            {nucleicResidueRules.length > 0 && (
+                                                                <div className="space-y-1 max-h-[120px] overflow-y-auto custom-scrollbar">
+                                                                    {nucleicResidueRules.map(rule => (
+                                                                        <div key={rule.id} className={`flex items-center justify-between p-1.5 rounded border ${isLightMode ? 'bg-white border-neutral-200' : 'bg-neutral-800 border-white/5'}`}>
+                                                                            <div className="flex flex-col gap-0.5 min-w-0">
+                                                                                <div className="flex items-center gap-1.5 flex-wrap">
+                                                                                    <span className={`px-1 py-0.5 rounded text-[8px] font-mono font-bold ${isLightMode ? 'bg-neutral-100 text-neutral-700' : 'bg-neutral-700 text-neutral-300'}`}>
+                                                                                        {rule.chain === 'All' ? '*' : `:${rule.chain}`}
+                                                                                    </span>
+                                                                                    <span className="text-[9px] font-mono opacity-70">{rule.residues}</span>
+                                                                                </div>
+                                                                                <div className="flex gap-1.5 flex-wrap text-[8px] opacity-60">
+                                                                                    {rule.baseStyle && <span>base: {rule.baseStyle}</span>}
+                                                                                    {rule.baseColor && <span>col: {rule.baseColor}</span>}
+                                                                                    {rule.backboneStyle && <span>bb: {rule.backboneStyle}</span>}
+                                                                                    {rule.backboneColor && <span>bb-col: {rule.backboneColor}</span>}
+                                                                                </div>
+                                                                            </div>
+                                                                            <button
+                                                                                onClick={() => setNucleicResidueRules?.((prev: NucleicResidueRule[]) => prev.filter(r => r.id !== rule.id))}
+                                                                                className="p-1 hover:bg-red-500/20 text-neutral-400 hover:text-red-500 rounded transition-colors shrink-0"
+                                                                            >
+                                                                                <Trash2 size={11} />
+                                                                            </button>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
                                         )}
