@@ -279,3 +279,51 @@ export interface NotebookEntry {
     created_at: string;
     updated_at: string;
 }
+
+export interface AssignmentPayload {
+    question: string;
+    successMessage: string;
+    targetChain: string;
+    targetResNo: number;
+    targetAtomName?: string;
+}
+
+export interface SlideQuiz {
+    question: string;
+    options: string[];
+    correctIndex: number;
+}
+
+export interface SlideAnnotation {
+    id: string;
+    text: string;
+    x: number;
+    y: number;
+    color: string;
+}
+
+export interface StoryboardSlide {
+    id: string;
+    title: string;
+    description: string;
+    cameraOrientation?: any;
+    representation?: RepresentationType;
+    coloring?: ColoringType;
+    customColors?: CustomColorRule[];
+    selectedResidue?: any;
+    showSurface?: boolean;
+    showLigands?: boolean;
+    screenshot?: string;
+    quiz?: SlideQuiz;
+    annotations?: SlideAnnotation[];
+    speakerNotes?: string;
+    audioNarration?: string;
+    transitionDurationMs?: number;
+    loadAction?: string;
+}
+
+export interface StoryboardPayload {
+    title: string;
+    slides: StoryboardSlide[];
+    autoPlaySeconds?: number;
+}
