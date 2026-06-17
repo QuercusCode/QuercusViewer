@@ -68,12 +68,20 @@ export interface StructureController {
     smoothSheetEnabled: boolean;
     setSmoothSheetEnabled: (enabled: boolean | ((prev: boolean) => boolean)) => void;
 
+    // Nucleic Acid Independent Controls
+    nucleicBackboneStyle: 'tube' | 'ribbon' | 'licorice' | 'line';
+    setNucleicBackboneStyle: (s: 'tube' | 'ribbon' | 'licorice' | 'line') => void;
+    nucleicBackboneColor: ColoringType | undefined;
+    setNucleicBackboneColor: (c: ColoringType | undefined) => void; // undefined = same as structure
+    nucleicBaseStyle: 'licorice' | 'ball+stick' | 'spacefill';
+    setNucleicBaseStyle: (s: 'licorice' | 'ball+stick' | 'spacefill') => void;
+    nucleicBaseColor: ColoringType | undefined;
+    setNucleicBaseColor: (c: ColoringType | undefined) => void; // undefined = same as structure
+
     // Actions
     handleUpload: (file: File, isCif?: boolean, preservePdbId?: boolean) => void;
     handleResetView: () => void;
     resetKey: number; // Used to trigger re-renders/resets in the viewer
-
-    assignmentPayload?: import('../types').AssignmentPayload;
 }
 
 export const useStructureController = (initialState: any = {}): StructureController => {
@@ -93,6 +101,11 @@ export const useStructureController = (initialState: any = {}): StructureControl
     const [showLigands, setShowLigands] = useState(false);
     const [showIons, setShowIons] = useState(initialState.showIons ?? false);
     const [smoothSheetEnabled, setSmoothSheetEnabled] = useState(initialState.smoothSheetEnabled ?? false);
+
+    const [nucleicBackboneStyle, setNucleicBackboneStyle] = useState<'tube' | 'ribbon' | 'licorice' | 'line'>('tube');
+    const [nucleicBackboneColor, setNucleicBackboneColor] = useState<ColoringType | undefined>(undefined);
+    const [nucleicBaseStyle, setNucleicBaseStyle] = useState<'licorice' | 'ball+stick' | 'spacefill'>('licorice');
+    const [nucleicBaseColor, setNucleicBaseColor] = useState<ColoringType | undefined>(undefined);
 
     const [customBackgroundColor, setCustomBackgroundColor] = useState<string | null>(null);
     // Analysis
@@ -131,8 +144,6 @@ export const useStructureController = (initialState: any = {}): StructureControl
 
     // Custom Transparency
     const [customTransparency, setCustomTransparency] = useState<CustomTransparencyRule[]>([]);
-
-    const [assignmentPayload] = useState<import('../types').AssignmentPayload | undefined>(initialState.assignmentPayload);
 
     // -- Handlers --
 
@@ -219,6 +230,11 @@ export const useStructureController = (initialState: any = {}): StructureControl
         smoothSheetEnabled,
         setSmoothSheetEnabled,
 
+        nucleicBackboneStyle, setNucleicBackboneStyle,
+        nucleicBackboneColor, setNucleicBackboneColor,
+        nucleicBaseStyle, setNucleicBaseStyle,
+        nucleicBaseColor, setNucleicBaseColor,
+
         customBackgroundColor, setCustomBackgroundColor,
         chains, setChains,
         ligands, setLigands,
@@ -231,7 +247,6 @@ export const useStructureController = (initialState: any = {}): StructureControl
         overlays, setOverlays, addOverlay, removeOverlay, toggleOverlay,
         handleUpload,
         handleResetView,
-        resetKey,
-        assignmentPayload
+        resetKey
     };
 };
