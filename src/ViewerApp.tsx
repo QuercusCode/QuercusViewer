@@ -140,15 +140,23 @@ function App() {
 
   // GRAPHICS SETTINGS
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  
+
+  // Settings panel state
+  const [isTeachingMode, setIsTeachingMode] = useState(false);
+  const [uiScale, setUiScale] = useState<'small' | 'medium' | 'large'>(
+    (localStorage.getItem('uiScale') as 'small' | 'medium' | 'large') || 'medium'
+  );
+  const [autoHideHUD, setAutoHideHUD] = useState(localStorage.getItem('autoHideHUD') === 'true');
+  const [reducedMotion, setReducedMotion] = useState(localStorage.getItem('reducedMotion') === 'true');
+  const [visualAccessibility, setVisualAccessibility] = useState<string>(
+    localStorage.getItem('visualAccessibility') || user?.user_metadata?.visual_accessibility || 'none'
+  );
+
   // Map performance_mode to internal quality levels (Legacy: switched to Visual Accessibility)
   const [settings, setSettings] = useState<{ quality: 'low' | 'medium' | 'high'; ssao: boolean }>({
     quality: 'medium',
     ssao: true
   });
-
-  // Sync settings when user metadata changes (Legacy: switched to Visual Accessibility)
-  const visualAccessibility = user?.user_metadata?.visual_accessibility || 'none';
 
   const updateSetting = (key: keyof typeof settings, value: any) => {
     setSettings(prev => ({ ...prev, [key]: value }));
@@ -2906,6 +2914,18 @@ function App() {
             setSsao={(s) => updateSetting('ssao', s)}
             visualizerEngine={visualizerEngine}
             setVisualizerEngine={setVisualizerEngine}
+            isTeachingMode={isTeachingMode}
+            setIsTeachingMode={setIsTeachingMode}
+            uiScale={uiScale}
+            setUiScale={setUiScale}
+            autoHideHUD={autoHideHUD}
+            setAutoHideHUD={setAutoHideHUD}
+            reducedMotion={reducedMotion}
+            setReducedMotion={setReducedMotion}
+            visualAccessibility={visualAccessibility}
+            setVisualAccessibility={setVisualAccessibility}
+            onUpdateDefaultStyle={(style) => localStorage.setItem('defaultMoleculeStyle', style)}
+            onUpdateDefaultColor={(color) => localStorage.setItem('defaultColorScheme', color)}
             isOpen={isSettingsOpen}
             onClose={() => setIsSettingsOpen(false)}
           />
