@@ -29,6 +29,16 @@ export interface CustomTransparencyRule {
     opacity: number; // 0.0 to 1.0
 }
 
+export interface NucleicResidueRule {
+    id: string;
+    chain: string;
+    residues: string;
+    baseStyle?: string;
+    baseColor?: string;
+    backboneStyle?: string;
+    backboneColor?: string;
+}
+
 export interface AtomInfo {
     serial: number;
     name: string;
@@ -268,4 +278,52 @@ export interface NotebookEntry {
     content: string;
     created_at: string;
     updated_at: string;
+}
+
+export interface AssignmentPayload {
+    question: string;
+    successMessage: string;
+    targetChain: string;
+    targetResNo: number;
+    targetAtomName?: string;
+}
+
+export interface SlideQuiz {
+    question: string;
+    options: string[];
+    correctIndex: number;
+}
+
+export interface SlideAnnotation {
+    id: string;
+    text: string;
+    x: number;
+    y: number;
+    color: string;
+}
+
+export interface StoryboardSlide {
+    id: string;
+    title: string;
+    description: string;
+    cameraOrientation?: any;
+    representation?: RepresentationType;
+    coloring?: ColoringType;
+    customColors?: CustomColorRule[];
+    selectedResidue?: any;
+    showSurface?: boolean;
+    showLigands?: boolean;
+    screenshot?: string;
+    quiz?: SlideQuiz;
+    annotations?: SlideAnnotation[];
+    speakerNotes?: string;
+    audioNarration?: string;
+    transitionDurationMs?: number;
+    loadAction?: string;
+}
+
+export interface StoryboardPayload {
+    title: string;
+    slides: StoryboardSlide[];
+    autoPlaySeconds?: number;
 }
