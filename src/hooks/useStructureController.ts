@@ -77,6 +77,10 @@ export interface StructureController {
     setNucleicBaseStyle: (s: string) => void;
     nucleicBaseColor: ColoringType | undefined;
     setNucleicBaseColor: (c: ColoringType | undefined) => void;
+    nucleicBackboneOpacity: number;
+    setNucleicBackboneOpacity: (v: number) => void;
+    nucleicBaseOpacity: number;
+    setNucleicBaseOpacity: (v: number) => void;
 
     // Actions
     handleUpload: (file: File, isCif?: boolean, preservePdbId?: boolean) => void;
@@ -106,6 +110,8 @@ export const useStructureController = (initialState: any = {}): StructureControl
     const [nucleicBackboneColor, setNucleicBackboneColor] = useState<ColoringType | undefined>(undefined);
     const [nucleicBaseStyle, setNucleicBaseStyle] = useState<string>('licorice');
     const [nucleicBaseColor, setNucleicBaseColor] = useState<ColoringType | undefined>(undefined);
+    const [nucleicBackboneOpacity, setNucleicBackboneOpacity] = useState(100);
+    const [nucleicBaseOpacity, setNucleicBaseOpacity] = useState(100);
 
     const [customBackgroundColor, setCustomBackgroundColor] = useState<string | null>(null);
     // Analysis
@@ -234,6 +240,8 @@ export const useStructureController = (initialState: any = {}): StructureControl
         nucleicBackboneColor, setNucleicBackboneColor,
         nucleicBaseStyle, setNucleicBaseStyle,
         nucleicBaseColor, setNucleicBaseColor,
+        nucleicBackboneOpacity, setNucleicBackboneOpacity,
+        nucleicBaseOpacity, setNucleicBaseOpacity,
 
         customBackgroundColor, setCustomBackgroundColor,
         chains, setChains,
