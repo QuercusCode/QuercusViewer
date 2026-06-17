@@ -1591,6 +1591,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                             <option value="licorice">Licorice</option>
                                                             <option value="ball+stick">Ball & Stick</option>
                                                             <option value="spacefill">Spacefill</option>
+                                                            <option value="surface">Surface</option>
                                                             <option value="line">Line</option>
                                                             <option value="none">Hidden</option>
                                                         </select>
@@ -1606,6 +1607,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                             <option value="ball+stick">Ball & Stick</option>
                                                             <option value="hyperball">Hyperball</option>
                                                             <option value="spacefill">Spacefill</option>
+                                                            <option value="surface">Surface</option>
                                                             <option value="line">Line</option>
                                                             <option value="none">Hidden</option>
                                                         </select>
