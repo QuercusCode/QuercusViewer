@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useImperativeHandle, forwardRef } from 'react
 import clsx from 'clsx';
 import { Skeleton } from './Skeleton';
 import { SequenceAlignmentModal } from './SequenceAlignmentModal';
-import type { RepresentationType, ColoringType, ChainInfo, Measurement, CustomColorRule, CustomStyleRule, CustomTransparencyRule, ColorPalette, ResidueInfo, StructureInfo, MeasurementTextColor, SuperposedStructure, Annotation } from '../types';
+import type { RepresentationType, ColoringType, ChainInfo, Measurement, CustomColorRule, CustomStyleRule, CustomTransparencyRule, ColorPalette, ResidueInfo, StructureInfo, MeasurementTextColor, SuperposedStructure, Annotation, NucleicResidueRule } from '../types';
 import { type DataSource, getStructureUrl, extractChainsFromComponent } from '../utils/pdbUtils';
 
 
@@ -114,6 +114,7 @@ export interface ProteinViewerProps {
     nucleicBaseColor?: ColoringType;
     nucleicBackboneOpacity?: number;
     nucleicBaseOpacity?: number;
+    nucleicResidueRules?: NucleicResidueRule[];
 }
 
 export interface ProteinViewerRef {
@@ -219,6 +220,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
     nucleicBaseColor,
     nucleicBackboneOpacity = 100,
     nucleicBaseOpacity = 100,
+    nucleicResidueRules = [],
 }: ProteinViewerProps, ref: React.Ref<ProteinViewerRef>) => {
 
     const [isAlignmentOpen, setIsAlignmentOpen] = React.useState(false);
@@ -3036,10 +3038,35 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                     else if (bsStyle === 'surface') bsParams.opacity = Math.min(bsOp, 0.7);
                     tryApply(bsStyle, bsColor, baseSele, bsParams);
                 }
+
+                // Per-residue nucleic overrides
+                nucleicResidueRules.forEach(rule => {
+                    const chainPart = rule.chain === 'All' ? '' : `:${rule.chain}`;
+                    const resPart = rule.residues ? (chainPart ? ` and ${rule.residues}` : rule.residues) : '';
+                    const ruleSele = `nucleic and (${chainPart}${resPart})`;
+                    const ruleBackboneSele = `${ruleSele} and backbone`;
+                    const ruleBaseSele = `${ruleSele} and (not backbone or .C4' or .O4' or .C1')`;
+
+                    if (rule.backboneStyle && rule.backboneStyle !== 'none') {
+                        const rbbColor = rule.backboneColor ? mapNucCol(rule.backboneColor as any) : bbColor;
+                        const rbbParams: any = { opacity: bbOp };
+                        if (rule.backboneStyle === 'licorice') rbbParams.scale = 0.6;
+                        else if (rule.backboneStyle === 'ball+stick') rbbParams.scale = 1.5;
+                        const rbbSele = ['tube', 'cartoon', 'ribbon', 'rope', 'trace'].includes(rule.backboneStyle)
+                            ? ruleSele : ruleBackboneSele;
+                        tryApply(rule.backboneStyle, rbbColor, rbbSele, rbbParams);
+                    }
+                    if (rule.baseStyle && rule.baseStyle !== 'none') {
+                        const rbsColor = rule.baseColor ? mapNucCol(rule.baseColor as any) : bsColor;
+                        const rbsParams: any = { opacity: bsOp };
+                        if (rule.baseStyle === 'licorice') rbsParams.scale = 0.6;
+                        else if (rule.baseStyle === 'ball+stick') rbsParams.scale = 1.5;
+                        else if (rule.baseStyle === 'hyperball') rbsParams.scale = 1.0;
+                        else if (rule.baseStyle === 'surface') rbsParams.opacity = Math.min(bsOp, 0.7);
+                        tryApply(rule.baseStyle, rbsColor, ruleBaseSele, rbsParams);
+                    }
+                });
             }
-
-
-
 
 
             if (stageRef.current?.viewer) {
@@ -3075,7 +3102,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
 
     useEffect(() => {
         updateRepresentation();
-    }, [representation, coloring, showSurface, showLigands, showIons, colorPalette, customColors, chainStyles, customStyles, customTransparency, smoothSheetEnabled, nucleicBackboneStyle, nucleicBackboneColor, nucleicBaseStyle, nucleicBaseColor, nucleicBackboneOpacity, nucleicBaseOpacity]);
+    }, [representation, coloring, showSurface, showLigands, showIons, colorPalette, customColors, chainStyles, customStyles, customTransparency, smoothSheetEnabled, nucleicBackboneStyle, nucleicBackboneColor, nucleicBaseStyle, nucleicBaseColor, nucleicBackboneOpacity, nucleicBaseOpacity, nucleicResidueRules]);
 
     useEffect(() => {
         if (stageRef.current) {
