@@ -108,9 +108,9 @@ export interface ProteinViewerProps {
     onLayoutChange?: (isExpanded: boolean) => void;
 
     // Nucleic Acid Independent Controls
-    nucleicBackboneStyle?: 'tube' | 'ribbon' | 'licorice' | 'line';
+    nucleicBackboneStyle?: string;
     nucleicBackboneColor?: ColoringType;
-    nucleicBaseStyle?: 'licorice' | 'ball+stick' | 'spacefill';
+    nucleicBaseStyle?: string;
     nucleicBaseColor?: ColoringType;
 }
 
@@ -2984,26 +2984,49 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                     if (!c) return finalColor;
                     if (c === 'chainid') return 'chainindex';
                     if (c === 'structure') return 'sstruc';
+                    if (c === 'hydrophobicity') return 'hydrophobicity';
+                    if (c === 'occupancy') return 'occupancy';
                     return c as string;
                 };
                 const bbColor = mapNucCol(nucleicBackboneColor);
                 const bsColor = mapNucCol(nucleicBaseColor);
+                const bbStyle = nucleicBackboneStyle || 'tube';
+                const bsStyle = nucleicBaseStyle || 'licorice';
 
-                // Backbone: tube traces through C4' atoms; licorice/line show explicit bonds
-                if (nucleicBackboneStyle === 'tube') {
-                    tryApply('tube', bbColor, 'nucleic', { radiusSize: 0.4 });
-                } else if (nucleicBackboneStyle === 'ribbon') {
-                    tryApply('ribbon', bbColor, 'nucleic', {});
-                } else if (nucleicBackboneStyle === 'licorice') {
-                    tryApply('licorice', bbColor, 'nucleic and backbone', { scale: 0.6 });
-                } else if (nucleicBackboneStyle === 'line') {
-                    tryApply('line', bbColor, 'nucleic and backbone', {});
+                // Backbone rendering
+                const bbSele = 'nucleic';
+                const bbBackboneSele = 'nucleic and backbone';
+                if (bbStyle === 'tube') {
+                    tryApply('tube', bbColor, bbSele, { radiusSize: 0.4 });
+                } else if (bbStyle === 'cartoon') {
+                    tryApply('cartoon', bbColor, bbSele, {});
+                } else if (bbStyle === 'ribbon') {
+                    tryApply('ribbon', bbColor, bbSele, {});
+                } else if (bbStyle === 'rope') {
+                    tryApply('rope', bbColor, bbSele, { smooth: 2 });
+                } else if (bbStyle === 'trace') {
+                    tryApply('trace', bbColor, bbSele, {});
+                } else if (bbStyle === 'licorice') {
+                    tryApply('licorice', bbColor, bbBackboneSele, { scale: 0.6 });
+                } else if (bbStyle === 'ball+stick') {
+                    tryApply('ball+stick', bbColor, bbBackboneSele, { scale: 1.5 });
+                } else if (bbStyle === 'line') {
+                    tryApply('line', bbColor, bbBackboneSele, {});
+                } else if (bbStyle === 'spacefill') {
+                    tryApply('spacefill', bbColor, bbBackboneSele, {});
+                } else if (bbStyle === 'none') {
+                    // no backbone rendered
                 }
 
-                // Bases: base ring atoms + sugar bridge (C4'→O4'→C1') so there's no gap from the tube
-                const bsParams: any = { opacity: 1.0 };
-                if (nucleicBaseStyle === 'licorice') bsParams.scale = 0.6;
-                tryApply(nucleicBaseStyle, bsColor, "nucleic and (not backbone or .C4' or .O4' or .C1')", bsParams);
+                // Bases: ring atoms + sugar bridge (C4'→O4'→C1') so there's no gap from the tube
+                const baseSele = "nucleic and (not backbone or .C4' or .O4' or .C1')";
+                if (bsStyle !== 'none') {
+                    const bsParams: any = { opacity: 1.0 };
+                    if (bsStyle === 'licorice') bsParams.scale = 0.6;
+                    else if (bsStyle === 'ball+stick') bsParams.scale = 1.5;
+                    else if (bsStyle === 'hyperball') bsParams.scale = 1.0;
+                    tryApply(bsStyle, bsColor, baseSele, bsParams);
+                }
             }
 
 
