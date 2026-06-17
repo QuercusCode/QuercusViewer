@@ -12,10 +12,6 @@ import { parseURLState, getShareableURL } from './utils/urlManager';
 
 import LibraryModal from './components/LibraryModal';
 import { ShareModal } from './components/ShareModal';
-import { AssignmentBuilderModal } from './components/AssignmentBuilderModal';
-import { StoryboardBuilderModal } from './components/StoryboardBuilderModal';
-import { StoryboardOverlay } from './components/StoryboardOverlay';
-import { DrawingCanvas } from './components/DrawingCanvas';
 import { SequenceTrack } from './components/SequenceTrack';
 import { DragDropOverlay } from './components/DragDropOverlay';
 import { GalleryModal } from './components/GalleryModal';
@@ -30,7 +26,6 @@ import { Settings } from './components/Settings';
 import { SessionChat } from './components/SessionChat';
 import { AIChatSidebar } from './components/AIChatSidebar';
 import { NotesPanel } from './components/NotesPanel';
-import { AssignmentOverlay } from './components/AssignmentOverlay';
 import { OFFLINE_LIBRARY } from './data/library';
 import { fetchPubChemMetadata } from './utils/pdbUtils';
 import { useTheme } from './lib/ThemeContext';
@@ -99,9 +94,6 @@ const deepEqual = (a: any, b: any): boolean => {
 
 function App() {
   const { t } = useTranslation();
-  
-  // Parse Global URL State Once
-  const initialUrlState = useMemo(() => parseURLState(), []);
 
   // Set page title for the viewer route
   useEffect(() => {
@@ -137,26 +129,7 @@ function App() {
   // Feature: Nametags
   const [userName, setUserName] = useState<string | null>(null);
   const [isIdentityModalOpen, setIsIdentityModalOpen] = useState(false);
-  const [isAssignmentBuilderOpen, setIsAssignmentBuilderOpen] = useState(false);
-  const [isStoryboardBuilderOpen, setIsStoryboardBuilderOpen] = useState(false);
-  const [activeStoryboard, setActiveStoryboard] = useState<import('./types').StoryboardPayload | null>(initialUrlState.viewports[0]?.storyboardPayload || null);
-  const [currentSlideIndex, setCurrentSlideIndex] = useState<number>(initialUrlState.viewports[0]?.storyboardSlideIndex || 0);
-  // Guard: the auto-apply of the initial slide must happen ONCE only — never again after the user starts navigating
-  const hasAppliedInitialSlideRef = useRef(false);
   const [isNotebookOpen, setIsNotebookOpen] = useState(false);
-  // Drawing Canvas and transitions
-  const [isDrawing, setIsDrawing] = useState(false);
-  const [drawingColor, setDrawingColor] = useState('#ef4444');
-  const [clearDrawingTrigger, setClearDrawingTrigger] = useState(0);
-  const slideActionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (slideActionTimerRef.current) {
-        clearTimeout(slideActionTimerRef.current);
-      }
-    };
-  }, []);
 
   // ...
 
@@ -168,25 +141,18 @@ function App() {
   // GRAPHICS SETTINGS
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   
-  // Map performance_mode to internal quality levels
+  // Map performance_mode to internal quality levels (Legacy: switched to Visual Accessibility)
   const [settings, setSettings] = useState<{ quality: 'low' | 'medium' | 'high'; ssao: boolean }>({
     quality: 'medium',
     ssao: true
   });
 
+  // Sync settings when user metadata changes (Legacy: switched to Visual Accessibility)
+  const visualAccessibility = user?.user_metadata?.visual_accessibility || 'none';
+
   const updateSetting = (key: keyof typeof settings, value: any) => {
     setSettings(prev => ({ ...prev, [key]: value }));
   };
-
-  // NEW UI PREFERENCES
-  const [uiScale, setUiScale] = useState<import('./types').UiScale>(() => (localStorage.getItem('uiScale') as import('./types').UiScale) || 'medium');
-  const [autoHideHUD, setAutoHideHUD] = useState<boolean>(() => localStorage.getItem('autoHideHUD') === 'true');
-  const [reducedMotion, setReducedMotion] = useState<boolean>(() => localStorage.getItem('reducedMotion') === 'true');
-  
-  // Sync accessibility with localStorage (fallback to user_metadata or 'none')
-  const [visualAccessibility, setVisualAccessibility] = useState<string>(() => 
-    localStorage.getItem('visualAccessibility') || user?.user_metadata?.visual_accessibility || 'none'
-  );
 
   // Prompt for name when connecting (if not set)
   useEffect(() => {
@@ -326,7 +292,8 @@ function App() {
     }
   }, []);
   
-
+  // Parse Global URL State Once
+  const initialUrlState = useMemo(() => parseURLState(), []);
 
   // --- State: Multi-View Controllers (array of 4) ---
   const defaultRep = user?.user_metadata?.default_rendering || 'cartoon';
@@ -766,6 +733,10 @@ function App() {
     customStyles, setCustomStyles,
     customTransparency, setCustomTransparency,
     smoothSheetEnabled, setSmoothSheetEnabled,
+    nucleicBackboneStyle, setNucleicBackboneStyle,
+    nucleicBackboneColor, setNucleicBackboneColor,
+    nucleicBaseStyle, setNucleicBaseStyle,
+    nucleicBaseColor, setNucleicBaseColor,
     isSpinning, setIsSpinning,
     isRocking, setIsRocking,
     showSurface, setShowSurface,
@@ -1368,7 +1339,6 @@ function App() {
   // handleResetView and handleUpload extracted to hook
 
   const [isPublicationMode, setIsPublicationMode] = useState(false);
-  const [isTeachingMode, setIsTeachingMode] = useState(false);
 
   // Store previous theme to restore after exiting Publication Mode
   const previousThemeRef = useRef(isLightMode);
@@ -1544,99 +1514,6 @@ function App() {
       }, 500);
     }
   }, [addToHistory, controllers, initialUrlState]);
-
-  const handleSlideChange = useCallback((index: number) => {
-    if (!activeStoryboard) return;
-    setCurrentSlideIndex(index);
-    const slide = activeStoryboard.slides[index];
-    if (!slide) return;
-
-    // Clear previous timer & disable rocking/spinning
-    if (slideActionTimerRef.current) {
-      clearTimeout(slideActionTimerRef.current);
-      slideActionTimerRef.current = null;
-    }
-    activeController.setIsSpinning(false);
-    activeController.setIsRocking(false);
-
-    // Disable drawing mode and clear canvas on slide change
-    setIsDrawing(false);
-    setClearDrawingTrigger(Date.now());
-
-    // Persist slide index in URL so share links & refreshes remember the position
-    try {
-      const currentParams = new URLSearchParams(window.location.search);
-      if (index > 0) {
-        currentParams.set('si', String(index));
-      } else {
-        currentParams.delete('si');
-      }
-      const newUrl = `${window.location.pathname}?${currentParams.toString()}`;
-      window.history.replaceState(null, '', newUrl);
-    } catch (e) { /* ignore */ }
-
-    // Apply visualization parameters
-    if (slide.representation) {
-      activeController.setRepresentation(slide.representation);
-    }
-    if (slide.coloring) {
-      activeController.setColoring(slide.coloring);
-    }
-    if (slide.customColors) {
-      activeController.setCustomColors(slide.customColors);
-    } else {
-      activeController.setCustomColors([]);
-    }
-    if (slide.showSurface !== undefined) {
-      activeController.setShowSurface(slide.showSurface);
-    }
-    if (slide.showLigands !== undefined) {
-      activeController.setShowLigands(slide.showLigands);
-    }
-    if (slide.selectedResidue !== undefined) {
-      activeController.setHighlightedResidue(slide.selectedResidue);
-      if (slide.selectedResidue) {
-        viewerRefs[activeViewIndex].current?.highlightResidue(slide.selectedResidue.chain, slide.selectedResidue.resNo);
-      } else {
-        viewerRefs[activeViewIndex].current?.clearHighlight?.();
-      }
-    }
-
-    // Apply Camera orientation with transition duration
-    if (slide.cameraOrientation) {
-      const viewerRef = viewerRefs[activeViewIndex]?.current;
-      if (viewerRef) {
-        const duration = slide.transitionDurationMs ?? 1000;
-        viewerRef.setOrientation(slide.cameraOrientation);
-
-        if (slide.loadAction && slide.loadAction !== 'none') {
-          slideActionTimerRef.current = setTimeout(() => {
-            if (slide.loadAction === 'spin') {
-              activeController.setIsSpinning(true);
-            } else if (slide.loadAction === 'rock') {
-              activeController.setIsRocking(true);
-            }
-          }, duration);
-        }
-      }
-    }
-  }, [activeStoryboard, activeController, activeViewIndex, setIsDrawing, setClearDrawingTrigger]);
-
-  // Apply the initial slide view ONCE when the storyboard first becomes available.
-  // The hasAppliedInitialSlideRef guard ensures this never fires again — even if activeStoryboard
-  // reference changes due to re-renders — so the user's slide position is never reset.
-  useEffect(() => {
-    if (hasAppliedInitialSlideRef.current) return; // ← ONE-SHOT GUARD: never run twice
-    if (!activeStoryboard || !activeStoryboard.slides?.length) return;
-
-    hasAppliedInitialSlideRef.current = true;
-    const initialIndex = initialUrlState.viewports[0]?.storyboardSlideIndex || 0;
-    const clampedIndex = Math.min(initialIndex, activeStoryboard.slides.length - 1);
-    const timer = setTimeout(() => {
-      handleSlideChange(clampedIndex);
-    }, 1200); // wait for PDB structure to finish loading before applying camera/rep
-    return () => clearTimeout(timer);
-  }); // No dependency array — runs after every render, but the ref guard makes it a no-op after first run
 
   const handlePdbIdChange = (id: string) => {
 
@@ -2722,15 +2599,13 @@ function App() {
 
       {/* Main Content Wrapper with Accessibility Filter */}
       <div 
-        className={`w-full h-full flex flex-col relative ui-scale-${uiScale} ${reducedMotion ? 'reduced-motion' : ''}`}
+        className="w-full h-full flex flex-col relative"
         style={{
           filter: visualAccessibility === 'achromatopsia' 
             ? 'grayscale(100%)' 
-            : visualAccessibility === 'high-contrast'
-              ? 'contrast(1.5) saturate(1.2)'
-              : visualAccessibility !== 'none' 
-                ? `url(#${visualAccessibility})` 
-                : 'none'
+            : visualAccessibility !== 'none' 
+              ? `url(#${visualAccessibility})` 
+              : 'none'
         }}
       >
       {/* Interaction Blocker for Static Embeds */}
@@ -2953,10 +2828,6 @@ function App() {
             isNotesOpen={isNotesOpen}
             onToggleNotes={() => setIsNotesOpen(!isNotesOpen)}
             onOpenSettings={() => setIsSettingsOpen(true)}
-            onOpenAssignmentBuilder={() => setIsAssignmentBuilderOpen(true)}
-            onOpenStoryboardBuilder={() => setIsStoryboardBuilderOpen(true)}
-            isTeachingMode={isTeachingMode}
-            autoHideHUD={autoHideHUD}
           />
 
           <AIChatSidebar isOpen={isAiChatOpen} onClose={() => setIsAiChatOpen(false)} pdbId={pdbId} pdbMetadata={pdbMetadata} />
@@ -3037,18 +2908,6 @@ function App() {
             setVisualizerEngine={setVisualizerEngine}
             isOpen={isSettingsOpen}
             onClose={() => setIsSettingsOpen(false)}
-            isTeachingMode={isTeachingMode}
-            setIsTeachingMode={setIsTeachingMode}
-            uiScale={uiScale}
-            setUiScale={setUiScale}
-            autoHideHUD={autoHideHUD}
-            setAutoHideHUD={setAutoHideHUD}
-            reducedMotion={reducedMotion}
-            setReducedMotion={setReducedMotion}
-            visualAccessibility={visualAccessibility}
-            setVisualAccessibility={setVisualAccessibility}
-            onUpdateDefaultStyle={(style) => setRepresentation(style as any)}
-            onUpdateDefaultColor={(color) => setColoring(color as any)}
           />
         </>
       )}
@@ -3144,6 +3003,14 @@ function App() {
                     setCustomTransparency={setCustomTransparency}
                     smoothSheetEnabled={smoothSheetEnabled}
                     setSmoothSheetEnabled={setSmoothSheetEnabled}
+                    nucleicBackboneStyle={nucleicBackboneStyle}
+                    setNucleicBackboneStyle={setNucleicBackboneStyle}
+                    nucleicBackboneColor={nucleicBackboneColor}
+                    setNucleicBackboneColor={setNucleicBackboneColor}
+                    nucleicBaseStyle={nucleicBaseStyle}
+                    setNucleicBaseStyle={setNucleicBaseStyle}
+                    nucleicBaseColor={nucleicBaseColor}
+                    setNucleicBaseColor={setNucleicBaseColor}
                     onResetCamera={() => handleToolAction('reset')}
                     chains={chains}
                     ligands={ligands}
@@ -3151,8 +3018,6 @@ function App() {
                     setIsMeasurementMode={setIsMeasurementMode}
                     isPublicationMode={isPublicationMode}
                     onTogglePublicationMode={togglePublicationMode}
-                    isTeachingMode={isTeachingMode}
-                    setIsTeachingMode={setIsTeachingMode}
                     onClearMeasurements={() => {
                       lastLocalMeasurementUpdate.current = Date.now();
                       setMeasurements([]);
@@ -3434,102 +3299,97 @@ function App() {
                             </div>
                           </div>
                         ) : (
-                          <>
-                            <ViewerComponent
-                              ref={ref}
-                              pdbId={ctrl.pdbId}
-                              dataSource={ctrl.dataSource}
-                              file={ctrl.file || undefined}
-                              fileType={ctrl.fileType}
-                              isLightMode={isLightMode}
-                              isSpinning={controllers[index].isSpinning}
-                              isRocking={controllers[index].isRocking}
-                              // Interactive if: Not connected OR Is Host OR Not Synced OR Is Active Controller
-                              isInteractive={!peerSession.isConnected || peerSession.isHost || !isCameraSynced || (!!controllerId && controllerId === peerSession.peerId)}
-                              representation={ctrl.representation}
-                              showSurface={ctrl.showSurface}
-                              showLigands={ctrl.showLigands}
-                              showIons={ctrl.showIons}
-                              coloring={ctrl.coloring}
-                              customColors={ctrl.customColors}
-                              chainStyles={ctrl.chainStyles}
-                              customStyles={ctrl.customStyles}
-                              customTransparency={ctrl.customTransparency}
-                              smoothSheetEnabled={ctrl.smoothSheetEnabled}
-                              palette={colorPalette}
-                              backgroundColor={
-                                (isStudioMode && recorder.session?.metadata?.settings?.backgroundColor !== undefined)
-                                  ? recorder.session.metadata.settings.backgroundColor
-                                  : (ctrl.customBackgroundColor || (isLightMode ? 'white' : 'black'))
-                              }
-                              measurementTextColor={measurementTextColorMode}
-                              overlays={ctrl.overlays}
+                          <ViewerComponent
+                            ref={ref}
+                            pdbId={ctrl.pdbId}
+                            dataSource={ctrl.dataSource}
+                            file={ctrl.file || undefined}
+                            fileType={ctrl.fileType}
+                            isLightMode={isLightMode}
+                            isSpinning={controllers[index].isSpinning}
+                            isRocking={controllers[index].isRocking}
+                            // Interactive if: Not connected OR Is Host OR Not Synced OR Is Active Controller
+                            isInteractive={!peerSession.isConnected || peerSession.isHost || !isCameraSynced || (!!controllerId && controllerId === peerSession.peerId)}
+                            representation={ctrl.representation}
+                            showSurface={ctrl.showSurface}
+                            showLigands={ctrl.showLigands}
+                            showIons={ctrl.showIons}
+                            coloring={ctrl.coloring}
+                            customColors={ctrl.customColors}
+                            chainStyles={ctrl.chainStyles}
+                            customStyles={ctrl.customStyles}
+                            customTransparency={ctrl.customTransparency}
+                            smoothSheetEnabled={ctrl.smoothSheetEnabled}
+                            nucleicBackboneStyle={ctrl.nucleicBackboneStyle}
+                            nucleicBackboneColor={ctrl.nucleicBackboneColor}
+                            nucleicBaseStyle={ctrl.nucleicBaseStyle}
+                            nucleicBaseColor={ctrl.nucleicBaseColor}
+                            palette={colorPalette}
+                            backgroundColor={
+                              (isStudioMode && recorder.session?.metadata?.settings?.backgroundColor !== undefined)
+                                ? recorder.session.metadata.settings.backgroundColor
+                                : (ctrl.customBackgroundColor || (isLightMode ? 'white' : 'black'))
+                            }
+                            measurementTextColor={measurementTextColorMode}
+                            overlays={ctrl.overlays}
 
-                              initialOrientation={index === 0 ? embedOrientation : undefined}
+                            initialOrientation={index === 0 ? embedOrientation : undefined}
 
-                              // Layout Sync (from Mol*)
-                              isMultiView={viewMode !== 'single'}
-                              onLayoutChange={setIsMolStarSidebarExpanded}
-                              // Live Session: Broadcast camera changes if active view and connected
-                              onCameraChange={index === 0 && peerSession.isConnected ? (orient: any) => {
-                                // Pass the Chalk: Only broadcast if I am allowed
-                                if (controllerId && controllerId !== peerSession.peerId) return;
-                                peerSession.broadcastCamera(orient);
-                              } : undefined}
-
-
-                              onStructureLoaded={(info: any) => handleLoad(info, ctrl)}
-                              onAtomClick={(info: any) => handleAtomClick(info, index)}
-                              isMeasurementMode={isMeasurementMode}
-                              measurements={ctrl.measurements}
-                              onAddMeasurement={(m: any) => {
-                                // LOCK: Mark local update to prevent overwrite by stale remote state
-                                lastLocalMeasurementUpdate.current = Date.now();
-                                ctrl.setMeasurements([...ctrl.measurements, m]);
-                                ctrl.setIsMeasurementPanelOpen(true);
-                                setActiveViewIndex(index);
-                              }}
-                              onHover={setHoveredResidue}
-                              // Live Session Features
-                              annotations={annotations}
-                              onAddAnnotation={handleAddAnnotation}
-                              remoteHoveredResidue={remoteHoveredResidue}
+                            // Layout Sync (from Mol*)
+                            isMultiView={viewMode !== 'single'}
+                            onLayoutChange={setIsMolStarSidebarExpanded}
+                            // Live Session: Broadcast camera changes if active view and connected
+                            onCameraChange={index === 0 && peerSession.isConnected ? (orient: any) => {
+                              // Pass the Chalk: Only broadcast if I am allowed
+                              if (controllerId && controllerId !== peerSession.peerId) return;
+                              peerSession.broadcastCamera(orient);
+                            } : undefined}
 
 
+                            onStructureLoaded={(info: any) => handleLoad(info, ctrl)}
+                            onAtomClick={(info: any) => handleAtomClick(info, index)}
+                            isMeasurementMode={isMeasurementMode}
+                            measurements={ctrl.measurements}
+                            onAddMeasurement={(m: any) => {
+                              // LOCK: Mark local update to prevent overwrite by stale remote state
+                              lastLocalMeasurementUpdate.current = Date.now();
+                              ctrl.setMeasurements([...ctrl.measurements, m]);
+                              ctrl.setIsMeasurementPanelOpen(true);
+                              setActiveViewIndex(index);
+                            }}
+                            onHover={setHoveredResidue}
+                            // Live Session Features
+                            annotations={annotations}
+                            onAddAnnotation={handleAddAnnotation}
+                            remoteHoveredResidue={remoteHoveredResidue}
 
-                              // Action bindings for this viewport
-                              quality={
-                                (isStudioMode && recorder.session?.metadata?.settings?.exportQuality)
-                                  ? recorder.session.metadata.settings.exportQuality
-                                  : (isPublicationMode ? 'high' : settings.quality)
-                              }
-                              enableAmbientOcclusion={
-                                (isStudioMode && recorder.session?.metadata?.settings?.ssao !== undefined)
-                                  ? recorder.session.metadata.settings.ssao
-                                  : settings.ssao
-                              }
-                              pixelRatio={
-                                (isStudioMode && recorder.session?.metadata?.settings?.resolutionScale !== undefined)
-                                  ? recorder.session.metadata.settings.resolutionScale
-                                  : undefined
-                              }
-                              showCursor={
-                                isStudioMode
-                                  ? (recorder.session?.metadata?.settings?.showCursor ?? true)
-                                  : true
-                              }
-                              resetCamera={ctrl.resetKey}
-                              disableScroll={!isScrollEnabled} // Scroll Protection
 
-                            />
-                            {activeStoryboard && (
-                              <DrawingCanvas
-                                isActive={isDrawing && isActive}
-                                color={drawingColor}
-                                clearTrigger={clearDrawingTrigger}
-                              />
-                            )}
-                          </>
+
+                            // Action bindings for this viewport
+                            quality={
+                              (isStudioMode && recorder.session?.metadata?.settings?.exportQuality)
+                                ? recorder.session.metadata.settings.exportQuality
+                                : (isPublicationMode ? 'high' : settings.quality)
+                            }
+                            enableAmbientOcclusion={
+                              (isStudioMode && recorder.session?.metadata?.settings?.ssao !== undefined)
+                                ? recorder.session.metadata.settings.ssao
+                                : settings.ssao
+                            }
+                            pixelRatio={
+                              (isStudioMode && recorder.session?.metadata?.settings?.resolutionScale !== undefined)
+                                ? recorder.session.metadata.settings.resolutionScale
+                                : undefined
+                            }
+                            showCursor={
+                              isStudioMode
+                                ? (recorder.session?.metadata?.settings?.showCursor ?? true)
+                                : true
+                            }
+                            resetCamera={ctrl.resetKey}
+                            disableScroll={!isScrollEnabled} // Scroll Protection
+
+                          />
                         )}
                       </div>
                     </div>
@@ -3787,77 +3647,6 @@ function App() {
         isLightMode={isLightMode}
       />
 
-      <AssignmentBuilderModal
-        isOpen={isAssignmentBuilderOpen}
-        onClose={() => setIsAssignmentBuilderOpen(false)}
-        isLightMode={isLightMode}
-        highlightedResidue={hoveredResidue}
-        generateBaseUrl={() => {
-          return getShareableURL(viewMode, controllers.map((ctrl, index) => ({
-            pdbId: ctrl.pdbId,
-            representation: ctrl.representation,
-            coloring: ctrl.coloring,
-            isSpinning: ctrl.isSpinning,
-            showLigands: ctrl.showLigands,
-            showSurface: ctrl.showSurface,
-            showIons: ctrl.showIons,
-            customColors: ctrl.customColors,
-            customBackgroundColor: ctrl.customBackgroundColor,
-            dataSource: ctrl.dataSource,
-            orientation: viewerRefs[index].current?.getOrientation()
-          })));
-        }}
-      />
-
-      <StoryboardBuilderModal
-        isOpen={isStoryboardBuilderOpen}
-        onClose={() => setIsStoryboardBuilderOpen(false)}
-        isLightMode={isLightMode}
-        captureScreenshot={async () => {
-          const viewer = viewerRefs[activeViewIndex]?.current;
-          if (!viewer) {
-            // Fallback to DOM canvas query if no viewer ref is loaded
-            const canvas = document.querySelector('canvas') as HTMLCanvasElement | null;
-            return canvas ? canvas.toDataURL('image/png') : null;
-          }
-          try {
-            // Request snapshot from the active viewer component
-            const blob = await viewer.getSnapshotBlob(1.5, false);
-            if (!blob) {
-              // Fallback
-              const canvas = document.querySelector('canvas') as HTMLCanvasElement | null;
-              return canvas ? canvas.toDataURL('image/png') : null;
-            }
-            return new Promise<string | null>((resolve) => {
-              const reader = new FileReader();
-              reader.onloadend = () => {
-                resolve(reader.result as string);
-              };
-              reader.onerror = () => {
-                resolve(null);
-              };
-              reader.readAsDataURL(blob);
-            });
-          } catch (e) {
-            console.error("Screenshot capture failed:", e);
-            // Fallback
-            const canvas = document.querySelector('canvas') as HTMLCanvasElement | null;
-            return canvas ? canvas.toDataURL('image/png') : null;
-          }
-        }}
-        getCurrentViewerState={() => ({
-          cameraOrientation: viewerRefs[activeViewIndex].current?.getOrientation(),
-          representation: activeController.representation,
-          coloring: activeController.coloring,
-          customColors: activeController.customColors,
-          selectedResidue: activeController.highlightedResidue,
-          showSurface: activeController.showSurface,
-          showLigands: activeController.showLigands,
-          pdbId: activeController.pdbId,
-          dataSource: activeController.dataSource
-        })}
-      />
-
 
 
       <LandingOverlay
@@ -3944,30 +3733,6 @@ function App() {
       }
 
       <div className={`absolute inset-0 pointer-events-none transition-opacity duration-300 ${isLightMode ? 'opacity-0' : 'opacity-100 bg-[radial-gradient(circle_at_50%_50%,rgba(50,50,80,0.2),rgba(0,0,0,0))]'}`} />
-
-      {activeController.assignmentPayload && (
-        <AssignmentOverlay
-          assignment={activeController.assignmentPayload}
-          selectedResidue={activeController.highlightedResidue}
-          isLightMode={isLightMode}
-          onResetSelection={() => activeController.setHighlightedResidue(null)}
-        />
-      )}
-
-      {activeStoryboard && (
-        <StoryboardOverlay
-          storyboard={activeStoryboard}
-          currentSlideIndex={currentSlideIndex}
-          isLightMode={isLightMode}
-          onSlideChange={handleSlideChange}
-          onExit={() => setActiveStoryboard(null)}
-          isDrawing={isDrawing}
-          setIsDrawing={setIsDrawing}
-          drawingColor={drawingColor}
-          setDrawingColor={setDrawingColor}
-          onClearDrawing={() => setClearDrawingTrigger(Date.now())}
-        />
-      )}
       </div>
 
       {upgradeModalTarget && (
