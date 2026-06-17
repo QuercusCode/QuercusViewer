@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import type { RepresentationType, ColoringType, ResidueInfo, Measurement, PDBMetadata, ChainInfo, CustomColorRule, CustomStyleRule, CustomTransparencyRule, SuperposedStructure } from '../types';
+import type { RepresentationType, ColoringType, ResidueInfo, Measurement, PDBMetadata, ChainInfo, CustomColorRule, CustomStyleRule, CustomTransparencyRule, SuperposedStructure, NucleicResidueRule } from '../types';
 import type { DataSource } from '../utils/pdbUtils';
 
 // Types for the Controller Return Value
@@ -81,6 +81,8 @@ export interface StructureController {
     setNucleicBackboneOpacity: (v: number) => void;
     nucleicBaseOpacity: number;
     setNucleicBaseOpacity: (v: number) => void;
+    nucleicResidueRules: NucleicResidueRule[];
+    setNucleicResidueRules: (rules: NucleicResidueRule[] | ((prev: NucleicResidueRule[]) => NucleicResidueRule[])) => void;
 
     // Actions
     handleUpload: (file: File, isCif?: boolean, preservePdbId?: boolean) => void;
@@ -112,6 +114,7 @@ export const useStructureController = (initialState: any = {}): StructureControl
     const [nucleicBaseColor, setNucleicBaseColor] = useState<ColoringType | undefined>(undefined);
     const [nucleicBackboneOpacity, setNucleicBackboneOpacity] = useState(100);
     const [nucleicBaseOpacity, setNucleicBaseOpacity] = useState(100);
+    const [nucleicResidueRules, setNucleicResidueRules] = useState<NucleicResidueRule[]>([]);
 
     const [customBackgroundColor, setCustomBackgroundColor] = useState<string | null>(null);
     // Analysis
@@ -242,6 +245,7 @@ export const useStructureController = (initialState: any = {}): StructureControl
         nucleicBaseColor, setNucleicBaseColor,
         nucleicBackboneOpacity, setNucleicBackboneOpacity,
         nucleicBaseOpacity, setNucleicBaseOpacity,
+        nucleicResidueRules, setNucleicResidueRules,
 
         customBackgroundColor, setCustomBackgroundColor,
         chains, setChains,
