@@ -2998,23 +2998,27 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                 const bbStyle = nucleicBackboneStyle || 'tube';
                 const bsStyle = nucleicBaseStyle || 'licorice';
 
-                // Build exclusion selections from per-residue rules so global rendering skips overridden residues
-                const bbExclusions: string[] = [];
-                const bsExclusions: string[] = [];
+                // Build NGL-native exclusion fragments from per-residue rules
+                // Use compact NGL syntax: "7-8:A" instead of "(:A and 7-8)"
+                const nucRuleSele = (rule: NucleicResidueRule): string => {
+                    if (rule.chain === 'All') return rule.residues;
+                    return `(${rule.residues}:${rule.chain})`;
+                };
+                const bbExclFrags: string[] = [];
+                const bsExclFrags: string[] = [];
                 nucleicResidueRules.forEach(rule => {
-                    const cp = rule.chain === 'All' ? '' : `:${rule.chain}`;
-                    const rp = rule.residues ? (cp ? ` and ${rule.residues}` : rule.residues) : '';
-                    const frag = `(${cp}${rp})`;
-                    if (rule.backboneStyle) bbExclusions.push(frag);
-                    if (rule.baseStyle) bsExclusions.push(frag);
+                    if (!rule.residues) return;
+                    const frag = nucRuleSele(rule);
+                    if (rule.backboneStyle) bbExclFrags.push(frag);
+                    if (rule.baseStyle) bsExclFrags.push(frag);
                 });
-                const bbExcl = bbExclusions.length > 0 ? ` and not (${bbExclusions.join(' or ')})` : '';
-                const bsExcl = bsExclusions.length > 0 ? ` and not (${bsExclusions.join(' or ')})` : '';
+                const bbExcl = bbExclFrags.length > 0 ? ` and not (${bbExclFrags.join(' or ')})` : '';
+                const bsExcl = bsExclFrags.length > 0 ? ` and not (${bsExclFrags.join(' or ')})` : '';
 
-                // Backbone rendering
+                // Backbone rendering (global, excluding per-residue overrides)
                 const bbOp = nucleicBackboneOpacity / 100;
                 const bbSele = `nucleic${bbExcl}`;
-                const bbBackboneSele = `nucleic and backbone${bbExcl}`;
+                const bbBackboneSele = `(nucleic and backbone)${bbExcl}`;
                 const bbBase: any = { opacity: bbOp };
                 if (bbStyle === 'tube') {
                     tryApply('tube', bbColor, bbSele, { ...bbBase, radiusSize: 0.4 });
@@ -3040,9 +3044,9 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                     // no backbone rendered
                 }
 
-                // Bases: ring atoms + sugar bridge (C4'→O4'→C1') so there's no gap from the tube
+                // Bases: ring atoms + sugar bridge (global, excluding per-residue overrides)
                 const bsOp = nucleicBaseOpacity / 100;
-                const baseSele = `nucleic and (not backbone or .C4' or .O4' or .C1')${bsExcl}`;
+                const baseSele = `(nucleic and (not backbone or .C4' or .O4' or .C1'))${bsExcl}`;
                 if (bsStyle !== 'none') {
                     const bsParams: any = { opacity: bsOp };
                     if (bsStyle === 'licorice') bsParams.scale = 0.6;
@@ -3052,13 +3056,13 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                     tryApply(bsStyle, bsColor, baseSele, bsParams);
                 }
 
-                // Per-residue nucleic overrides (rendered separately after exclusion from globals above)
+                // Per-residue nucleic overrides
                 nucleicResidueRules.forEach(rule => {
-                    const chainPart = rule.chain === 'All' ? '' : `:${rule.chain}`;
-                    const resPart = rule.residues ? (chainPart ? ` and ${rule.residues}` : rule.residues) : '';
-                    const ruleSele = `nucleic and (${chainPart}${resPart})`;
-                    const ruleBackboneSele = `${ruleSele} and backbone`;
-                    const ruleBaseSele = `${ruleSele} and (not backbone or .C4' or .O4' or .C1')`;
+                    if (!rule.residues) return;
+                    const resSele = nucRuleSele(rule);
+                    const ruleSele = `nucleic and ${resSele}`;
+                    const ruleBackboneSele = `nucleic and backbone and ${resSele}`;
+                    const ruleBaseSele = `(nucleic and (not backbone or .C4' or .O4' or .C1')) and ${resSele}`;
 
                     if (rule.backboneStyle && rule.backboneStyle !== 'none') {
                         const rbbColor = rule.backboneColor ? mapNucCol(rule.backboneColor as any) : bbColor;
