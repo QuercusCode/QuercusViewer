@@ -1712,6 +1712,15 @@ export const Controls: React.FC<ControlsProps> = ({
                                                     {setNucleicResidueRules && (
                                                         <div className="col-span-2 pt-2 border-t border-white/5 space-y-2">
                                                             <label className={`text-[9px] font-bold uppercase tracking-wider block ${subtleText} opacity-70`}>Per-Residue Override</label>
+                                                            {(() => {
+                                                                const nucChains = chains.filter(c => c.type === 'nucleic');
+                                                                const rangeText = nucRuleChain === 'All'
+                                                                    ? (nucChains.length > 0 ? nucChains.map(c => `${c.name}: ${c.min}–${c.max}`).join(', ') : '')
+                                                                    : (() => { const ch = nucChains.find(c => c.name === nucRuleChain); return ch ? `${ch.min}–${ch.max}` : ''; })();
+                                                                return rangeText ? (
+                                                                    <div className={`text-[9px] font-mono ${subtleText} opacity-50`}>Range: {rangeText}</div>
+                                                                ) : null;
+                                                            })()}
                                                             <div className="grid grid-cols-2 gap-1.5">
                                                                 <select value={nucRuleChain} onChange={e => setNucRuleChain(e.target.value)} className={`border rounded-lg px-2 py-1.5 text-[10px] outline-none ${inputBg}`}>
                                                                     <option value="All">All Chains</option>
