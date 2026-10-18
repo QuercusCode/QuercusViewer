@@ -362,6 +362,8 @@ interface ControlsProps {
     onDownloadSequence: () => void;
     showIons?: boolean;
     setShowIons?: (show: boolean) => void;
+    showWaters?: boolean;
+    setShowWaters?: (show: boolean) => void;
     onStartTour?: () => void;
 
     // History
@@ -395,6 +397,8 @@ interface ControlsProps {
     setCustomColors?: (colors: CustomColorRule[] | ((prev: CustomColorRule[]) => CustomColorRule[])) => void;
     chainStyles?: Record<string, RepresentationType>;
     setChainStyle?: (chain: string, style: RepresentationType | null) => void;
+    chainVisibility?: Record<string, boolean>;
+    setChainVisibility?: (chain: string, visible: boolean) => void;
 
     recorderContent?: React.ReactNode;
     // Engine Switcher
@@ -447,6 +451,8 @@ export const Controls: React.FC<ControlsProps> = ({
     setCustomColors,
     chainStyles, // Destructure
     setChainStyle, // Destructure
+    chainVisibility,
+    setChainVisibility,
     customStyles = [],
     setCustomStyles,
     customTransparency = [],
@@ -473,6 +479,8 @@ export const Controls: React.FC<ControlsProps> = ({
     setShowLigands,
     showIons,
     setShowIons,
+    showWaters,
+    setShowWaters,
     setSmoothSheetEnabled,
     onRecordMovie,
     isRecording,
@@ -2422,7 +2430,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                     </div>
 
                                     {/* Toggles */}
-                                    <div className="grid grid-cols-2 gap-2 mb-2">
+                                    <div className="grid grid-cols-3 gap-2 mb-2">
                                         <button
                                             onClick={() => setShowLigands(!showLigands)}
                                             className={`flex items-center justify-center gap-2 px-3 py-1.5 rounded-md border text-[10px] font-medium transition-all
@@ -2445,6 +2453,19 @@ export const Controls: React.FC<ControlsProps> = ({
                                             <span className={`w-1.5 h-1.5 rounded-full ${showIons ? 'bg-purple-500' : 'bg-neutral-400'}`} />
                                             {showIons ? (t.ionsOn as string) : (t.ionsOff as string)}
                                         </button>
+                                        <button
+                                            onClick={() => setShowWaters && setShowWaters(!showWaters)}
+                                            disabled={visualizerEngine !== 'ngl'}
+                                            title={visualizerEngine === 'ngl' ? undefined : "Only available in NGL Viewer"}
+                                            className={`flex items-center justify-center gap-2 px-3 py-1.5 rounded-md border text-[10px] font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed
+                                                ${showWaters
+                                                    ? 'bg-cyan-500/10 border-cyan-500 text-cyan-600 dark:text-cyan-400'
+                                                    : `${isLightMode ? 'bg-white border-neutral-200 text-neutral-600 hover:bg-neutral-50' : 'bg-white/5 border-white/10 text-neutral-400 hover:bg-white/10'}`
+                                                }`}
+                                        >
+                                            <span className={`w-1.5 h-1.5 rounded-full ${showWaters ? 'bg-cyan-500' : 'bg-neutral-400'}`} />
+                                            {showWaters ? (t.watersOn as string) : (t.watersOff as string)}
+                                        </button>
                                     </div>
                                     <div className="flex flex-wrap gap-1">
                                         {ligands.map(lig => (
@@ -2452,6 +2473,43 @@ export const Controls: React.FC<ControlsProps> = ({
                                                 {formatChemicalId(lig)}
                                             </span>
                                         ))}
+                                    </div>
+                                </div>
+                            )
+                        }
+
+                        {/* Chains */}
+                        {
+                            chains.length > 1 && (
+                                <div className={`p-2 rounded-lg border ${cardBg}`}>
+                                    <div className="flex items-center justify-between mb-2">
+                                        <div className="flex items-center gap-2">
+                                            <Eye className="w-3.5 h-3.5 text-emerald-500" />
+                                            <span className={`text-xs font-bold ${isLightMode ? 'text-neutral-900' : 'text-white'}`}>
+                                                {`Chains (${chains.length})`}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {chains.map(c => {
+                                            const isHidden = chainVisibility?.[c.name] === false;
+                                            return (
+                                                <button
+                                                    key={c.name}
+                                                    onClick={() => setChainVisibility && setChainVisibility(c.name, isHidden)}
+                                                    disabled={visualizerEngine !== 'ngl'}
+                                                    title={visualizerEngine === 'ngl' ? (isHidden ? `Show chain ${c.name || ''}` : `Hide chain ${c.name || ''}`) : "Only available in NGL Viewer"}
+                                                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-[10px] font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed
+                                                        ${isHidden
+                                                            ? `${isLightMode ? 'bg-white border-neutral-200 text-neutral-400 hover:bg-neutral-50' : 'bg-white/5 border-white/10 text-neutral-500 hover:bg-white/10'}`
+                                                            : 'bg-emerald-500/10 border-emerald-500 text-emerald-600 dark:text-emerald-400'
+                                                        }`}
+                                                >
+                                                    {isHidden ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                                                    {c.name ? `:${c.name}` : 'Molecule'}
+                                                </button>
+                                            );
+                                        })}
                                     </div>
                                 </div>
                             )

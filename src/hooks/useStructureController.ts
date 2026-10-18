@@ -36,6 +36,11 @@ export interface StructureController {
     setShowLigands: (show: boolean | ((prev: boolean) => boolean)) => void;
     showIons: boolean;
     setShowIons: (show: boolean | ((prev: boolean) => boolean)) => void;
+    showWaters: boolean;
+    setShowWaters: (show: boolean | ((prev: boolean) => boolean)) => void;
+    chainVisibility: Record<string, boolean>;
+    setChainVisibility: (chain: string, visible: boolean) => void;
+    resetChainVisibility: () => void;
 
     customBackgroundColor: string | null;
     setCustomBackgroundColor: (color: string | null) => void;
@@ -106,6 +111,7 @@ export const useStructureController = (initialState: any = {}): StructureControl
     const [showSurface, setShowSurface] = useState(false);
     const [showLigands, setShowLigands] = useState(false);
     const [showIons, setShowIons] = useState(initialState.showIons ?? false);
+    const [showWaters, setShowWaters] = useState(false);
     const [smoothSheetEnabled, setSmoothSheetEnabled] = useState(initialState.smoothSheetEnabled ?? false);
 
     const [nucleicBackboneStyle, setNucleicBackboneStyle] = useState<string>('tube');
@@ -148,6 +154,24 @@ export const useStructureController = (initialState: any = {}): StructureControl
         });
     }, []);
 
+    // Chain Visibility (isolation)
+    const [chainVisibility, setChainVisibilityState] = useState<Record<string, boolean>>({});
+
+    const setChainVisibility = useCallback((chain: string, visible: boolean) => {
+        setChainVisibilityState(prev => {
+            if (visible) {
+                const next = { ...prev };
+                delete next[chain]; // default = visible; no need to store `true`
+                return next;
+            }
+            return { ...prev, [chain]: false };
+        });
+    }, []);
+
+    const resetChainVisibility = useCallback(() => {
+        setChainVisibilityState({});
+    }, []);
+
     // Custom Residue Styles
     const [customStyles, setCustomStyles] = useState<CustomStyleRule[]>([]);
 
@@ -182,6 +206,7 @@ export const useStructureController = (initialState: any = {}): StructureControl
         // Reset analysis data
         setChains([]);
         setLigands([]);
+        resetChainVisibility();
         setMeasurements([]);
         setHighlightedResidue(null);
         // Set Title
@@ -205,7 +230,7 @@ export const useStructureController = (initialState: any = {}): StructureControl
             };
             reader.readAsText(uploadedFile);
         }
-    }, []);
+    }, [resetChainVisibility]);
 
     const addOverlay = useCallback((structure: SuperposedStructure) => {
         setOverlays(prev => [...prev, structure]);
@@ -236,6 +261,11 @@ export const useStructureController = (initialState: any = {}): StructureControl
         showLigands, setShowLigands,
         showIons,
         setShowIons,
+        showWaters,
+        setShowWaters,
+        chainVisibility,
+        setChainVisibility,
+        resetChainVisibility,
         smoothSheetEnabled,
         setSmoothSheetEnabled,
 

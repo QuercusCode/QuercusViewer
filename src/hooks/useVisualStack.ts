@@ -7,6 +7,7 @@ export interface VisualState {
     colorPalette: ColorPalette;
     showLigands: boolean;
     showIons: boolean;
+    showWaters: boolean;
     showSurface: boolean;
     customBackgroundColor: string;
     isSpinning: boolean;
@@ -58,6 +59,7 @@ export function useVisualStack({ state, onChange, resetTrigger }: UseVisualStack
             prev.colorPalette !== state.colorPalette ||
             prev.showLigands !== state.showLigands ||
             prev.showIons !== state.showIons ||
+            prev.showWaters !== state.showWaters ||
             prev.showSurface !== state.showSurface ||
             prev.customBackgroundColor !== state.customBackgroundColor ||
             prev.isSpinning !== state.isSpinning ||
