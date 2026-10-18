@@ -915,7 +915,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                             ? 'opacity-30 cursor-not-allowed'
                                             : `hover:bg-white hover:shadow-sm ${isLightMode ? 'text-neutral-600' : 'hover:bg-neutral-700 text-neutral-300'}`
                                             }`}
-                                        title="Redo (Ctrl+Y)"
+                                        title="Redo (Ctrl+Shift+Z)"
                                     >
                                         <Redo2 className="w-4 h-4" />
                                     </button>

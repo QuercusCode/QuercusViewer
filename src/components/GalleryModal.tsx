@@ -220,10 +220,18 @@ export const GalleryModal: React.FC<GalleryModalProps> = ({
 
                                 {/* Navigation & Fullscreen Overlay */}
                                 <div className="absolute inset-0 flex items-center justify-between p-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                                    <button onClick={handlePrev} className="p-1.5 bg-black/50 text-white rounded-full hover:bg-black/70 pointer-events-auto">
+                                    <button
+                                        onClick={handlePrev}
+                                        disabled={filteredItems.findIndex(i => i.id === selectedId) === 0}
+                                        className="p-1.5 bg-black/50 text-white rounded-full hover:bg-black/70 pointer-events-auto disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
                                         <ChevronLeft className="w-4 h-4" />
                                     </button>
-                                    <button onClick={handleNext} className="p-1.5 bg-black/50 text-white rounded-full hover:bg-black/70 pointer-events-auto">
+                                    <button
+                                        onClick={handleNext}
+                                        disabled={filteredItems.findIndex(i => i.id === selectedId) === filteredItems.length - 1}
+                                        className="p-1.5 bg-black/50 text-white rounded-full hover:bg-black/70 pointer-events-auto disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
                                         <ChevronRight className="w-4 h-4" />
                                     </button>
                                 </div>

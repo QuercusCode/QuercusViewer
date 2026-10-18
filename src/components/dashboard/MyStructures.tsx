@@ -663,7 +663,7 @@ function StructureRow({ item, selected, onSelect, onToggleStar, onDelete, onRena
 
 // ── RCSB Import bar ───────────────────────────────────────────────
 
-function RCSBImport({ userId, onImported }: { userId: string; onImported: (s: Structure) => void }) {
+function RCSBImport({ userId, onImported, onError }: { userId: string; onImported: (s: Structure) => void; onError: (message: string) => void }) {
     const [pdbId, setPdbId] = useState('');
     const [loading, setLoading] = useState(false);
     const { t } = useTranslation();
@@ -673,7 +673,7 @@ function RCSBImport({ userId, onImported }: { userId: string; onImported: (s: St
         try {
             const s = await importFromRCSB(pdbId, userId);
             onImported(s); setPdbId('');
-        } catch (ex: any) { alert(ex.message ?? 'Import failed'); }
+        } catch (ex: any) { onError(ex.message ?? 'Import failed'); }
         finally { setLoading(false); }
     };
 
@@ -697,13 +697,13 @@ type SortKey = 'date' | 'name' | 'size';
 type ViewMode = 'grid' | 'list';
 
 // ── ZIP export progress ────────────────────────────────────────────
-function ExportZipButton({ structures }: { structures: Structure[] }) {
+function ExportZipButton({ structures, onError }: { structures: Structure[]; onError: (message: string) => void }) {
     const [exporting, setExporting] = useState(false);
     const { t } = useTranslation();
     const handle = async () => {
         setExporting(true);
         try { await exportAllAsZip(structures); }
-        catch (e: any) { alert(e.message ?? 'Export failed'); }
+        catch (e: any) { onError(e.message ?? 'Export failed'); }
         finally { setExporting(false); }
     };
     return (
@@ -1446,7 +1446,7 @@ export const MyStructures = () => {
                         )}
 
                         <div className="flex items-center gap-2 ml-auto shrink-0">
-                            {!loading && <ExportZipButton structures={structures} />}
+                            {!loading && <ExportZipButton structures={structures} onError={setError} />}
                             <button onClick={() => fileInputRef.current?.click()} disabled={uploading}
                                 className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 border border-blue-500 disabled:opacity-60 text-white px-3 py-1.5 rounded-lg text-sm transition-colors shadow-sm">
                                 {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
@@ -1464,7 +1464,7 @@ export const MyStructures = () => {
                                 className="w-full pl-9 pr-3 py-1.5 bg-[var(--bg-header)] border border-[var(--border-main)] rounded-lg text-sm text-[var(--text-primary)] placeholder-neutral-500 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all" />
                         </div>
 
-                        {!loading && user && <RCSBImport userId={user.id} onImported={s => setStructures(prev => [s, ...prev])} />}
+                        {!loading && user && <RCSBImport userId={user.id} onImported={s => setStructures(prev => [s, ...prev])} onError={setError} />}
 
                         <button onClick={() => setShowStarred(p => !p)}
                             className={`flex items-center gap-1.5 px-2.5 py-1.5 text-sm border rounded-lg transition-all ${showStarred ? 'text-amber-400 border-amber-400/50 bg-amber-500/5' : 'text-[var(--text-secondary)] bg-[var(--bg-header)] border-[var(--border-main)] hover:text-amber-400 hover:border-neutral-600'}`}>
