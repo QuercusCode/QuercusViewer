@@ -201,9 +201,6 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
 
                 {/* Desktop Actions */}
                 <div className="hidden md:flex items-center gap-2">
-                    <button className="px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 rounded text-xs font-medium text-white transition-colors">
-                        Drafts
-                    </button>
                     <button
                         onClick={exportVideo}
                         className="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 rounded text-xs font-medium text-white transition-colors flex items-center gap-2 shadow-lg shadow-purple-900/20"
@@ -236,12 +233,6 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({ recorder, onExit, ex
                         <>
                             <div className="fixed inset-0 z-40" onClick={() => setIsMobileMenuOpen(false)} />
                             <div className="absolute right-0 top-full mt-2 w-48 bg-neutral-900 border border-white/10 rounded-xl shadow-2xl flex flex-col py-1 overflow-hidden z-50">
-                                <button
-                                    className="px-4 py-3 text-sm text-left hover:bg-white/10 text-white transition-colors w-full border-b border-white/5"
-                                    onClick={() => setIsMobileMenuOpen(false)}
-                                >
-                                    Drafts
-                                </button>
                                 <button
                                     onClick={() => { setIsMobileMenuOpen(false); exportVideo(); }}
                                     className="px-4 py-3 text-sm text-left hover:bg-white/10 text-white transition-colors w-full flex items-center justify-between border-b border-white/5"

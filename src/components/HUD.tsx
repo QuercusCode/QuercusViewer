@@ -220,6 +220,7 @@ export function HUD({ hoveredResidue, pdbMetadata, pdbId, isLightMode, isEmbedMo
                                             ? 'bg-blue-600 text-white shadow-md'
                                             : (isLightMode ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' : 'bg-blue-500/20 text-blue-300 hover:bg-blue-500/30')
                                             }`}
+                                        title={t.chatBtn as string}
                                     >
                                         <MessageSquare className="w-4 h-4 md:w-3 md:h-3" />
                                         {t.chatBtn as string}

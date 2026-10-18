@@ -77,8 +77,8 @@ export const MeasurementTable: React.FC<MeasurementTableProps> = ({
 
     if (measurements.length === 0) {
         return (
-            <div className="p-4 text-center text-xs opacity-60 italic">
-                No measurements yet. Alt+Click two atoms to measure distance.
+            <div className="p-4 text-center text-xs opacity-60 italic whitespace-pre-line">
+                {t.measurementsEmpty as string}
             </div>
         );
     }

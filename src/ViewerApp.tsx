@@ -2184,7 +2184,7 @@ function App() {
       if (validExtensions.includes(fileExt)) {
         handleFileUploadWithSync(droppedFile); // Use wrapper for sync
       } else {
-        alert("Invalid file type. Please drop a valid structure file (.pdb, .cif, .mol, .sdf, etc.)");
+        addToast("Invalid file type. Please drop a valid structure file (.pdb, .cif, .mol, .sdf, etc.)", 'error');
       }
     }
   };
