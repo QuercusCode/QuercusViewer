@@ -738,6 +738,7 @@ function App() {
     coloring, setColoring,
     customColors, setCustomColors,
     chainStyles, setChainStyle, // Destructure
+    chainVisibility, setChainVisibility,
     customStyles, setCustomStyles,
     customTransparency, setCustomTransparency,
     smoothSheetEnabled, setSmoothSheetEnabled,
@@ -753,6 +754,7 @@ function App() {
     showSurface, setShowSurface,
     showLigands, setShowLigands,
     showIons, setShowIons,
+    showWaters, setShowWaters,
     customBackgroundColor, setCustomBackgroundColor,
     chains,
     ligands,
@@ -1389,6 +1391,7 @@ function App() {
     colorPalette,
     showLigands,
     showIons,
+    showWaters,
     showSurface,
     customBackgroundColor: customBackgroundColor || '',
     isSpinning,
@@ -1397,7 +1400,7 @@ function App() {
     isPublicationMode,
     highlightedResidue,
     measurements
-  }), [representation, coloring, colorPalette, showLigands, showIons, showSurface, customBackgroundColor, isSpinning, isCleanMode, showContactMap, isPublicationMode, highlightedResidue, measurements]);
+  }), [representation, coloring, colorPalette, showLigands, showIons, showWaters, showSurface, customBackgroundColor, isSpinning, isCleanMode, showContactMap, isPublicationMode, highlightedResidue, measurements]);
 
   const handleVisualStateChange = useCallback((newState: VisualState) => {
     setRepresentation(newState.representation);
@@ -1405,6 +1408,7 @@ function App() {
     setColorPalette(newState.colorPalette);
     setShowLigands(newState.showLigands);
     setShowIons(newState.showIons);
+    setShowWaters(newState.showWaters);
     setShowSurface(newState.showSurface);
     setCustomBackgroundColor(newState.customBackgroundColor || null);
     setIsSpinning(newState.isSpinning);
@@ -1485,6 +1489,7 @@ function App() {
   const handleLoad = useCallback((info: StructureInfo, ctrl: StructureController) => {
     ctrl.setChains(info.chains);
     ctrl.setLigands(info.ligands);
+    ctrl.resetChainVisibility();
 
     const hasPolymer = info.chains.some(c => c.type === 'protein' || c.type === 'nucleic');
     const totalResidues = info.chains.reduce((acc, c) => acc + c.sequence.length, 0);
@@ -1531,6 +1536,7 @@ function App() {
     activeController.setPdbId(id);
     activeController.setFile(null);
     activeController.setChains([]);
+    activeController.resetChainVisibility();
     activeController.setHighlightedResidue(null);
     activeController.setMeasurements([]);
 
@@ -3020,6 +3026,8 @@ function App() {
                     setCustomColors={setCustomColors}
                     chainStyles={chainStyles}
                     setChainStyle={setChainStyle}
+                    chainVisibility={chainVisibility}
+                    setChainVisibility={setChainVisibility}
                     customStyles={customStyles}
                     setCustomStyles={setCustomStyles}
                     customTransparency={customTransparency}
@@ -3090,6 +3098,8 @@ function App() {
                     setShowLigands={setShowLigands}
                     showIons={showIons}
                     setShowIons={setShowIons}
+                    showWaters={showWaters}
+                    setShowWaters={setShowWaters}
                     onFocusLigands={handleFocusLigands}
                     onRecordMovie={handleRecordMovie}
                     isRecording={isRecording}
@@ -3343,9 +3353,11 @@ function App() {
                             showSurface={ctrl.showSurface}
                             showLigands={ctrl.showLigands}
                             showIons={ctrl.showIons}
+                            showWaters={ctrl.showWaters}
                             coloring={ctrl.coloring}
                             customColors={ctrl.customColors}
                             chainStyles={ctrl.chainStyles}
+                            chainVisibility={ctrl.chainVisibility}
                             customStyles={ctrl.customStyles}
                             customTransparency={ctrl.customTransparency}
                             smoothSheetEnabled={ctrl.smoothSheetEnabled}

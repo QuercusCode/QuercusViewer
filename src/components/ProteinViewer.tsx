@@ -44,10 +44,12 @@ export interface ProteinViewerProps {
     showSurface: boolean;
     showLigands?: boolean;  // Optional, defaults to true
     showIons?: boolean;     // New prop
+    showWaters?: boolean;   // New prop
     coloring: ColoringType;
     palette: ColorPalette;
     customColors?: CustomColorRule[];
     chainStyles?: Record<string, RepresentationType>; // New Prop
+    chainVisibility?: Record<string, boolean>; // New Prop — false = hidden
     customStyles?: CustomStyleRule[]; // New Prop
     setCustomStyles?: (styles: CustomStyleRule[] | ((prev: CustomStyleRule[]) => CustomStyleRule[])) => void;
 
@@ -174,6 +176,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
     coloring = 'chainid',
     customColors = [],
     chainStyles = {},
+    chainVisibility = {},
     customStyles = [],
     customTransparency = [],
     smoothSheetEnabled = false,
@@ -194,6 +197,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
     showSurface = false,
     showLigands = false,
     showIons = false,
+    showWaters = false,
     isSpinning = false,
     isRocking = false,
     isMeasurementMode = false,
@@ -2677,6 +2681,15 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                 ? transparencySelections.map(s => ` and not (${s})`).join('')
                 : "";
 
+            // --- CHAIN VISIBILITY (ISOLATION) ---
+            const hiddenChainSet = new Set(
+                Object.keys(chainVisibility).filter(c => chainVisibility[c] === false)
+            );
+            const hiddenChainNames = Array.from(hiddenChainSet).filter(c => c !== '');
+            const hiddenChainExclusion = hiddenChainNames.length > 0
+                ? ` and not (${hiddenChainNames.map(c => `:${c}`).join(' or ')})`
+                : "";
+
             // --- 3. APPLY CUSTOM OVERRIDES USING SELECTION SCHEME ---
             if (customColors && customColors.length > 0 && NGL.ColormakerRegistry.addSelectionScheme) {
                 const dataList: any[] = [];
@@ -2775,6 +2788,8 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
             // But we need to add them to the component.
             if (customTransparency) {
                 renderSelections.forEach((rule) => {
+                    if (rule.chain && rule.chain !== 'All' && hiddenChainSet.has(rule.chain)) return;
+
                     // Use EXPANDED selection for rendering to guarantee sticks map across representation boundaries
                     let selection = rule.expandedSelection;
 
@@ -2862,6 +2877,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
             if (component.structure && component.structure.chainStore) {
                 component.structure.eachChain((cp: any) => {
                     const chainName = cp.chainname;
+                    if (hiddenChainSet.has(chainName)) return;
 
                     if (!fullyHandledChains.has(chainName)) {
                         // This chain needs default rendering.
@@ -2907,6 +2923,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
             if (chainStyles) {
                 Object.entries(chainStyles).forEach(([chain, style]) => {
                     if (!style) return;
+                    if (hiddenChainSet.has(chain)) return;
 
                     let actualStyle = style as any;
                     if (actualStyle === 'backbone') actualStyle = 'trace';
@@ -2935,6 +2952,8 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
             // --- 6. RENDER CUSTOM RESIDUE STYLES ---
             if (customStyles) {
                 customStyles.forEach(rule => {
+                    if (rule.chain !== 'All' && hiddenChainSet.has(rule.chain)) return;
+
                     const chainPart = rule.chain === 'All' ? '' : (rule.chain ? `:${rule.chain}` : '');
                     const resPart = rule.residues ? (chainPart === '' ? rule.residues : ` and ${rule.residues}`) : '';
                     const exactSelection = `${chainPart}${resPart}` || '*'; // e.g. ":A and 50-60" or "@1-5"
@@ -2979,9 +2998,10 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
 
             const skipLigandOverlay = isBaseRepAtomic && isSmallMoleculeOrSingleChain;
 
-            if (showSurface) tryApply('surface', 'white', "*", { opacity: 0.4, depthWrite: false, side: 'front' });
-            if (showLigands && !skipLigandOverlay) tryApply('ball+stick', 'element', 'ligand and not (water or ion)', { scale: 2.0 });
-            if (showIons) tryApply('ball+stick', 'element', 'ion', { scale: 2.0 });
+            if (showSurface) tryApply('surface', 'white', `*${hiddenChainExclusion}`, { opacity: 0.4, depthWrite: false, side: 'front' });
+            if (showLigands && !skipLigandOverlay) tryApply('ball+stick', 'element', `ligand and not (water or ion)${hiddenChainExclusion}`, { scale: 2.0 });
+            if (showIons) tryApply('ball+stick', 'element', `ion${hiddenChainExclusion}`, { scale: 2.0 });
+            if (showWaters) tryApply('ball+stick', 'element', `water${hiddenChainExclusion}`, { scale: 1.5 });
 
             // For backbone-style reps: nucleic acids are excluded from cartoon above.
             // Backbone and bases are rendered independently so the user can style/color them separately.
@@ -3017,8 +3037,8 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
 
                 // Backbone rendering (global, excluding per-residue overrides)
                 const bbOp = nucleicBackboneOpacity / 100;
-                const bbSele = `nucleic${bbExcl}`;
-                const bbBackboneSele = `(nucleic and backbone)${bbExcl}`;
+                const bbSele = `nucleic${bbExcl}${hiddenChainExclusion}`;
+                const bbBackboneSele = `(nucleic and backbone)${bbExcl}${hiddenChainExclusion}`;
                 const bbBase: any = { opacity: bbOp };
                 if (bbStyle === 'tube') {
                     tryApply('tube', bbColor, bbSele, { ...bbBase, radiusSize: 0.4 });
@@ -3046,7 +3066,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
 
                 // Bases: ring atoms + sugar bridge (global, excluding per-residue overrides)
                 const bsOp = nucleicBaseOpacity / 100;
-                const baseSele = `(nucleic and (not backbone or .C4' or .O4' or .C1'))${bsExcl}`;
+                const baseSele = `(nucleic and (not backbone or .C4' or .O4' or .C1'))${bsExcl}${hiddenChainExclusion}`;
                 if (bsStyle !== 'none') {
                     const bsParams: any = { opacity: bsOp };
                     if (bsStyle === 'licorice') bsParams.scale = 0.6;
@@ -3059,10 +3079,11 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                 // Per-residue nucleic overrides
                 nucleicResidueRules.forEach(rule => {
                     if (!rule.residues) return;
+                    if (rule.chain !== 'All' && hiddenChainSet.has(rule.chain)) return;
                     const resSele = nucRuleSele(rule);
-                    const ruleSele = `nucleic and ${resSele}`;
-                    const ruleBackboneSele = `nucleic and backbone and ${resSele}`;
-                    const ruleBaseSele = `(nucleic and (not backbone or .C4' or .O4' or .C1')) and ${resSele}`;
+                    const ruleSele = `nucleic and ${resSele}${hiddenChainExclusion}`;
+                    const ruleBackboneSele = `nucleic and backbone and ${resSele}${hiddenChainExclusion}`;
+                    const ruleBaseSele = `(nucleic and (not backbone or .C4' or .O4' or .C1')) and ${resSele}${hiddenChainExclusion}`;
 
                     if (rule.backboneStyle && rule.backboneStyle !== 'none') {
                         const rbbColor = rule.backboneColor ? mapNucCol(rule.backboneColor as any) : bbColor;
@@ -3119,7 +3140,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
 
     useEffect(() => {
         updateRepresentation();
-    }, [representation, coloring, showSurface, showLigands, showIons, colorPalette, customColors, chainStyles, customStyles, customTransparency, smoothSheetEnabled, nucleicBackboneStyle, nucleicBackboneColor, nucleicBaseStyle, nucleicBaseColor, nucleicBackboneOpacity, nucleicBaseOpacity, nucleicResidueRules]);
+    }, [representation, coloring, showSurface, showLigands, showIons, showWaters, colorPalette, customColors, chainStyles, chainVisibility, customStyles, customTransparency, smoothSheetEnabled, nucleicBackboneStyle, nucleicBackboneColor, nucleicBaseStyle, nucleicBaseColor, nucleicBackboneOpacity, nucleicBaseOpacity, nucleicResidueRules]);
 
     useEffect(() => {
         if (stageRef.current) {
