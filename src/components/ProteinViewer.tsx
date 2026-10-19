@@ -2826,6 +2826,28 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                 }
             };
 
+            // NGL's "rocket" representation only draws a cylinder through detected
+            // alpha-helical stretches (residueCount >= 4) — beta sheets, loops, and short
+            // helices are left completely unrendered. On a sheet-dominated structure this
+            // reads as disconnected floating capsules with nothing holding them together.
+            // PyMOL's equivalent ("cylindrical helices") keeps the rest of the cartoon
+            // visible underneath; replicate that by always layering a thin tube for the
+            // full selection behind the rocket cylinders, so no part of the backbone goes
+            // missing. Routed through one helper since 'rocket' can be the resolved style
+            // from four different call sites (global, per-chain, custom-residue, transparency).
+            const addRepresentationWithRocketBackbone = (style: string, repParams: any) => {
+                if (style === 'rocket') {
+                    const tubeParams = { ...repParams };
+                    delete tubeParams.quality;
+                    delete tubeParams.localAngle;
+                    delete tubeParams.centerDist;
+                    delete tubeParams.ssBorder;
+                    tubeParams.radiusScale = 0.7;
+                    component.addRepresentation('tube', tubeParams);
+                }
+                return component.addRepresentation(style as any, repParams);
+            };
+
             let globalParams = { ...params };
 
             // Ensure specific parameters for non-backbone styles are applied globally
@@ -2866,7 +2888,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                     else if (actualStyle === 'licorice') ruleParams.scale = 2.0;
                     applyAdvancedStyle(ruleParams, actualStyle);
 
-                    component.addRepresentation(actualStyle as any, ruleParams);
+                    addRepresentationWithRocketBackbone(actualStyle, ruleParams);
                 });
             }
 
@@ -2965,7 +2987,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                             selection += ' and not nucleic';
                         }
 
-                        try { component.addRepresentation(repType as any, { ...globalParams, sele: selection }); } catch (err) { console.error("CRASH IN BASE RENDER:", err, repType, selection, globalParams); }
+                        try { addRepresentationWithRocketBackbone(repType, { ...globalParams, sele: selection }); } catch (err) { console.error("CRASH IN BASE RENDER:", err, repType, selection, globalParams); }
                     }
                 });
             }
@@ -2997,7 +3019,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                     }
                     applyAdvancedStyle(chainParams, actualStyle);
 
-                    component.addRepresentation(actualStyle as any, chainParams);
+                    addRepresentationWithRocketBackbone(actualStyle, chainParams);
                 });
             }
 
@@ -3029,7 +3051,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                     if (actualStyle === 'licorice') ruleParams.scale = 2.0;
                     applyAdvancedStyle(ruleParams, actualStyle);
 
-                    component.addRepresentation(actualStyle, ruleParams);
+                    addRepresentationWithRocketBackbone(actualStyle, ruleParams);
                 });
             }
 
