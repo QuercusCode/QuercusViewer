@@ -47,9 +47,10 @@ import {
     Upload,
     Video,
     Wrench,
-    X
+    X,
+    Zap
 } from 'lucide-react';
-import type { RepresentationType, ColoringType, ChainInfo, Snapshot, Movie, ColorPalette, PDBMetadata, CustomColorRule, CustomStyleRule, CustomTransparencyRule, Measurement, NucleicResidueRule, RadiusSourceType, SurfaceAlgorithm } from '../types';
+import type { RepresentationType, ColoringType, ChainInfo, Snapshot, Movie, ColorPalette, PDBMetadata, CustomColorRule, CustomStyleRule, CustomTransparencyRule, Measurement, NucleicResidueRule, RadiusSourceType, SurfaceAlgorithm, ResidueInteraction } from '../types';
 import type { DataSource } from '../utils/pdbUtils';
 import type { HistoryItem } from '../hooks/useHistory';
 import { formatChemicalId } from '../utils/pdbUtils';
@@ -327,6 +328,11 @@ interface ControlsProps {
     measurements: Measurement[]; // Use imported Measurement type
     onDeleteMeasurement: (id: string) => void;
     onClearMeasurements: () => void;
+    isInteractionMode?: boolean;
+    onToggleInteraction?: () => void;
+    residueInteractions?: ResidueInteraction[];
+    onClearResidueInteractions?: () => void;
+    onDeleteResidueInteraction?: (id: string) => void;
     isSharedSession: boolean; // Added prop
     onOpenSuperposition?: () => void;
     pdbMetadata: PDBMetadata | null;
@@ -495,6 +501,11 @@ export const Controls: React.FC<ControlsProps> = ({
     setIsMeasurementMode,
     onToggleMeasurement,
     onClearMeasurements,
+    isInteractionMode = false,
+    onToggleInteraction,
+    residueInteractions = [],
+    onClearResidueInteractions,
+    onDeleteResidueInteraction,
     isSharedSession, // Destructure prop
     onOpenSuperposition,
     measurements,
@@ -2653,11 +2664,21 @@ export const Controls: React.FC<ControlsProps> = ({
                                     setIsMeasurementMode(!isMeasurementMode);
                                     if (!isMeasurementMode && onToggleMeasurement) onToggleMeasurement();
                                 }}
-                                className={`flex items-center justify-between px-3 py-2 rounded-lg transition-colors ${isMeasurementMode ? 'bg-amber-500/10 text-amber-500' : `${cardBg} hover:opacity-80`} ${isChemical ? 'col-span-2' : ''}`}
+                                className={`flex items-center justify-between px-3 py-2 rounded-lg transition-colors ${isMeasurementMode ? 'bg-amber-500/10 text-amber-500' : `${cardBg} hover:opacity-80`}`}
                             >
                                 <span className="text-xs font-medium">{t.measureLabel as string}</span>
                                 <Ruler className="w-3.5 h-3.5" />
                             </button>
+
+                            <button
+                                onClick={onToggleInteraction}
+                                title={t.interactionModeHint as string}
+                                className={`flex items-center justify-between px-3 py-2 rounded-lg transition-colors ${isInteractionMode ? 'bg-cyan-500/10 text-cyan-500' : `${cardBg} hover:opacity-80`}`}
+                            >
+                                <span className="text-xs font-medium">{t.interactionLabel as string}</span>
+                                <Zap className="w-3.5 h-3.5" />
+                            </button>
+
                             {/* Contact Map - Only for Proteins */}
                             {!isChemical && (
                                 <button
@@ -2690,11 +2711,87 @@ export const Controls: React.FC<ControlsProps> = ({
                                 </button>
                             )}
 
+                            {isInteractionMode && (
+                                <button
+                                    onClick={onClearResidueInteractions}
+                                    className={`col-span-2 flex items-center justify-center gap-2 px-3 py-2 rounded-lg transition-colors ${cardBg} hover:text-red-500`}
+                                >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                    <span className="text-xs font-medium">{t.clearInteractions as string}</span>
+                                </button>
+                            )}
+
                             {/* Chemical Properties - Only for Chemicals */}
                             {isChemical && pdbMetadata?.cid && (
                                 <ChemicalPropertiesPanel cid={pdbMetadata.cid} isLightMode={isLightMode} cardBg={cardBg} subtleText={subtleText} />
                             )}
                         </div>
+
+                        {/* Residue Interaction Results */}
+                        {residueInteractions.length > 0 && (
+                            <div className={`p-2 rounded-lg space-y-2 ${cardBg}`}>
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-1.5">
+                                        <Zap className="w-3.5 h-3.5 text-cyan-500" />
+                                        <span className={`text-[10px] font-bold uppercase tracking-wider ${subtleText}`}>
+                                            {`${t.interactionsLabel as string} (${residueInteractions.length})`}
+                                        </span>
+                                    </div>
+                                    <button
+                                        onClick={onClearResidueInteractions}
+                                        className="text-[10px] text-red-500 hover:underline flex items-center gap-1"
+                                    >
+                                        <Trash2 className="w-3 h-3" /> {t.clearAll as string}
+                                    </button>
+                                </div>
+                                <div className="space-y-1.5 max-h-56 overflow-y-auto scrollbar-thin">
+                                    {residueInteractions.map(ri => (
+                                        <div key={ri.id} className={`group p-2 rounded-md ${isLightMode ? 'bg-white' : 'bg-white/5'}`}>
+                                            <div className="flex items-center justify-between gap-2">
+                                                <span className="text-[11px] font-mono font-medium truncate">
+                                                    {ri.residue1.resName}{ri.residue1.resNo}:{ri.residue1.chain} ↔ {ri.residue2.resName}{ri.residue2.resNo}:{ri.residue2.chain}
+                                                </span>
+                                                <button
+                                                    onClick={() => onDeleteResidueInteraction && onDeleteResidueInteraction(ri.id)}
+                                                    className="p-0.5 text-neutral-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all rounded flex-shrink-0"
+                                                    title={t.mtDeleteMeasurement as string}
+                                                >
+                                                    <Trash2 className="w-3 h-3" />
+                                                </button>
+                                            </div>
+                                            <div className="flex items-center justify-between mt-1">
+                                                {ri.interactionType ? (
+                                                    <span
+                                                        className="text-[10px] font-semibold px-1.5 py-0.5 rounded"
+                                                        style={{ color: ri.interactionColor || undefined, backgroundColor: ri.interactionColor ? `${ri.interactionColor}1A` : undefined }}
+                                                    >
+                                                        {ri.interactionType}
+                                                    </span>
+                                                ) : (
+                                                    <span className={`text-[10px] italic ${subtleText}`}>{t.noClassifiedInteraction as string}</span>
+                                                )}
+                                                <span className={`text-[10px] font-mono ${subtleText}`}>{ri.minDistance.toFixed(2)}Å min</span>
+                                            </div>
+                                            {ri.contacts.length > 0 ? (
+                                                <div className="mt-1.5 space-y-0.5">
+                                                    {ri.contacts.slice(0, 6).map((c, idx) => (
+                                                        <div key={idx} className={`flex items-center justify-between text-[10px] font-mono ${subtleText}`}>
+                                                            <span>{c.atom1Name} – {c.atom2Name}</span>
+                                                            <span>{c.distance.toFixed(2)}Å</span>
+                                                        </div>
+                                                    ))}
+                                                    {ri.contacts.length > 6 && (
+                                                        <div className={`text-[9px] italic ${subtleText}`}>+{ri.contacts.length - 6} {t.moreContacts as string}</div>
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                <div className={`mt-1 text-[10px] italic ${subtleText}`}>{t.noCloseContacts as string}</div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
 
 
                         {/* Sequence Viewer Component - Only for Proteins */}

@@ -177,6 +177,27 @@ export interface Measurement {
     atom2: ResidueInfo;
 }
 
+export interface AtomContact {
+    atom1Name: string;
+    atom1Index: number;
+    atom2Name: string;
+    atom2Index: number;
+    distance: number;
+}
+
+// All close atom-pair contacts between two residues (picked by clicking each in
+// Interaction Mode), plus a heuristic overall classification (salt bridge,
+// hydrophobic contact, etc. — from getInteractionType) for the pair as a whole.
+export interface ResidueInteraction {
+    id: string;
+    residue1: ResidueInfo;
+    residue2: ResidueInfo;
+    minDistance: number;
+    interactionType: string | null;
+    interactionColor: string | null;
+    contacts: AtomContact[]; // sorted by distance ascending, within the contact cutoff
+}
+
 export interface Annotation {
     id: string; // UUID
     residue: ResidueInfo;

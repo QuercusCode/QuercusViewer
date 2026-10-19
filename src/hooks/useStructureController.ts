@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import type { RepresentationType, ColoringType, ResidueInfo, Measurement, PDBMetadata, ChainInfo, CustomColorRule, CustomStyleRule, CustomTransparencyRule, SuperposedStructure, NucleicResidueRule, RadiusSourceType, SurfaceAlgorithm } from '../types';
+import type { RepresentationType, ColoringType, ResidueInfo, Measurement, ResidueInteraction, PDBMetadata, ChainInfo, CustomColorRule, CustomStyleRule, CustomTransparencyRule, SuperposedStructure, NucleicResidueRule, RadiusSourceType, SurfaceAlgorithm } from '../types';
 import type { DataSource } from '../utils/pdbUtils';
 
 // Types for the Controller Return Value
@@ -72,6 +72,8 @@ export interface StructureController {
     setMeasurements: (measurements: Measurement[] | ((prev: Measurement[]) => Measurement[])) => void;
     isMeasurementPanelOpen: boolean;
     setIsMeasurementPanelOpen: (isOpen: boolean | ((prev: boolean) => boolean)) => void;
+    residueInteractions: ResidueInteraction[];
+    setResidueInteractions: (interactions: ResidueInteraction[] | ((prev: ResidueInteraction[]) => ResidueInteraction[])) => void;
 
     // Superposition
     overlays: SuperposedStructure[];
@@ -144,6 +146,7 @@ export const useStructureController = (initialState: any = {}): StructureControl
     const [measurements, setMeasurements] = useState<Measurement[]>([]);
 
     const [isMeasurementPanelOpen, setIsMeasurementPanelOpen] = useState(false);
+    const [residueInteractions, setResidueInteractions] = useState<ResidueInteraction[]>([]);
 
     const [overlays, setOverlays] = useState<SuperposedStructure[]>([]);
 
@@ -226,6 +229,7 @@ export const useStructureController = (initialState: any = {}): StructureControl
         setLigands([]);
         resetChainVisibility();
         setMeasurements([]);
+        setResidueInteractions([]);
         setHighlightedResidue(null);
         // Set Title
         const filenameTitle = uploadedFile.name.replace(/\.[^/.]+$/, "");
@@ -308,6 +312,7 @@ export const useStructureController = (initialState: any = {}): StructureControl
         measurements, setMeasurements,
 
         isMeasurementPanelOpen, setIsMeasurementPanelOpen,
+        residueInteractions, setResidueInteractions,
         overlays, setOverlays, addOverlay, removeOverlay, toggleOverlay,
         handleUpload,
         handleResetView,
