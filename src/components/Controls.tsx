@@ -2335,12 +2335,18 @@ export const Controls: React.FC<ControlsProps> = ({
                                                                                 className="w-full appearance-none bg-transparent py-1.5 pl-2 pr-6 text-xs outline-none"
                                                                             >
                                                                                 {!isChemical && <option value="cartoon">Cartoon</option>}
+                                                                                {!isChemical && <option value="tube">Tube</option>}
+                                                                                {!isChemical && <option value="rope">Rope</option>}
+                                                                                {!isChemical && <option value="rocket">Rocket (Helices)</option>}
+                                                                                {!isChemical && <option value="ribbon">Ribbon</option>}
                                                                                 <option value="ball+stick">Ball & Stick</option>
                                                                                 <option value="licorice">Licorice</option>
                                                                                 {!isChemical && <option value="backbone">Backbone</option>}
                                                                                 <option value="spacefill">Spacefill</option>
                                                                                 <option value="surface">Surface</option>
                                                                                 <option value="line">Line</option>
+                                                                                <option value="point">Dots</option>
+                                                                                <option value="hyperball">Hyperball</option>
                                                                             </select>
                                                                             <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 opacity-50 pointer-events-none" />
                                                                         </div>
@@ -2435,12 +2441,18 @@ export const Controls: React.FC<ControlsProps> = ({
                                                                             className="w-full appearance-none bg-transparent py-1.5 pl-2 pr-6 text-xs outline-none"
                                                                         >
                                                                             {!isChemical && <option value="cartoon">Cartoon</option>}
+                                                                            {!isChemical && <option value="tube">Tube</option>}
+                                                                            {!isChemical && <option value="rope">Rope</option>}
+                                                                            {!isChemical && <option value="rocket">Rocket (Helices)</option>}
+                                                                            {!isChemical && <option value="ribbon">Ribbon</option>}
                                                                             <option value="ball+stick">Ball & Stick</option>
                                                                             <option value="licorice">Licorice</option>
                                                                             {!isChemical && <option value="backbone">Backbone</option>}
                                                                             <option value="spacefill">Spacefill</option>
                                                                             <option value="surface">Surface</option>
                                                                             <option value="line">Line</option>
+                                                                            <option value="point">Dots</option>
+                                                                            <option value="hyperball">Hyperball</option>
                                                                         </select>
                                                                         <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 opacity-50 pointer-events-none" />
                                                                     </div>
