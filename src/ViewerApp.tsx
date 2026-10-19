@@ -495,6 +495,10 @@ function App() {
     if (vpState.showLigands !== undefined && vpState.showLigands !== ctrl.showLigands) ctrl.setShowLigands(vpState.showLigands);
     if (vpState.showSurface !== undefined && vpState.showSurface !== ctrl.showSurface) ctrl.setShowSurface(vpState.showSurface);
     if (vpState.showIons !== undefined && vpState.showIons !== ctrl.showIons) ctrl.setShowIons(vpState.showIons);
+    if (vpState.radiusType !== ctrl.radiusType) ctrl.setRadiusType(vpState.radiusType);
+    if (vpState.radiusScale !== undefined && vpState.radiusScale !== ctrl.radiusScale) ctrl.setRadiusScale(vpState.radiusScale);
+    if (vpState.surfaceWireframe !== undefined && vpState.surfaceWireframe !== ctrl.surfaceWireframe) ctrl.setSurfaceWireframe(vpState.surfaceWireframe);
+    if (vpState.surfaceType !== ctrl.surfaceType) ctrl.setSurfaceType(vpState.surfaceType);
 
     // Custom Styles & Data
     // JSON stringify comparison for deep objects to avoid loops/unnecessary updates
@@ -739,6 +743,10 @@ function App() {
     customColors, setCustomColors,
     chainStyles, setChainStyle, // Destructure
     chainVisibility, setChainVisibility,
+    radiusType, setRadiusType,
+    radiusScale, setRadiusScale,
+    surfaceWireframe, setSurfaceWireframe,
+    surfaceType, setSurfaceType,
     customStyles, setCustomStyles,
     customTransparency, setCustomTransparency,
     smoothSheetEnabled, setSmoothSheetEnabled,
@@ -1249,6 +1257,10 @@ function App() {
       showLigands: ctrl.showLigands,
       showSurface: ctrl.showSurface,
       showIons: ctrl.showIons,
+      radiusType: ctrl.radiusType,
+      radiusScale: ctrl.radiusScale,
+      surfaceWireframe: ctrl.surfaceWireframe,
+      surfaceType: ctrl.surfaceType,
       customColors: ctrl.customColors,
       dataSource: ctrl.dataSource,
       measurements: ctrl.measurements,
@@ -1393,6 +1405,10 @@ function App() {
     showIons,
     showWaters,
     showSurface,
+    radiusType,
+    radiusScale,
+    surfaceWireframe,
+    surfaceType,
     customBackgroundColor: customBackgroundColor || '',
     isSpinning,
     isCleanMode,
@@ -1400,7 +1416,7 @@ function App() {
     isPublicationMode,
     highlightedResidue,
     measurements
-  }), [representation, coloring, colorPalette, showLigands, showIons, showWaters, showSurface, customBackgroundColor, isSpinning, isCleanMode, showContactMap, isPublicationMode, highlightedResidue, measurements]);
+  }), [representation, coloring, colorPalette, showLigands, showIons, showWaters, showSurface, radiusType, radiusScale, surfaceWireframe, surfaceType, customBackgroundColor, isSpinning, isCleanMode, showContactMap, isPublicationMode, highlightedResidue, measurements]);
 
   const handleVisualStateChange = useCallback((newState: VisualState) => {
     setRepresentation(newState.representation);
@@ -1410,6 +1426,10 @@ function App() {
     setShowIons(newState.showIons);
     setShowWaters(newState.showWaters);
     setShowSurface(newState.showSurface);
+    setRadiusType(newState.radiusType);
+    setRadiusScale(newState.radiusScale);
+    setSurfaceWireframe(newState.surfaceWireframe);
+    setSurfaceType(newState.surfaceType);
     setCustomBackgroundColor(newState.customBackgroundColor || null);
     setIsSpinning(newState.isSpinning);
     setIsCleanMode(newState.isCleanMode);
@@ -3027,6 +3047,14 @@ function App() {
                     chainStyles={chainStyles}
                     setChainStyle={setChainStyle}
                     chainVisibility={chainVisibility}
+                    radiusType={radiusType}
+                    setRadiusType={setRadiusType}
+                    radiusScale={radiusScale}
+                    setRadiusScale={setRadiusScale}
+                    surfaceWireframe={surfaceWireframe}
+                    setSurfaceWireframe={setSurfaceWireframe}
+                    surfaceType={surfaceType}
+                    setSurfaceType={setSurfaceType}
                     setChainVisibility={setChainVisibility}
                     customStyles={customStyles}
                     setCustomStyles={setCustomStyles}
@@ -3358,6 +3386,10 @@ function App() {
                             customColors={ctrl.customColors}
                             chainStyles={ctrl.chainStyles}
                             chainVisibility={ctrl.chainVisibility}
+                            radiusType={ctrl.radiusType}
+                            radiusScale={ctrl.radiusScale}
+                            surfaceWireframe={ctrl.surfaceWireframe}
+                            surfaceType={ctrl.surfaceType}
                             customStyles={ctrl.customStyles}
                             customTransparency={ctrl.customTransparency}
                             smoothSheetEnabled={ctrl.smoothSheetEnabled}
@@ -3598,6 +3630,10 @@ function App() {
             showLigands: ctrl.showLigands,
             showSurface: ctrl.showSurface,
             showIons: ctrl.showIons,
+            radiusType: ctrl.radiusType,
+            radiusScale: ctrl.radiusScale,
+            surfaceWireframe: ctrl.surfaceWireframe,
+            surfaceType: ctrl.surfaceType,
             customColors: ctrl.customColors,
             customBackgroundColor: ctrl.customBackgroundColor,
             dataSource: ctrl.dataSource,
@@ -3650,6 +3686,10 @@ function App() {
               showLigands: ctrl.showLigands,
               showSurface: ctrl.showSurface,
               showIons: ctrl.showIons,
+              radiusType: ctrl.radiusType,
+              radiusScale: ctrl.radiusScale,
+              surfaceWireframe: ctrl.surfaceWireframe,
+              surfaceType: ctrl.surfaceType,
               customColors: ctrl.customColors,
               customBackgroundColor: ctrl.customBackgroundColor,
               dataSource: ctrl.dataSource,

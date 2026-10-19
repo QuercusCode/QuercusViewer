@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useImperativeHandle, forwardRef } from 'react
 import clsx from 'clsx';
 import { Skeleton } from './Skeleton';
 import { SequenceAlignmentModal } from './SequenceAlignmentModal';
-import type { RepresentationType, ColoringType, ChainInfo, Measurement, CustomColorRule, CustomStyleRule, CustomTransparencyRule, ColorPalette, ResidueInfo, StructureInfo, MeasurementTextColor, SuperposedStructure, Annotation, NucleicResidueRule } from '../types';
+import type { RepresentationType, ColoringType, ChainInfo, Measurement, CustomColorRule, CustomStyleRule, CustomTransparencyRule, ColorPalette, ResidueInfo, StructureInfo, MeasurementTextColor, SuperposedStructure, Annotation, NucleicResidueRule, RadiusSourceType, SurfaceAlgorithm } from '../types';
 import { type DataSource, getStructureUrl, extractChainsFromComponent } from '../utils/pdbUtils';
 
 
@@ -50,6 +50,10 @@ export interface ProteinViewerProps {
     customColors?: CustomColorRule[];
     chainStyles?: Record<string, RepresentationType>; // New Prop
     chainVisibility?: Record<string, boolean>; // New Prop — false = hidden
+    radiusType?: RadiusSourceType; // New Prop — PyMOL-style "putty" when 'bfactor'
+    radiusScale?: number; // New Prop — only applied when radiusType is set
+    surfaceWireframe?: boolean; // New Prop — mesh-style surface
+    surfaceType?: SurfaceAlgorithm; // New Prop — NGL surface algorithm variant
     customStyles?: CustomStyleRule[]; // New Prop
     setCustomStyles?: (styles: CustomStyleRule[] | ((prev: CustomStyleRule[]) => CustomStyleRule[])) => void;
 
@@ -177,6 +181,10 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
     customColors = [],
     chainStyles = {},
     chainVisibility = {},
+    radiusType,
+    radiusScale = 1.0,
+    surfaceWireframe = false,
+    surfaceType,
     customStyles = [],
     customTransparency = [],
     smoothSheetEnabled = false,
@@ -2777,6 +2785,23 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                 aspectRatio: 1.5 // Adjust cylinder aspect ratio
             };
 
+            // Advanced Style (opt-in only): applied AFTER all existing style-specific
+            // params below, so it never changes default rendering unless the user has
+            // explicitly picked a radius source or surface option. radiusType sources
+            // the per-atom radius from vdW/covalent/B-factor/secondary-structure/fixed
+            // size (NGL's native param — 'bfactor' gives a PyMOL "putty" look);
+            // wireframe/surfaceType only apply to the 'surface' representation.
+            const applyAdvancedStyle = (targetParams: any, style: string) => {
+                if (radiusType) {
+                    targetParams.radiusType = radiusType;
+                    targetParams.scale = radiusScale;
+                }
+                if (style === 'surface') {
+                    if (surfaceWireframe) targetParams.wireframe = true;
+                    if (surfaceType) targetParams.surfaceType = surfaceType;
+                }
+            };
+
             let globalParams = { ...params };
 
             // Ensure specific parameters for non-backbone styles are applied globally
@@ -2812,21 +2837,23 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                         side: 'front'
                     };
 
-                    if (actualStyle === 'cartoon') Object.assign(ruleParams, cartoonParams);
+                    if (actualStyle === 'cartoon' || actualStyle === 'tube' || actualStyle === 'rope') Object.assign(ruleParams, cartoonParams);
                     else if (actualStyle === 'trace') Object.assign(ruleParams, backboneParams);
                     else if (actualStyle === 'licorice') ruleParams.scale = 2.0;
+                    applyAdvancedStyle(ruleParams, actualStyle);
 
                     component.addRepresentation(actualStyle as any, ruleParams);
                 });
             }
 
-            if (repType === 'cartoon') {
+            if (repType === 'cartoon' || repType === 'tube' || repType === 'rope') {
                 delete globalParams.quality;
                 Object.assign(globalParams, cartoonParams);
                 // try { component.structure.eachModel((m: any) => m.calculateSecondaryStructure?.()); } catch (e) { }
             } else if (repType === 'trace') {
                 Object.assign(globalParams, backboneParams);
             }
+            applyAdvancedStyle(globalParams, repType);
 
             // --- 3.5 PREPARE CUSTOM STYLE SELECTIONS ---
             // We need to exclude these custom residues from Global and Chain representations to avoid overlaps.
@@ -2935,7 +2962,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                     };
 
                     // Specific adjustments based on style
-                    if (actualStyle === 'cartoon') Object.assign(chainParams, cartoonParams);
+                    if (actualStyle === 'cartoon' || actualStyle === 'tube' || actualStyle === 'rope') Object.assign(chainParams, cartoonParams);
                     else if (actualStyle === 'trace') Object.assign(chainParams, backboneParams);
 
                     // For atomic/bond representations, ensure reasonable defaults
@@ -2944,6 +2971,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                     } else if (actualStyle === 'ball+stick') {
                         // No overrides - use global defaults
                     }
+                    applyAdvancedStyle(chainParams, actualStyle);
 
                     component.addRepresentation(actualStyle as any, chainParams);
                 });
@@ -2971,10 +2999,11 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                     };
 
                     // Apply specific style adjustments
-                    if (actualStyle === 'cartoon') Object.assign(ruleParams, cartoonParams);
+                    if (actualStyle === 'cartoon' || actualStyle === 'tube' || actualStyle === 'rope') Object.assign(ruleParams, cartoonParams);
                     else if (actualStyle === 'trace') Object.assign(ruleParams, backboneParams);
 
                     if (actualStyle === 'licorice') ruleParams.scale = 2.0;
+                    applyAdvancedStyle(ruleParams, actualStyle);
 
                     component.addRepresentation(actualStyle, ruleParams);
                 });
@@ -2998,7 +3027,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
 
             const skipLigandOverlay = isBaseRepAtomic && isSmallMoleculeOrSingleChain;
 
-            if (showSurface) tryApply('surface', 'white', `*${hiddenChainExclusion}`, { opacity: 0.4, depthWrite: false, side: 'front' });
+            if (showSurface) tryApply('surface', 'white', `*${hiddenChainExclusion}`, { opacity: 0.4, depthWrite: false, side: 'front', ...(surfaceWireframe ? { wireframe: true } : {}), ...(surfaceType ? { surfaceType } : {}) });
             if (showLigands && !skipLigandOverlay) tryApply('ball+stick', 'element', `ligand and not (water or ion)${hiddenChainExclusion}`, { scale: 2.0 });
             if (showIons) tryApply('ball+stick', 'element', `ion${hiddenChainExclusion}`, { scale: 2.0 });
             if (showWaters) tryApply('ball+stick', 'element', `water${hiddenChainExclusion}`, { scale: 1.5 });
@@ -3140,7 +3169,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
 
     useEffect(() => {
         updateRepresentation();
-    }, [representation, coloring, showSurface, showLigands, showIons, showWaters, colorPalette, customColors, chainStyles, chainVisibility, customStyles, customTransparency, smoothSheetEnabled, nucleicBackboneStyle, nucleicBackboneColor, nucleicBaseStyle, nucleicBaseColor, nucleicBackboneOpacity, nucleicBaseOpacity, nucleicResidueRules]);
+    }, [representation, coloring, showSurface, showLigands, showIons, showWaters, colorPalette, customColors, chainStyles, chainVisibility, radiusType, radiusScale, surfaceWireframe, surfaceType, customStyles, customTransparency, smoothSheetEnabled, nucleicBackboneStyle, nucleicBackboneColor, nucleicBaseStyle, nucleicBaseColor, nucleicBackboneOpacity, nucleicBaseOpacity, nucleicResidueRules]);
 
     useEffect(() => {
         if (stageRef.current) {
