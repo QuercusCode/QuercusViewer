@@ -1,12 +1,17 @@
 import React, { useRef, useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import type { User } from '@supabase/supabase-js';
 import { Skeleton } from './Skeleton';
 import { MeasurementTable } from './MeasurementTable';
+import { LanguageSwitcher } from './landing/LanguageSwitcher';
 import {
     Activity,
+    Blend,
     BookOpen,
     Camera,
     ChevronDown,
     Clock,
+    Dna,
     Download,
     Eye,
     EyeOff,
@@ -16,10 +21,14 @@ import {
     ImageIcon,
     Layers,
     Loader2,
+    LogIn,
     Menu,
     Minimize,
     Moon,
     MoveHorizontal,
+    NotebookPen,
+    PaintBucket,
+    Palette,
     Plus,
     Redo2,
     RefreshCw,
@@ -28,6 +37,9 @@ import {
     ScanSearch,
     Search,
     Share2,
+    Shuffle,
+    SlidersHorizontal,
+    Sparkles,
     Star,
     Sun,
     Trash2,
@@ -328,6 +340,9 @@ interface ControlsProps {
 
 
     isLightMode: boolean;
+    user?: User | null;
+    isNotebookOpen?: boolean;
+    setIsNotebookOpen?: (open: boolean) => void;
     highlightedResidue: { chain: string; resNo: number; resName?: string } | null;
     onResidueClick: (chain: string, resNo: number, resName?: string) => void;
 
@@ -493,6 +508,9 @@ export const Controls: React.FC<ControlsProps> = ({
     onDeleteMeasurement,
     pdbMetadata,
     isLightMode,
+    user,
+    isNotebookOpen,
+    setIsNotebookOpen,
     highlightedResidue,
     onResidueClick,
     showSurface,
@@ -750,7 +768,8 @@ export const Controls: React.FC<ControlsProps> = ({
 
     // Accordion State - Use lifted state from props if available
     const openSections = propOpenSections || {
-        'appearance': true,
+        'style-appearance': true,
+        'structure-detail': true,
         'analysis': false,
         'tools': false,
         'motif-search': false
@@ -1356,17 +1375,17 @@ export const Controls: React.FC<ControlsProps> = ({
 
                     {/* ACCORDION 1: APPEARANCE */}
                     <SidebarSection
-                        title={t.sectionAppearance as string}
-                        icon={Eye}
-                        isOpen={openSections['appearance']}
-                        onToggle={() => toggleSection('appearance')}
+                        title={t.sectionStyleAppearance as string}
+                        icon={Palette}
+                        isOpen={openSections['style-appearance']}
+                        onToggle={() => toggleSection('style-appearance')}
                         isLightMode={isLightMode}
                         id="visualization-controls"
                     >
                         <div className="space-y-3">
                             {/* Visual Style */}
                             <div className="space-y-2">
-                                <label className={`text-[10px] font-bold uppercase tracking-wider block ${subtleText}`}>{t.visualizationLabel as string}</label>
+                                <label className={`flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider ${subtleText}`}><Grid3X3 className="w-3 h-3 opacity-70" />{t.visualizationLabel as string}</label>
                                 <div className="space-y-3">
                                     {/* Consolidated Visualization & Layout Grid - 4 Columns */}
                                     <div className="grid grid-cols-4 gap-2">
@@ -1560,7 +1579,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                         {/* Advanced Style (radius source / surface rendering) */}
                                         {(RADIUS_TYPE_COMPATIBLE_STYLES.has(representation) || representation === 'surface') && (
                                         <div className="col-span-2 space-y-2 pt-2 border-t border-white/5">
-                                            <label className={`text-[10px] font-bold uppercase tracking-wider block ${subtleText}`}>{t.advancedStyleLabel as string}</label>
+                                            <label className={`flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider ${subtleText}`}><Sparkles className="w-3 h-3 opacity-70" />{t.advancedStyleLabel as string}</label>
                                             {RADIUS_TYPE_COMPATIBLE_STYLES.has(representation) && (
                                             <div className="grid grid-cols-2 gap-2">
                                                 <div>
@@ -1630,7 +1649,7 @@ export const Controls: React.FC<ControlsProps> = ({
 
                                         {/* Background Controls */}
                                         <div className="col-span-2 space-y-2 pt-2 border-t border-white/5">
-                                            <label className={`text-[10px] font-bold uppercase tracking-wider block ${subtleText}`}>{t.backgroundLabel as string}</label>
+                                            <label className={`flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider ${subtleText}`}><PaintBucket className="w-3 h-3 opacity-70" />{t.backgroundLabel as string}</label>
 
                                             {/* Row 1: Presets - Spread full width */}
                                             <div className="grid grid-cols-6 gap-1.5">
@@ -1712,11 +1731,27 @@ export const Controls: React.FC<ControlsProps> = ({
                                                 )}
                                             </div>
                                         </div>
+                                    </div>
+                                </div>
+                                </div>
+                                </div>
+                            </SidebarSection>
 
+                            <SidebarSection
+                                title={t.sectionStructureDetail as string}
+                                icon={SlidersHorizontal}
+                                isOpen={openSections['structure-detail']}
+                                onToggle={() => toggleSection('structure-detail')}
+                                isLightMode={isLightMode}
+                            >
+                                <div className="space-y-3">
+                                    <div className="space-y-2">
+                                        <div className="space-y-2">
+                                        <div className="grid grid-cols-2 gap-2">
                                         {/* DNA / RNA CONTROLS */}
                                         {!isChemical && chains.some(c => c.type === 'nucleic') && (
                                             <div className="col-span-2 pt-2 border-t border-white/5 space-y-2">
-                                                <label className={`text-[10px] font-bold uppercase tracking-wider block ${subtleText}`}>DNA / RNA</label>
+                                                <label className={`flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider ${subtleText}`}><Dna className="w-3 h-3 opacity-70" />DNA / RNA</label>
                                                 <div className="grid grid-cols-2 gap-2">
                                                     <div>
                                                         <label className={`text-[9px] uppercase tracking-wider mb-1 block opacity-60 ${subtleText}`}>Backbone Style</label>
@@ -1925,8 +1960,8 @@ export const Controls: React.FC<ControlsProps> = ({
                                         {setCustomColors && (
                                             <div className="col-span-2 pt-2 border-t border-white/5 space-y-2">
                                                 <div className="flex items-center justify-between mb-1">
-                                                    <div className={`text-[10px] font-bold uppercase tracking-wider ${subtleText} opacity-80`}>
-                                                        {t.advancedColors as string}
+                                                    <div className={`flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider ${subtleText} opacity-80`}>
+                                                        <Blend className="w-3 h-3 opacity-70 shrink-0" />{t.advancedColors as string}
                                                     </div>
                                                     {/* Mode Toggle */}
                                                     <div className={`flex p-0.5 rounded-lg border ${isLightMode ? 'bg-neutral-100 border-neutral-200' : 'bg-black/20 border-white/5'}`}>
@@ -2115,8 +2150,8 @@ export const Controls: React.FC<ControlsProps> = ({
                                         {true && (
                                             <div className="col-span-2 pt-2 border-t border-white/5 space-y-2">
                                                 <div className="flex items-center justify-between mb-1">
-                                                    <div className={`text-[10px] font-bold uppercase tracking-wider ${subtleText} opacity-80`}>
-                                                        {t.transparencyLabel as string}
+                                                    <div className={`flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider ${subtleText} opacity-80`}>
+                                                        <EyeOff className="w-3 h-3 opacity-70 shrink-0" />{t.transparencyLabel as string}
                                                     </div>
                                                     <div className={`flex p-0.5 rounded-lg border ${isLightMode ? 'bg-neutral-100 border-neutral-200' : 'bg-black/20 border-white/5'}`}>
                                                         <button
@@ -2255,8 +2290,8 @@ export const Controls: React.FC<ControlsProps> = ({
                                         {(setChainStyle && chainStyles && chains.length > 0) || (true) ? (
                                             <div className="col-span-2 pt-2 border-t border-white/5 space-y-2">
                                                 <div className="flex items-center justify-between mb-1">
-                                                    <div className={`text-[10px] font-bold uppercase tracking-wider ${subtleText} opacity-80`}>
-                                                        {t.advancedStyles as string}
+                                                    <div className={`flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider ${subtleText} opacity-80`}>
+                                                        <Shuffle className="w-3 h-3 opacity-70 shrink-0" />{t.advancedStyles as string}
                                                     </div>
                                                     {/* Mode Toggle */}
                                                     <div className={`flex p-0.5 rounded-lg border ${isLightMode ? 'bg-neutral-100 border-neutral-200' : 'bg-black/20 border-white/5'}`}>
@@ -2907,6 +2942,47 @@ export const Controls: React.FC<ControlsProps> = ({
                         </div>
                     </SidebarSection>
                 </div >
+
+                {/* Footer - Account & Resources (Fixed) */}
+                <div className={`flex-none border-t p-3 space-y-2 ${isLightMode ? 'border-neutral-200 bg-white' : 'border-white/10 bg-neutral-900'}`}>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => setIsNotebookOpen?.(!isNotebookOpen)}
+                            className={`flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-xs font-medium transition-all border ${isNotebookOpen ? 'bg-blue-600/90 border-blue-500/50 text-white' : isLightMode ? 'bg-neutral-50 border-neutral-200 text-neutral-700 hover:bg-neutral-100' : 'bg-white/5 border-white/10 text-neutral-300 hover:bg-white/10 hover:text-white'}`}
+                            title={t.notebookLabel as string}
+                        >
+                            <NotebookPen className={`w-4 h-4 ${isNotebookOpen ? 'animate-pulse' : ''}`} />
+                            <span className="hidden sm:inline">{t.notebookLabel as string}</span>
+                        </button>
+                        <LanguageSwitcher compact />
+                    </div>
+
+                    {user ? (
+                        <Link
+                            to="/dashboard"
+                            onClick={() => sessionStorage.setItem('viewer_return_url', window.location.href)}
+                            className={`flex items-center gap-2.5 p-2 rounded-lg border transition-colors ${isLightMode ? 'border-neutral-200 hover:bg-neutral-50' : 'border-white/10 hover:bg-white/5'}`}
+                        >
+                            <img
+                                src={user?.user_metadata?.avatar_url || `https://ui-avatars.com/api/?name=${user?.email || 'User'}&background=random`}
+                                alt="Profile"
+                                className="w-8 h-8 rounded-full shrink-0"
+                            />
+                            <div className="min-w-0 flex-1">
+                                <div className={`text-xs font-bold truncate ${isLightMode ? 'text-neutral-900' : 'text-white'}`}>{user?.user_metadata?.full_name || user?.email}</div>
+                                <div className={`text-[10px] ${subtleText}`}>{t.dashboardLabel as string}</div>
+                            </div>
+                        </Link>
+                    ) : (
+                        <Link
+                            to="/auth"
+                            className={`flex items-center justify-center gap-2 h-10 rounded-lg text-sm font-medium border transition-colors ${isLightMode ? 'bg-neutral-50 border-neutral-200 text-neutral-700 hover:bg-neutral-100' : 'bg-white/5 border-white/10 text-neutral-300 hover:bg-white/10 hover:text-white'}`}
+                        >
+                            <LogIn className="w-4 h-4" />
+                            {t.logInLabel as string}
+                        </Link>
+                    )}
+                </div>
             </div >
 
             {/* <GalleryModal /> Removed: Lifted to App.tsx */}
