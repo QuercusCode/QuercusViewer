@@ -1,4 +1,4 @@
-import type { RepresentationType, ColoringType, CustomColorRule, StoryboardPayload } from '../types';
+import type { RepresentationType, ColoringType, CustomColorRule, StoryboardPayload, RadiusSourceType, SurfaceAlgorithm } from '../types';
 import type { DataSource } from '../utils/pdbUtils';
 
 export interface AppState {
@@ -10,6 +10,10 @@ export interface AppState {
     isSpinning: boolean;
     showLigands: boolean;
     showSurface: boolean;
+    radiusType?: RadiusSourceType;
+    radiusScale?: number;
+    surfaceWireframe?: boolean;
+    surfaceType?: SurfaceAlgorithm;
     measurements?: { atom1: any, atom2: any, distance: number }[];
     customBackgroundColor?: string | null;
     dataSource?: DataSource; // Added for chemical structures
@@ -63,6 +67,10 @@ export const getShareableURL = (viewMode: string, viewports: AppState[]): string
         if (state.isSpinning) params.set(p('spin'), '1');
         if (state.showLigands) params.set(p('lig'), '1');
         if (state.showSurface) params.set(p('surf'), '1');
+        if (state.radiusType) params.set(p('radt'), state.radiusType);
+        if (state.radiusType && state.radiusScale !== undefined) params.set(p('rads'), String(state.radiusScale));
+        if (state.surfaceWireframe) params.set(p('wire'), '1');
+        if (state.surfaceType) params.set(p('surft'), state.surfaceType);
 
         if (state.orientation) {
             try {
@@ -173,6 +181,14 @@ export const parseURLState = (): MultiViewState => {
         if (params.get(p('spin')) === '1') state.isSpinning = true;
         if (params.get(p('lig')) === '1') state.showLigands = true;
         if (params.get(p('surf')) === '1') state.showSurface = true;
+
+        const radt = params.get(p('radt'));
+        if (radt) state.radiusType = radt as RadiusSourceType;
+        const rads = params.get(p('rads'));
+        if (rads) state.radiusScale = parseFloat(rads);
+        if (params.get(p('wire')) === '1') state.surfaceWireframe = true;
+        const surft = params.get(p('surft'));
+        if (surft) state.surfaceType = surft as SurfaceAlgorithm;
 
         const cam = params.get(p('cam'));
         if (cam) {

@@ -121,7 +121,19 @@ export type RepresentationType =
     | 'line'
     | 'backbone'
     | 'licorice'
-    | 'trace';
+    | 'trace'
+    | 'tube'
+    | 'rope'
+    | 'rocket'
+    | 'point'
+    | 'hyperball';
+
+// Radius source for structure representations (NGL's native radiusType param).
+// 'bfactor' gives a PyMOL "putty"-style flexibility visualization.
+export type RadiusSourceType = 'vdw' | 'covalent' | 'bfactor' | 'sstruc' | 'size';
+
+// NGL surface algorithm variants (PyMOL's surface taxonomy: vws/sas/ms/ses/av)
+export type SurfaceAlgorithm = 'vws' | 'sas' | 'ms' | 'ses' | 'av';
 export type ColoringType = 'chainid' | 'residue' | 'secondary' | 'hydrophobicity' | 'structure' | 'bfactor' | 'charge' | 'residueindex' | 'element' | 'custom';
 export type ColorPalette = 'standard' | 'viridis' | 'magma' | 'cividis' | 'plasma';
 

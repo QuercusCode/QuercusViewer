@@ -37,7 +37,7 @@ import {
     Wrench,
     X
 } from 'lucide-react';
-import type { RepresentationType, ColoringType, ChainInfo, Snapshot, Movie, ColorPalette, PDBMetadata, CustomColorRule, CustomStyleRule, CustomTransparencyRule, Measurement, NucleicResidueRule } from '../types';
+import type { RepresentationType, ColoringType, ChainInfo, Snapshot, Movie, ColorPalette, PDBMetadata, CustomColorRule, CustomStyleRule, CustomTransparencyRule, Measurement, NucleicResidueRule, RadiusSourceType, SurfaceAlgorithm } from '../types';
 import type { DataSource } from '../utils/pdbUtils';
 import type { HistoryItem } from '../hooks/useHistory';
 import { formatChemicalId } from '../utils/pdbUtils';
@@ -399,6 +399,14 @@ interface ControlsProps {
     setChainStyle?: (chain: string, style: RepresentationType | null) => void;
     chainVisibility?: Record<string, boolean>;
     setChainVisibility?: (chain: string, visible: boolean) => void;
+    radiusType?: RadiusSourceType;
+    setRadiusType?: (type: RadiusSourceType | undefined) => void;
+    radiusScale?: number;
+    setRadiusScale?: (scale: number) => void;
+    surfaceWireframe?: boolean;
+    setSurfaceWireframe?: (wireframe: boolean) => void;
+    surfaceType?: SurfaceAlgorithm;
+    setSurfaceType?: (type: SurfaceAlgorithm | undefined) => void;
 
     recorderContent?: React.ReactNode;
     // Engine Switcher
@@ -453,6 +461,14 @@ export const Controls: React.FC<ControlsProps> = ({
     setChainStyle, // Destructure
     chainVisibility,
     setChainVisibility,
+    radiusType,
+    setRadiusType,
+    radiusScale,
+    setRadiusScale,
+    surfaceWireframe,
+    setSurfaceWireframe,
+    surfaceType,
+    setSurfaceType,
     customStyles = [],
     setCustomStyles,
     customTransparency = [],
@@ -1491,12 +1507,18 @@ export const Controls: React.FC<ControlsProps> = ({
                                                 className={`w-full border rounded-lg px-2 py-2 text-xs outline-none ${inputBg}`}
                                             >
                                                 {!isChemical && <option value="cartoon">Cartoon</option>}
+                                                {!isChemical && <option value="tube">Tube</option>}
+                                                {!isChemical && <option value="rope">Rope</option>}
+                                                {!isChemical && <option value="rocket">Rocket (Helices)</option>}
+                                                {!isChemical && <option value="ribbon">Ribbon</option>}
                                                 <option value="ball+stick">Ball & Stick</option>
                                                 <option value="licorice">Licorice</option>
                                                 {!isChemical && <option value="backbone">Backbone</option>}
                                                 <option value="spacefill">Spacefill</option>
                                                 <option value="surface">Surface</option>
                                                 <option value="line">Line</option>
+                                                <option value="point">Dots</option>
+                                                <option value="hyperball">Hyperball</option>
                                             </select>
                                         </div>
                                         <div>
@@ -1528,6 +1550,73 @@ export const Controls: React.FC<ControlsProps> = ({
                                                 residueindex: "Rainbow gradient by residue position."
                                             } as Record<string, string>)[coloring]}
                                         </p>
+
+                                        {/* Advanced Style (radius source / surface rendering) */}
+                                        <div className="col-span-2 space-y-2 pt-2 border-t border-white/5">
+                                            <label className={`text-[10px] font-bold uppercase tracking-wider block ${subtleText}`}>{t.advancedStyleLabel as string}</label>
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <div>
+                                                    <label className={`text-[9px] opacity-70 mb-1 block ${subtleText}`}>{t.radiusSourceLabel as string}</label>
+                                                    <select
+                                                        value={radiusType || 'default'}
+                                                        onChange={(e) => setRadiusType && setRadiusType(e.target.value === 'default' ? undefined : e.target.value as RadiusSourceType)}
+                                                        className={`w-full border rounded-lg px-2 py-1.5 text-[10px] outline-none ${inputBg}`}
+                                                    >
+                                                        <option value="default">{t.radiusDefault as string}</option>
+                                                        <option value="vdw">Van der Waals</option>
+                                                        <option value="covalent">Covalent</option>
+                                                        <option value="bfactor">{t.radiusPutty as string}</option>
+                                                        <option value="sstruc">Secondary Structure</option>
+                                                        <option value="size">Fixed Size</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label className={`text-[9px] opacity-70 mb-1 block ${subtleText}`}>{t.radiusScaleLabel as string} ({(radiusScale ?? 1).toFixed(1)})</label>
+                                                    <input
+                                                        type="range"
+                                                        min="0.1"
+                                                        max="3"
+                                                        step="0.1"
+                                                        value={radiusScale ?? 1}
+                                                        onChange={(e) => setRadiusScale && setRadiusScale(parseFloat(e.target.value))}
+                                                        disabled={!radiusType}
+                                                        className="w-full mt-2 disabled:opacity-40"
+                                                    />
+                                                </div>
+                                            </div>
+                                            {representation === 'surface' && (
+                                                <div className="grid grid-cols-2 gap-2 pt-1">
+                                                    <div>
+                                                        <label className={`text-[9px] opacity-70 mb-1 block ${subtleText}`}>{t.surfaceTypeLabel as string}</label>
+                                                        <select
+                                                            value={surfaceType || 'default'}
+                                                            onChange={(e) => setSurfaceType && setSurfaceType(e.target.value === 'default' ? undefined : e.target.value as SurfaceAlgorithm)}
+                                                            className={`w-full border rounded-lg px-2 py-1.5 text-[10px] outline-none ${inputBg}`}
+                                                        >
+                                                            <option value="default">{t.radiusDefault as string}</option>
+                                                            <option value="vws">Van der Waals</option>
+                                                            <option value="sas">Solvent Accessible</option>
+                                                            <option value="ms">Molecular Surface</option>
+                                                            <option value="ses">Solvent Excluded</option>
+                                                            <option value="av">Averaged</option>
+                                                        </select>
+                                                    </div>
+                                                    <div className="flex items-end">
+                                                        <button
+                                                            onClick={() => setSurfaceWireframe && setSurfaceWireframe(!surfaceWireframe)}
+                                                            className={`w-full h-[30px] flex items-center justify-center gap-2 rounded-lg border text-[10px] font-medium transition-all
+                                                                ${surfaceWireframe
+                                                                    ? 'bg-emerald-500/10 border-emerald-500 text-emerald-600 dark:text-emerald-400'
+                                                                    : `${isLightMode ? 'bg-white border-neutral-200 text-neutral-600 hover:bg-neutral-50' : 'bg-white/5 border-white/10 text-neutral-400 hover:bg-white/10'}`
+                                                                }`}
+                                                        >
+                                                            <span className={`w-1.5 h-1.5 rounded-full ${surfaceWireframe ? 'bg-emerald-500' : 'bg-neutral-400'}`} />
+                                                            {t.wireframeLabel as string}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
 
                                         {/* Background Controls */}
                                         <div className="col-span-2 space-y-2 pt-2 border-t border-white/5">

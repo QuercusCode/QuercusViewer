@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import type { RepresentationType, ColoringType, ColorPalette, ResidueInfo, Measurement } from '../types';
+import type { RepresentationType, ColoringType, ColorPalette, ResidueInfo, Measurement, RadiusSourceType, SurfaceAlgorithm } from '../types';
 
 export interface VisualState {
     representation: RepresentationType;
@@ -9,6 +9,10 @@ export interface VisualState {
     showIons: boolean;
     showWaters: boolean;
     showSurface: boolean;
+    radiusType?: RadiusSourceType;
+    radiusScale: number;
+    surfaceWireframe: boolean;
+    surfaceType?: SurfaceAlgorithm;
     customBackgroundColor: string;
     isSpinning: boolean;
     isCleanMode: boolean;
@@ -61,6 +65,10 @@ export function useVisualStack({ state, onChange, resetTrigger }: UseVisualStack
             prev.showIons !== state.showIons ||
             prev.showWaters !== state.showWaters ||
             prev.showSurface !== state.showSurface ||
+            prev.radiusType !== state.radiusType ||
+            prev.radiusScale !== state.radiusScale ||
+            prev.surfaceWireframe !== state.surfaceWireframe ||
+            prev.surfaceType !== state.surfaceType ||
             prev.customBackgroundColor !== state.customBackgroundColor ||
             prev.isSpinning !== state.isSpinning ||
             prev.isCleanMode !== state.isCleanMode ||

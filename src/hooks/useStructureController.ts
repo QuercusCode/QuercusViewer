@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import type { RepresentationType, ColoringType, ResidueInfo, Measurement, PDBMetadata, ChainInfo, CustomColorRule, CustomStyleRule, CustomTransparencyRule, SuperposedStructure, NucleicResidueRule } from '../types';
+import type { RepresentationType, ColoringType, ResidueInfo, Measurement, PDBMetadata, ChainInfo, CustomColorRule, CustomStyleRule, CustomTransparencyRule, SuperposedStructure, NucleicResidueRule, RadiusSourceType, SurfaceAlgorithm } from '../types';
 import type { DataSource } from '../utils/pdbUtils';
 
 // Types for the Controller Return Value
@@ -41,6 +41,16 @@ export interface StructureController {
     chainVisibility: Record<string, boolean>;
     setChainVisibility: (chain: string, visible: boolean) => void;
     resetChainVisibility: () => void;
+
+    // Advanced Style (PyMOL-style radius source / surface rendering)
+    radiusType?: RadiusSourceType;
+    setRadiusType: (type: RadiusSourceType | undefined) => void;
+    radiusScale: number;
+    setRadiusScale: (scale: number) => void;
+    surfaceWireframe: boolean;
+    setSurfaceWireframe: (wireframe: boolean) => void;
+    surfaceType?: SurfaceAlgorithm;
+    setSurfaceType: (type: SurfaceAlgorithm | undefined) => void;
 
     customBackgroundColor: string | null;
     setCustomBackgroundColor: (color: string | null) => void;
@@ -172,6 +182,14 @@ export const useStructureController = (initialState: any = {}): StructureControl
         setChainVisibilityState({});
     }, []);
 
+    // Advanced Style (PyMOL-style radius source / surface rendering).
+    // radiusType/surfaceType default to undefined so nothing is passed to NGL
+    // unless the user explicitly opts in — current visuals stay unchanged.
+    const [radiusType, setRadiusType] = useState<RadiusSourceType | undefined>(initialState.radiusType);
+    const [radiusScale, setRadiusScale] = useState<number>(initialState.radiusScale ?? 1.0);
+    const [surfaceWireframe, setSurfaceWireframe] = useState<boolean>(initialState.surfaceWireframe ?? false);
+    const [surfaceType, setSurfaceType] = useState<SurfaceAlgorithm | undefined>(initialState.surfaceType);
+
     // Custom Residue Styles
     const [customStyles, setCustomStyles] = useState<CustomStyleRule[]>([]);
 
@@ -266,6 +284,10 @@ export const useStructureController = (initialState: any = {}): StructureControl
         chainVisibility,
         setChainVisibility,
         resetChainVisibility,
+        radiusType, setRadiusType,
+        radiusScale, setRadiusScale,
+        surfaceWireframe, setSurfaceWireframe,
+        surfaceType, setSurfaceType,
         smoothSheetEnabled,
         setSmoothSheetEnabled,
 
