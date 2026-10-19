@@ -40,7 +40,8 @@ import type {
   ColorPalette,
   ResidueInfo,
   StructureInfo,
-  ChatMessage
+  ChatMessage,
+  ResidueInteraction
 } from './types';
 import { LabNotebook } from './components/dashboard/LabNotebook';
 import {
@@ -769,6 +770,7 @@ function App() {
     highlightedResidue, setHighlightedResidue,
     measurements, setMeasurements,
     isMeasurementPanelOpen, setIsMeasurementPanelOpen,
+    residueInteractions, setResidueInteractions,
     handleUpload,
     handleResetView,
 
@@ -780,6 +782,7 @@ function App() {
   // Removed hasRestoredState as it is no longer used
   // const [hasRestoredState, setHasRestoredState] = useState(!!initialUrlState.orientation);
   const [isMeasurementMode, setIsMeasurementMode] = useState(false);
+  const [isInteractionMode, setIsInteractionMode] = useState(false);
 
   useEffect(() => {
     // Check for onboarding tour
@@ -1486,8 +1489,8 @@ function App() {
       ctrl.setHighlightedResidue(null);
       ref.current?.clearHighlight?.();
     } else {
-      if (isMeasurementMode || (highlightedResidue?.chain === info.chain && highlightedResidue?.resNo === info.resNo)) {
-        // Ignore if measurement mode or same residue
+      if (isMeasurementMode || isInteractionMode || (highlightedResidue?.chain === info.chain && highlightedResidue?.resNo === info.resNo)) {
+        // Ignore if measurement/interaction mode or same residue
       } else {
         console.log("App: Atom Clicked", info);
         ctrl.setHighlightedResidue({ chain: info.chain, resNo: info.resNo, resName: info.resName });
@@ -1559,6 +1562,7 @@ function App() {
     activeController.resetChainVisibility();
     activeController.setHighlightedResidue(null);
     activeController.setMeasurements([]);
+    activeController.setResidueInteractions([]);
 
     if (activeController.dataSource === 'alphafold') {
       // Build a human-readable title: handle isoforms (P00533-2) and fragments (P00533::F2)
@@ -2574,7 +2578,21 @@ function App() {
       icon: Ruler,
       shortcut: 'M',
       category: 'Tools',
-      perform: () => setIsMeasurementMode(prev => !prev)
+      perform: () => {
+        setIsMeasurementMode(prev => !prev);
+        if (!isMeasurementMode) setIsInteractionMode(false);
+      }
+    },
+    {
+      id: 'toggle-interaction',
+      label: isInteractionMode ? 'Exit Interaction Mode' : 'Enter Interaction Mode',
+      icon: Zap,
+      shortcut: 'I',
+      category: 'Tools',
+      perform: () => {
+        setIsInteractionMode(prev => !prev);
+        if (!isInteractionMode) setIsMeasurementMode(false);
+      }
     },
     {
       id: 'toggle-contact-map',
@@ -2598,7 +2616,7 @@ function App() {
         }
       }
     },
-  ], [isPublicationMode, isSpinning, isLightMode, isMeasurementMode, showContactMap, handleSaveSession, handleSnapshot, handleResetView]);
+  ], [isPublicationMode, isSpinning, isLightMode, isMeasurementMode, isInteractionMode, showContactMap, handleSaveSession, handleSnapshot, handleResetView]);
 
   return (
     <main
@@ -3123,7 +3141,22 @@ function App() {
                     onShare={() => handleToolAction('share')}
                     onToggleShare={() => handleToolAction('share')}
                     onToggleLibrary={() => setIsLibraryOpen(!isLibraryOpen)}
-                    onToggleMeasurement={() => setIsMeasurementMode(!isMeasurementMode)}
+                    onToggleMeasurement={() => {
+                      setIsMeasurementMode(!isMeasurementMode);
+                      if (!isMeasurementMode) setIsInteractionMode(false);
+                    }}
+                    isInteractionMode={isInteractionMode}
+                    onToggleInteraction={() => {
+                      setIsInteractionMode(!isInteractionMode);
+                      if (!isInteractionMode) setIsMeasurementMode(false);
+                    }}
+                    residueInteractions={residueInteractions}
+                    onClearResidueInteractions={() => {
+                      setResidueInteractions([]);
+                    }}
+                    onDeleteResidueInteraction={(id: string) => {
+                      setResidueInteractions(prev => prev.filter(ri => ri.id !== id));
+                    }}
                     onOpenSuperposition={() => setIsSuperpositionModalOpen(true)} // Added prop
                     colorPalette={colorPalette}
                     setColorPalette={setColorPalette}
@@ -3401,6 +3434,12 @@ function App() {
                               lastLocalMeasurementUpdate.current = Date.now();
                               ctrl.setMeasurements([...ctrl.measurements, m]);
                               ctrl.setIsMeasurementPanelOpen(true);
+                              setActiveViewIndex(index);
+                            }}
+                            isInteractionMode={isInteractionMode}
+                            residueInteractions={ctrl.residueInteractions}
+                            onAddResidueInteraction={(ri: ResidueInteraction) => {
+                              ctrl.setResidueInteractions([...ctrl.residueInteractions, ri]);
                               setActiveViewIndex(index);
                             }}
                             onHover={setHoveredResidue}

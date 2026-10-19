@@ -2,7 +2,8 @@ import React, { useEffect, useRef, useImperativeHandle, forwardRef } from 'react
 import clsx from 'clsx';
 import { Skeleton } from './Skeleton';
 import { SequenceAlignmentModal } from './SequenceAlignmentModal';
-import type { RepresentationType, ColoringType, ChainInfo, Measurement, CustomColorRule, CustomStyleRule, CustomTransparencyRule, ColorPalette, ResidueInfo, StructureInfo, MeasurementTextColor, SuperposedStructure, Annotation, NucleicResidueRule, RadiusSourceType, SurfaceAlgorithm } from '../types';
+import type { RepresentationType, ColoringType, ChainInfo, Measurement, ResidueInteraction, AtomContact, CustomColorRule, CustomStyleRule, CustomTransparencyRule, ColorPalette, ResidueInfo, StructureInfo, MeasurementTextColor, SuperposedStructure, Annotation, NucleicResidueRule, RadiusSourceType, SurfaceAlgorithm } from '../types';
+import { getInteractionType } from '../utils/interactionUtils';
 import { type DataSource, getStructureUrl, extractChainsFromComponent } from '../utils/pdbUtils';
 
 
@@ -89,6 +90,11 @@ export interface ProteinViewerProps {
     isMeasurementMode?: boolean;
     measurements?: Measurement[];
     onAddMeasurement?: (m: Measurement) => void;
+
+    // Residue Interaction Analysis
+    isInteractionMode?: boolean;
+    residueInteractions?: ResidueInteraction[];
+    onAddResidueInteraction?: (ri: ResidueInteraction) => void;
 
 
     // Actions
@@ -211,6 +217,9 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
     isMeasurementMode = false,
     measurements,
     onAddMeasurement,
+    isInteractionMode = false,
+    residueInteractions,
+    onAddResidueInteraction,
 
     onHover,
     isLightMode,
@@ -261,6 +270,8 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
     const regionHighlightRepRef = useRef<any>(null); // V6: Track region highlight
     const overlayComponentsRef = useRef<Map<string, any>>(new Map()); // Track overlay components
     const selectedAtomsRef = useRef<any[]>([]);
+    const selectedResiduesRef = useRef<ResidueInfo[]>([]); // Interaction Mode: residues picked so far (0-1 pending)
+    const interactionRepsRef = useRef<any[]>([]); // Track NGL Representations for interaction-contact lines, for cleanup
 
     // Helper to find atom
     const findAtom = (chain: string, resNo: number, atomName: string) => {
@@ -2424,6 +2435,38 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
 
     }, [measurements, isLightMode, backgroundColor, measurementTextColor]);
 
+    // Draw a dashed "distance" line for every atom-pair contact of every stored
+    // residue interaction (Interaction Mode results). One representation per
+    // interaction, covering all of its contact pairs at once via NGL's atomPair
+    // array — far cheaper than one shape per pair, and keeps cleanup simple.
+    useEffect(() => {
+        const component = componentRef.current;
+        if (!component) return;
+
+        interactionRepsRef.current.forEach((rep) => {
+            try { component.removeRepresentation(rep); } catch {
+                // Representation may already be gone (e.g. component was disposed)
+            }
+        });
+        interactionRepsRef.current = [];
+
+        residueInteractions?.forEach((ri: ResidueInteraction) => {
+            if (!ri.contacts.length) return; // Nothing within the contact cutoff to draw
+            try {
+                const rep = component.addRepresentation("distance", {
+                    labelVisible: false,
+                    color: ri.interactionColor || '#d946ef',
+                    atomPair: ri.contacts.map(c => [c.atom1Index, c.atom2Index]),
+                    opacity: 0.9,
+                    linewidth: 2.5
+                });
+                interactionRepsRef.current.push(rep);
+            } catch (e) {
+                console.warn("Failed to draw residue interaction contacts", e);
+            }
+        });
+    }, [residueInteractions]);
+
 
     useEffect(() => {
         if (!stageRef.current) return;
@@ -2433,11 +2476,91 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
             if (!pickingProxy || !pickingProxy.atom) {
                 if (onAtomClick) onAtomClick(null);
                 selectedAtomsRef.current = []; // Reset selection on background click
+                selectedResiduesRef.current = [];
                 // Clear temp selection shapes?
                 stage.getComponentsByName("temp-selection").list.forEach((c: any) => stage.removeComponent(c));
+                stage.getComponentsByName("temp-interaction-selection").list.forEach((c: any) => stage.removeComponent(c));
                 return;
             }
             const atom = pickingProxy.atom;
+
+            // INTERACTION MODE LOGIC — pick two residues, report every atom pair
+            // between them within a contact cutoff (not just the clicked atoms).
+            if (isInteractionMode) {
+                const clickedResidue: ResidueInfo = {
+                    chain: atom.chainname,
+                    resNo: atom.resno,
+                    resName: atom.resname
+                };
+
+                const already = selectedResiduesRef.current[0];
+                if (already && already.chain === clickedResidue.chain && already.resNo === clickedResidue.resNo) {
+                    // Clicked the same residue again — deselect instead of a pointless self-pair.
+                    selectedResiduesRef.current = [];
+                    stage.getComponentsByName("temp-interaction-selection").list.forEach((c: any) => stage.removeComponent(c));
+                    return;
+                }
+
+                selectedResiduesRef.current.push(clickedResidue);
+
+                // Highlight choice (cyan, distinct from Measurement's gold)
+                const shape = new window.NGL.Shape("temp-interaction-selection");
+                shape.addSphere([atom.x, atom.y, atom.z], [0.1, 0.85, 0.85], 0.35);
+                const comp = stage.addComponentFromObject(shape);
+                comp.addRepresentation("buffer", { depthTest: false });
+
+                if (selectedResiduesRef.current.length === 2 && componentRef.current?.structure) {
+                    const [resA, resB] = selectedResiduesRef.current;
+                    const structure = componentRef.current.structure;
+
+                    const collectAtoms = (res: ResidueInfo) => {
+                        const atoms: { index: number, name: string, x: number, y: number, z: number }[] = [];
+                        const sel = new window.NGL.Selection(`${res.resNo}:${res.chain}`);
+                        structure.eachAtom((a: any) => {
+                            atoms.push({ index: a.index, name: a.atomname, x: a.x, y: a.y, z: a.z });
+                        }, sel);
+                        return atoms;
+                    };
+
+                    const atomsA = collectAtoms(resA);
+                    const atomsB = collectAtoms(resB);
+
+                    const CONTACT_CUTOFF = 4.0; // Å — covers H-bonds, salt bridges, hydrophobic contacts
+                    let minDist = Infinity;
+                    const contacts: AtomContact[] = [];
+                    for (const a1 of atomsA) {
+                        for (const a2 of atomsB) {
+                            const dx = a1.x - a2.x, dy = a1.y - a2.y, dz = a1.z - a2.z;
+                            const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+                            if (dist < minDist) minDist = dist;
+                            if (dist <= CONTACT_CUTOFF) {
+                                contacts.push({ atom1Name: a1.name, atom1Index: a1.index, atom2Name: a2.name, atom2Index: a2.index, distance: dist });
+                            }
+                        }
+                    }
+                    contacts.sort((a, b) => a.distance - b.distance);
+
+                    const classification = atomsA.length && atomsB.length
+                        ? getInteractionType(`${resA.resName} ${resA.resNo}`, `${resB.resName} ${resB.resNo}`, minDist)
+                        : null;
+
+                    const newInteraction: ResidueInteraction = {
+                        id: crypto.randomUUID(),
+                        residue1: resA,
+                        residue2: resB,
+                        minDistance: minDist,
+                        interactionType: classification?.type ?? null,
+                        interactionColor: classification?.hex ?? null,
+                        contacts
+                    };
+
+                    if (onAddResidueInteraction) onAddResidueInteraction(newInteraction);
+
+                    selectedResiduesRef.current = [];
+                    stage.getComponentsByName("temp-interaction-selection").list.forEach((c: any) => stage.removeComponent(c));
+                }
+                return;
+            }
 
             // MEASUREMENT MODE LOGIC
             // MEASUREMENT MODE LOGIC
@@ -2534,7 +2657,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
             stage.signals.clicked.remove(handleClick);
 
         };
-    }, [onAtomClick, isMeasurementMode]);
+    }, [onAtomClick, isMeasurementMode, isInteractionMode, onAddResidueInteraction]);
 
 
     const updateRepresentation = (specificComponent?: any) => {
