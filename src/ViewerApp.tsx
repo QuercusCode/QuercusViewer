@@ -73,11 +73,9 @@ import { useSessionRecorder } from './hooks/useSessionRecorder';
 import { RecorderControls } from './components/RecorderControls';
 import { StudioLayout } from './components/StudioLayout';
 import { useAuth } from './lib/AuthContext';
-import { Link } from 'react-router-dom';
 import { uploadStructure } from './lib/structuresService';
 import { addRecentStructure } from './lib/recentStructures';
 import { useTranslation } from './lib/i18n';
-import { LanguageSwitcher } from './components/landing/LanguageSwitcher';
 import { EmbedToolbar } from './components/EmbedToolbar';
 
 const deepEqual = (a: any, b: any): boolean => {
@@ -1200,7 +1198,8 @@ function App() {
   const params = new URLSearchParams(window.location.search);
 
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
-    'appearance': true,
+    'style-appearance': true,
+    'structure-detail': true,
     'analysis': false,
     'tools': false,
     'motif-search': false
@@ -1227,14 +1226,15 @@ function App() {
 
     // Close all and open only the target section
     const newSections = {
-      'appearance': false,
+      'style-appearance': false,
+      'structure-detail': false,
       'analysis': false,
       'tools': false,
       'motif-search': false
     };
 
     if (elementId === '#visualization-controls' || elementId === '#viewport-controls') {
-      newSections['appearance'] = true;
+      newSections['style-appearance'] = true;
     } else if (elementId === '#analysis-tools') {
       newSections['analysis'] = true;
     } else if (elementId === '#export-tools' || elementId === '#media-gallery-btn') {
@@ -2968,40 +2968,7 @@ function App() {
             <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-black to-gray-950 -z-10" />
           )}
 
-          {/* Top Right Navigation (Dashboard / Auth / Notebook) */}
-          {!isEmbedMode && !isStudioMode && (
-            <div className={`absolute top-4 z-50 flex items-center gap-3 transition-all duration-300 ease-in-out ${
-              visualizerEngine === 'molstar'
-                ? (isAiChatOpen ? 'right-[324px] md:right-[392px]' : 'right-4 md:right-8')
-                : (chains.length > 0
-                    ? (isAiChatOpen ? 'right-[512px] md:right-[628px]' : 'right-[110px] md:right-[340px]')
-                    : (isAiChatOpen ? 'right-[324px] md:right-[442px]' : 'right-[110px] md:right-[240px]'))
-            }`}>
-              <button
-                onClick={() => setIsNotebookOpen(!isNotebookOpen)}
-                className={`flex items-center gap-2 h-10 px-4 rounded-full text-sm font-medium transition-all border shadow-lg backdrop-blur-md ${isNotebookOpen ? 'bg-blue-600/90 border-blue-500/50 text-white' : isLightMode ? 'bg-white/80 border-black/10 text-gray-700 hover:bg-white' : 'bg-neutral-900/80 border-white/10 text-neutral-300 hover:text-white hover:bg-neutral-800'}`}
-              >
-                <NotebookPen className={`w-4 h-4 ${isNotebookOpen ? 'animate-pulse' : ''}`} />
-                <span className="hidden md:inline">{t.notebookLabel as string}</span>
-              </button>
-              <LanguageSwitcher compact />
-              {user ? (
-                <Link
-                  to="/dashboard"
-                  onClick={() => sessionStorage.setItem('viewer_return_url', window.location.href)}
-                  className={`flex items-center gap-2 h-10 px-4 rounded-full text-sm font-medium transition-colors border shadow-lg backdrop-blur-md ${isLightMode ? 'bg-white/80 border-black/10 text-gray-700 hover:bg-white' : 'bg-neutral-900/80 border-white/10 text-neutral-300 hover:text-white hover:bg-neutral-800'}`}
-                >
-                  <img src={user?.user_metadata?.avatar_url || `https://ui-avatars.com/api/?name=${user?.email || 'User'}&background=random`} alt="Profile" className="w-5 h-5 rounded-full" />
-                  <span className="hidden sm:inline">{t.dashboardLabel as string}</span>
-                </Link>
-              ) : (
-                <Link to="/auth" className={`flex items-center gap-2 h-10 px-4 rounded-full text-sm font-medium transition-colors border shadow-lg backdrop-blur-md ${isLightMode ? 'bg-white/80 border-black/10 text-gray-700 hover:bg-white' : 'bg-neutral-900/80 border-white/10 text-neutral-300 hover:text-white hover:bg-neutral-800'}`}>
-                  <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                  <span className="hidden sm:inline">{t.logInLabel as string}</span>
-                </Link>
-              )}
-            </div>
-          )}
+          {/* Dashboard / Auth / Notebook moved into the sidebar's bottom footer (Controls.tsx) */}
 
           {/* --- PLAYLIST BAR (Overlay) --- */}
 
@@ -3118,6 +3085,9 @@ function App() {
                     }
                     isSharedSession={peerSession.isConnected}
                     isLightMode={isLightMode}
+                    user={user}
+                    isNotebookOpen={isNotebookOpen}
+                    setIsNotebookOpen={setIsNotebookOpen}
                     highlightedResidue={highlightedResidue}
                     onResidueClick={handleSequenceResidueClick}
                     showSurface={showSurface}
