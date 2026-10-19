@@ -3080,7 +3080,7 @@ function App() {
                         exportVideo={handleExportVideo}
                         updateMetadata={recorder.updateMetadata}
                         isLightMode={isLightMode}
-                        cardBg={isLightMode ? 'bg-white' : 'bg-neutral-900'}
+                        cardBg={isLightMode ? 'bg-neutral-50' : 'bg-white/5'}
                       />
                     }
                     isSharedSession={peerSession.isConnected}

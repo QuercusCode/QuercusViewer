@@ -44,13 +44,13 @@ export const RecorderControls = ({
     // Styles
     const styles = {
         icon: "w-4 h-4",
-        button: `p-2 rounded-lg border transition-all flex items-center justify-center gap-2 ${cardBg} ${isLightMode ? 'hover:bg-neutral-100 border-neutral-200' : 'hover:bg-white/10 border-white/10'}`,
-        activeButton: "bg-red-500 text-white border-red-600 animate-pulse",
+        button: `p-2 rounded-lg transition-colors flex items-center justify-center gap-2 ${cardBg} ${isLightMode ? 'hover:bg-neutral-100' : 'hover:bg-white/10'}`,
+        activeButton: "bg-red-500 text-white animate-pulse",
         text: `text-[10px] font-bold uppercase tracking-wider ${isLightMode ? 'text-neutral-500' : 'text-neutral-400'}`
     };
 
     return (
-        <div className={`p-3 rounded-xl border space-y-3 ${cardBg} ${isLightMode ? 'border-neutral-200' : 'border-white/10'}`}>
+        <div className={`p-2.5 rounded-xl space-y-3 ${cardBg}`}>
 
             {/* Header / Status */}
             <div className="flex items-center justify-between">
