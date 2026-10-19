@@ -48,6 +48,12 @@ import { HexColorPicker } from 'react-colorful';
 import { useTheme } from '../lib/ThemeContext';
 import { useTranslation } from '../lib/i18n';
 
+// Representations where NGL's radiusType/scale produce correct geometry — confirmed by
+// direct testing. Cartoon/Tube (spline surfaces) distort badly with a sharply-varying
+// radius; Trace/Backbone ignores radius entirely. Keep in sync with ProteinViewer.tsx's
+// RADIUS_TYPE_COMPATIBLE_STYLES.
+const RADIUS_TYPE_COMPATIBLE_STYLES = new Set(['licorice', 'ball+stick', 'spacefill', 'line', 'point', 'hyperball']);
+
 // Reusable Sidebar Section Component - Defined outside to prevent re-renders losing focus
 const SidebarSection = ({ title, icon: Icon, children, isOpen, onToggle, isLightMode, id }: { title: string, icon: any, children: React.ReactNode, isOpen: boolean, onToggle: () => void, isLightMode: boolean, id?: string }) => {
     const sectionRef = useRef<HTMLDivElement>(null);
@@ -1552,8 +1558,10 @@ export const Controls: React.FC<ControlsProps> = ({
                                         </p>
 
                                         {/* Advanced Style (radius source / surface rendering) */}
+                                        {(RADIUS_TYPE_COMPATIBLE_STYLES.has(representation) || representation === 'surface') && (
                                         <div className="col-span-2 space-y-2 pt-2 border-t border-white/5">
                                             <label className={`text-[10px] font-bold uppercase tracking-wider block ${subtleText}`}>{t.advancedStyleLabel as string}</label>
+                                            {RADIUS_TYPE_COMPATIBLE_STYLES.has(representation) && (
                                             <div className="grid grid-cols-2 gap-2">
                                                 <div>
                                                     <label className={`text-[9px] opacity-70 mb-1 block ${subtleText}`}>{t.radiusSourceLabel as string}</label>
@@ -1584,6 +1592,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                     />
                                                 </div>
                                             </div>
+                                            )}
                                             {representation === 'surface' && (
                                                 <div className="grid grid-cols-2 gap-2 pt-1">
                                                     <div>
@@ -1617,6 +1626,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                 </div>
                                             )}
                                         </div>
+                                        )}
 
                                         {/* Background Controls */}
                                         <div className="col-span-2 space-y-2 pt-2 border-t border-white/5">

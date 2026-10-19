@@ -2791,10 +2791,34 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
             // the per-atom radius from vdW/covalent/B-factor/secondary-structure/fixed
             // size (NGL's native param — 'bfactor' gives a PyMOL "putty" look);
             // wireframe/surfaceType only apply to the 'surface' representation.
+            //
+            // NGL computes the raw per-atom radius as `source * scale`, then clamps it
+            // to a hardcoded max of 10 (see RadiusFactory in NGL's source) — it never
+            // normalizes for the source's own units. A raw B-factor (typically 10-100)
+            // used directly as a radius blows straight through that clamp with any
+            // scale near 1, which both makes the geometry balloon to the clamped
+            // ceiling AND makes the scale slider feel like it does nothing (everything
+            // above a tiny threshold clamps to the same value). NGL's own UI/docs use a
+            // 0.01 default scale specifically for 'bfactor' to compensate; the other
+            // sources are already close to real atomic radii and need none. Apply that
+            // per-source baseline here so the Radius Scale slider's 0.1-3.0 range reads
+            // as an intuitive "weaker/stronger" multiplier around a sane default for
+            // whichever source is selected, instead of raw NGL units.
+            const RADIUS_BASE_SCALE: Record<string, number> = { vdw: 1, covalent: 1, bfactor: 0.01, sstruc: 1, size: 1 };
+            // Radius source only looks right on per-atom geometric representations.
+            // Confirmed by direct testing against a varied-B-factor structure: Licorice
+            // and Ball & Stick render a clean, correct putty gradient; Cartoon and Tube
+            // (spline-surface representations, which multiply this same radius by their
+            // own aspectRatio and interpolate it along a spline) produce jagged,
+            // self-intersecting geometry regardless of scale; Trace/Backbone ignores it
+            // entirely (always a plain line). This isn't a tunable scale problem — it's
+            // NGL's spline surface generator not tolerating a sharply-varying radius
+            // between few control points. Keep the set in sync with `atomicReps` below.
+            const RADIUS_TYPE_COMPATIBLE_STYLES = new Set(['licorice', 'ball+stick', 'spacefill', 'line', 'point', 'hyperball']);
             const applyAdvancedStyle = (targetParams: any, style: string) => {
-                if (radiusType) {
+                if (radiusType && RADIUS_TYPE_COMPATIBLE_STYLES.has(style)) {
                     targetParams.radiusType = radiusType;
-                    targetParams.scale = radiusScale;
+                    targetParams.radiusScale = radiusScale * (RADIUS_BASE_SCALE[radiusType] ?? 1);
                 }
                 if (style === 'surface') {
                     if (surfaceWireframe) targetParams.wireframe = true;
