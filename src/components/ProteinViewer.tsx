@@ -2798,13 +2798,23 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
             // used directly as a radius blows straight through that clamp with any
             // scale near 1, which both makes the geometry balloon to the clamped
             // ceiling AND makes the scale slider feel like it does nothing (everything
-            // above a tiny threshold clamps to the same value). NGL's own UI/docs use a
-            // 0.01 default scale specifically for 'bfactor' to compensate; the other
-            // sources are already close to real atomic radii and need none. Apply that
-            // per-source baseline here so the Radius Scale slider's 0.1-3.0 range reads
-            // as an intuitive "weaker/stronger" multiplier around a sane default for
-            // whichever source is selected, instead of raw NGL units.
-            const RADIUS_BASE_SCALE: Record<string, number> = { vdw: 1, covalent: 1, bfactor: 0.01, sstruc: 1, size: 1 };
+            // above a tiny threshold clamps to the same value).
+            //
+            // vdw/covalent need the same treatment, just a smaller correction: raw vdW
+            // radii run ~1.2-2Å and raw covalent radii ~0.3-1Å, and Ball & Stick/Licorice
+            // additionally double whatever radius they're given via their own internal
+            // aspectRatio before drawing it. Left unnormalized (as this previously was,
+            // on the assumption these were "already close to real atomic radii"), a
+            // small molecule at the slider's upper end produces single spheres several
+            // Ångströms in radius — several times the molecule's own full extent — which
+            // swallows the camera entirely. Confirmed by direct testing on a small
+            // 13-atom molecule (aspirin): with no normalization, Radius Scale 3.0 under
+            // VdW rendered as an all-white screen because the camera ended up inside the
+            // sphere. These baselines bring every source to roughly the same visual
+            // magnitude as NGL's own built-in default ball radius (~0.3Å) at the slider's
+            // default (1.0), so the 0.1-3.0 range reads as "weaker/stronger" relative to
+            // a sane default for whichever source is selected, instead of raw NGL units.
+            const RADIUS_BASE_SCALE: Record<string, number> = { vdw: 0.1, covalent: 0.15, bfactor: 0.01, sstruc: 1, size: 1 };
             // Radius source only looks right on per-atom geometric representations.
             // Confirmed by direct testing against a varied-B-factor structure: Licorice
             // and Ball & Stick render a clean, correct putty gradient; Cartoon and Tube
