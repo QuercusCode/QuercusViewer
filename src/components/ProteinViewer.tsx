@@ -1301,52 +1301,44 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
             };
 
             component.structure.eachChain((chain: any) => {
-                const residues: any[] = [];
-                chain.eachResidue((res: any) => residues.push(res));
+                // NGL's eachResidue/eachAtom callbacks hand back a reused proxy object
+                // (mutated in place as the iterator advances), not a fresh object per
+                // call — storing those proxies for later random access (prev/next) would
+                // leave every stored "residue" aliasing the SAME final proxy state. Pull
+                // out the plain data (N/CA/C positions, resno, resname) during this single
+                // pass instead, into independent objects we can safely index afterward.
+                const residues: { resno: number, resname: string, N: any, CA: any, C: any }[] = [];
+                chain.eachResidue((res: any) => {
+                    let N: any = null, CA: any = null, C: any = null;
+                    res.eachAtom((at: any) => {
+                        if (at.atomname === 'N') N = new Vector3(at.x, at.y, at.z);
+                        else if (at.atomname === 'CA') CA = new Vector3(at.x, at.y, at.z);
+                        else if (at.atomname === 'C') C = new Vector3(at.x, at.y, at.z);
+                    });
+                    residues.push({ resno: res.resno, resname: res.resname, N, CA, C });
+                });
 
-                // Need random access for prev/next
                 for (let i = 0; i < residues.length; i++) {
                     const curr = residues[i];
                     const prev = i > 0 ? residues[i - 1] : null;
                     const next = i < residues.length - 1 ? residues[i + 1] : null;
 
-                    // Helper: Get Atom Coordinates safely
-                    const getAtomPos = (r: any, name: string): any => {
-                        let pos = null;
-                        r.eachAtom((at: any) => {
-                            if (at.atomname === name) {
-                                pos = new window.NGL.Vector3(at.x, at.y, at.z);
-                            }
-                        });
-                        return pos;
-                    };
-
-                    const vN = getAtomPos(curr, 'N');
-                    const vCA = getAtomPos(curr, 'CA');
-                    const vC = getAtomPos(curr, 'C');
-
                     let phi = null;
                     let psi = null;
 
                     // Calculate Phi: C(prev) - N - CA - C
-                    if (prev && vN && vCA && vC) {
-                        const vPrevC = getAtomPos(prev, 'C');
-                        if (vPrevC) {
-                            // Check connectivity distance (~1.33A) to ensure unbroken chain
-                            if (vPrevC.distanceTo(vN) < 2.0) {
-                                phi = calculateDihedral(vPrevC, vN, vCA, vC);
-                            }
+                    if (prev?.C && curr.N && curr.CA && curr.C) {
+                        // Check connectivity distance (~1.33A) to ensure unbroken chain
+                        if (prev.C.distanceTo(curr.N) < 2.0) {
+                            phi = calculateDihedral(prev.C, curr.N, curr.CA, curr.C);
                         }
                     }
 
                     // Calculate Psi: N - CA - C - N(next)
-                    if (next && vN && vCA && vC) {
-                        const vNextN = getAtomPos(next, 'N');
-                        if (vNextN) {
-                            // Check connectivity
-                            if (vC.distanceTo(vNextN) < 2.0) {
-                                psi = calculateDihedral(vN, vCA, vC, vNextN);
-                            }
+                    if (next?.N && curr.N && curr.CA && curr.C) {
+                        // Check connectivity
+                        if (curr.C.distanceTo(next.N) < 2.0) {
+                            psi = calculateDihedral(curr.N, curr.CA, curr.C, next.N);
                         }
                     }
 

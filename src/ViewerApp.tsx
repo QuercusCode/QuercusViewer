@@ -6,6 +6,7 @@ import { MolStarProteinViewer } from './components/MolStarProteinViewer'; // ENG
 import { LandingOverlay } from './components/LandingOverlay';
 import { Controls } from './components/Controls';
 import { ContactMap } from './components/ContactMap';
+import { RamachandranModal } from './components/RamachandranModal';
 
 import { HelpGuide } from './components/HelpGuide';
 import { parseURLState, getShareableURL } from './utils/urlManager';
@@ -46,7 +47,7 @@ import type {
 import { LabNotebook } from './components/dashboard/LabNotebook';
 import {
   Camera, RefreshCw, Upload,
-  Settings as SettingsIcon, Zap, Activity, Grid3X3, Palette,
+  Settings as SettingsIcon, Zap, Activity, Grid3X3, Palette, ScatterChart,
   Share2, Save, FolderOpen, Video, Ruler, Maximize2, Star, Undo2, Redo2, BookOpen,
   ChevronLeft, ChevronRight, Menu, X, NotebookPen
 } from 'lucide-react';
@@ -980,6 +981,7 @@ function App() {
   // isSpinning extracted to hook
   const [isCleanMode, setIsCleanMode] = useState(false);
   const [showContactMap, setShowContactMap] = useState(false);
+  const [showRamachandran, setShowRamachandran] = useState(false);
 
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
   const [embedOrientation, setEmbedOrientation] = useState<any>(null);
@@ -1653,6 +1655,13 @@ function App() {
     return [];
   };
 
+  const getTorsionDataWrapper = async () => {
+    if (viewerRef.current) {
+      return await viewerRef.current.getTorsionData();
+    }
+    return [];
+  };
+
 
 
   const handlePixelClick = (chainA: string, resA: number, chainB: string, resB: number) => {
@@ -2265,13 +2274,14 @@ function App() {
         setIsCommandPaletteOpen(false);
         setIsLibraryOpen(false);
         setShowContactMap(false);
+        setShowRamachandran(false);
         setShowLanding(false); // Close landing if open
         setIsNotebookOpen(false); // Close notebook if open
         return;
       }
 
       // Only process below shortcuts if no modals are open
-      if (isLibraryOpen || isCommandPaletteOpen || showContactMap || isNotebookOpen) return;
+      if (isLibraryOpen || isCommandPaletteOpen || showContactMap || showRamachandran || isNotebookOpen) return;
 
       switch (e.key.toLowerCase()) {
         // General
@@ -2330,7 +2340,7 @@ function App() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isLibraryOpen, isCommandPaletteOpen, showContactMap, isNotebookOpen]);
+  }, [isLibraryOpen, isCommandPaletteOpen, showContactMap, showRamachandran, isNotebookOpen]);
 
   const commandActions: CommandAction[] = useMemo(() => [
     // --- FILES & LOADING ---
@@ -2603,6 +2613,13 @@ function App() {
       perform: () => setShowContactMap(prev => !prev)
     },
     {
+      id: 'toggle-ramachandran',
+      label: showRamachandran ? 'Hide Ramachandran Plot' : 'Show Ramachandran Plot',
+      icon: ScatterChart,
+      category: 'Tools',
+      perform: () => setShowRamachandran(prev => !prev)
+    },
+    {
       id: 'fullscreen',
       label: 'Toggle Fullscreen',
       icon: Maximize2,
@@ -2616,7 +2633,7 @@ function App() {
         }
       }
     },
-  ], [isPublicationMode, isSpinning, isLightMode, isMeasurementMode, isInteractionMode, showContactMap, handleSaveSession, handleSnapshot, handleResetView]);
+  ], [isPublicationMode, isSpinning, isLightMode, isMeasurementMode, isInteractionMode, showContactMap, showRamachandran, handleSaveSession, handleSnapshot, handleResetView]);
 
   return (
     <main
@@ -3134,6 +3151,7 @@ function App() {
                     onDownloadPDB={handleDownloadPDB}
                     onDownloadSequence={handleDownloadSequence}
                     onToggleContactMap={() => setShowContactMap(!showContactMap)}
+                    onToggleRamachandran={() => setShowRamachandran(!showRamachandran)}
                     onTakeSnapshot={handleSnapshot}
                     movies={movies}
                     isCleanMode={isCleanMode}
@@ -3658,7 +3676,14 @@ function App() {
         }}
       />
 
-
+      <RamachandranModal
+        isOpen={showRamachandran}
+        onClose={() => setShowRamachandran(false)}
+        getTorsionData={getTorsionDataWrapper}
+        isLightMode={isLightMode}
+        onHighlightResidue={(chain, resNo) => handleHighlightResidue(chain, resNo)}
+        proteinName={proteinTitle || (file ? file.name.replace(/\.[^/.]+$/, "") : pdbId)}
+      />
 
 
       <ShareModal
