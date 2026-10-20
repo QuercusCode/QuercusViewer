@@ -35,6 +35,7 @@ import {
     RotateCcw,
     Ruler,
     ScanSearch,
+    ScatterChart,
     Search,
     Share2,
     Shuffle,
@@ -366,6 +367,7 @@ interface ControlsProps {
     onSaveSession: () => void;
     onLoadSession: (file: File) => void;
     onToggleContactMap: () => void;
+    onToggleRamachandran?: () => void;
     onQuickSave?: () => void;
     quickSaving?: boolean;
     movies: Movie[];
@@ -538,6 +540,7 @@ export const Controls: React.FC<ControlsProps> = ({
     onSaveSession,
     onLoadSession,
     onToggleContactMap,
+    onToggleRamachandran,
     movies,
     isDyslexicFont,
     setIsDyslexicFont,
@@ -2698,6 +2701,17 @@ export const Controls: React.FC<ControlsProps> = ({
                                 >
                                     <span className="text-xs font-medium">{t.superpose as string}</span>
                                     <Layers className="w-3.5 h-3.5" />
+                                </button>
+                            )}
+
+                            {/* Ramachandran Plot - Only for Proteins */}
+                            {!isChemical && (
+                                <button
+                                    onClick={onToggleRamachandran}
+                                    className={`col-span-2 flex items-center justify-between px-3 py-2 rounded-lg transition-colors ${cardBg} hover:opacity-80`}
+                                >
+                                    <span className="text-xs font-medium">{t.ramachandranPlot as string}</span>
+                                    <ScatterChart className="w-3.5 h-3.5" />
                                 </button>
                             )}
 
