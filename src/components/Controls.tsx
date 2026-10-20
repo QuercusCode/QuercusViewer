@@ -1566,18 +1566,37 @@ export const Controls: React.FC<ControlsProps> = ({
                                         </div>
 
                                         {/* Color Explanation */}
-                                        <p className={`text-[9px] opacity-70 leading-relaxed col-span-2 ${subtleText}`}>
-                                            {({
-                                                chainid: "Distinct colors for each chain.",
-                                                resname: "Standard amino acid colors (RasMol).",
-                                                residue: "Standard amino acid colors.",
-                                                structure: "Helices (Magenta), Sheets (Yellow), Loops (White).",
-                                                hydrophobicity: "Blue (Hydrophilic) → Red (Hydrophobic).",
-                                                bfactor: "Blue (Stable) → Red (Flexible/Mobile).",
-                                                secondary: "Secondary structure delineation.",
-                                                residueindex: "Rainbow gradient by residue position."
-                                            } as Record<string, string>)[coloring]}
-                                        </p>
+                                        {coloring === 'bfactor' && dataSource === 'alphafold' ? (
+                                            <div className="col-span-2 space-y-1">
+                                                <p className={`text-[9px] opacity-70 ${subtleText}`}>{t.plddtLegendTitle as string}</p>
+                                                <div className="flex flex-wrap gap-x-3 gap-y-1">
+                                                    {[
+                                                        { color: '#0053D6', label: t.plddtVeryHigh as string },
+                                                        { color: '#65CBF3', label: t.plddtConfident as string },
+                                                        { color: '#FFDB13', label: t.plddtLow as string },
+                                                        { color: '#FF7D45', label: t.plddtVeryLow as string },
+                                                    ].map(({ color, label }) => (
+                                                        <div key={color} className="flex items-center gap-1">
+                                                            <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: color }} />
+                                                            <span className={`text-[9px] ${subtleText}`}>{label}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <p className={`text-[9px] opacity-70 leading-relaxed col-span-2 ${subtleText}`}>
+                                                {({
+                                                    chainid: "Distinct colors for each chain.",
+                                                    resname: "Standard amino acid colors (RasMol).",
+                                                    residue: "Standard amino acid colors.",
+                                                    structure: "Helices (Magenta), Sheets (Yellow), Loops (White).",
+                                                    hydrophobicity: "Blue (Hydrophilic) → Red (Hydrophobic).",
+                                                    bfactor: "Blue (Stable) → Red (Flexible/Mobile).",
+                                                    secondary: "Secondary structure delineation.",
+                                                    residueindex: "Rainbow gradient by residue position."
+                                                } as Record<string, string>)[coloring]}
+                                            </p>
+                                        )}
 
                                         {/* Advanced Style (radius source / surface rendering) */}
                                         {(RADIUS_TYPE_COMPATIBLE_STYLES.has(representation) || representation === 'surface') && (
