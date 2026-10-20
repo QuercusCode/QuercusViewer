@@ -465,6 +465,9 @@ export const translations = {
         snapImageQuality: 'Image Quality',
         snapBackground: 'Background',
         snapTransparentBgDesc: 'Removes background for compositing',
+        snapWatermarkOn: 'This snapshot will include a QuercusViewer watermark.',
+        snapWatermarkOff: 'No watermark will be added to this snapshot.',
+        snapWatermarkManage: 'Manage in Account Settings',
         snapCapture: (n: number) => n > 1 ? `Capture ${n} Snapshots` : 'Capture Snapshot',
         // Notes Panel (quick notes)
         notesStartTyping: 'Start typing…',
@@ -648,6 +651,8 @@ export const translations = {
         vpViewport: (n: number) => `Viewport ${n}`, vpVP: (n: number) => `VP ${n}`,
         // TourGuide
         tourExitConfirm: 'Are you sure you want to exit the tour?',
+        tourExitButton: 'Exit Tour',
+        tourContinueButton: 'Continue Tour',
     },
     'Spanish (ES)': {
         nav: 'NAVEGACIÓN',
@@ -1056,6 +1061,9 @@ export const translations = {
         snapImageQuality: 'Calidad de Imagen',
         snapBackground: 'Fondo',
         snapTransparentBgDesc: 'Elimina el fondo para composición',
+        snapWatermarkOn: 'Esta captura incluirá una marca de agua de QuercusViewer.',
+        snapWatermarkOff: 'No se añadirá marca de agua a esta captura.',
+        snapWatermarkManage: 'Gestionar en Configuración de Cuenta',
         snapCapture: (n: number) => n > 1 ? `Capturar ${n} Capturas` : 'Capturar',
         notesStartTyping: 'Empieza a escribir…',
         notesSaved: 'Guardado',
@@ -1211,6 +1219,8 @@ export const translations = {
         vpViewport: (n: number) => `Ventana ${n}`, vpVP: (n: number) => `VP ${n}`,
         // TourGuide
         tourExitConfirm: '¿Seguro que quieres salir del tour?',
+        tourExitButton: 'Salir del Tour',
+        tourContinueButton: 'Continuar Tour',
         chartCapturing: 'Capturando Alta Resolución...', chartDownloadPNG: 'Descargar PNG (Listo para Publicación)',
         // LabReportTemplate
         lrAuthor: 'Autor', lrReportID: 'ID de Informe', lrDateCreated: 'Fecha de Creación', lrStatus: 'Estado', lrVerifiedAnalysis: 'Análisis Verificado',
@@ -1639,6 +1649,9 @@ export const translations = {
         snapImageQuality: "Qualité d'Image",
         snapBackground: 'Arrière-plan',
         snapTransparentBgDesc: "Supprime l'arrière-plan pour la composition",
+        snapWatermarkOn: 'Cette capture inclura un filigrane QuercusViewer.',
+        snapWatermarkOff: 'Aucun filigrane ne sera ajouté à cette capture.',
+        snapWatermarkManage: 'Gérer dans les Paramètres du Compte',
         snapCapture: (n: number) => n > 1 ? `Capturer ${n} Captures` : 'Capturer',
         notesStartTyping: 'Commencez à écrire…',
         notesSaved: 'Enregistré',
@@ -1794,6 +1807,8 @@ export const translations = {
         vpViewport: (n: number) => `Fenêtre ${n}`, vpVP: (n: number) => `VP ${n}`,
         // TourGuide
         tourExitConfirm: 'Êtes-vous sûr de vouloir quitter la visite ?',
+        tourExitButton: 'Quitter la Visite',
+        tourContinueButton: 'Continuer la Visite',
         chartCapturing: 'Capture Haute Résolution...', chartDownloadPNG: 'Télécharger PNG (Prêt pour Publication)',
         // LabReportTemplate
         lrAuthor: 'Auteur', lrReportID: 'ID du Rapport', lrDateCreated: 'Date de Création', lrStatus: 'Statut', lrVerifiedAnalysis: 'Analyse Vérifiée',
@@ -2222,6 +2237,9 @@ export const translations = {
         snapImageQuality: 'Bildqualität',
         snapBackground: 'Hintergrund',
         snapTransparentBgDesc: 'Entfernt den Hintergrund für Compositing',
+        snapWatermarkOn: 'Dieser Schnappschuss enthält ein QuercusViewer-Wasserzeichen.',
+        snapWatermarkOff: 'Diesem Schnappschuss wird kein Wasserzeichen hinzugefügt.',
+        snapWatermarkManage: 'In den Kontoeinstellungen verwalten',
         snapCapture: (n: number) => n > 1 ? `${n} Screenshots aufnehmen` : 'Screenshot aufnehmen',
         notesStartTyping: 'Beginnen Sie zu tippen…',
         notesSaved: 'Gespeichert',
@@ -2377,6 +2395,8 @@ export const translations = {
         vpViewport: (n: number) => `Ansicht ${n}`, vpVP: (n: number) => `VP ${n}`,
         // TourGuide
         tourExitConfirm: 'Möchten Sie die Tour wirklich beenden?',
+        tourExitButton: 'Tour Beenden',
+        tourContinueButton: 'Tour Fortsetzen',
         chartCapturing: 'Hochauflösend erfassen...', chartDownloadPNG: 'PNG herunterladen (Publikationsbereit)',
         // LabReportTemplate
         lrAuthor: 'Autor', lrReportID: 'Bericht-ID', lrDateCreated: 'Erstellungsdatum', lrStatus: 'Status', lrVerifiedAnalysis: 'Verifizierte Analyse',
@@ -2599,6 +2619,9 @@ export const translations = {
         snapImageQuality: 'Qualidade da Imagem',
         snapBackground: 'Plano de Fundo',
         snapTransparentBgDesc: 'Remove o fundo para composição',
+        snapWatermarkOn: 'Esta captura incluirá uma marca d\'água do QuercusViewer.',
+        snapWatermarkOff: 'Nenhuma marca d\'água será adicionada a esta captura.',
+        snapWatermarkManage: 'Gerenciar nas Configurações da Conta',
         snapCapture: (n: number) => n > 1 ? `Capturar ${n} Imagens` : 'Capturar Imagem',
         notesStartTyping: 'Comece a digitar…',
         notesSaved: 'Salvo',
@@ -2754,6 +2777,7 @@ export const translations = {
         vpViewport: (n: number) => `Janela ${n}`, vpVP: (n: number) => `VP ${n}`,
         // TourGuide
         tourExitConfirm: 'Tem certeza de que deseja sair do tour?',
+        tourExitButton: 'Sair do Tour', tourContinueButton: 'Continuar Tour',
         chartCapturing: 'Capturando Alta Resolução...', chartDownloadPNG: 'Baixar PNG (Pronto para Publicação)',
         // LabReportTemplate
         lrAuthor: 'Autor', lrReportID: 'ID do Relatório', lrDateCreated: 'Data de Criação', lrStatus: 'Status', lrVerifiedAnalysis: 'Análise Verificada',
@@ -2978,6 +3002,7 @@ export const translations = {
         snapImageQuality: 'छवि गुणवत्ता',
         snapBackground: 'पृष्ठभूमि',
         snapTransparentBgDesc: 'कंपोज़िटिंग के लिए पृष्ठभूमि हटाता है',
+        snapWatermarkOn: 'इस स्नैपशॉट में QuercusViewer वॉटरमार्क शामिल होगा।', snapWatermarkOff: 'इस स्नैपशॉट में कोई वॉटरमार्क नहीं जोड़ा जाएगा।', snapWatermarkManage: 'खाता सेटिंग्स में प्रबंधित करें',
         snapCapture: (n: number) => n > 1 ? `${n} स्नैपशॉट लें` : 'स्नैपशॉट लें',
         notesStartTyping: 'टाइप करना शुरू करें…',
         notesSaved: 'सहेजा गया',
@@ -3133,6 +3158,7 @@ export const translations = {
         vpViewport: (n: number) => `व्यूपोर्ट ${n}`, vpVP: (n: number) => `VP ${n}`,
         // TourGuide
         tourExitConfirm: 'क्या आप टूर से बाहर निकलना चाहते हैं?',
+        tourExitButton: 'टूर से बाहर निकलें', tourContinueButton: 'टूर जारी रखें',
         chartCapturing: 'उच्च-रिज़ॉल्यूशन कैप्चर हो रहा है...', chartDownloadPNG: 'PNG डाउनलोड करें (प्रकाशन योग्य)',
         // LabReportTemplate
         lrAuthor: 'लेखक', lrReportID: 'रिपोर्ट आईडी', lrDateCreated: 'निर्माण तिथि', lrStatus: 'स्थिति', lrVerifiedAnalysis: 'सत्यापित विश्लेषण',
@@ -3357,6 +3383,7 @@ export const translations = {
         snapImageQuality: '图片质量',
         snapBackground: '背景',
         snapTransparentBgDesc: '移除背景以进行合成',
+        snapWatermarkOn: '此快照将包含 QuercusViewer 水印。', snapWatermarkOff: '此快照将不添加水印。', snapWatermarkManage: '在账户设置中管理',
         snapCapture: (n: number) => n > 1 ? `拍摄 ${n} 张截图` : '拍摄截图',
         notesStartTyping: '开始输入…',
         notesSaved: '已保存',
@@ -3532,6 +3559,7 @@ export const translations = {
         vpViewport: (n: number) => `视口 ${n}`, vpVP: (n: number) => `VP ${n}`,
         // TourGuide
         tourExitConfirm: '您确定要退出导览吗？',
+        tourExitButton: '退出导览', tourContinueButton: '继续导览',
     },
 };
 

@@ -10,11 +10,14 @@ import {
 } from 'recharts'
 import { Trash2, BarChart2, TrendingUp, Palette, X, Download, Zap } from 'lucide-react'
 import { useTranslation } from '../../lib/i18n'
+import { useToast } from '../../hooks/useToast'
+import { ToastContainer } from '../Toast'
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#ef4444', '#06b6d4', '#84cc16'];
 
 const InlineChartComponent = ({ node, updateAttributes, deleteNode }: NodeViewProps) => {
   const { t } = useTranslation()
+  const { toasts, removeToast, error: showError } = useToast()
   const { data, type, title, xAxis, yAxes, customColors, showTrendLine, showStatistics } = node.attrs
   const [showColorEditor, setShowColorEditor] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
@@ -129,6 +132,7 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: NodeViewPr
 
   return (
     <NodeViewWrapper ref={chartRef} className="inline-chart-wrapper my-8 group relative">
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
       <div className="bg-[var(--bg-sidebar)] border border-[var(--border-main)] rounded-2xl overflow-hidden shadow-xl p-8 transition-all group-hover:border-blue-500/30">
         
         {/* Header Section */}
@@ -302,7 +306,7 @@ const InlineChartComponent = ({ node, updateAttributes, deleteNode }: NodeViewPr
                 link.click();
               } catch (err: any) {
                 console.error('Export Error:', err);
-                alert(`Export failed: ${err.message || 'Unknown failure'}`);
+                showError(`Export failed: ${err.message || 'Unknown failure'}`);
               } finally {
                 // 4. RESTORE ORIGINAL STATE
                 if (chartRef.current) {

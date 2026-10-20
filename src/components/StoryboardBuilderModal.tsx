@@ -8,6 +8,8 @@ import {
 } from 'lucide-react';
 import type { StoryboardPayload, StoryboardSlide, SlideQuiz, SlideAnnotation } from '../types';
 import { getShareableURL } from '../utils/urlManager';
+import { useToast } from '../hooks/useToast';
+import { ToastContainer } from './Toast';
 
 const AUTO_PLAY_OPTIONS = [0, 3, 5, 10, 15, 30];
 
@@ -38,6 +40,7 @@ export const StoryboardBuilderModal: React.FC<StoryboardBuilderModalProps> = ({
     captureScreenshot,
     getCurrentViewerState
 }) => {
+    const { toasts, removeToast, error: showError } = useToast();
     const [storyTitle, setStoryTitle] = useState('Protein Structure Walkthrough');
     const [autoPlaySeconds, setAutoPlaySeconds] = useState(0);
     const [slides, setSlides] = useState<StoryboardSlide[]>([
@@ -110,7 +113,7 @@ export const StoryboardBuilderModal: React.FC<StoryboardBuilderModalProps> = ({
             }, 1000);
         } catch (err) {
             console.error('Error starting audio recording:', err);
-            alert('Could not access microphone. Please check permissions.');
+            showError('Could not access microphone. Please check permissions.');
         }
     };
 
@@ -754,9 +757,9 @@ export const StoryboardBuilderModal: React.FC<StoryboardBuilderModalProps> = ({
             });
             
             pres.writeFile({ fileName: `${storyTitle.replace(/\s+/g, '_')}.storyboard.pptx` });
-        } catch (error) {
-            console.error('Error generating PPTX:', error);
-            alert('Failed to generate PPTX presentation.');
+        } catch (pptxError) {
+            console.error('Error generating PPTX:', pptxError);
+            showError('Failed to generate PPTX presentation.');
         }
     };
 
@@ -773,7 +776,7 @@ export const StoryboardBuilderModal: React.FC<StoryboardBuilderModalProps> = ({
                 setAutoPlaySeconds(parsed.autoPlaySeconds || 0);
                 setActiveSlideId(parsed.slides[0]?.id || '1');
             } catch {
-                alert('Invalid storyboard JSON file.');
+                showError('Invalid storyboard JSON file.');
             }
         };
         reader.readAsText(file);
@@ -1314,6 +1317,7 @@ export const StoryboardBuilderModal: React.FC<StoryboardBuilderModalProps> = ({
                     </div>
                 </div>
             </div>
+            <ToastContainer toasts={toasts} onRemove={removeToast} />
         </div>
     );
 };

@@ -65,6 +65,7 @@ export interface ProteinViewerProps {
     measurementTextColor?: MeasurementTextColor; // Added prop
     overlays?: SuperposedStructure[];
     onSuperpositionStatus?: (overlayId: string, failed: boolean) => void;
+    onToast?: (message: string, type?: 'success' | 'error' | 'info' | 'warning') => void;
 
     // Quality
     quality?: 'low' | 'medium' | 'high';
@@ -198,6 +199,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
     isChemical = false,
     overlays,
     onSuperpositionStatus,
+    onToast,
 
     palette: colorPalette = 'standard', // Rename to matches internal usage
     className,
@@ -3530,6 +3532,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                 onClose={() => setIsAlignmentOpen(false)}
                 primaryStructure={primaryStructureChains}
                 overlays={overlays?.map(o => ({ ...o, chains: overlayChains[o.id] || o.chains })) || []}
+                onToast={onToast}
             />
 
             {/* HTML Overlays for Annotations */}

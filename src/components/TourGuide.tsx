@@ -1,8 +1,7 @@
 import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
-import { getT } from '../lib/i18n';
 
-export const startOnboardingTour = (onComplete?: () => void, onHighlight?: (elementId: string) => void, isChemical: boolean = false) => {
+export const startOnboardingTour = (onComplete?: () => void, onHighlight?: (elementId: string, refresh: () => void) => void, isChemical: boolean = false, onConfirmExit?: () => Promise<boolean>) => {
 
     const steps = [
         {
@@ -106,15 +105,37 @@ export const startOnboardingTour = (onComplete?: () => void, onHighlight?: (elem
         animate: true,
         steps: steps,
         onDestroyStarted: () => {
-            const t = getT();
-            if (!driverObj.hasNextStep() || confirm(t.tourExitConfirm as string)) {
+            // Reaching the end naturally (no next step) needs no confirmation.
+            if (!driverObj.hasNextStep()) {
+                driverObj.destroy();
+                if (onComplete) onComplete();
+                return;
+            }
+            // Exiting mid-tour (Escape / overlay click / close button): ask via the
+            // caller's own in-app UI rather than a native confirm() dialog, which
+            // looks out of place next to the rest of the app's styled modals. driver.js
+            // only actually destroys once we call driverObj.destroy() below, so it's
+            // safe to wait on this promise first.
+            if (onConfirmExit) {
+                onConfirmExit().then(confirmed => {
+                    if (confirmed) {
+                        driverObj.destroy();
+                        if (onComplete) onComplete();
+                    }
+                });
+            } else {
                 driverObj.destroy();
                 if (onComplete) onComplete();
             }
         },
         onHighlightStarted: (_element, step) => {
+            // The step's target may be inside a sidebar section that's currently
+            // collapsed (e.g. Analysis, Tools, Motif Search default closed) — the
+            // caller opens it via React state, which commits async, so hand back a
+            // refresh() the caller can call once the DOM has actually updated,
+            // instead of driver.js measuring/positioning against a hidden element.
             if (onHighlight && step && typeof step.element === 'string') {
-                onHighlight(step.element);
+                onHighlight(step.element, () => driverObj.refresh());
             }
         }
     });

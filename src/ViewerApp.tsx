@@ -785,6 +785,31 @@ function App() {
   const [isMeasurementMode, setIsMeasurementMode] = useState(false);
   const [isInteractionMode, setIsInteractionMode] = useState(false);
 
+  // A tour triggered before a structure is loaded (first-visit auto-start, or
+  // "Restart Tour" with nothing loaded) can't just wait a guessed number of
+  // milliseconds for the viewer to be ready — that's exactly the race that used
+  // to crash the tour if the WebGL canvas was still initializing. Instead, flag
+  // that a tour is pending and let handleLoad() (which only fires once the
+  // structure has actually finished loading and its chains are parsed) start it.
+  const tourPendingRef = useRef(false);
+  const tourPendingIsChemicalRef = useRef(false);
+
+  const beginTourWhenStructureReady = useCallback((isChemical: boolean) => {
+    tourPendingIsChemicalRef.current = isChemical;
+    tourPendingRef.current = true;
+  }, []);
+
+  // Resolver for the in-app "exit tour?" confirmation (replaces a native confirm()
+  // dialog, which looks out of place next to the rest of the app's in-app modals).
+  const tourExitResolveRef = useRef<((confirmed: boolean) => void) | null>(null);
+  const [showTourExitConfirm, setShowTourExitConfirm] = useState(false);
+  const handleTourConfirmExit = useCallback((): Promise<boolean> => {
+    return new Promise(resolve => {
+      tourExitResolveRef.current = resolve;
+      setShowTourExitConfirm(true);
+    });
+  }, []);
+
   useEffect(() => {
     // Check for onboarding tour
     const hasSeenTour = localStorage.getItem('hasSeenViewerTour');
@@ -802,16 +827,10 @@ function App() {
           setFile(new File([blob], "2B3P.pdb", { type: "chemical/x-pdb" }));
           setPdbId('');
           setProteinTitle(null);
-
-          // Delay to ensure the structure mounts in NGL viewport
-          setTimeout(() => {
-            startOnboardingTour(() => {
-              localStorage.setItem('hasSeenViewerTour', 'true');
-            }, handleTourHighlight, false);
-          }, 1500);
+          beginTourWhenStructureReady(false);
         });
     }
-  }, []);
+  }, [beginTourWhenStructureReady]);
 
   // Handle Default Loading on DataSource Switch
   useEffect(() => {
@@ -1217,7 +1236,7 @@ function App() {
     }));
   };
 
-  const handleTourHighlight = (elementId: string) => {
+  const handleTourHighlight = (elementId: string, refreshTourPopover?: () => void) => {
     console.log('Tour highlight:', elementId); // Debug log
 
     // If on mobile, expand/collapse the mobile sidebar so tooltips anchor correctly
@@ -1251,6 +1270,15 @@ function App() {
     }
 
     setOpenSections(newSections);
+
+    // The section we just opened may have been collapsed, so its target element
+    // didn't exist in the DOM when driver.js first tried to position this step's
+    // popover. setOpenSections is an async state update — wait for it to actually
+    // paint (two rAFs: one for React's commit, one for the browser's next paint)
+    // before asking driver.js to re-measure and reposition against the real element.
+    if (refreshTourPopover) {
+      requestAnimationFrame(() => requestAnimationFrame(() => refreshTourPopover()));
+    }
   };
 
   const handleStartRecording = useCallback(() => {
@@ -1300,20 +1328,15 @@ function App() {
     if (hasStructure) {
       startOnboardingTour(() => {
         localStorage.setItem('hasSeenViewerTour', 'true');
-      }, handleTourHighlight, isChemicalContext);
+      }, handleTourHighlight, isChemicalContext, handleTourConfirmExit);
     } else {
-      // Load default structure explicitly if none loaded
+      // Load default structure explicitly if none loaded, then let handleLoad()
+      // start the tour once it's actually ready (see beginTourWhenStructureReady).
       if (isChemicalContext) {
         setPdbId('2244');
         setFile(null); // Ensure no file conflict
         setProteinTitle(null);
-
-        // Wait for load to propagate before starting tour
-        setTimeout(() => {
-          startOnboardingTour(() => {
-            localStorage.setItem('hasSeenViewerTour', 'true');
-          }, handleTourHighlight, true);
-        }, 2000); // 2s delay to allow fetching and rendering
+        beginTourWhenStructureReady(true);
       } else {
         // Fetch local 2B3P robustly for the tour
         fetch(`${import.meta.env.BASE_URL}models/2B3P.pdb`)
@@ -1322,13 +1345,7 @@ function App() {
             setFile(new File([blob], "2B3P.pdb", { type: "chemical/x-pdb" }));
             setPdbId('');
             setProteinTitle(null);
-
-            // Wait for parse to propagate
-            setTimeout(() => {
-              startOnboardingTour(() => {
-                localStorage.setItem('hasSeenViewerTour', 'true');
-              }, handleTourHighlight, false);
-            }, 1000);
+            beginTourWhenStructureReady(false);
           });
       }
     }
@@ -1554,7 +1571,22 @@ function App() {
         viewerRefs[index].current?.setOrientation(initialUrlState.viewports[index].orientation);
       }, 500);
     }
-  }, [addToHistory, controllers, initialUrlState]);
+
+    // A tour is waiting on this exact signal — the structure just finished loading
+    // and its chains/representation are set, so every step target (metadata box,
+    // sequence track, etc.) now has real data behind it. One frame for the DOM to
+    // settle, then start, instead of a guessed setTimeout that could fire before
+    // the canvas/WebGL context (or this very state) is actually ready.
+    if (index === 0 && tourPendingRef.current) {
+      tourPendingRef.current = false;
+      const isChemical = tourPendingIsChemicalRef.current;
+      requestAnimationFrame(() => {
+        startOnboardingTour(() => {
+          localStorage.setItem('hasSeenViewerTour', 'true');
+        }, handleTourHighlight, isChemical, handleTourConfirmExit);
+      });
+    }
+  }, [addToHistory, controllers, initialUrlState, handleTourConfirmExit]);
 
   const handlePdbIdChange = (id: string) => {
 
@@ -1753,7 +1785,7 @@ function App() {
       success("Session saved successfully ✓");
     } catch (e) {
       console.error("CRITICAL SAVE ERROR:", e);
-      alert(`Failed to save session: ${e instanceof Error ? e.message : String(e)}`);
+      error(`Failed to save session: ${e instanceof Error ? e.message : String(e)}`);
     }
   };
 
@@ -2093,9 +2125,9 @@ function App() {
         }
         success("Session loaded ✓");
       }
-    } catch (error) {
-      console.error("Failed to load session:", error);
-      alert("Failed to load session file");
+    } catch (loadError) {
+      console.error("Failed to load session:", loadError);
+      error("Failed to load session file");
     }
   };
 
@@ -3432,6 +3464,7 @@ function App() {
                             onSuperpositionStatus={(overlayId: string, failed: boolean) => {
                               ctrl.setOverlays(prev => prev.map(o => o.id === overlayId ? { ...o, superpositionFailed: failed } : o));
                             }}
+                            onToast={addToast}
 
                             initialOrientation={index === 0 ? embedOrientation : undefined}
 
@@ -3611,6 +3644,8 @@ function App() {
               sendSystemLog(`Captured Snapshot (Quality: ${factor}x)`);
             }}
             onCancel={() => setIsSnapshotModalOpen(false)}
+            watermarkEnabled={user?.user_metadata?.show_watermark ?? true}
+            isSignedIn={!!user}
           />
 
           <SessionChat
@@ -3641,6 +3676,7 @@ function App() {
         colorPalette={colorPalette}
         proteinName={proteinTitle || (file ? file.name.replace(/\.[^/.]+$/, "") : pdbId)}
         pdbAccession={pdbId}
+        onToast={addToast}
         getSnapshot={async () => {
           if (!viewerRef.current) return null;
           const blob = await viewerRef.current.getSnapshotBlob();
@@ -3688,6 +3724,41 @@ function App() {
         proteinName={proteinTitle || (file ? file.name.replace(/\.[^/.]+$/, "") : pdbId)}
       />
 
+      {showTourExitConfirm && (
+        // Inline pointer-events overrides are required here: while the tour is active,
+        // driver.js's own stylesheet sets `pointer-events: none` on every element under
+        // `.driver-active` except its own popover/highlighted-element classes, which would
+        // otherwise silently swallow clicks on this modal (confirmed via Playwright testing).
+        // The z-index must also beat driver.js's overlay SVG, which sets z-index:10000 inline
+        // (above this div's z-[9999]) and would otherwise sit visually and interactively on top.
+        <div className="fixed inset-0 flex items-center justify-center p-6 bg-black/70 backdrop-blur-sm animate-in fade-in" style={{ pointerEvents: 'auto', zIndex: 2000000000 }}>
+          <div className={`relative w-full max-w-sm rounded-xl shadow-2xl p-6 ${isLightMode ? 'bg-white text-neutral-900' : 'bg-neutral-900 text-white border border-neutral-800'}`} style={{ pointerEvents: 'auto' }}>
+            <p className="text-sm font-medium mb-5">{t.tourExitConfirm as string}</p>
+            <div className="flex items-center justify-end gap-2">
+              <button
+                onClick={() => {
+                  tourExitResolveRef.current?.(false);
+                  setShowTourExitConfirm(false);
+                }}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${isLightMode ? 'hover:bg-neutral-100' : 'hover:bg-white/10'}`}
+                style={{ pointerEvents: 'auto' }}
+              >
+                {t.tourContinueButton as string}
+              </button>
+              <button
+                onClick={() => {
+                  tourExitResolveRef.current?.(true);
+                  setShowTourExitConfirm(false);
+                }}
+                className="px-4 py-2 rounded-lg text-sm font-medium bg-red-600 hover:bg-red-500 text-white transition-colors"
+                style={{ pointerEvents: 'auto' }}
+              >
+                {t.tourExitButton as string}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <ShareModal
         isOpen={showShareModal}

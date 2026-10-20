@@ -10,6 +10,7 @@ interface SequenceAlignmentModalProps {
     onClose: () => void;
     primaryStructure?: ChainInfo[];
     overlays: SuperposedStructure[];
+    onToast?: (message: string, type?: 'success' | 'error' | 'info' | 'warning') => void;
 }
 
 interface AlignedResult {
@@ -226,7 +227,8 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
     isOpen,
     onClose,
     primaryStructure,
-    overlays
+    overlays,
+    onToast
 }) => {
     const { t } = useTranslation();
     const [selectedChain, setSelectedChain] = useState<string | null>(null);
@@ -1265,9 +1267,9 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
             // Save
             doc.save(`sequence_alignment_${Date.now()}.pdf`);
             console.log('PDF exported successfully');
-        } catch (error) {
-            console.error('Failed to export PDF:', error);
-            alert(`Export failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        } catch (exportError) {
+            console.error('Failed to export PDF:', exportError);
+            onToast?.(`Export failed: ${exportError instanceof Error ? exportError.message : 'Unknown error'}`, 'error');
         }
     };
 

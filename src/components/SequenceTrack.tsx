@@ -150,7 +150,18 @@ export const SequenceTrack: React.FC<SequenceTrackProps> = ({
         }
     }, [highlightedResidue, activeChain]);
 
-    if (!activeChain) return null;
+    if (!activeChain) {
+        return (
+            <div id={id} className={`hidden md:flex relative h-full w-24 rounded-none shrink-0 z-10 border-l
+                ${isLightMode ? 'bg-white border-neutral-300' : 'bg-black/90 border-neutral-700'}
+                flex-col items-center justify-center gap-2 px-2 text-center`}>
+                <Map size={18} className={isLightMode ? 'text-neutral-300' : 'text-neutral-700'} />
+                <span className={`text-[9px] leading-tight ${isLightMode ? 'text-neutral-400' : 'text-neutral-600'}`}>
+                    Load a structure to view its sequence
+                </span>
+            </div>
+        );
+    }
 
     const isAtomView = activeChain.atoms && activeChain.atoms.length > 0;
 
