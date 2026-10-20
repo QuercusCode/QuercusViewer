@@ -3,7 +3,7 @@ import clsx from 'clsx';
 import { Skeleton } from './Skeleton';
 import { SequenceAlignmentModal } from './SequenceAlignmentModal';
 import type { RepresentationType, ColoringType, ChainInfo, Measurement, ResidueInteraction, AtomContact, CustomColorRule, CustomStyleRule, CustomTransparencyRule, ColorPalette, ResidueInfo, StructureInfo, MeasurementTextColor, SuperposedStructure, Annotation, NucleicResidueRule, RadiusSourceType, SurfaceAlgorithm } from '../types';
-import { getInteractionType } from '../utils/interactionUtils';
+import { getAtomicInteractionType } from '../utils/interactionUtils';
 import { type DataSource, getStructureUrl, extractChainsFromComponent } from '../utils/pdbUtils';
 
 
@@ -2596,21 +2596,24 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
 
                     const CONTACT_CUTOFF = 4.0; // Å — covers H-bonds, salt bridges, hydrophobic contacts
                     let minDist = Infinity;
-                    const contacts: AtomContact[] = [];
+                    // Every atom pair, unfiltered — classification needs the full range
+                    // (e.g. a salt bridge's charged atoms can be meaningfully close up to
+                    // ~6Å apart) even though only the tight CONTACT_CUTOFF pairs are shown
+                    // as dashed lines / listed contacts below.
+                    const allPairs: AtomContact[] = [];
                     for (const a1 of atomsA) {
                         for (const a2 of atomsB) {
                             const dx = a1.x - a2.x, dy = a1.y - a2.y, dz = a1.z - a2.z;
                             const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
                             if (dist < minDist) minDist = dist;
-                            if (dist <= CONTACT_CUTOFF) {
-                                contacts.push({ atom1Name: a1.name, atom1Index: a1.index, atom2Name: a2.name, atom2Index: a2.index, distance: dist });
-                            }
+                            allPairs.push({ atom1Name: a1.name, atom1Index: a1.index, atom2Name: a2.name, atom2Index: a2.index, distance: dist });
                         }
                     }
-                    contacts.sort((a, b) => a.distance - b.distance);
+                    allPairs.sort((a, b) => a.distance - b.distance);
+                    const contacts = allPairs.filter(c => c.distance <= CONTACT_CUTOFF);
 
                     const classification = atomsA.length && atomsB.length
-                        ? getInteractionType(`${resA.resName} ${resA.resNo}`, `${resB.resName} ${resB.resNo}`, minDist)
+                        ? getAtomicInteractionType(resA.resName, resB.resName, allPairs)
                         : null;
 
                     const newInteraction: ResidueInteraction = {
