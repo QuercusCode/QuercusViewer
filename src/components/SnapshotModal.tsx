@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Check, Image, Zap, Target, Sparkles } from 'lucide-react';
+import { Check, Image, Zap, Target, Sparkles, Droplet } from 'lucide-react';
 import clsx from 'clsx';
 import { useTranslation } from '../lib/i18n';
 
@@ -8,9 +8,11 @@ interface SnapshotModalProps {
     viewMode: 'single' | 'dual' | 'triple' | 'quad';
     onConfirm: (viewportIndices: number[], qualityFactor: number, transparent: boolean) => void;
     onCancel: () => void;
+    watermarkEnabled?: boolean;
+    isSignedIn?: boolean;
 }
 
-export const SnapshotModal: React.FC<SnapshotModalProps> = ({ isOpen, viewMode, onConfirm, onCancel }) => {
+export const SnapshotModal: React.FC<SnapshotModalProps> = ({ isOpen, viewMode, onConfirm, onCancel, watermarkEnabled = true, isSignedIn = false }) => {
     const { t } = useTranslation();
     const [selectedViewports, setSelectedViewports] = useState<boolean[]>([true, true, true, true]);
     const [selectedQuality, setSelectedQuality] = useState(2); // Default to High (2x)
@@ -218,20 +220,41 @@ export const SnapshotModal: React.FC<SnapshotModalProps> = ({ isOpen, viewMode, 
                 </div>
 
                 {/* Footer */}
-                <div className="p-4 bg-gray-900/50 border-t border-white/10 flex gap-3 justify-end">
-                    <button
-                        onClick={onCancel}
-                        className="px-4 py-2 rounded-lg text-sm text-gray-400 hover:text-white hover:bg-white/5 transition-colors font-medium"
-                    >
-                        {t.cancelBtn as string}
-                    </button>
-                    <button
-                        onClick={handleConfirm}
-                        disabled={selectedCount === 0}
-                        className="px-6 py-2 rounded-lg text-sm bg-blue-600 text-white font-bold hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-900/20 transition-all active:scale-95"
-                    >
-                        {(t.snapCapture as (n: number) => string)(selectedCount)}
-                    </button>
+                <div className="p-4 bg-gray-900/50 border-t border-white/10 space-y-3">
+                    <div className="flex items-start gap-2 text-[11px] text-gray-500">
+                        <Droplet size={12} className="mt-0.5 shrink-0" />
+                        <span>
+                            {watermarkEnabled ? (t.snapWatermarkOn as string) : (t.snapWatermarkOff as string)}
+                            {isSignedIn && (
+                                <>
+                                    {' '}
+                                    <a
+                                        href="/dashboard/settings"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-blue-400 hover:text-blue-300 underline underline-offset-2"
+                                    >
+                                        {t.snapWatermarkManage as string}
+                                    </a>
+                                </>
+                            )}
+                        </span>
+                    </div>
+                    <div className="flex gap-3 justify-end">
+                        <button
+                            onClick={onCancel}
+                            className="px-4 py-2 rounded-lg text-sm text-gray-400 hover:text-white hover:bg-white/5 transition-colors font-medium"
+                        >
+                            {t.cancelBtn as string}
+                        </button>
+                        <button
+                            onClick={handleConfirm}
+                            disabled={selectedCount === 0}
+                            className="px-6 py-2 rounded-lg text-sm bg-blue-600 text-white font-bold hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-900/20 transition-all active:scale-95"
+                        >
+                            {(t.snapCapture as (n: number) => string)(selectedCount)}
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

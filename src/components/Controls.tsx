@@ -961,6 +961,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                             : `hover:bg-white hover:shadow-sm ${isLightMode ? 'text-neutral-600' : 'hover:bg-neutral-700 text-neutral-300'}`
                                             }`}
                                         title="Undo (Ctrl+Z)"
+                                        aria-label="Undo"
                                     >
                                         <Undo2 className="w-4 h-4" />
                                     </button>
@@ -972,6 +973,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                             : `hover:bg-white hover:shadow-sm ${isLightMode ? 'text-neutral-600' : 'hover:bg-neutral-700 text-neutral-300'}`
                                             }`}
                                         title="Redo (Ctrl+Shift+Z)"
+                                        aria-label="Redo"
                                     >
                                         <Redo2 className="w-4 h-4" />
                                     </button>
@@ -988,6 +990,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                         onClick={onOpenFavorites}
                                         className={`p-2 rounded-lg transition-colors ${isLightMode ? 'text-neutral-600 hover:bg-neutral-100' : 'text-neutral-400 hover:bg-neutral-800'}`}
                                         title={t.favoritesTitle as string}
+                                        aria-label={t.favoritesTitle as string}
                                     >
                                         <Star className="w-4 h-4" />
                                     </button>
@@ -997,6 +1000,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                         onClick={onOpenHistory}
                                         className={`p-2 rounded-lg transition-colors ${isLightMode ? 'text-neutral-600 hover:bg-neutral-100' : 'text-neutral-400 hover:bg-neutral-800'}`}
                                         title={t.recentHistory as string}
+                                        aria-label={t.recentHistory as string}
                                     >
                                         <Clock className="w-4 h-4" />
                                     </button>
@@ -1005,6 +1009,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                     onClick={onToggleLibrary}
                                     className={`p-2 rounded-lg transition-colors ${isLightMode ? 'text-neutral-600 hover:bg-neutral-100' : 'text-neutral-400 hover:bg-neutral-800'}`}
                                     title={t.offlineLibrary as string}
+                                    aria-label={t.offlineLibrary as string}
                                 >
                                     <BookOpen className="w-4 h-4" />
                                 </button>
@@ -1022,6 +1027,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                         : 'text-neutral-400 hover:bg-white/5 hover:text-white'
                                         }`}
                                     title={t.interactiveTour as string}
+                                    aria-label={t.interactiveTour as string}
                                     id="help-button"
                                 >
                                     <HelpCircle className="w-4 h-4" />
@@ -1035,6 +1041,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                         : 'text-indigo-400 hover:bg-white/5 hover:text-indigo-300'
                                         }`}
                                     title={`Toggle Theme (Current: ${theme})`}
+                                    aria-label={`Toggle Theme (Current: ${theme})`}
                                 >
                                     {theme === 'light' ? <Sun className="w-4 h-4" /> : theme === 'dark-room' ? <EyeOff className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
                                 </button>
@@ -1155,6 +1162,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                             : `${isLightMode ? 'bg-neutral-200 hover:bg-neutral-300' : 'bg-neutral-700 hover:bg-neutral-600'}`
                                             }`}
                                         title={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+                                        aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
                                     >
                                         <Star className={`w-4 h-4 ${isFavorite ? 'fill-white' : ''}`} />
                                     </button>
@@ -1264,6 +1272,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                         <button
                                             onClick={onDownloadPDB}
                                             title={t.downloadPDBTitle as string}
+                                            aria-label={t.downloadPDBTitle as string}
                                             className={`p-1 rounded-md transition-colors ${isLightMode ? 'hover:bg-neutral-200 text-neutral-500 hover:text-black' : 'hover:bg-white/10 text-neutral-400 hover:text-white'}`}
                                         >
                                             <Download className="w-3.5 h-3.5" />
@@ -2826,6 +2835,13 @@ export const Controls: React.FC<ControlsProps> = ({
                             </div>
                         )}
 
+                        {/* Empty state: Interaction Mode is active but nothing picked yet */}
+                        {isInteractionMode && residueInteractions.length === 0 && (
+                            <div className={`p-3 rounded-lg flex items-start gap-2 ${cardBg}`}>
+                                <Zap className="w-3.5 h-3.5 text-cyan-500 mt-0.5 shrink-0" />
+                                <span className={`text-[11px] leading-snug ${subtleText}`}>{t.interactionModeHint as string}</span>
+                            </div>
+                        )}
 
                         {/* Sequence Viewer Component - Only for Proteins */}
                         {!isChemical && (
@@ -2836,6 +2852,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                         <button
                                             onClick={onDownloadSequence}
                                             title="Download FASTA Sequence"
+                                            aria-label="Download FASTA Sequence"
                                             className={`p-1 rounded-md transition-colors ${isLightMode ? 'hover:bg-neutral-200 text-neutral-500 hover:text-black' : 'hover:bg-white/10 text-neutral-400 hover:text-white'}`}
                                         >
                                             <Download className="w-3.5 h-3.5" />

@@ -11,10 +11,13 @@ import html2canvas from 'html2canvas';
 import { Share, Calculator } from 'lucide-react';
 import { FloatingCalculator } from './FloatingCalculator';
 import { useTranslation } from '../../lib/i18n';
+import { useToast } from '../../hooks/useToast';
+import { ToastContainer } from '../Toast';
 
 export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false }) => {
     const { user } = useAuth();
     const { t } = useTranslation();
+    const { toasts, removeToast, error: showError } = useToast();
     const [notebooks, setNotebooks] = useState<NotebookEntry[]>([]);
     const [activeId, setActiveId] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
@@ -232,7 +235,7 @@ export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false
             }
         } catch (err) {
             console.error('Failed to export PDF:', err);
-            alert(`Failed to generate PDF report: ${err instanceof Error ? err.message : 'Unknown error'}`);
+            showError(`Failed to generate PDF report: ${err instanceof Error ? err.message : 'Unknown error'}`);
         } finally {
             document.body.removeChild(iframe);
             setIsExporting(false);
@@ -264,6 +267,7 @@ export const LabNotebook: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false
 
     return (
         <div className={`flex h-full w-full bg-[var(--bg-main)] overflow-hidden text-[var(--text-secondary)] ${isDrawer ? 'border-l border-[var(--border-main)] shadow-2xl' : ''}`}>
+            <ToastContainer toasts={toasts} onRemove={removeToast} />
             {/* Left Sidebar: List */}
             {(!isDrawer || showDrawerList) && (
                 <div className={`

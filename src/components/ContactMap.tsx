@@ -21,6 +21,7 @@ interface ContactMapProps {
     pdbMetadata: PDBMetadata | null;
     getLigandInteractions?: () => Promise<import('../types').LigandInteraction[]>;
     pdbAccession?: string;
+    onToast?: (message: string, type?: 'success' | 'error' | 'info' | 'warning') => void;
 }
 
 
@@ -38,7 +39,8 @@ export const ContactMap: React.FC<ContactMapProps> = ({
     // onHighlightResidue
     pdbMetadata,
     getLigandInteractions,
-    pdbAccession
+    pdbAccession,
+    onToast
 }) => {
     const { t } = useTranslation();
     const mapCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -95,11 +97,11 @@ export const ContactMap: React.FC<ContactMapProps> = ({
                         window.addEventListener('deviceorientation', handleDeviceOrientation);
                         setIsARMode(true);
                     } else {
-                        alert("Permission to use gyroscope was denied.");
+                        onToast?.("Permission to use gyroscope was denied.", 'warning');
                     }
                 } catch (e) {
                     console.error(e);
-                    alert("Error requesting gyroscope permission.");
+                    onToast?.("Error requesting gyroscope permission.", 'error');
                 }
             } else {
                 // Non-iOS or older devices
@@ -195,7 +197,7 @@ export const ContactMap: React.FC<ContactMapProps> = ({
                 // ... (N check) ...
                 const N = allResidues.length;
                 if (N > 6000) {
-                    alert(`Protein too large for browser-based contact map (${N} residues > 6000 limit). Computing this might freeze your device.`);
+                    onToast?.(`Protein too large for browser-based contact map (${N} residues > 6000 limit). Computing this might freeze your device.`, 'warning');
                     setLoading(false);
                     return;
                 }

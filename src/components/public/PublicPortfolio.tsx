@@ -3,6 +3,8 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { getPublicCollection, getDownloadUrl, type Collection, type Structure } from '../../lib/structuresService';
 import { Loader2, Folder, ExternalLink, Download, Globe, Beaker, Dna } from 'lucide-react';
 import { useTranslation } from '../../lib/i18n';
+import { useToast } from '../../hooks/useToast';
+import { ToastContainer } from '../Toast';
 
 // Re-use some constants for visual consistency
 const COLOR_CLASSES: Record<string, string> = {
@@ -34,6 +36,7 @@ export const PublicPortfolio: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [collection, setCollection] = useState<Collection | null>(null);
     const [structures, setStructures] = useState<Structure[]>([]);
+    const { toasts, removeToast, error: showError } = useToast();
 
     useEffect(() => {
         if (!collectionId) return;
@@ -57,7 +60,7 @@ export const PublicPortfolio: React.FC = () => {
             sessionStorage.setItem('pendingStructure', JSON.stringify(pending));
             navigate('/');
         } catch (e: any) {
-            alert('Failed to generate viewer link: ' + e.message);
+            showError('Failed to generate viewer link: ' + e.message);
         }
     };
 
@@ -71,7 +74,7 @@ export const PublicPortfolio: React.FC = () => {
             a.click();
             document.body.removeChild(a);
         } catch (e: any) {
-            alert('Download failed: ' + e.message);
+            showError('Download failed: ' + e.message);
         }
     };
 
@@ -103,6 +106,7 @@ export const PublicPortfolio: React.FC = () => {
 
     return (
         <div className="min-h-screen bg-neutral-950 text-neutral-200 selection:bg-blue-500/30">
+            <ToastContainer toasts={toasts} onRemove={removeToast} />
             {/* Header */}
             <header className="sticky top-0 z-30 bg-neutral-950/80 backdrop-blur-xl border-b border-neutral-800/50">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">

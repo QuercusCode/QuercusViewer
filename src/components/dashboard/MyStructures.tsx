@@ -730,6 +730,7 @@ export const MyStructures = () => {
     // New State for Moving Structure
     const [movingStructure, setMovingStructure] = useState<Structure | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [showStarred, setShowStarred] = useState(false);
     const [sortBy, setSortBy] = useState<SortKey>('date');
@@ -1336,6 +1337,14 @@ export const MyStructures = () => {
                     <div className="fixed top-4 right-4 z-50 flex items-start gap-3 bg-red-500/10 border border-red-500/30 text-red-400 rounded-lg px-4 py-3 text-sm shadow-xl shadow-black/50 backdrop-blur-md">
                         <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" /><span>{error}</span>
                         <button onClick={() => setError(null)} className="ml-auto opacity-60 hover:opacity-100">✕</button>
+                    </div>
+                )}
+
+                {/* Success floating */}
+                {successMessage && (
+                    <div className="fixed top-4 right-4 z-50 flex items-start gap-3 bg-green-500/10 border border-green-500/30 text-green-400 rounded-lg px-4 py-3 text-sm shadow-xl shadow-black/50 backdrop-blur-md">
+                        <Check className="w-4 h-4 mt-0.5 shrink-0" /><span>{successMessage}</span>
+                        <button onClick={() => setSuccessMessage(null)} className="ml-auto opacity-60 hover:opacity-100">✕</button>
                     </div>
                 )}
 
@@ -1951,7 +1960,8 @@ export const MyStructures = () => {
                                     if (isPublic) {
                                         const url = `${window.location.origin}/share/${contextMenu.item.id}`;
                                         await navigator.clipboard.writeText(url);
-                                        alert(`Public link copied to clipboard!\n${url}`);
+                                        setSuccessMessage('Public link copied to clipboard!');
+                                        setTimeout(() => setSuccessMessage(null), 3000);
                                     }
                                 } catch (e: any) {
                                     setError(e.message || 'Failed to update visibility');

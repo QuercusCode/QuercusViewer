@@ -9,10 +9,13 @@ import {
   ChevronDown, Activity, BarChart2, Plus, X, TrendingUp
 } from 'lucide-react'
 import { useTranslation } from '../../lib/i18n'
+import { useToast } from '../../hooks/useToast'
+import { ToastContainer } from '../Toast'
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#ef4444', '#06b6d4', '#84cc16'];
 const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode, updateAttributes }: NodeViewProps) => {
   const { t } = useTranslation();
+  const { toasts, removeToast, warning: showWarning } = useToast();
   const [rowCount, setRowCount] = useState(1);
   const [activeCell, setActiveCell] = useState<string | null>(null);
   const [cellValue, setCellValue] = useState("");
@@ -357,7 +360,7 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode, updateAtt
     }
 
     if (tableData.length === 0) {
-      alert("Please add some data to the table first.");
+      showWarning("Please add some data to the table first.");
       return;
     }
 
@@ -499,6 +502,7 @@ const SpreadsheetTableComponent = ({ node, editor, getPos, deleteNode, updateAtt
 
   return (
     <NodeViewWrapper className="spreadsheet-premium-wrapper my-12 group/spreadsheet relative z-30">
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
       <div className="bg-white border border-neutral-200 rounded-xl shadow-2xl transition-all group-hover/spreadsheet:border-neutral-300 relative">
         
         {/* TOP HEADER: Title & Global Actions */}
