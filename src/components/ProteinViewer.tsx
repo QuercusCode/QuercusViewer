@@ -272,6 +272,80 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
     const selectedAtomsRef = useRef<any[]>([]);
     const selectedResiduesRef = useRef<ResidueInfo[]>([]); // Interaction Mode: residues picked so far (0-1 pending)
     const interactionRepsRef = useRef<any[]>([]); // Track NGL Representations for interaction-contact lines, for cleanup
+    const interactionOverlayRepsRef = useRef<any[]>([]); // Track NGL ball+stick "detail overlay" reps for interaction-mode residues, for cleanup
+
+    // Re-draws every Interaction Mode visual on `component`: the dashed "distance"
+    // contact lines for each stored residueInteraction, plus a ball+stick "detail
+    // overlay" representation on top of whatever the global Style is for every
+    // residue involved (so individual atoms are visible even under backbone-only
+    // styles like cartoon/ribbon/tube, and the dashed lines connect to real
+    // geometry instead of floating in empty space). Also covers the single
+    // pending pick while Interaction Mode is active, so the first click gets a
+    // visible detail overlay before the pair completes.
+    //
+    // Defined as a plain function (not useCallback) so it always closes over the
+    // latest residueInteractions/isInteractionMode props and ref values on every
+    // render — it's called imperatively from event handlers and from
+    // updateRepresentation, not from its own effect with a dependency array.
+    const syncInteractionVisuals = (component: any) => {
+        interactionRepsRef.current.forEach((rep) => {
+            try { component.removeRepresentation(rep); } catch {
+                // Representation (or component) may already be gone
+            }
+        });
+        interactionRepsRef.current = [];
+
+        interactionOverlayRepsRef.current.forEach((rep) => {
+            try { component.removeRepresentation(rep); } catch {
+                // Representation (or component) may already be gone
+            }
+        });
+        interactionOverlayRepsRef.current = [];
+
+        if (!component || !component.structure) return; // No structure loaded yet — nothing further to draw
+
+        residueInteractions?.forEach((ri: ResidueInteraction) => {
+            if (!ri.contacts.length) return; // Nothing within the contact cutoff to draw
+            try {
+                const rep = component.addRepresentation("distance", {
+                    labelVisible: false,
+                    color: ri.interactionColor || '#d946ef',
+                    atomPair: ri.contacts.map(c => [c.atom1Index, c.atom2Index]),
+                    opacity: 0.9,
+                    linewidth: 2.5
+                });
+                interactionRepsRef.current.push(rep);
+            } catch (e) {
+                console.warn("Failed to draw residue interaction contacts", e);
+            }
+        });
+
+        // Every residue needing its atoms visible: both sides of every stored
+        // interaction, plus the pending (not-yet-paired) pick while in the mode.
+        const detailResidues = new Map<string, ResidueInfo>();
+        residueInteractions?.forEach((ri: ResidueInteraction) => {
+            detailResidues.set(`${ri.residue1.chain}|${ri.residue1.resNo}`, ri.residue1);
+            detailResidues.set(`${ri.residue2.chain}|${ri.residue2.resNo}`, ri.residue2);
+        });
+        if (isInteractionMode) {
+            selectedResiduesRef.current.forEach((res) => {
+                detailResidues.set(`${res.chain}|${res.resNo}`, res);
+            });
+        }
+
+        detailResidues.forEach((res) => {
+            try {
+                const rep = component.addRepresentation('ball+stick', {
+                    sele: `${res.resNo}:${res.chain}`,
+                    colorScheme: 'element',
+                    scale: 1.0
+                });
+                interactionOverlayRepsRef.current.push(rep);
+            } catch (e) {
+                console.warn("Failed to draw interaction detail overlay", e);
+            }
+        });
+    };
 
     // Helper to find atom
     const findAtom = (chain: string, resNo: number, atomName: string) => {
@@ -2440,32 +2514,21 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
     // interaction, covering all of its contact pairs at once via NGL's atomPair
     // array — far cheaper than one shape per pair, and keeps cleanup simple.
     useEffect(() => {
-        const component = componentRef.current;
-        if (!component) return;
+        syncInteractionVisuals(componentRef.current);
+    }, [residueInteractions, isInteractionMode]);
 
-        interactionRepsRef.current.forEach((rep) => {
-            try { component.removeRepresentation(rep); } catch {
-                // Representation may already be gone (e.g. component was disposed)
+    // Exiting Interaction Mode should clear the lingering pending (not-yet-paired)
+    // pick highlight/overlay, but leave stored/completed interactions' dashed
+    // lines and detail overlays visible.
+    useEffect(() => {
+        if (!isInteractionMode) {
+            selectedResiduesRef.current = [];
+            if (stageRef.current) {
+                stageRef.current.getComponentsByName("temp-interaction-selection").list.forEach((c: any) => stageRef.current.removeComponent(c));
             }
-        });
-        interactionRepsRef.current = [];
-
-        residueInteractions?.forEach((ri: ResidueInteraction) => {
-            if (!ri.contacts.length) return; // Nothing within the contact cutoff to draw
-            try {
-                const rep = component.addRepresentation("distance", {
-                    labelVisible: false,
-                    color: ri.interactionColor || '#d946ef',
-                    atomPair: ri.contacts.map(c => [c.atom1Index, c.atom2Index]),
-                    opacity: 0.9,
-                    linewidth: 2.5
-                });
-                interactionRepsRef.current.push(rep);
-            } catch (e) {
-                console.warn("Failed to draw residue interaction contacts", e);
-            }
-        });
-    }, [residueInteractions]);
+            syncInteractionVisuals(componentRef.current);
+        }
+    }, [isInteractionMode]);
 
 
     useEffect(() => {
@@ -2480,6 +2543,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                 // Clear temp selection shapes?
                 stage.getComponentsByName("temp-selection").list.forEach((c: any) => stage.removeComponent(c));
                 stage.getComponentsByName("temp-interaction-selection").list.forEach((c: any) => stage.removeComponent(c));
+                syncInteractionVisuals(componentRef.current); // Pending pick's detail overlay must disappear too
                 return;
             }
             const atom = pickingProxy.atom;
@@ -2498,6 +2562,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                     // Clicked the same residue again — deselect instead of a pointless self-pair.
                     selectedResiduesRef.current = [];
                     stage.getComponentsByName("temp-interaction-selection").list.forEach((c: any) => stage.removeComponent(c));
+                    syncInteractionVisuals(componentRef.current); // Drop that residue's pending detail overlay
                     return;
                 }
 
@@ -2508,6 +2573,10 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                 shape.addSphere([atom.x, atom.y, atom.z], [0.1, 0.85, 0.85], 0.35);
                 const comp = stage.addComponentFromObject(shape);
                 comp.addRepresentation("buffer", { depthTest: false });
+
+                // First pick: pop its ball+stick detail overlay immediately so the
+                // atoms are visible before the second residue is even chosen.
+                syncInteractionVisuals(componentRef.current);
 
                 if (selectedResiduesRef.current.length === 2 && componentRef.current?.structure) {
                     const [resA, resB] = selectedResiduesRef.current;
@@ -2558,6 +2627,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
 
                     selectedResiduesRef.current = [];
                     stage.getComponentsByName("temp-interaction-selection").list.forEach((c: any) => stage.removeComponent(c));
+                    syncInteractionVisuals(componentRef.current); // Pair complete: pending overlay clears (the new pair's own overlay/lines arrive via the residueInteractions-keyed effect once the prop updates)
                 }
                 return;
             }
@@ -3314,6 +3384,13 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                 });
             }
 
+            // removeAllRepresentations() above wipes every NGL representation on
+            // this component, including the interaction dashed lines and ball+stick
+            // detail overlays added outside this function — re-add them now so a
+            // Style/Coloring/Surface/etc. change doesn't make them vanish for good.
+            // Uses the resolved `component` (not componentRef.current) so this stays
+            // correct for the specificComponent-at-initial-load case too.
+            syncInteractionVisuals(component);
 
             if (stageRef.current?.viewer) {
                 stageRef.current.viewer.requestRender();
