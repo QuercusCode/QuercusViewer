@@ -73,6 +73,47 @@ const CONSERVATIVE_GROUPS = [
     ['F', 'Y', 'W']
 ];
 
+// Standard BLOSUM62 substitution matrix (Henikoff & Henikoff 1992), the scoring
+// scheme this alignment already claims to use in its UI/PDF labels (saSubtitle,
+// the PDF report header). Used for protein chains; nucleic acid chains fall back to
+// a simple match/mismatch score further down, since BLOSUM62 only applies to amino
+// acids and a flat score is the standard choice for DNA/RNA alignment.
+const BLOSUM62_ORDER = 'ARNDCQEGHILKMFPSTWYV';
+const BLOSUM62_MATRIX = [
+    [4, -1, -2, -2, 0, -1, -1, 0, -2, -1, -1, -1, -1, -2, -1, 1, 0, -3, -2, 0],
+    [-1, 5, 0, -2, -3, 1, 0, -2, 0, -3, -2, 2, -1, -3, -2, -1, -1, -3, -2, -3],
+    [-2, 0, 6, 1, -3, 0, 0, 0, 1, -3, -3, 0, -2, -3, -2, 1, 0, -4, -2, -3],
+    [-2, -2, 1, 6, -3, 0, 2, -1, -1, -3, -4, -1, -3, -3, -1, 0, -1, -4, -3, -3],
+    [0, -3, -3, -3, 9, -3, -4, -3, -3, -1, -1, -3, -1, -2, -3, -1, -1, -2, -2, -1],
+    [-1, 1, 0, 0, -3, 5, 2, -2, 0, -3, -2, 1, 0, -3, -1, 0, -1, -2, -1, -2],
+    [-1, 0, 0, 2, -4, 2, 5, -2, 0, -3, -3, 1, -2, -3, -1, 0, -1, -3, -2, -2],
+    [0, -2, 0, -1, -3, -2, -2, 6, -2, -4, -4, -2, -3, -3, -2, 0, -2, -2, -3, -3],
+    [-2, 0, 1, -1, -3, 0, 0, -2, 8, -3, -3, -1, -2, -1, -2, -1, -2, -2, 2, -3],
+    [-1, -3, -3, -3, -1, -3, -3, -4, -3, 4, 2, -3, 1, 0, -3, -2, -1, -3, -1, 3],
+    [-1, -2, -3, -4, -1, -2, -3, -4, -3, 2, 4, -2, 2, 0, -3, -2, -1, -2, -1, 1],
+    [-1, 2, 0, -1, -3, 1, 1, -2, -1, -3, -2, 5, -1, -3, -1, 0, -1, -3, -2, -2],
+    [-1, -1, -2, -3, -1, 0, -2, -3, -2, 1, 2, -1, 5, 0, -2, -1, -1, -1, -1, 1],
+    [-2, -3, -3, -3, -2, -3, -3, -3, -1, 0, 0, -3, 0, 6, -4, -2, -2, 1, 3, -1],
+    [-1, -2, -2, -1, -3, -1, -1, -2, -2, -3, -3, -1, -2, -4, 7, -1, -1, -4, -3, -2],
+    [1, -1, 1, 0, -1, 0, 0, 0, -1, -2, -2, 0, -1, -2, -1, 4, 1, -3, -2, -2],
+    [0, -1, 0, -1, -1, -1, -1, -2, -2, -1, -1, -1, -1, -2, -1, 1, 5, -2, -2, 0],
+    [-3, -3, -4, -4, -2, -2, -3, -2, -2, -3, -2, -3, -1, 1, -4, -3, -2, 11, 2, -3],
+    [-2, -2, -2, -3, -2, -1, -2, -3, 2, -1, -1, -2, -1, 3, -3, -2, -2, 2, 7, -1],
+    [0, -3, -3, -3, -1, -2, -2, -3, -3, 3, 1, -2, 1, -1, -2, -2, 0, -3, -1, 4],
+];
+const BLOSUM62_INDEX: Record<string, number> = {};
+BLOSUM62_ORDER.split('').forEach((c, idx) => { BLOSUM62_INDEX[c] = idx; });
+
+// BLOSUM62 score for a pair of single-letter amino acid codes. Falls back to -4
+// (BLOSUM62's typical worst-case off-diagonal magnitude) for any character outside
+// the 20 standard residues (ambiguous codes like X, B, Z are rare in PDB sequences).
+const blosum62Score = (a: string, b: string): number => {
+    const i = BLOSUM62_INDEX[a.toUpperCase()];
+    const j = BLOSUM62_INDEX[b.toUpperCase()];
+    if (i === undefined || j === undefined) return a.toUpperCase() === b.toUpperCase() ? 1 : -4;
+    return BLOSUM62_MATRIX[i][j];
+};
+
 const getMatchChar = (a: string, b: string): string => {
     if (a === '-' || b === '-') return ' ';
     if (a === b) return '|';
@@ -88,9 +129,13 @@ const alignSequences = (chain1: ChainInfo, chain2: ChainInfo) => {
     const coords1 = chain1.coords;
     const coords2 = chain2.coords;
 
+    // BLOSUM62 only applies to amino acids — nucleic acid chains (DNA/RNA) use a
+    // simple match/mismatch score instead, the standard choice for that case.
+    const isNucleic = chain1.type === 'nucleic' || chain2.type === 'nucleic';
     const match = 10;
     const mismatch = -2;
     const gap = -5;
+    const pairScore = (a: string, b: string) => isNucleic ? (a === b ? match : mismatch) : blosum62Score(a, b);
 
     const n = seq1.length;
     const m = seq2.length;
@@ -101,9 +146,8 @@ const alignSequences = (chain1: ChainInfo, chain2: ChainInfo) => {
 
     for (let i = 1; i <= n; i++) {
         for (let j = 1; j <= m; j++) {
-            const isMatch = seq1[i - 1] === seq2[j - 1];
             scoreMatrix[i][j] = Math.max(
-                scoreMatrix[i - 1][j - 1] + (isMatch ? match : mismatch),
+                scoreMatrix[i - 1][j - 1] + pairScore(seq1[i - 1], seq2[j - 1]),
                 scoreMatrix[i - 1][j] + gap,
                 scoreMatrix[i][j - 1] + gap
             );
@@ -122,7 +166,7 @@ const alignSequences = (chain1: ChainInfo, chain2: ChainInfo) => {
     let atomPairs = 0;
 
     while (i > 0 || j > 0) {
-        if (i > 0 && j > 0 && scoreMatrix[i][j] === scoreMatrix[i - 1][j - 1] + (seq1[i - 1] === seq2[j - 1] ? match : mismatch)) {
+        if (i > 0 && j > 0 && scoreMatrix[i][j] === scoreMatrix[i - 1][j - 1] + pairScore(seq1[i - 1], seq2[j - 1])) {
             const c1 = seq1[i - 1];
             const c2 = seq2[j - 1];
             align1 = c1 + align1;
@@ -421,11 +465,14 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
             let rmsdCount = 0;
 
             alignmentResults.forEach(result => {
+                const resultAlignmentFailed = overlays.find(o => o.id === result.overlayId)?.superpositionFailed;
                 result.chainMatches.forEach(match => {
                     totalAlignments++;
                     avgIdentity += match.stats.identity;
                     avgSimilarity += match.stats.similarity;
-                    if (match.stats.rmsd) {
+                    // Skip RMSD from any overlay whose 3D alignment failed — its
+                    // coordinates are unfitted, so the distance is not meaningful.
+                    if (match.stats.rmsd && !resultAlignmentFailed) {
                         avgRMSD += match.stats.rmsd;
                         rmsdCount++;
                     }
@@ -521,10 +568,11 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                     yPos += 14;
 
                     // Statistics Cards - Modern glassmorphism style
+                    const rowAlignmentFailed = overlays.find(o => o.id === result.overlayId)?.superpositionFailed;
                     const statsData = [
                         { label: 'Identity', value: `${match.stats.identity.toFixed(1)}%`, color: [59, 130, 246], bgColor: [30, 58, 138] }, // blue
                         { label: 'Similarity', value: `${match.stats.similarity.toFixed(1)}%`, color: [16, 185, 129], bgColor: [6, 78, 59] }, // emerald
-                        { label: 'RMSD', value: match.stats.rmsd ? `${match.stats.rmsd.toFixed(2)} Å` : 'N/A', color: [168, 85, 247], bgColor: [88, 28, 135] }, // purple
+                        { label: 'RMSD', value: (!rowAlignmentFailed && match.stats.rmsd) ? `${match.stats.rmsd.toFixed(2)} Å` : (rowAlignmentFailed ? 'Alignment Failed' : 'N/A'), color: [168, 85, 247], bgColor: [88, 28, 135] }, // purple
                         { label: 'Gaps', value: `${match.stats.gaps} (${(match.stats.gaps / match.stats.length * 100).toFixed(1)}%)`, color: [251, 146, 60], bgColor: [124, 45, 18] }, // orange
                         { label: 'Length', value: `${match.stats.length}`, color: [148, 163, 184], bgColor: [51, 65, 85] } // slate
                     ];
@@ -1315,6 +1363,10 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
 
                         const chainKey = `${result.overlayId}_${match.primaryChain}_${match.targetChain}`;
                         const chainAnnotations = annotations[chainKey] || [];
+                        // A failed 3D alignment leaves the overlay's coordinates unfitted, so
+                        // any RMSD computed from them doesn't mean anything — don't show a
+                        // confident-looking number for it.
+                        const alignmentFailed = overlays.find(o => o.id === result.overlayId)?.superpositionFailed;
 
                         return (
                             <div key={result.overlayId} className="bg-black/40 border border-white/10 rounded-xl overflow-hidden">
@@ -1334,10 +1386,10 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
                                     />
                                     <StatBox
                                         label={t.saRmsd as string}
-                                        value={match.stats.rmsd ? `${match.stats.rmsd.toFixed(2)} Å` : "N/A"}
-                                        icon={<Activity size={14} />}
-                                        color="text-cyan-400"
-                                        subtext={match.stats.rmsd ? "Cα Atoms" : "No Coordinates"}
+                                        value={alignmentFailed ? "N/A" : (match.stats.rmsd ? `${match.stats.rmsd.toFixed(2)} Å` : "N/A")}
+                                        icon={alignmentFailed ? <AlertTriangle size={14} /> : <Activity size={14} />}
+                                        color={alignmentFailed ? "text-amber-400" : "text-cyan-400"}
+                                        subtext={alignmentFailed ? "3D Alignment Failed" : (match.stats.rmsd ? "Cα Atoms" : "No Coordinates")}
                                     />
                                     <StatBox
                                         label={t.saGaps as string}

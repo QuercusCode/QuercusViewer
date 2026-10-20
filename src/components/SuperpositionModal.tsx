@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Plus, Eye, EyeOff, Trash2, Upload, FileDown } from 'lucide-react';
+import { X, Plus, Eye, EyeOff, Trash2, Upload, FileDown, AlertTriangle } from 'lucide-react';
 import jsPDF from 'jspdf';
 import type { SuperposedStructure } from '../types';
 import { useTranslation } from '../lib/i18n';
@@ -304,6 +304,12 @@ export const SuperpositionModal: React.FC<SuperpositionModalProps> = ({
                                                     <span className="text-[10px] text-neutral-500 font-mono truncate" title={item.id}>{item.id}</span>
 
                                                 </div>
+                                                {item.superpositionFailed && (
+                                                    <div className="flex items-center gap-1 mt-0.5 text-amber-400" title="Automatic 3D alignment onto the main structure failed — shown in its original orientation. Any RMSD computed against it is not meaningful.">
+                                                        <AlertTriangle size={11} className="shrink-0" />
+                                                        <span className="text-[10px]">Alignment failed — shown unfitted</span>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
 

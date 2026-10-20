@@ -3429,6 +3429,9 @@ function App() {
                             }
                             measurementTextColor={measurementTextColorMode}
                             overlays={ctrl.overlays}
+                            onSuperpositionStatus={(overlayId: string, failed: boolean) => {
+                              ctrl.setOverlays(prev => prev.map(o => o.id === overlayId ? { ...o, superpositionFailed: failed } : o));
+                            }}
 
                             initialOrientation={index === 0 ? embedOrientation : undefined}
 

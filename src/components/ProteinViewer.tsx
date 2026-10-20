@@ -64,6 +64,7 @@ export interface ProteinViewerProps {
 
     measurementTextColor?: MeasurementTextColor; // Added prop
     overlays?: SuperposedStructure[];
+    onSuperpositionStatus?: (overlayId: string, failed: boolean) => void;
 
     // Quality
     quality?: 'low' | 'medium' | 'high';
@@ -196,6 +197,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
     smoothSheetEnabled = false,
     isChemical = false,
     overlays,
+    onSuperpositionStatus,
 
     palette: colorPalette = 'standard', // Rename to matches internal usage
     className,
@@ -2194,28 +2196,34 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                     if (comp) {
                         // SUPERPOSE
                         console.log(`Superposing ${overlay.id} onto main structure...`);
+                        let superposeSucceeded = false;
                         try {
                             // Verify main component structure availability
                             if (!mainComponent || !mainComponent.structure) {
                                 console.warn("[Superpose] Main component or structure missing!", mainComponent);
-                                return;
-                            }
+                            } else {
+                                const mainAtoms = mainComponent.structure.atomCount;
+                                const overlayAtoms = comp.structure.atomCount;
+                                console.log(`[Superpose] Aligning '${overlay.id}' (${overlayAtoms} atoms) to Main (${mainAtoms} atoms)`);
 
-                            const mainAtoms = mainComponent.structure.atomCount;
-                            const overlayAtoms = comp.structure.atomCount;
-                            console.log(`[Superpose] Aligning '${overlay.id}' (${overlayAtoms} atoms) to Main (${mainAtoms} atoms)`);
-
-                            // align=true moves the component
-                            try {
-                                comp.superpose(mainComponent, true, "CA");
-                                // Also try to update position just in case
-                                comp.updateRepresentations({ position: true });
-                            } catch (e) {
-                                console.warn("Superposition failed:", e);
+                                // align=true moves the component
+                                try {
+                                    comp.superpose(mainComponent, true, "CA");
+                                    // Also try to update position just in case
+                                    comp.updateRepresentations({ position: true });
+                                    superposeSucceeded = true;
+                                } catch (e) {
+                                    console.warn("Superposition failed:", e);
+                                }
                             }
                         } catch (e) {
                             console.warn("Superposition failed:", e);
                         }
+                        // Surface the fit outcome to the UI — previously this was
+                        // silently swallowed, so a failed automatic alignment would
+                        // leave the overlay unmoved while the app (and any RMSD
+                        // computed from it elsewhere) carried on as if it had worked.
+                        onSuperpositionStatus?.(overlay.id, !superposeSucceeded);
 
                         // Add Representation
                         comp.addRepresentation('cartoon', {
@@ -2792,6 +2800,30 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                         return 0xFFFFFF; // White
                     };
                 }, 'charge_dynamic');
+            }
+
+            // Helper: Register a fixed-scale pLDDT scheme for AlphaFold-sourced models.
+            // NGL's stock 'bfactor' colormaker auto-scales its color domain to this
+            // structure's own min/max B-factor value — correct for a genuine
+            // crystallographic B-factor (which has no fixed range), but WRONG for
+            // AlphaFold's pLDDT confidence score, which is always on an absolute 0-100
+            // scale: a model whose residues all sit in the 40-65 range would otherwise
+            // render across the full color gradient, implying a confidence spread that
+            // doesn't exist. Only applies when we know the source is actually AlphaFold
+            // DB (dataSource === 'alphafold') — real experimental B-factor coloring
+            // keeps NGL's normal per-structure auto-scaling, which is correct for it.
+            // Uses AlphaFold DB's own official 4-band palette.
+            if (finalColor === 'bfactor' && dataSource === 'alphafold') {
+                finalColor = NGL.ColormakerRegistry.addScheme(function (this: any, params: any) {
+                    this.parameters = params;
+                    this.atomColor = function (atom: any) {
+                        const plddt = atom.bfactor;
+                        if (plddt >= 90) return 0x0053D6; // Very high confidence
+                        if (plddt >= 70) return 0x65CBF3; // Confident
+                        if (plddt >= 50) return 0xFFDB13; // Low confidence
+                        return 0xFF7D45; // Very low confidence
+                    };
+                }, 'plddt_dynamic');
             }
 
             // --- 2.5. PREPARE TRANSPARENCY SELECTIONS (Moved Before Colors) ---
