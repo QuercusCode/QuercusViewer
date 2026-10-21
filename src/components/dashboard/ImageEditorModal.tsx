@@ -462,7 +462,9 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ src, onSave,
   };
 
   return (
-    <div 
+    <div
+      role="dialog"
+      aria-modal="true"
       className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-md p-4 animate-in fade-in duration-300"
       onClick={(e) => e.stopPropagation()}
       onMouseDown={(e) => e.stopPropagation()}

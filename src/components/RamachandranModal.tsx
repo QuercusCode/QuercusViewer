@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { X, Download, AlertTriangle, Loader2 } from 'lucide-react';
 import { useTranslation } from '../lib/i18n';
+import { useModalA11y } from '../hooks/useModalA11y';
 
 interface TorsionPoint {
     phi: number | null;
@@ -186,6 +187,8 @@ export const RamachandranModal: React.FC<RamachandranModalProps> = ({
         });
     }, [plottable, isLightMode]);
 
+    const dialogRef = useModalA11y<HTMLDivElement>(isOpen, onClose);
+
     if (!isOpen) return null;
 
     const handleCanvasMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -225,7 +228,7 @@ export const RamachandranModal: React.FC<RamachandranModalProps> = ({
 
     return (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-6 bg-black/70 backdrop-blur-sm animate-in fade-in">
-            <div className={`relative w-full max-w-4xl h-[85vh] rounded-xl shadow-2xl flex flex-col overflow-hidden ${cardBg}`}>
+            <div ref={dialogRef} role="dialog" aria-modal="true" tabIndex={-1} className={`relative w-full max-w-4xl h-[85vh] rounded-xl shadow-2xl flex flex-col overflow-hidden outline-none ${cardBg}`}>
                 <div className={`flex items-center justify-between px-6 py-4 border-b ${isLightMode ? 'border-neutral-200' : 'border-neutral-800'}`}>
                     <div>
                         <h2 className="text-lg font-semibold">{t.ramachandranTitle as string}</h2>

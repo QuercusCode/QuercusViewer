@@ -25,7 +25,7 @@ export function IdentityModal({ isOpen, onConfirm, currentName, isLightMode }: I
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className={`relative w-full max-w-sm ${bgColor} ${textColor} rounded-2xl shadow-2xl border ${borderColor} p-6 animate-in zoom-in-95 duration-200`}>
+            <div role="dialog" aria-modal="true" className={`relative w-full max-w-sm ${bgColor} ${textColor} rounded-2xl shadow-2xl border ${borderColor} p-6 animate-in zoom-in-95 duration-200`}>
 
                 <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
                     <User className="text-indigo-500" />

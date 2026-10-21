@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Check, Image, Zap, Target, Sparkles, Droplet } from 'lucide-react';
 import clsx from 'clsx';
 import { useTranslation } from '../lib/i18n';
+import { useModalA11y } from '../hooks/useModalA11y';
 
 interface SnapshotModalProps {
     isOpen: boolean;
@@ -31,6 +32,8 @@ export const SnapshotModal: React.FC<SnapshotModalProps> = ({ isOpen, viewMode, 
             setTransparentBackground(true); // Reset to transparent
         }
     }, [isOpen, viewportCount]);
+
+    const dialogRef = useModalA11y<HTMLDivElement>(isOpen, onCancel);
 
     if (!isOpen) return null;
 
@@ -118,7 +121,7 @@ export const SnapshotModal: React.FC<SnapshotModalProps> = ({ isOpen, viewMode, 
 
     return (
         <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-[#0a0a0a] border border-white/10 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+            <div ref={dialogRef} role="dialog" aria-modal="true" tabIndex={-1} className="bg-[#0a0a0a] border border-white/10 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh] outline-none">
 
                 {/* Header */}
                 <div className="p-5 border-b border-white/10 bg-gradient-to-r from-gray-900 to-black">

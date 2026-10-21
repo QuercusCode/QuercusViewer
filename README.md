@@ -67,6 +67,16 @@ npm run dev
 
 Open `http://localhost:5173` to start viewing.
 
+Some features (auth, AI chat, saving/loading structures) require Supabase — copy `.env.example` to `.env` and fill in your project's URL and anon key. Everything else works without it.
+
+### Build
+
+```bash
+npm run build
+```
+
+Output goes to `dist/`. Use `npm run build:analyze` instead to also generate a bundle treemap at `dist/stats.html`.
+
 ---
 
 ## 🤝 Contributing & Support

@@ -2014,7 +2014,21 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                         console.log(`Fetching from: ${url}`);
 
                         try {
-                            const comp = await stage.loadFile(url, loadParams);
+                            // stage is NGL's loosely-typed Stage (stageRef is `any`), so this
+                            // retry loop is written inline rather than through the shared
+                            // retryWithBackoff<T> utility: inferring T from an `any`-typed
+                            // call loses that looseness and falls back to `{}`, breaking the
+                            // comp.structure access below.
+                            let comp;
+                            for (let attempt = 0; ; attempt++) {
+                                try {
+                                    comp = await stage.loadFile(url, loadParams);
+                                    break;
+                                } catch (retryErr) {
+                                    if (attempt >= 2) throw retryErr;
+                                    await new Promise(resolve => setTimeout(resolve, 500 * 2 ** attempt));
+                                }
+                            }
                             if (!comp) throw new Error("NGL returned null component");
 
                             // CRITICAL: Check if structure is actually populated

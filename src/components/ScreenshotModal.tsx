@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, Image as ImageIcon, Check, Camera } from 'lucide-react';
 import clsx from 'clsx';
 import { useTranslation } from '../lib/i18n';
+import { useModalA11y } from '../hooks/useModalA11y';
 
 interface ScreenshotModalProps {
     isOpen: boolean;
@@ -15,6 +16,8 @@ export const ScreenshotModal: React.FC<ScreenshotModalProps> = ({ isOpen, onClos
     const [resolution, setResolution] = useState<1 | 2 | 4 | 8>(4); // Default to High (4x)
     const [transparent, setTransparent] = useState(true);
 
+    const dialogRef = useModalA11y<HTMLDivElement>(isOpen, onClose);
+
     if (!isOpen) return null;
 
     const resolutions = [
@@ -26,8 +29,8 @@ export const ScreenshotModal: React.FC<ScreenshotModalProps> = ({ isOpen, onClos
 
     return (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className={clsx(
-                "w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border transition-all transform animate-in zoom-in-95 duration-200",
+            <div ref={dialogRef} role="dialog" aria-modal="true" tabIndex={-1} className={clsx(
+                "w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border transition-all transform animate-in zoom-in-95 duration-200 outline-none",
                 isLightMode ? "bg-white border-neutral-200" : "bg-neutral-900 border-neutral-800"
             )}>
                 {/* Header */}

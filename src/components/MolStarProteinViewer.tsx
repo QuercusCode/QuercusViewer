@@ -10,6 +10,7 @@ import { StateTransforms } from 'molstar/lib/commonjs/mol-plugin-state/transform
 import { StateObjectSelector, StateSelection } from 'molstar/lib/commonjs/mol-state';
 
 import type { ProteinViewerRef, ProteinViewerProps } from './ProteinViewer';
+import { retryWithBackoff } from '../utils/retryWithBackoff';
 
 export const MolStarProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>((props, ref) => {
     const containerRef = useRef<HTMLDivElement>(null);
@@ -224,7 +225,9 @@ export const MolStarProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerPr
         }
 
         try {
-            const data = await pluginRef.current.builders.data.download({ url, isBinary }, { state: { isGhost: true } });
+            const data = await retryWithBackoff(() =>
+                pluginRef.current!.builders.data.download({ url, isBinary }, { state: { isGhost: true } })
+            );
             const trajectory = await pluginRef.current.builders.structure.parseTrajectory(data, format);
 
             // Store reference to the Model/Structure for updates

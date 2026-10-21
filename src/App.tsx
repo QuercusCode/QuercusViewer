@@ -1,7 +1,8 @@
 import { lazy, Suspense } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom';
 import { AuthProvider, useAuth } from './lib/AuthContext';
 import { ThemeProvider } from './lib/ThemeContext';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 // Every route below pulls in a distinct, often heavy dependency tree (the 3D
 // viewer engines, jsPDF, the rich-text editor, pptxgenjs, etc.) — none of which
@@ -18,6 +19,32 @@ const LabNotebook = lazy(() => import('./components/dashboard/LabNotebook').then
 const StudioDrafts = lazy(() => import('./components/dashboard/StudioDrafts').then(m => ({ default: m.StudioDrafts })));
 const AccountSettings = lazy(() => import('./components/dashboard/AccountSettings').then(m => ({ default: m.AccountSettings })));
 const ActivityTimeline = lazy(() => import('./components/dashboard/ActivityTimeline').then(m => ({ default: m.ActivityTimeline })));
+
+// A render crash scoped to the viewer route previously took down the whole
+// SPA — Router, AuthProvider, ThemeProvider, and all UI chrome — down to the
+// generic root-level fallback. This boundary keeps a viewer crash contained
+// to the /app route, and offers a way back to the rest of the app without a
+// full page reload.
+const ViewerCrashFallback = () => (
+    <div className="h-screen w-screen flex flex-col items-center justify-center bg-neutral-950 text-white p-8 text-center">
+        <h1 className="text-2xl font-bold mb-2">The viewer ran into a problem.</h1>
+        <p className="text-neutral-400 mb-6 max-w-md">This usually means a structure or setting caused a rendering error. Reloading the viewer should fix it.</p>
+        <div className="flex gap-3">
+            <button
+                onClick={() => window.location.reload()}
+                className="px-4 py-2 bg-blue-600 rounded text-white hover:bg-blue-700"
+            >
+                Reload Viewer
+            </button>
+            <Link
+                to="/"
+                className="px-4 py-2 bg-neutral-800 rounded text-white hover:bg-neutral-700"
+            >
+                Go Home
+            </Link>
+        </div>
+    </div>
+);
 
 const RouteFallback = () => (
     <div className="h-screen w-screen flex items-center justify-center bg-neutral-950">
@@ -51,7 +78,11 @@ function App() {
                             <Route path="/" element={<LandingPage />} />
 
                             {/* Main Viewer App - accessible to everyone */}
-                            <Route path="/app" element={<ViewerApp />} />
+                            <Route path="/app" element={
+                                <ErrorBoundary fallback={<ViewerCrashFallback />}>
+                                    <ViewerApp />
+                                </ErrorBoundary>
+                            } />
 
                             {/* Authentication */}
                             <Route path="/auth" element={<AuthPage />} />
