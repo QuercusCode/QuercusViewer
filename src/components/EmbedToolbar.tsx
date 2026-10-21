@@ -35,7 +35,7 @@ const COLORINGS: { value: ColoringType; label: string }[] = [
     { value: 'hydrophobicity', label: 'Hydrophobicity' },
     { value: 'bfactor', label: 'B-Factor / pLDDT' },
     { value: 'secondary', label: 'Secondary Structure' },
-    { value: 'charge', label: 'Charge' },
+    { value: 'electrostatic', label: 'Electrostatic (approx.)' },
     { value: 'residueindex', label: 'Rainbow' },
     { value: 'residue', label: 'Residue Name' },
 ];

@@ -138,7 +138,7 @@ export type RadiusSourceType = 'vdw' | 'covalent' | 'bfactor' | 'sstruc' | 'size
 
 // NGL surface algorithm variants (PyMOL's surface taxonomy: vws/sas/ms/ses/av)
 export type SurfaceAlgorithm = 'vws' | 'sas' | 'ms' | 'ses' | 'av';
-export type ColoringType = 'chainid' | 'residue' | 'secondary' | 'hydrophobicity' | 'structure' | 'bfactor' | 'charge' | 'residueindex' | 'element' | 'custom';
+export type ColoringType = 'chainid' | 'residue' | 'secondary' | 'hydrophobicity' | 'structure' | 'bfactor' | 'electrostatic' | 'residueindex' | 'element' | 'custom';
 export type ColorPalette = 'standard' | 'viridis' | 'magma' | 'cividis' | 'plasma';
 
 
