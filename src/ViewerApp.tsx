@@ -1,18 +1,28 @@
-import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import { useState, useRef, useEffect, useMemo, useCallback, Suspense, lazy } from 'react';
 import { ProteinViewer, type ProteinViewerRef } from './components/ProteinViewer';
-import { MolStarProteinViewer } from './components/MolStarProteinViewer'; // ENGINE: New Import
+// Mol* (vendor-molstar) is a multi-MB secondary engine most sessions never touch
+// (NGL is the default) — lazy-load it so only users who actually switch engines
+// pay for it.
+const MolStarProteinViewer = lazy(() => import('./components/MolStarProteinViewer').then(m => ({ default: m.MolStarProteinViewer })));
 
 
 import { LandingOverlay } from './components/LandingOverlay';
 import { Controls } from './components/Controls';
-import { ContactMap } from './components/ContactMap';
-import { RamachandranModal } from './components/RamachandranModal';
+// These four analysis/sharing modals are only ever mounted after the user
+// explicitly opens them (see the useLazyMountGate calls below), and each
+// pulls in a chunk of vendor weight the base viewer doesn't otherwise need
+// (ContactMap and SuperpositionModal both reach jsPDF via pdfGenerator.ts /
+// a direct import; ShareModal reaches qrcode) — load them on first open
+// instead of with the rest of the viewer.
+const ContactMap = lazy(() => import('./components/ContactMap').then(m => ({ default: m.ContactMap })));
+const RamachandranModal = lazy(() => import('./components/RamachandranModal').then(m => ({ default: m.RamachandranModal })));
+const ShareModal = lazy(() => import('./components/ShareModal').then(m => ({ default: m.ShareModal })));
+const SuperpositionModal = lazy(() => import('./components/SuperpositionModal').then(m => ({ default: m.SuperpositionModal })));
 
 import { HelpGuide } from './components/HelpGuide';
 import { parseURLState, getShareableURL } from './utils/urlManager';
 
 import LibraryModal from './components/LibraryModal';
-import { ShareModal } from './components/ShareModal';
 import { SequenceTrack } from './components/SequenceTrack';
 import { DragDropOverlay } from './components/DragDropOverlay';
 import { GalleryModal } from './components/GalleryModal';
@@ -21,7 +31,6 @@ import { HUD } from './components/HUD';
 import { ReactionOverlay } from './components/ReactionOverlay';
 import { AudioRoom } from './components/AudioRoom';
 import { MeasurementPanel } from './components/MeasurementPanel';
-import { SuperpositionModal } from './components/SuperpositionModal';
 import { IdentityModal } from './components/IdentityModal';
 import { Settings } from './components/Settings';
 import { SessionChat } from './components/SessionChat';
@@ -44,7 +53,10 @@ import type {
   ChatMessage,
   ResidueInteraction
 } from './types';
-import { LabNotebook } from './components/dashboard/LabNotebook';
+// LabNotebook pulls in the full rich-text editor (vendor-tiptap) and its chart
+// node view (vendor-charts) — most viewer sessions never open the notebook
+// drawer, so load it on demand instead of with the rest of the viewer.
+const LabNotebook = lazy(() => import('./components/dashboard/LabNotebook').then(m => ({ default: m.LabNotebook })));
 import {
   Camera, RefreshCw, Upload,
   Settings as SettingsIcon, Zap, Activity, Grid3X3, Palette, ScatterChart,
@@ -58,6 +70,7 @@ import { getDownloadUrl } from './lib/structuresService';
 import { SnapshotModal } from './components/SnapshotModal';
 import { ToastContainer } from './components/Toast';
 import { useToast } from './hooks/useToast';
+import { useLazyMountGate } from './hooks/useLazyMountGate';
 import { FavoritesPanel } from './components/FavoritesPanel';
 import { useFavorites } from './hooks/useFavorites';
 import { useHistory } from './hooks/useHistory';
@@ -73,7 +86,9 @@ import { useSubscription, planCanUse as _planCanUse } from './lib/useSubscriptio
 import { UpgradeModal } from './components/UpgradeModal';
 import { useSessionRecorder } from './hooks/useSessionRecorder';
 import { RecorderControls } from './components/RecorderControls';
-import { StudioLayout } from './components/StudioLayout';
+// Studio (recording/export) mode is opt-in and substantial on its own — load
+// it only when the user actually enters Studio Mode.
+const StudioLayout = lazy(() => import('./components/StudioLayout').then(m => ({ default: m.StudioLayout })));
 import { useAuth } from './lib/AuthContext';
 import { uploadStructure } from './lib/structuresService';
 import { addRecentStructure } from './lib/recentStructures';
@@ -604,6 +619,7 @@ function App() {
     peerSession.connections // Broadcast when new peers join
   ]);
   const [isSuperpositionModalOpen, setIsSuperpositionModalOpen] = useState(false); // Contact/Feedback Modal
+  const hasOpenedSuperposition = useLazyMountGate(isSuperpositionModalOpen);
 
   // --- Residue-Specific Coloring State ---
 
@@ -1000,7 +1016,9 @@ function App() {
   // isSpinning extracted to hook
   const [isCleanMode, setIsCleanMode] = useState(false);
   const [showContactMap, setShowContactMap] = useState(false);
+  const hasOpenedContactMap = useLazyMountGate(showContactMap);
   const [showRamachandran, setShowRamachandran] = useState(false);
+  const hasOpenedRamachandran = useLazyMountGate(showRamachandran);
 
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
   const [embedOrientation, setEmbedOrientation] = useState<any>(null);
@@ -1117,6 +1135,7 @@ function App() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const hasOpenedShareModal = useLazyMountGate(showShareModal);
   const [colorPalette, setColorPalette] = useState<ColorPalette>('standard');
 
   // Multi-View Sharing Selection State
@@ -2881,6 +2900,11 @@ function App() {
 
       {/* STUDIO MODE OVERLAY */}
       {isStudioMode && recorder.session && (
+        <Suspense fallback={
+          <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/80">
+            <div className="animate-spin rounded-full h-8 w-8 border-2 border-neutral-700 border-t-blue-500" />
+          </div>
+        }>
         <StudioLayout
           recorder={recorder}
           onExit={() => setIsStudioMode(false)}
@@ -2903,6 +2927,7 @@ function App() {
             });
           }}
         />
+        </Suspense>
       )}
 
       {!showLanding && !isStudioMode && (
@@ -2978,6 +3003,8 @@ function App() {
           )}
 
           {/* Superposition Modal - Linked to Active Controller */}
+          {hasOpenedSuperposition && (
+          <Suspense fallback={null}>
           <SuperpositionModal
             isOpen={isSuperpositionModalOpen}
             onClose={() => setIsSuperpositionModalOpen(false)}
@@ -3000,6 +3027,8 @@ function App() {
               viewerRefs[activeViewIndex].current?.openAlignmentView();
             }}
           />
+          </Suspense>
+          )}
 
           <Settings
             isLightMode={isLightMode}
@@ -3419,6 +3448,11 @@ function App() {
                             </div>
                           </div>
                         ) : (
+                          <Suspense fallback={
+                            <div className="w-full h-full flex items-center justify-center bg-black">
+                              <div className="animate-spin rounded-full h-8 w-8 border-2 border-neutral-700 border-t-blue-500" />
+                            </div>
+                          }>
                           <ViewerComponent
                             ref={ref}
                             pdbId={ctrl.pdbId}
@@ -3529,6 +3563,7 @@ function App() {
                             disableScroll={!isScrollEnabled} // Scroll Protection
 
                           />
+                          </Suspense>
                         )}
                       </div>
                     </div>
@@ -3580,7 +3615,13 @@ function App() {
             {!isEmbedMode && !isStudioMode && isNotebookOpen && (
               <div className="hidden md:block w-[400px] lg:w-[450px] shrink-0 z-40 pt-[4.5rem] pointer-events-none flex flex-col h-full border-l border-[var(--border-main)]/30 backdrop-blur-sm bg-neutral-950/10">
                 <div className="w-full flex-1 min-h-0 pointer-events-auto shadow-2xl relative">
-                  <LabNotebook isDrawer />
+                  <Suspense fallback={
+                    <div className="w-full h-full flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-6 w-6 border-2 border-neutral-700 border-t-blue-500" />
+                    </div>
+                  }>
+                    <LabNotebook isDrawer />
+                  </Suspense>
                 </div>
               </div>
             )}
@@ -3603,7 +3644,13 @@ function App() {
                     </button>
                   </div>
                   <div className="flex-1 overflow-hidden">
-                    <LabNotebook isDrawer />
+                    <Suspense fallback={
+                      <div className="w-full h-full flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-6 w-6 border-2 border-neutral-700 border-t-blue-500" />
+                      </div>
+                    }>
+                      <LabNotebook isDrawer />
+                    </Suspense>
                   </div>
                 </div>
               </div>
@@ -3664,6 +3711,8 @@ function App() {
       )}
 
 
+      {hasOpenedContactMap && (
+      <Suspense fallback={null}>
       <ContactMap
 
         isOpen={showContactMap}
@@ -3714,7 +3763,11 @@ function App() {
           return [];
         }}
       />
+      </Suspense>
+      )}
 
+      {hasOpenedRamachandran && (
+      <Suspense fallback={null}>
       <RamachandranModal
         isOpen={showRamachandran}
         onClose={() => setShowRamachandran(false)}
@@ -3723,6 +3776,8 @@ function App() {
         onHighlightResidue={(chain, resNo) => handleHighlightResidue(chain, resNo)}
         proteinName={proteinTitle || (file ? file.name.replace(/\.[^/.]+$/, "") : pdbId)}
       />
+      </Suspense>
+      )}
 
       {showTourExitConfirm && (
         // Inline pointer-events overrides are required here: while the tour is active,
@@ -3760,6 +3815,8 @@ function App() {
         </div>
       )}
 
+      {hasOpenedShareModal && (
+      <Suspense fallback={null}>
       <ShareModal
         isOpen={showShareModal}
         onClose={() => setShowShareModal(false)}
@@ -3826,6 +3883,8 @@ function App() {
         // onLiveUpgradeRequired disabled until monetization is live:
         // onLiveUpgradeRequired={!planCanUse(plan, 'collaboration') ? () => setUpgradeModalTarget({ feature: 'Live Collaboration', requiredPlan: 'team' }) : undefined}
       />
+      </Suspense>
+      )}
 
       <GalleryModal
         isOpen={isGalleryOpen}

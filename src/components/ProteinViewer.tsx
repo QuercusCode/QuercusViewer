@@ -1,7 +1,10 @@
-import React, { useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
+import React, { useEffect, useRef, useImperativeHandle, forwardRef, Suspense, lazy } from 'react';
 import clsx from 'clsx';
 import { Skeleton } from './Skeleton';
-import { SequenceAlignmentModal } from './SequenceAlignmentModal';
+import { useLazyMountGate } from '../hooks/useLazyMountGate';
+// Reaches jsPDF for its PDF export — load it only once the user actually
+// opens the sequence alignment view, not with the rest of the NGL viewer.
+const SequenceAlignmentModal = lazy(() => import('./SequenceAlignmentModal').then(m => ({ default: m.SequenceAlignmentModal })));
 import type { RepresentationType, ColoringType, ChainInfo, Measurement, ResidueInteraction, AtomContact, CustomColorRule, CustomStyleRule, CustomTransparencyRule, ColorPalette, ResidueInfo, StructureInfo, MeasurementTextColor, SuperposedStructure, Annotation, NucleicResidueRule, RadiusSourceType, SurfaceAlgorithm } from '../types';
 import { getAtomicInteractionType } from '../utils/interactionUtils';
 import { type DataSource, getStructureUrl, extractChainsFromComponent } from '../utils/pdbUtils';
@@ -249,6 +252,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
 }: ProteinViewerProps, ref: React.Ref<ProteinViewerRef>) => {
 
     const [isAlignmentOpen, setIsAlignmentOpen] = React.useState(false);
+    const hasOpenedAlignment = useLazyMountGate(isAlignmentOpen);
     const [primaryStructureChains, setPrimaryStructureChains] = React.useState<ChainInfo[] | undefined>(undefined);
     const [overlayChains, setOverlayChains] = React.useState<Record<string, ChainInfo[]>>({});
     const containerRef = useRef<HTMLDivElement>(null);
@@ -3527,6 +3531,8 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
         <div className={clsx("relative w-full h-full", className)} style={backgroundColor === 'transparent' ? { background: 'transparent' } : {}}>
             <div ref={containerRef} className="w-full h-full" style={backgroundColor === 'transparent' ? { background: 'transparent' } : {}} />
 
+            {hasOpenedAlignment && (
+            <Suspense fallback={null}>
             <SequenceAlignmentModal
                 isOpen={isAlignmentOpen}
                 onClose={() => setIsAlignmentOpen(false)}
@@ -3534,6 +3540,8 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                 overlays={overlays?.map(o => ({ ...o, chains: overlayChains[o.id] || o.chains })) || []}
                 onToast={onToast}
             />
+            </Suspense>
+            )}
 
             {/* HTML Overlays for Annotations */}
             {annotations && annotations.map(ann => {
