@@ -108,7 +108,7 @@ BLOSUM62_ORDER.split('').forEach((c, idx) => { BLOSUM62_INDEX[c] = idx; });
 // BLOSUM62 score for a pair of single-letter amino acid codes. Falls back to -4
 // (BLOSUM62's typical worst-case off-diagonal magnitude) for any character outside
 // the 20 standard residues (ambiguous codes like X, B, Z are rare in PDB sequences).
-const blosum62Score = (a: string, b: string): number => {
+export const blosum62Score = (a: string, b: string): number => {
     const i = BLOSUM62_INDEX[a.toUpperCase()];
     const j = BLOSUM62_INDEX[b.toUpperCase()];
     if (i === undefined || j === undefined) return a.toUpperCase() === b.toUpperCase() ? 1 : -4;
@@ -124,7 +124,7 @@ const getMatchChar = (a: string, b: string): string => {
     return '.';
 };
 
-const alignSequences = (chain1: ChainInfo, chain2: ChainInfo) => {
+export const alignSequences = (chain1: ChainInfo, chain2: ChainInfo) => {
     const seq1 = chain1.sequence;
     const seq2 = chain2.sequence;
     const coords1 = chain1.coords;
