@@ -1,8 +1,38 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import Peer from 'peerjs';
-import type { DataConnection, MediaConnection } from 'peerjs';
+import type { DataConnection, MediaConnection, PeerError } from 'peerjs';
 
 import type { ChatMessage, CustomTransparencyRule } from '../types';
+
+// WebRTC data channels can technically carry larger messages, but PeerJS's
+// own default chunking/reliability gets shaky well before that, and a
+// multi-dozen-MB send can stall or silently fail for every participant in
+// the session, not just the sender. Structure files this feature is meant
+// to share are almost always well under this; reject anything larger with
+// a clear error instead of attempting a transfer likely to break the
+// session for everyone.
+const MAX_SHARED_FILE_BYTES = 20 * 1024 * 1024; // 20MB
+
+// Maps PeerJS's own error type strings to a short, user-facing message.
+// Falls back to the raw type string for anything not explicitly listed here
+// rather than a generic "Connection error", so a genuinely new/unexpected
+// PeerJS error type is still informative instead of swallowed into a
+// meaningless catch-all.
+function describePeerError(err: PeerError<string>): string {
+    switch (err.type) {
+        case 'peer-unavailable': return 'That session could not be found — it may have ended.';
+        case 'network': return 'Network error — check your connection.';
+        case 'server-error': return 'Collaboration server error. Please try again shortly.';
+        case 'socket-error': return 'Lost connection to the collaboration server.';
+        case 'socket-closed': return 'Connection to the collaboration server closed unexpectedly.';
+        case 'browser-incompatible': return 'Your browser does not support live collaboration (WebRTC).';
+        case 'ssl-unavailable': return 'A secure connection is required for live collaboration.';
+        case 'unavailable-id':
+        case 'invalid-id': return 'Could not start a session — please reload and try again.';
+        case 'webrtc': return 'A WebRTC connection error occurred.';
+        default: return `Connection error (${err.type}).`;
+    }
+}
 
 export interface SessionState {
     // Single View Props (Legacy/Fallback)
@@ -82,6 +112,12 @@ export const usePeerSession = (initialState?: Partial<SessionState>): PeerSessio
     const peerRef = useRef<Peer | null>(null);
     const connectionsRef = useRef<DataConnection[]>([]);
     const mediaConnectionsRef = useRef<MediaConnection[]>([]); // Keep specific track of calls
+    const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    // Tracks whether we've already made one auto-reconnect attempt since the
+    // last successful (re)connection, so a signaling drop gets exactly one
+    // retry rather than looping forever against a server that's genuinely
+    // down — the user sees a clear error instead of silent repeated retries.
+    const hasAttemptedReconnectRef = useRef(false);
 
     // Initialize Peer
     useEffect(() => {
@@ -91,6 +127,7 @@ export const usePeerSession = (initialState?: Partial<SessionState>): PeerSessio
             console.log('My peer ID is: ' + id);
             setPeerId(id);
             setError(null);
+            hasAttemptedReconnectRef.current = false;
         });
 
         peer.on('connection', (conn) => {
@@ -111,14 +148,48 @@ export const usePeerSession = (initialState?: Partial<SessionState>): PeerSessio
             // We'll handle this in a separate useEffect that watches incomingCalls.
         });
 
+        // Fires when the connection to PeerJS's signaling server drops (e.g. a
+        // brief network blip, laptop sleep/wake) — distinct from 'error' or
+        // 'close'. Existing peer-to-peer data connections may survive this,
+        // but no NEW connection can be made until the signaling link is back.
+        // Make one delayed reconnect attempt; if it doesn't recover, the user
+        // sees a clear error via peer.on('error') instead of being stuck with
+        // no explanation.
+        peer.on('disconnected', () => {
+            console.warn('PeerJS disconnected from signaling server');
+            if (peer.destroyed) return;
+            setError('Lost connection to the collaboration server — reconnecting…');
+            if (!hasAttemptedReconnectRef.current) {
+                hasAttemptedReconnectRef.current = true;
+                reconnectTimerRef.current = setTimeout(() => {
+                    if (!peer.destroyed && peer.disconnected) {
+                        peer.reconnect();
+                    }
+                }, 2000);
+            }
+        });
+
+        peer.on('close', () => {
+            console.warn('PeerJS peer closed');
+            setError('Collaboration session ended.');
+            setPeerId(null);
+        });
+
         peer.on('error', (err) => {
             console.error('PeerJS error:', err);
-            setError(err.type === 'peer-unavailable' ? 'Peer not found' : 'Connection error');
+            setError(describePeerError(err));
+            // A dead/unavailable host is never worth silently retrying again
+            // on a future visit — without this, "Smart Reconnect" below would
+            // keep trying the same gone session on every page load forever.
+            if (err.type === 'peer-unavailable') {
+                sessionStorage.removeItem('QUERCUS_LAST_HOST_ID');
+            }
         });
 
         peerRef.current = peer;
 
         return () => {
+            if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
             peer.destroy();
         };
     }, []);
@@ -133,7 +204,12 @@ export const usePeerSession = (initialState?: Partial<SessionState>): PeerSessio
                 connectionsRef.current = [...connectionsRef.current, conn];
                 setConnections([...connectionsRef.current]);
             } else {
-                console.warn('Duplicate connection ignored:', conn.peer);
+                // A second connection to a peer we're already connected to
+                // (e.g. a race from a double-click) is just dead weight if
+                // left open — explicitly close it rather than abandoning it.
+                console.warn('Duplicate connection closed:', conn.peer);
+                conn.close();
+                return;
             }
 
             // If I have initial state, send it to the new peer
@@ -151,6 +227,33 @@ export const usePeerSession = (initialState?: Partial<SessionState>): PeerSessio
             connectionsRef.current = connectionsRef.current.filter(c => c.peer !== conn.peer);
             setConnections([...connectionsRef.current]);
         });
+
+        // Without this, a data-channel error (e.g. the remote end crashing,
+        // a negotiation failure) left the dead connection sitting in state
+        // forever — the UI kept showing a participant who was long gone,
+        // and nothing ever told the user a connection had actually failed.
+        conn.on('error', (err) => {
+            console.error('DataConnection error with', conn.peer, err);
+            setError(`Connection to a participant was lost (${err.type}).`);
+            connectionsRef.current = connectionsRef.current.filter(c => c.peer !== conn.peer);
+            setConnections([...connectionsRef.current]);
+        });
+    };
+
+    // The host blindly relays REACTION/SYNC_FILE/SYNC_CHAT from one guest to
+    // every other guest (a hub-and-spoke stand-in for a full mesh), so a
+    // malformed or hostile payload from any single guest would otherwise
+    // reach everyone else too. These checks run on every participant (not
+    // just the host) before the payload is trusted at all.
+    const isValidChatMessage = (message: unknown): message is ChatMessage => {
+        const m = message as Record<string, unknown>;
+        return !!m &&
+            typeof m.id === 'string' &&
+            typeof m.senderId === 'string' &&
+            typeof m.senderName === 'string' &&
+            typeof m.content === 'string' &&
+            typeof m.timestamp === 'number' &&
+            (m.type === 'text' || m.type === 'system' || m.type === 'link');
     };
 
     const handleData = (data: any, sender: DataConnection) => {
@@ -165,6 +268,10 @@ export const usePeerSession = (initialState?: Partial<SessionState>): PeerSessio
                 [sender.peer]: data.payload
             }));
         } else if (data.type === 'REACTION') {
+            if (typeof data.payload?.emoji !== 'string' || data.payload.emoji.length === 0 || data.payload.emoji.length > 32) {
+                console.warn('Ignored malformed REACTION from', sender.peer);
+                return;
+            }
             const reactionSenderName = data.payload.senderName || peerNames[sender.peer] || 'Guest';
             setLastReaction({
                 emoji: data.payload.emoji,
@@ -187,33 +294,49 @@ export const usePeerSession = (initialState?: Partial<SessionState>): PeerSessio
                 });
             }
         } else if (data.type === 'SYNC_FILE') {
-            console.log('Received file:', data.payload.name);
-            setLastReceivedFile(data.payload);
+            const payload = data.payload;
+            const byteLength = payload?.data instanceof ArrayBuffer ? payload.data.byteLength : -1;
+            if (typeof payload?.name !== 'string' || byteLength < 0 || byteLength > MAX_SHARED_FILE_BYTES) {
+                console.warn('Ignored malformed or oversized SYNC_FILE from', sender.peer);
+                return;
+            }
+            console.log('Received file:', payload.name);
+            setLastReceivedFile(payload);
 
             if (isHost) {
                 connectionsRef.current.forEach(conn => {
                     if (conn.open && conn.peer !== sender.peer) {
                         conn.send({
                             type: 'SYNC_FILE',
-                            payload: data.payload
+                            payload
                         });
                     }
                 });
             }
         } else if (data.type === 'SYNC_CHAT') {
-            setLastReceivedChat(data.message); // Changed from data.payload to data.message
+            if (!isValidChatMessage(data.message)) {
+                console.warn('Ignored malformed SYNC_CHAT from', sender.peer);
+                return;
+            }
+            setLastReceivedChat(data.message);
 
             if (isHost) {
                 connectionsRef.current.forEach(conn => {
                     if (conn.open && conn.peer !== sender.peer) {
-                        conn.send({ type: 'SYNC_CHAT', message: data.message }); // Changed from data.payload to data.message
+                        conn.send({ type: 'SYNC_CHAT', message: data.message });
                     }
                 });
             }
+        } else {
+            console.warn('Ignored unrecognized data type from', sender.peer, ':', data?.type);
         }
     };
 
     const broadcastFile = useCallback((file: File) => {
+        if (file.size > MAX_SHARED_FILE_BYTES) {
+            setError(`"${file.name}" is too large to share live (max ${Math.floor(MAX_SHARED_FILE_BYTES / (1024 * 1024))}MB).`);
+            return;
+        }
         const reader = new FileReader();
         reader.onload = (e) => {
             const buffer = e.target?.result as ArrayBuffer;
@@ -229,6 +352,9 @@ export const usePeerSession = (initialState?: Partial<SessionState>): PeerSessio
                     }
                 });
             }
+        };
+        reader.onerror = () => {
+            setError(`Failed to read "${file.name}" for sharing.`);
         };
         reader.readAsArrayBuffer(file);
     }, []);
@@ -288,7 +414,12 @@ export const usePeerSession = (initialState?: Partial<SessionState>): PeerSessio
                 return newMap;
             });
         });
-        call.on('error', (err) => console.error('Call error:', err));
+        call.on('error', (err) => {
+            // Previously only logged — a failed call gave the user no
+            // indication audio wasn't working for that participant.
+            console.error('Call error:', err);
+            setError(`Voice call error with a participant (${err.type}).`);
+        });
         mediaConnectionsRef.current.push(call);
     };
 
@@ -308,7 +439,7 @@ export const usePeerSession = (initialState?: Partial<SessionState>): PeerSessio
             console.error('Failed to join audio:', err);
             setError('Microphone access denied');
         }
-    }, [myStream, peerNames]);
+    }, [myStream]);
 
     const leaveAudio = useCallback(() => {
         if (myStream) {

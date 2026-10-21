@@ -137,6 +137,16 @@ function App() {
   const peerSession = usePeerSession();
   const { user } = useAuth();
 
+  // Previously set but never read anywhere — connection failures, a denied
+  // microphone, an oversized shared file, etc. all happened completely
+  // silently. Surface it the same way every other async failure in this app
+  // is surfaced.
+  useEffect(() => {
+    if (peerSession.error) {
+      error(peerSession.error);
+    }
+  }, [peerSession.error, error]);
+
   // Peer Session UX State
   const [isCameraSynced, setIsCameraSynced] = useState(true);
   const [remoteHoveredResidue, setRemoteHoveredResidue] = useState<ResidueInfo | null>(null);
