@@ -816,6 +816,7 @@ function App() {
     pdbMetadata, setPdbMetadata,
     proteinTitle, setProteinTitle,
     uniprotFeatures,
+    relatedStructures,
     highlightedResidue, setHighlightedResidue,
     measurements, setMeasurements,
     isMeasurementPanelOpen, setIsMeasurementPanelOpen,
@@ -1706,6 +1707,27 @@ function App() {
       if (activeController.representation === 'ball+stick') {
         activeController.setRepresentation('cartoon');
       }
+    }
+  };
+
+  // Entries in the Related Structures list are always real PDB entries
+  // (from UniProt's own PDB cross-references), so this forces dataSource to
+  // 'pdb' outright rather than branching on activeController.dataSource —
+  // which, read synchronously right after a setDataSource('pdb') call in
+  // the same function, would still reflect the PREVIOUS (possibly
+  // AlphaFold) value, since React state updates aren't applied in place.
+  const handleLoadRelatedStructure = (id: string) => {
+    activeController.setDataSource('pdb');
+    activeController.setPdbId(id);
+    activeController.setFile(null);
+    activeController.setChains([]);
+    activeController.resetChainVisibility();
+    activeController.setHighlightedResidue(null);
+    activeController.setMeasurements([]);
+    activeController.setResidueInteractions([]);
+    activeController.setProteinTitle(null);
+    if (activeController.representation === 'ball+stick') {
+      activeController.setRepresentation('cartoon');
     }
   };
 
@@ -3340,6 +3362,8 @@ function App() {
                     setCustomBackgroundColor={setCustomBackgroundColor}
                     pdbMetadata={pdbMetadata}
                     uniprotFeatures={uniprotFeatures}
+                    relatedStructures={relatedStructures}
+                    onLoadRelatedStructure={handleLoadRelatedStructure}
                     onJumpToResidue={handleHighlightResidue}
                     onHighlightRegion={(selection, label) => {
                       viewerRef.current?.highlightRegion(selection, label);

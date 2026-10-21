@@ -22,6 +22,7 @@ import {
     Hexagon,
     ImageIcon,
     Layers,
+    Link2,
     Loader2,
     LogIn,
     Menu,
@@ -54,7 +55,7 @@ import {
     X,
     Zap
 } from 'lucide-react';
-import type { RepresentationType, ColoringType, ChainInfo, Snapshot, Movie, ColorPalette, PDBMetadata, CustomColorRule, CustomStyleRule, CustomTransparencyRule, Measurement, NucleicResidueRule, RadiusSourceType, SurfaceAlgorithm, ResidueInteraction, MappedUniProtFeature, LigandChemicalInfo } from '../types';
+import type { RepresentationType, ColoringType, ChainInfo, Snapshot, Movie, ColorPalette, PDBMetadata, CustomColorRule, CustomStyleRule, CustomTransparencyRule, Measurement, NucleicResidueRule, RadiusSourceType, SurfaceAlgorithm, ResidueInteraction, MappedUniProtFeature, LigandChemicalInfo, RelatedPdbEntry } from '../types';
 import { featureColor } from '../hooks/useUniProtFeatures';
 import { fetchChemicalComponent } from '../services/chemicalComponent';
 import type { DataSource } from '../utils/pdbUtils';
@@ -344,6 +345,8 @@ interface ControlsProps {
     pdbMetadata: PDBMetadata | null;
     uniprotFeatures?: Record<string, MappedUniProtFeature[]> | null;
     onJumpToResidue?: (chain: string, resNo: number) => void;
+    relatedStructures?: RelatedPdbEntry[] | null;
+    onLoadRelatedStructure?: (id: string) => void;
 
 
     isLightMode: boolean;
@@ -522,6 +525,8 @@ export const Controls: React.FC<ControlsProps> = ({
     pdbMetadata,
     uniprotFeatures,
     onJumpToResidue,
+    relatedStructures,
+    onLoadRelatedStructure,
     isLightMode,
     user,
     isNotebookOpen,
@@ -2826,6 +2831,45 @@ export const Controls: React.FC<ControlsProps> = ({
                                     </div>
                                 );
                             })()
+                        }
+
+                        {/* Related Structures (other PDB entries for the same UniProt accession) */}
+                        {
+                            !isChemical && relatedStructures && relatedStructures.length > 0 && (
+                                <div className="space-y-2">
+                                    <div className="flex items-center gap-2">
+                                        <Link2 className="w-3.5 h-3.5 text-teal-500" />
+                                        <span className={`text-[10px] font-bold uppercase tracking-wider ${subtleText}`}>
+                                            {(t.relatedStructuresLabel as (n: number) => string)(relatedStructures.length)}
+                                        </span>
+                                    </div>
+                                    <div className="max-h-40 overflow-y-auto space-y-1 scrollbar-thin scrollbar-thumb-white/10">
+                                        {relatedStructures.map(entry => (
+                                            <button
+                                                key={entry.id}
+                                                onClick={() => onLoadRelatedStructure && onLoadRelatedStructure(entry.id)}
+                                                title={[entry.method, entry.resolution].filter(Boolean).join(' · ') || entry.id}
+                                                className={`w-full flex items-center gap-2 px-2 py-1 rounded-md text-left transition-colors ${isLightMode ? 'hover:bg-neutral-100' : 'hover:bg-white/5'}`}
+                                            >
+                                                <span className="w-2 h-2 rounded-full shrink-0 bg-teal-500" />
+                                                <span className={`text-[10px] font-bold font-mono truncate flex-1 ${isLightMode ? 'text-neutral-800' : 'text-neutral-200'}`}>
+                                                    {entry.id}
+                                                </span>
+                                                {entry.method && (
+                                                    <span className={`text-[9px] shrink-0 ${subtleText}`}>
+                                                        {entry.method}
+                                                    </span>
+                                                )}
+                                                {entry.resolution && (
+                                                    <span className={`text-[9px] font-mono shrink-0 ${subtleText}`}>
+                                                        {entry.resolution}
+                                                    </span>
+                                                )}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )
                         }
 
                         {/* Chains */}
