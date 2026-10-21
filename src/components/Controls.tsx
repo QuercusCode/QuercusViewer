@@ -1,8 +1,10 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, Suspense, lazy } from 'react';
 import { Link } from 'react-router-dom';
 import type { User } from '@supabase/supabase-js';
 import { Skeleton } from './Skeleton';
-import { MeasurementTable } from './MeasurementTable';
+// Reaches jsPDF for its PDF export — only rendered in a live, shared session,
+// so load it on demand instead of with the rest of the (always-eager) sidebar.
+const MeasurementTable = lazy(() => import('./MeasurementTable').then(m => ({ default: m.MeasurementTable })));
 import { LanguageSwitcher } from './landing/LanguageSwitcher';
 import {
     Activity,
@@ -2567,11 +2569,13 @@ export const Controls: React.FC<ControlsProps> = ({
                             isLightMode={isLightMode}
                             id="measurements-section"
                         >
+                            <Suspense fallback={null}>
                             <MeasurementTable
                                 measurements={measurements}
                                 onDelete={onDeleteMeasurement}
                                 isLightMode={isLightMode}
                             />
+                            </Suspense>
                             <div className="mt-2 pt-2 border-t border-white/5 flex justify-end">
                                 <button
                                     onClick={onClearMeasurements}
