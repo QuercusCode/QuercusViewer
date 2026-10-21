@@ -158,6 +158,17 @@ export interface PDBMetadata {
     cid?: string; // PubChem CID for 2D Image
 }
 
+// Chemical identity of a bound ligand/ion, looked up by its PDB Chemical
+// Component Dictionary code (the same code already in StructureInfo.ligands)
+// — not tied to a specific bound instance, since the same code means the
+// same chemical everywhere.
+export interface LigandChemicalInfo {
+    name?: string;
+    formula?: string;
+    molecularWeight?: number;
+    smiles?: string;
+}
+
 export interface LigandInteraction {
     ligandName: string;
     ligandChain: string;

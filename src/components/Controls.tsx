@@ -54,8 +54,9 @@ import {
     X,
     Zap
 } from 'lucide-react';
-import type { RepresentationType, ColoringType, ChainInfo, Snapshot, Movie, ColorPalette, PDBMetadata, CustomColorRule, CustomStyleRule, CustomTransparencyRule, Measurement, NucleicResidueRule, RadiusSourceType, SurfaceAlgorithm, ResidueInteraction, MappedUniProtFeature } from '../types';
+import type { RepresentationType, ColoringType, ChainInfo, Snapshot, Movie, ColorPalette, PDBMetadata, CustomColorRule, CustomStyleRule, CustomTransparencyRule, Measurement, NucleicResidueRule, RadiusSourceType, SurfaceAlgorithm, ResidueInteraction, MappedUniProtFeature, LigandChemicalInfo } from '../types';
 import { featureColor } from '../hooks/useUniProtFeatures';
+import { fetchChemicalComponent } from '../services/chemicalComponent';
 import type { DataSource } from '../utils/pdbUtils';
 import type { HistoryItem } from '../hooks/useHistory';
 import { formatChemicalId } from '../utils/pdbUtils';
@@ -625,6 +626,28 @@ export const Controls: React.FC<ControlsProps> = ({
     // Background Color Picker Popover State
     const [showBgColorPicker, setShowBgColorPicker] = useState(false);
     const bgColorPickerRef = useRef<HTMLDivElement>(null);
+
+    // Bound-Ligand Chemical Property Lookup State
+    const [selectedLigandCode, setSelectedLigandCode] = useState<string | null>(null);
+    const [ligandInfo, setLigandInfo] = useState<LigandChemicalInfo | null>(null);
+    const [ligandInfoLoading, setLigandInfoLoading] = useState(false);
+    const latestLigandRequestRef = useRef<string | null>(null);
+
+    const handleLigandChipClick = async (code: string) => {
+        if (selectedLigandCode === code) {
+            setSelectedLigandCode(null);
+            latestLigandRequestRef.current = null;
+            return;
+        }
+        setSelectedLigandCode(code);
+        setLigandInfo(null);
+        setLigandInfoLoading(true);
+        latestLigandRequestRef.current = code;
+        const info = await fetchChemicalComponent(code);
+        if (latestLigandRequestRef.current !== code) return; // superseded by a newer click
+        setLigandInfoLoading(false);
+        setLigandInfo(info);
+    };
 
     const handleAddCustomStyle = () => {
         if (!setCustomStyles || !customResStyleRange) return;
@@ -2676,11 +2699,73 @@ export const Controls: React.FC<ControlsProps> = ({
                                     </div>
                                     <div className="flex flex-wrap gap-1">
                                         {ligands.map(lig => (
-                                            <span key={lig} className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-neutral-100 dark:bg-white/5 text-neutral-600 dark:text-neutral-300">
+                                            <button
+                                                key={lig}
+                                                onClick={() => handleLigandChipClick(lig)}
+                                                title={t.ligandLookupHint as string}
+                                                className={`px-1.5 py-0.5 rounded text-[10px] font-mono transition-colors ${selectedLigandCode === lig
+                                                    ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 ring-1 ring-amber-500/40'
+                                                    : 'bg-neutral-100 dark:bg-white/5 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-white/10'
+                                                    }`}
+                                            >
                                                 {formatChemicalId(lig)}
-                                            </span>
+                                            </button>
                                         ))}
                                     </div>
+
+                                    {/* Looked-up chemical properties for the selected ligand/ion code. */}
+                                    {selectedLigandCode && (
+                                        <div className={`rounded-lg ${cardBg} px-3 py-2 space-y-2`}>
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-[10px] font-bold uppercase tracking-wider font-mono">
+                                                    {formatChemicalId(selectedLigandCode)}
+                                                </span>
+                                                <button
+                                                    onClick={() => setSelectedLigandCode(null)}
+                                                    className={`${subtleText} hover:opacity-70`}
+                                                    aria-label="Close"
+                                                >
+                                                    <X className="w-3 h-3" />
+                                                </button>
+                                            </div>
+                                            {ligandInfoLoading ? (
+                                                <div className="space-y-2 py-1">
+                                                    <Skeleton variant="text" className="h-3 w-2/3 bg-neutral-700/50" />
+                                                    <Skeleton variant="text" className="h-3 w-1/3 bg-neutral-800/50" />
+                                                    <Skeleton variant="text" className="h-4 w-full bg-neutral-800/50" />
+                                                </div>
+                                            ) : ligandInfo ? (
+                                                <>
+                                                    {ligandInfo.name && (
+                                                        <div>
+                                                            <div className={`text-[9px] font-bold uppercase tracking-wider ${subtleText}`}>{t.ligandNameLabel as string}</div>
+                                                            <div className={`text-[10px] ${isLightMode ? 'text-neutral-800' : 'text-neutral-200'}`}>{ligandInfo.name}</div>
+                                                        </div>
+                                                    )}
+                                                    {ligandInfo.formula && (
+                                                        <div>
+                                                            <div className={`text-[9px] font-bold uppercase tracking-wider ${subtleText}`}>{t.formulaLabel as string}</div>
+                                                            <div className={`text-[10px] ${isLightMode ? 'text-neutral-800' : 'text-neutral-200'}`}>{ligandInfo.formula}</div>
+                                                        </div>
+                                                    )}
+                                                    {ligandInfo.molecularWeight !== undefined && (
+                                                        <div>
+                                                            <div className={`text-[9px] font-bold uppercase tracking-wider ${subtleText}`}>{t.molWeightLabel as string}</div>
+                                                            <div className={`text-[10px] ${isLightMode ? 'text-neutral-800' : 'text-neutral-200'}`}>{ligandInfo.molecularWeight.toFixed(2)} g/mol</div>
+                                                        </div>
+                                                    )}
+                                                    {ligandInfo.smiles && (
+                                                        <div>
+                                                            <div className={`text-[9px] font-bold uppercase tracking-wider ${subtleText}`}>{t.smilesLabel as string}</div>
+                                                            <div className={`text-[10px] font-mono break-all ${isLightMode ? 'text-neutral-800' : 'text-neutral-200'}`}>{ligandInfo.smiles}</div>
+                                                        </div>
+                                                    )}
+                                                </>
+                                            ) : (
+                                                <div className={`text-[10px] italic ${subtleText}`}>{t.ligandInfoUnavailable as string}</div>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                             )
                         }
