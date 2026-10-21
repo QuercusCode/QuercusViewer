@@ -4,6 +4,7 @@ import clsx from 'clsx';
 import { OFFLINE_LIBRARY } from '../data/library';
 import { CHEMICAL_LIBRARY } from '../data/chemicalLibrary';
 import { useTranslation } from '../lib/i18n';
+import { useModalA11y } from '../hooks/useModalA11y';
 
 
 
@@ -126,11 +127,13 @@ const LibraryModal: React.FC<LibraryModalProps> = ({ isOpen, onClose, onSelect }
 
 
 
+    const dialogRef = useModalA11y<HTMLDivElement>(isOpen, onClose);
+
     if (!isOpen) return null;
 
     return (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-gray-900 border border-white/20 rounded-2xl shadow-2xl w-full max-w-6xl h-[90vh] flex flex-col overflow-hidden">
+            <div ref={dialogRef} role="dialog" aria-modal="true" tabIndex={-1} className="bg-gray-900 border border-white/20 rounded-2xl shadow-2xl w-full max-w-6xl h-[90vh] flex flex-col overflow-hidden outline-none">
 
                 {/* HEADER (Unchanged) */}
                 <div className="flex flex-col sm:flex-row items-center justify-between p-4 sm:p-6 border-b border-white/10 bg-gray-900/50 gap-4 shrink-0">

@@ -918,6 +918,7 @@ export const Controls: React.FC<ControlsProps> = ({
             <button
                 onClick={onToggleMobileSidebar}
                 className={`absolute top-4 left-4 z-40 md:hidden p-2 rounded-lg backdrop-blur-md shadow-lg transition-opacity hover:opacity-80 border ${isLightMode ? 'bg-white border-neutral-900 text-black' : 'bg-neutral-900/90 border-white/10 text-white'}`}
+                aria-label="Open menu"
             >
                 <Menu className="w-6 h-6" />
             </button>
@@ -937,6 +938,7 @@ export const Controls: React.FC<ControlsProps> = ({
                     <button
                         onClick={onToggleMobileSidebar}
                         className={`absolute top-4 right-4 p-1 md:hidden ${subtleText}`}
+                        aria-label="Close menu"
                     >
                         <X className="w-6 h-6" />
                     </button>
@@ -2307,6 +2309,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                                         <button
                                                                             onClick={() => handleRemoveTransparencyRule(rule.id)}
                                                                             className="p-1 hover:bg-red-500/20 text-neutral-400 hover:text-red-500 rounded transition-colors"
+                                                                            title="Remove Rule"
                                                                         >
                                                                             <Trash2 size={12} />
                                                                         </button>
@@ -2972,7 +2975,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                         <div className="max-h-40 overflow-y-auto space-y-1 scrollbar-thin scrollbar-thumb-white/10">
                                             <div className="flex justify-between items-center pb-1 border-b border-white/5">
                                                 <span className="text-[10px] font-bold opacity-70">{(t.matchesLabel as (n: number) => string)(searchResults.length)}</span>
-                                                <button onClick={() => setSearchResults([])} className="p-1 hover:text-red-400"><Trash2 className="w-3 h-3" /></button>
+                                                <button onClick={() => setSearchResults([])} className="p-1 hover:text-red-400" aria-label="Clear search results"><Trash2 className="w-3 h-3" /></button>
                                             </div>
                                             {searchResults.map((match, idx) => (
                                                 <button

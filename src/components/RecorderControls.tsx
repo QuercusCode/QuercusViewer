@@ -143,7 +143,7 @@ export const RecorderControls = ({
                 ) : (
                     // Playback Controls
                     <div className="flex-1 flex items-center justify-center gap-2">
-                        <button onClick={isPlaying ? pause : play} className={`${styles.button} w-10`}>
+                        <button onClick={isPlaying ? pause : play} className={`${styles.button} w-10`} aria-label={isPlaying ? 'Pause' : 'Play'}>
                             {isPlaying ? <Pause className={styles.icon} /> : <Play className={styles.icon} />}
                         </button>
                         <button onClick={() => {

@@ -16,6 +16,7 @@ import clsx from 'clsx';
 import type { Snapshot, Movie } from '../types';
 import { useTimezone, formatDate, formatDateTime } from '../lib/timezoneUtils';
 import { useTranslation } from '../lib/i18n';
+import { useModalA11y } from '../hooks/useModalA11y';
 
 interface GalleryModalProps {
     isOpen: boolean;
@@ -81,6 +82,8 @@ export const GalleryModal: React.FC<GalleryModalProps> = ({
         }
     };
 
+    const dialogRef = useModalA11y<HTMLDivElement>(isOpen, onClose);
+
     if (!isOpen) return null;
 
     const bgColor = isLightMode ? 'bg-white' : 'bg-neutral-900';
@@ -90,8 +93,8 @@ export const GalleryModal: React.FC<GalleryModalProps> = ({
 
     return (
         <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 sm:p-8 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-            <div className={clsx(
-                "w-full h-full max-w-6xl rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-200 border",
+            <div ref={dialogRef} role="dialog" aria-modal="true" tabIndex={-1} className={clsx(
+                "w-full h-full max-w-6xl rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-200 border outline-none",
                 bgColor, borderColor
             )}>
                 {/* Header */}

@@ -5,6 +5,7 @@ import clsx from 'clsx';
 import { jsPDF } from 'jspdf';
 import { useTranslation } from '../lib/i18n';
 import { alignSequences } from '../utils/sequenceAlignment';
+import { useModalA11y } from '../hooks/useModalA11y';
 
 interface SequenceAlignmentModalProps {
     isOpen: boolean;
@@ -77,6 +78,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
     const [annotationText, setAnnotationText] = useState('');
     const [showExportMenu, setShowExportMenu] = useState(false);
     const modalRef = useRef<HTMLDivElement>(null);
+    useModalA11y(isOpen, onClose, modalRef);
 
     const alignmentResults = useMemo(() => {
         if (!primaryStructure || overlays.length === 0) return [];
@@ -1153,7 +1155,7 @@ export const SequenceAlignmentModal: React.FC<SequenceAlignmentModalProps> = ({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 sm:p-8">
-            <div ref={modalRef} className="bg-[#0D1117] rounded-xl shadow-2xl w-full max-w-6xl h-[85vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div ref={modalRef} role="dialog" aria-modal="true" tabIndex={-1} className="bg-[#0D1117] rounded-xl shadow-2xl w-full max-w-6xl h-[85vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200 outline-none">
                 {/* Header */}
                 <div className="flex items-start justify-between px-8 py-6 border-b border-white/10 bg-gradient-to-r from-white/5 to-transparent">
                     <div className="flex items-center gap-4">

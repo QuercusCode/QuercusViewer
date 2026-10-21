@@ -4,6 +4,7 @@ import QRCode from 'qrcode';
 import { logEvent } from '../utils/analytics';
 import type { PeerSession } from '../hooks/usePeerSession';
 import { useTranslation } from '../lib/i18n';
+import { useModalA11y } from '../hooks/useModalA11y';
 
 interface ShareModalProps {
     isOpen: boolean;
@@ -216,17 +217,20 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, isLight
         }
     };
 
+    const dialogRef = useModalA11y<HTMLDivElement>(isOpen, onClose);
+
     if (!isOpen) return null;
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6 bg-black/70 backdrop-blur-sm animate-in fade-in overflow-y-auto">
-            <div className={`relative w-full max-w-5xl rounded-xl shadow-2xl p-5 my-auto ${isLightMode ? 'bg-white text-neutral-900' : 'bg-neutral-900 text-white'}`}>
+            <div ref={dialogRef} role="dialog" aria-modal="true" tabIndex={-1} className={`relative w-full max-w-5xl rounded-xl shadow-2xl p-5 my-auto outline-none ${isLightMode ? 'bg-white text-neutral-900' : 'bg-neutral-900 text-white'}`}>
                 {/* Header */}
                 <div className="flex items-center justify-between mb-4">
                     <h2 className="text-xl font-bold">{t.shareVisualization as string}</h2>
                     <button
                         onClick={onClose}
                         className={`p-2 rounded-lg transition-colors ${isLightMode ? 'hover:bg-neutral-100' : 'hover:bg-neutral-800'}`}
+                        aria-label="Close"
                     >
                         <X className="w-5 h-5" />
                     </button>

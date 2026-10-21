@@ -65,7 +65,7 @@ import {
 } from 'lucide-react';
 import { startOnboardingTour } from './components/TourGuide';
 import { ViewportSelector } from './components/ViewportSelector';
-import { supabase } from './lib/supabase';
+import { supabase, isSupabaseConfigured } from './lib/supabase';
 import { getDownloadUrl } from './lib/structuresService';
 import { SnapshotModal } from './components/SnapshotModal';
 import { ToastContainer } from './components/Toast';
@@ -131,7 +131,7 @@ function App() {
     useRef<ProteinViewerRef>(null)
   ];
 
-  const { toasts, addToast, removeToast, success, error } = useToast();
+  const { toasts, addToast, removeToast, success, error, warning } = useToast();
   const { favorites, toggleFavorite, removeFavorite, isFavorite } = useFavorites();
   const { history, addToHistory } = useHistory();
   const peerSession = usePeerSession();
@@ -146,6 +146,17 @@ function App() {
       error(peerSession.error);
     }
   }, [peerSession.error, error]);
+
+  // A missing VITE_SUPABASE_URL/VITE_SUPABASE_ANON_KEY previously only
+  // logged a console.warn and silently fell back to a placeholder client —
+  // auth, AI chat, and saving/loading structures would all fail later with
+  // no indication why. import.meta.env.PROD is false under Vitest, so this
+  // never fires during tests, which legitimately run with no .env at all.
+  useEffect(() => {
+    if (import.meta.env.PROD && !isSupabaseConfigured) {
+      warning('Cloud features (login, AI chat, saving structures) are unavailable — server configuration is missing.', 8000);
+    }
+  }, [warning]);
 
   // Peer Session UX State
   const [isCameraSynced, setIsCameraSynced] = useState(true);
@@ -3098,7 +3109,7 @@ function App() {
                 `}>
                   {/* Mobile Close Button */}
                   <div className="md:hidden absolute top-4 right-4 z-50">
-                    <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 text-white/50 hover:text-white">
+                    <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 text-white/50 hover:text-white" aria-label="Close menu">
                       <X size={24} />
                     </button>
                   </div>
@@ -3328,6 +3339,7 @@ function App() {
                   <button
                     onClick={() => setIsMobileMenuOpen(true)}
                     className="absolute top-4 left-4 z-40 md:hidden p-2 bg-black/50 backdrop-blur-sm rounded-lg border border-white/10 text-white shadow-lg"
+                    aria-label="Open menu"
                   >
                     <Menu size={24} />
                   </button>
@@ -3509,6 +3521,10 @@ function App() {
                               ctrl.setOverlays(prev => prev.map(o => o.id === overlayId ? { ...o, superpositionFailed: failed } : o));
                             }}
                             onToast={addToast}
+                            // The Mol* engine has no internal error UI of its own (unlike the
+                            // NGL engine, which renders setError inline) — without this, a
+                            // failed structure load on Mol* was completely invisible to the user.
+                            onError={error}
 
                             initialOrientation={index === 0 ? embedOrientation : undefined}
 
@@ -3646,9 +3662,10 @@ function App() {
                       <NotebookPen className="w-5 h-5 text-blue-400" />
                       Lab Notebook
                     </h2>
-                    <button 
+                    <button
                       onClick={() => setIsNotebookOpen(false)}
                       className="p-2 hover:bg-white/10 rounded-full text-white/50 hover:text-white"
+                      aria-label="Close notebook"
                     >
                       <X size={24} />
                     </button>

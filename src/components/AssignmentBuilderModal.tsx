@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Check, Copy, Camera, Target, Code, Sparkles } from 'lucide-react';
 import type { AssignmentPayload, ResidueInfo } from '../types';
+import { useModalA11y } from '../hooks/useModalA11y';
 
 interface AssignmentBuilderModalProps {
     isOpen: boolean;
@@ -85,13 +86,15 @@ export const AssignmentBuilderModal: React.FC<AssignmentBuilderModalProps> = ({
         }
     };
 
+    const dialogRef = useModalA11y<HTMLDivElement>(isOpen, onClose);
+
     if (!isOpen) return null;
 
     const isReady = targetResidue !== null && question.trim().length > 0;
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6 bg-black/60 backdrop-blur-sm animate-in fade-in overflow-y-auto">
-            <div className={`relative w-full max-w-4xl rounded-2xl shadow-[0_8px_40px_rgba(0,0,0,0.4)] p-1 overflow-hidden transition-all duration-300 ${isLightMode ? 'bg-white/80' : 'bg-neutral-900/80'} backdrop-blur-xl border ${isLightMode ? 'border-white/40' : 'border-white/10'}`}>
+            <div ref={dialogRef} role="dialog" aria-modal="true" tabIndex={-1} className={`relative w-full max-w-4xl rounded-2xl shadow-[0_8px_40px_rgba(0,0,0,0.4)] p-1 overflow-hidden transition-all duration-300 outline-none ${isLightMode ? 'bg-white/80' : 'bg-neutral-900/80'} backdrop-blur-xl border ${isLightMode ? 'border-white/40' : 'border-white/10'}`}>
                 {/* Decorative background glow */}
                 <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/20 rounded-full blur-[80px] pointer-events-none" />
                 <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-500/20 rounded-full blur-[80px] pointer-events-none" />

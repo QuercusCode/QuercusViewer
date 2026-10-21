@@ -10,6 +10,7 @@ import type { StoryboardPayload, StoryboardSlide, SlideQuiz, SlideAnnotation } f
 import { getShareableURL } from '../utils/urlManager';
 import { useToast } from '../hooks/useToast';
 import { ToastContainer } from './Toast';
+import { useModalA11y } from '../hooks/useModalA11y';
 
 const AUTO_PLAY_OPTIONS = [0, 3, 5, 10, 15, 30];
 
@@ -139,6 +140,8 @@ export const StoryboardBuilderModal: React.FC<StoryboardBuilderModalProps> = ({
         const s = secs % 60;
         return `${m}:${s < 10 ? '0' : ''}${s}`;
     };
+
+    const dialogRef = useModalA11y<HTMLDivElement>(isOpen, onClose);
 
     if (!isOpen) return null;
 
@@ -270,10 +273,17 @@ export const StoryboardBuilderModal: React.FC<StoryboardBuilderModalProps> = ({
         const payload = getPayload();
         const date = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
+        // payload.title/slide.title/quiz/annotations/representation are all
+        // reachable from handleImportFromUrl/handleImportJSON (arbitrary,
+        // attacker-controllable text), then interpolated into an HTML string
+        // injected via window.open + document.write below — escape every one
+        // of them the same way description/speakerNotes already are.
+        const escapeHtml = (text: string | undefined | null) =>
+            (text ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
         const mdToHtml = (text: string) => {
             if (!text) return '';
-            return text
-                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            return escapeHtml(text)
                 .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
                 .replace(/\*(.*?)\*/g, '<em>$1</em>')
                 .split('\n')
@@ -290,11 +300,11 @@ export const StoryboardBuilderModal: React.FC<StoryboardBuilderModalProps> = ({
             const quizHtml = slide.quiz ? `
                 <div class="quiz-block">
                     <div class="quiz-label">❓ Quiz Question</div>
-                    <div class="quiz-question">${slide.quiz.question}</div>
+                    <div class="quiz-question">${escapeHtml(slide.quiz.question)}</div>
                     <ul class="quiz-options">
                         ${slide.quiz.options.filter(o => o.trim()).map((opt, oi) => `
                             <li class="quiz-option ${oi === slide.quiz!.correctIndex ? 'correct' : ''}">
-                                ${oi === slide.quiz!.correctIndex ? '✅' : '○'} ${opt}
+                                ${oi === slide.quiz!.correctIndex ? '✅' : '○'} ${escapeHtml(opt)}
                             </li>
                         `).join('')}
                     </ul>
@@ -309,7 +319,7 @@ export const StoryboardBuilderModal: React.FC<StoryboardBuilderModalProps> = ({
             const annotationsHtml = slide.annotations?.length ? `
                 <div class="annotations-block">
                     <div class="annotations-label">🏷️ Floating Labels</div>
-                    <ul>${slide.annotations.map(a => `<li><span style="color:${a.color || '#6366f1'}">${a.text}</span> — position (${a.x}%, ${a.y}%)</li>`).join('')}</ul>
+                    <ul>${slide.annotations.map(a => `<li><span style="color:${/^#[0-9a-fA-F]{3,8}$/.test(a.color || '') ? a.color : '#6366f1'}">${escapeHtml(a.text)}</span> — position (${a.x}%, ${a.y}%)</li>`).join('')}</ul>
                 </div>` : '';
 
             const viewerBlockHtml = slide.screenshot
@@ -322,14 +332,14 @@ export const StoryboardBuilderModal: React.FC<StoryboardBuilderModalProps> = ({
                                 <path d="M2 12l10 5 10-5"/>
                             </svg>
                             <span>3D Viewer — no screenshot captured</span>
-                            ${slide.representation ? `<span class="rep-badge">${slide.representation}</span>` : ''}
+                            ${slide.representation ? `<span class="rep-badge">${escapeHtml(slide.representation)}</span>` : ''}
                         </div>
                    </div>`;
 
             return `
                 <div class="slide-page">
                     <div class="slide-number">Slide ${i + 1} of ${payload.slides.length}</div>
-                    <h2 class="slide-title">${slide.title}</h2>
+                    <h2 class="slide-title">${escapeHtml(slide.title)}</h2>
                     <div class="slide-description">${mdToHtml(slide.description)}</div>
                     ${viewerBlockHtml}
                     ${quizHtml}
@@ -342,7 +352,7 @@ export const StoryboardBuilderModal: React.FC<StoryboardBuilderModalProps> = ({
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <title>${payload.title}</title>
+    <title>${escapeHtml(payload.title)}</title>
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #fff; color: #111; }
@@ -436,7 +446,7 @@ export const StoryboardBuilderModal: React.FC<StoryboardBuilderModalProps> = ({
 <body>
     <div class="cover">
         <div class="cover-badge">Molecular Storyboard · Quercus Viewer</div>
-        <h1 class="cover-title">${payload.title}</h1>
+        <h1 class="cover-title">${escapeHtml(payload.title)}</h1>
         <div class="cover-count">${payload.slides.length} slide${payload.slides.length !== 1 ? 's' : ''}${payload.autoPlaySeconds ? ` · Auto-play ${payload.autoPlaySeconds}s` : ''}</div>
         <div class="cover-meta">Exported ${date}</div>
     </div>
@@ -452,7 +462,7 @@ export const StoryboardBuilderModal: React.FC<StoryboardBuilderModalProps> = ({
 </body>
 </html>`;
 
-        const win = window.open('', '_blank');
+        const win = window.open('', '_blank', 'noopener');
         if (win) {
             win.document.write(html);
             win.document.close();
@@ -843,7 +853,7 @@ export const StoryboardBuilderModal: React.FC<StoryboardBuilderModalProps> = ({
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6 bg-black/60 backdrop-blur-sm animate-in fade-in overflow-y-auto">
-            <div className={`relative w-full max-w-5xl rounded-2xl shadow-[0_8px_40px_rgba(0,0,0,0.4)] p-1 overflow-hidden transition-all duration-300 ${isLightMode ? 'bg-white/85' : 'bg-neutral-900/85'} backdrop-blur-xl border ${isLightMode ? 'border-white/40' : 'border-white/10'}`}>
+            <div ref={dialogRef} role="dialog" aria-modal="true" tabIndex={-1} className={`relative w-full max-w-5xl rounded-2xl shadow-[0_8px_40px_rgba(0,0,0,0.4)] p-1 overflow-hidden transition-all duration-300 outline-none ${isLightMode ? 'bg-white/85' : 'bg-neutral-900/85'} backdrop-blur-xl border ${isLightMode ? 'border-white/40' : 'border-white/10'}`}>
                 <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/20 rounded-full blur-[80px] pointer-events-none" />
                 <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-indigo-500/20 rounded-full blur-[80px] pointer-events-none" />
 

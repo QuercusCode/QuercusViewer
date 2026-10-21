@@ -3,6 +3,14 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "description": "Free, browser-based 3D molecular structure viewer for proteins and chemicals — load from RCSB PDB or PubChem, compare structures side-by-side, collaborate live, and export publication-quality renders.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/QuercusCode/QuercusViewer.git"
+  },
+  "author": "QuercusCode",
+  "license": "MIT",
+  "homepage": "https://quercusviewer.com",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

@@ -3,6 +3,7 @@ import { X, Plus, Eye, EyeOff, Trash2, Upload, FileDown, AlertTriangle } from 'l
 import jsPDF from 'jspdf';
 import type { SuperposedStructure } from '../types';
 import { useTranslation } from '../lib/i18n';
+import { useModalA11y } from '../hooks/useModalA11y';
 
 interface SuperpositionModalProps {
     isOpen: boolean;
@@ -28,6 +29,8 @@ export const SuperpositionModal: React.FC<SuperpositionModalProps> = ({
     const { t } = useTranslation();
     const [pdbInput, setPdbInput] = useState('');
     const [colorInput, setColorInput] = useState('#FFA500'); // Default Orange
+
+    const dialogRef = useModalA11y<HTMLDivElement>(isOpen, onClose);
 
     if (!isOpen) return null;
 
@@ -212,7 +215,7 @@ export const SuperpositionModal: React.FC<SuperpositionModalProps> = ({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-            <div className="bg-neutral-900 border border-neutral-700/50 rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
+            <div ref={dialogRef} role="dialog" aria-modal="true" tabIndex={-1} className="bg-neutral-900 border border-neutral-700/50 rounded-xl shadow-2xl w-full max-w-md overflow-hidden outline-none">
                 {/* Header */}
                 <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-800">
                     <h2 className="text-lg font-semibold text-white">{t.superpositionTitle as string}</h2>
