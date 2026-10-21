@@ -7,6 +7,18 @@ import { useLazyMountGate } from '../hooks/useLazyMountGate';
 const SequenceAlignmentModal = lazy(() => import('./SequenceAlignmentModal').then(m => ({ default: m.SequenceAlignmentModal })));
 import type { RepresentationType, ColoringType, ChainInfo, Measurement, ResidueInteraction, AtomContact, CustomColorRule, CustomStyleRule, CustomTransparencyRule, ColorPalette, ResidueInfo, StructureInfo, MeasurementTextColor, SuperposedStructure, Annotation, NucleicResidueRule, RadiusSourceType, SurfaceAlgorithm } from '../types';
 import { getAtomicInteractionType } from '../utils/interactionUtils';
+import { ChargeGrid, getFormalCharge, potentialToColor } from '../utils/electrostatics';
+
+// Minimal shape of the NGL atom proxy fields the electrostatics scan reads;
+// the full NGL proxy has many more untyped fields, so the rest stays `any`
+// throughout this file, matching the existing convention.
+interface NGLAtomProxyLike {
+    x: number;
+    y: number;
+    z: number;
+    resname: string;
+    atomname: string;
+}
 import { type DataSource, getStructureUrl, extractChainsFromComponent } from '../utils/pdbUtils';
 
 
@@ -2809,17 +2821,33 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
             // --- 2. REGISTER DYNAMIC SCHEMES (Charge & Custom) ---
             const NGL = window.NGL;
 
-            // Helper: Register Charge Scheme (Dynamic)
-            if (finalColor === 'charge') {
+            // Helper: Register Electrostatic Potential Scheme (Dynamic)
+            // See src/utils/electrostatics.ts for what this is and isn't —
+            // a screened sum of fixed formal side-chain charges, not a
+            // Poisson-Boltzmann solve. Built once per representation
+            // update (not per atom), via a spatial grid so it stays fast
+            // on large structures.
+            if (finalColor === 'electrostatic') {
+                const grid = new ChargeGrid();
+                let vMax = 0;
+                if (component.structure) {
+                    component.structure.eachAtom((atom: NGLAtomProxyLike) => {
+                        const q = getFormalCharge(atom.resname, atom.atomname);
+                        if (q !== 0) grid.add({ x: atom.x, y: atom.y, z: atom.z, charge: q });
+                    });
+                    if (grid.size > 0) {
+                        component.structure.eachAtom((atom: NGLAtomProxyLike) => {
+                            const v = Math.abs(grid.potentialAt(atom.x, atom.y, atom.z));
+                            if (v > vMax) vMax = v;
+                        });
+                    }
+                }
                 finalColor = NGL.ColormakerRegistry.addScheme(function (this: any, params: any) {
                     this.parameters = params;
                     this.atomColor = function (atom: any) {
-                        const r = atom.resname;
-                        if (['ARG', 'LYS', 'HIS'].includes(r)) return 0x0000FF; // Blue
-                        if (['ASP', 'GLU'].includes(r)) return 0xFF0000; // Red
-                        return 0xFFFFFF; // White
+                        return potentialToColor(grid.potentialAt(atom.x, atom.y, atom.z), vMax);
                     };
-                }, 'charge_dynamic');
+                }, 'electrostatic_dynamic');
             }
 
             // Helper: Register a fixed-scale pLDDT scheme for AlphaFold-sourced models.

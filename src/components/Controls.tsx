@@ -1581,11 +1581,30 @@ export const Controls: React.FC<ControlsProps> = ({
                                                 <option value="bfactor">B-Factor</option>
                                                 <option value="uniform">Uniform</option>
                                                 <option value="element">Element (CPK)</option>
+                                                {!isChemical && (
+                                                    <option value="electrostatic" disabled={visualizerEngine !== 'ngl'}>
+                                                        {visualizerEngine === 'ngl' ? (t.electrostaticLabel as string) : `${t.electrostaticLabel as string} (NGL only)`}
+                                                    </option>
+                                                )}
                                             </select>
                                         </div>
 
                                         {/* Color Explanation */}
-                                        {coloring === 'bfactor' && dataSource === 'alphafold' ? (
+                                        {coloring === 'electrostatic' ? (
+                                            <div className="col-span-2 space-y-1">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="flex items-center gap-1">
+                                                        <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: '#FF0000' }} />
+                                                        <span className={`text-[9px] ${subtleText}`}>{t.electrostaticNegative as string}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-1">
+                                                        <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: '#0000FF' }} />
+                                                        <span className={`text-[9px] ${subtleText}`}>{t.electrostaticPositive as string}</span>
+                                                    </div>
+                                                </div>
+                                                <p className={`text-[9px] opacity-70 leading-relaxed ${subtleText}`}>{t.electrostaticDisclaimer as string}</p>
+                                            </div>
+                                        ) : coloring === 'bfactor' && dataSource === 'alphafold' ? (
                                             <div className="col-span-2 space-y-1">
                                                 <p className={`text-[9px] opacity-70 ${subtleText}`}>{t.plddtLegendTitle as string}</p>
                                                 <div className="flex flex-wrap gap-x-3 gap-y-1">
