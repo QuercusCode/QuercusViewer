@@ -631,23 +631,37 @@ export const Controls: React.FC<ControlsProps> = ({
     const [selectedLigandCode, setSelectedLigandCode] = useState<string | null>(null);
     const [ligandInfo, setLigandInfo] = useState<LigandChemicalInfo | null>(null);
     const [ligandInfoLoading, setLigandInfoLoading] = useState(false);
-    const latestLigandRequestRef = useRef<string | null>(null);
+    // A monotonic counter, not the ligand code itself — two separate
+    // requests for the same code (e.g. a retry after a transient failure)
+    // need distinct ids so the older one can't clobber the newer one's
+    // result if it happens to resolve second.
+    const ligandRequestIdRef = useRef(0);
 
     const handleLigandChipClick = async (code: string) => {
         if (selectedLigandCode === code) {
             setSelectedLigandCode(null);
-            latestLigandRequestRef.current = null;
+            ligandRequestIdRef.current++;
             return;
         }
         setSelectedLigandCode(code);
         setLigandInfo(null);
         setLigandInfoLoading(true);
-        latestLigandRequestRef.current = code;
+        const requestId = ++ligandRequestIdRef.current;
         const info = await fetchChemicalComponent(code);
-        if (latestLigandRequestRef.current !== code) return; // superseded by a newer click
+        if (ligandRequestIdRef.current !== requestId) return; // superseded by a newer click
         setLigandInfoLoading(false);
         setLigandInfo(info);
     };
+
+    // Reset the lookup panel whenever a different structure is loaded, so a
+    // previously selected ligand's (now stale) info doesn't keep showing
+    // under a structure that may not even contain that ligand.
+    useEffect(() => {
+        setSelectedLigandCode(null);
+        setLigandInfo(null);
+        setLigandInfoLoading(false);
+        ligandRequestIdRef.current++;
+    }, [pdbId]);
 
     const handleAddCustomStyle = () => {
         if (!setCustomStyles || !customResStyleRange) return;

@@ -15,27 +15,37 @@ import type { LigandChemicalInfo } from '../types';
 // stuck on "unavailable".
 const cache = new Map<string, LigandChemicalInfo>();
 
+// PDB Chemical Component Dictionary IDs are 1-5 alphanumeric characters
+// (legacy IDs are 1-3 chars; the CCD's newer extended-ID range allows up to
+// 5). Rejecting anything else here, before it ever reaches a URL, is what
+// keeps a stray "." or "/" in a malformed/crafted structure file's residue
+// name from being interpreted as a URL path segment.
+const VALID_CODE = /^[A-Z0-9]{1,5}$/;
+
 export async function fetchChemicalComponent(code: string): Promise<LigandChemicalInfo | null> {
     const key = code.trim().toUpperCase();
-    if (!key) return null;
+    if (!VALID_CODE.test(key)) return null;
     if (cache.has(key)) return cache.get(key) ?? null;
 
     try {
-        const response = await fetch(`https://data.rcsb.org/rest/v1/core/chemcomp/${encodeURIComponent(key)}`);
-        if (!response.ok) return null;
+        const response = await fetch(`https://data.rcsb.org/rest/v1/core/chemcomp/${key}`);
+        if (!response.ok) throw new Error(`Chemical component fetch failed (${response.status})`);
 
         const data = await response.json();
         const comp = data?.chem_comp;
         if (!comp || typeof comp !== 'object') return null;
 
+        // rcsb_chem_comp_descriptor is one of the few RCSB categories whose
+        // fields keep their original mmCIF dictionary casing (SMILES,
+        // SMILES_stereo, InChI, InChIKey) instead of the usual snake_case.
         const descriptor = data?.rcsb_chem_comp_descriptor;
         const info: LigandChemicalInfo = {
             name: typeof comp.name === 'string' ? comp.name : undefined,
             formula: typeof comp.formula === 'string' ? comp.formula : undefined,
             molecularWeight: typeof comp.formula_weight === 'number' ? comp.formula_weight : undefined,
-            smiles: typeof descriptor?.smiles_stereo === 'string'
-                ? descriptor.smiles_stereo
-                : (typeof descriptor?.smiles === 'string' ? descriptor.smiles : undefined),
+            smiles: typeof descriptor?.SMILES_stereo === 'string'
+                ? descriptor.SMILES_stereo
+                : (typeof descriptor?.SMILES === 'string' ? descriptor.SMILES : undefined),
         };
 
         if (!info.name && !info.formula && info.molecularWeight === undefined && !info.smiles) return null;

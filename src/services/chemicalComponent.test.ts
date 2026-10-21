@@ -15,7 +15,9 @@ describe('fetchChemicalComponent', () => {
             ok: true,
             json: async () => ({
                 chem_comp: { name: "ADENOSINE-5'-TRIPHOSPHATE", formula: 'C10 H16 N5 O13 P3', formula_weight: 507.18 },
-                rcsb_chem_comp_descriptor: { smiles_stereo: 'c1nc(c2c(n1)n(cn2)...)', smiles: 'fallback-smiles' },
+                // rcsb_chem_comp_descriptor keeps the mmCIF dictionary's own casing
+                // (SMILES/SMILES_stereo), unlike chem_comp's snake_case fields.
+                rcsb_chem_comp_descriptor: { SMILES_stereo: 'c1nc(c2c(n1)n(cn2)...)', SMILES: 'fallback-smiles' },
             }),
         });
 
@@ -33,7 +35,7 @@ describe('fetchChemicalComponent', () => {
             ok: true,
             json: async () => ({
                 chem_comp: { name: 'Zinc ion', formula: 'Zn', formula_weight: 65.38 },
-                rcsb_chem_comp_descriptor: { smiles: '[Zn+2]' },
+                rcsb_chem_comp_descriptor: { SMILES: '[Zn+2]' },
             }),
         });
 
@@ -94,6 +96,19 @@ describe('fetchChemicalComponent', () => {
         vi.stubGlobal('fetch', fetchMock);
 
         expect(await fetchChemicalComponent('   ')).toBeNull();
+        expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+    it('rejects a code with characters outside the PDB chemical component ID format, without calling fetch', async () => {
+        const fetchMock = vi.fn();
+        vi.stubGlobal('fetch', fetchMock);
+
+        // A malformed/crafted structure file could in principle yield a
+        // residue name like "..", which would otherwise collapse a URL
+        // path segment via dot-segment normalization instead of 404ing.
+        expect(await fetchChemicalComponent('..')).toBeNull();
+        expect(await fetchChemicalComponent('TOO-LONG')).toBeNull();
+        expect(await fetchChemicalComponent('A/B')).toBeNull();
         expect(fetchMock).not.toHaveBeenCalled();
     });
 });
