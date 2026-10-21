@@ -19,6 +19,8 @@ interface StoryboardBuilderModalProps {
     onClose: () => void;
     isLightMode: boolean;
     captureScreenshot: () => Promise<string | null> | string | null; // returns canvas data URL
+    /** Optional: play the storyboard in-page right now, without generating/opening a share link first. */
+    onPreview?: (payload: StoryboardPayload) => void;
     getCurrentViewerState: () => {
         cameraOrientation: any;
         representation: any;
@@ -39,6 +41,7 @@ export const StoryboardBuilderModal: React.FC<StoryboardBuilderModalProps> = ({
     onClose,
     isLightMode,
     captureScreenshot,
+    onPreview,
     getCurrentViewerState
 }) => {
     const { toasts, removeToast, error: showError } = useToast();
@@ -1303,12 +1306,20 @@ export const StoryboardBuilderModal: React.FC<StoryboardBuilderModalProps> = ({
                                     <h4 className={`text-xs font-bold ${isLightMode ? 'text-neutral-800' : 'text-white'}`}>Shareable Lesson Link</h4>
                                     <p className={`text-[10px] mt-1 ${isLightMode ? 'text-neutral-500' : 'text-neutral-400'}`}>Direct link with the loaded storyboard player.</p>
                                 </div>
-                                <button onClick={handleCopyUrl}
-                                    className={`mt-3 w-full py-2 px-4 rounded-xl text-xs font-bold flex items-center justify-center gap-2 border transition-all duration-300 ${copiedUrl
-                                        ? 'bg-green-500 text-white border-green-500 shadow-lg shadow-green-500/20'
-                                        : (isLightMode ? 'bg-white text-neutral-800 border-neutral-200 hover:border-neutral-300' : 'bg-neutral-800 text-neutral-200 border-neutral-700 hover:bg-neutral-700')}`}>
-                                    {copiedUrl ? <><Check className="w-3.5 h-3.5" /> Copied!</> : <><Copy className="w-3.5 h-3.5" /> Copy Share Link</>}
-                                </button>
+                                <div className="mt-3 flex gap-2">
+                                    {onPreview && (
+                                        <button onClick={() => onPreview(getPayload())}
+                                            className={`flex-1 py-2 px-4 rounded-xl text-xs font-bold flex items-center justify-center gap-2 border transition-all duration-300 ${isLightMode ? 'bg-white text-neutral-800 border-neutral-200 hover:border-neutral-300' : 'bg-neutral-800 text-neutral-200 border-neutral-700 hover:bg-neutral-700'}`}>
+                                            <Play className="w-3.5 h-3.5" /> Preview
+                                        </button>
+                                    )}
+                                    <button onClick={handleCopyUrl}
+                                        className={`flex-1 py-2 px-4 rounded-xl text-xs font-bold flex items-center justify-center gap-2 border transition-all duration-300 ${copiedUrl
+                                            ? 'bg-green-500 text-white border-green-500 shadow-lg shadow-green-500/20'
+                                            : (isLightMode ? 'bg-white text-neutral-800 border-neutral-200 hover:border-neutral-300' : 'bg-neutral-800 text-neutral-200 border-neutral-700 hover:bg-neutral-700')}`}>
+                                        {copiedUrl ? <><Check className="w-3.5 h-3.5" /> Copied!</> : <><Copy className="w-3.5 h-3.5" /> Copy Share Link</>}
+                                    </button>
+                                </div>
                             </div>
 
                             <div className={`p-4 rounded-xl border flex flex-col justify-between ${isLightMode ? 'bg-[#FAFAFA] border-neutral-200' : 'bg-[#0E0E0E] border-neutral-800'}`}>

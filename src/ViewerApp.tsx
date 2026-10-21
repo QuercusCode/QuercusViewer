@@ -18,6 +18,9 @@ const ContactMap = lazy(() => import('./components/ContactMap').then(m => ({ def
 const RamachandranModal = lazy(() => import('./components/RamachandranModal').then(m => ({ default: m.RamachandranModal })));
 const ShareModal = lazy(() => import('./components/ShareModal').then(m => ({ default: m.ShareModal })));
 const SuperpositionModal = lazy(() => import('./components/SuperpositionModal').then(m => ({ default: m.SuperpositionModal })));
+const StoryboardBuilderModal = lazy(() => import('./components/StoryboardBuilderModal').then(m => ({ default: m.StoryboardBuilderModal })));
+const StoryboardOverlay = lazy(() => import('./components/StoryboardOverlay').then(m => ({ default: m.StoryboardOverlay })));
+const DrawingCanvas = lazy(() => import('./components/DrawingCanvas').then(m => ({ default: m.DrawingCanvas })));
 
 import { HelpGuide } from './components/HelpGuide';
 import { parseURLState, getShareableURL } from './utils/urlManager';
@@ -51,7 +54,8 @@ import type {
   ResidueInfo,
   StructureInfo,
   ChatMessage,
-  ResidueInteraction
+  ResidueInteraction,
+  StoryboardPayload
 } from './types';
 // LabNotebook pulls in the full rich-text editor (vendor-tiptap) and its chart
 // node view (vendor-charts) — most viewer sessions never open the notebook
@@ -1165,6 +1169,45 @@ function App() {
   const [showShareModal, setShowShareModal] = useState(false);
   const hasOpenedShareModal = useLazyMountGate(showShareModal);
   const [colorPalette, setColorPalette] = useState<ColorPalette>('standard');
+
+  // Storyboard: the builder (authoring) is opened explicitly, same lazy-mount
+  // pattern as the other analysis modals. Playback, by contrast, can be
+  // active from the very first render — a shared storyboard link encodes its
+  // payload straight into the URL (see urlManager.ts), so it's seeded here
+  // from initialUrlState rather than only ever starting at null/closed.
+  const [showStoryboardBuilder, setShowStoryboardBuilder] = useState(false);
+  const hasOpenedStoryboardBuilder = useLazyMountGate(showStoryboardBuilder);
+  const [activeStoryboard, setActiveStoryboard] = useState<StoryboardPayload | null>(initialUrlState.viewports[0]?.storyboardPayload || null);
+  const [storyboardSlideIndex, setStoryboardSlideIndex] = useState(initialUrlState.viewports[0]?.storyboardSlideIndex || 0);
+  const [isStoryboardDrawing, setIsStoryboardDrawing] = useState(false);
+  const [storyboardDrawingColor, setStoryboardDrawingColor] = useState('#ef4444');
+  const [storyboardClearTrigger, setStoryboardClearTrigger] = useState(0);
+
+  // Apply each slide's saved view state to viewport 0 (storyboards are
+  // always single-view, per StoryboardBuilderModal's own
+  // getShareableURL('single', ...) call) whenever the active slide changes.
+  // Mirrors the existing session-restore pattern below (same 1500ms delay
+  // before applying camera orientation, to give the structure time to load).
+  useEffect(() => {
+    if (!activeStoryboard) return;
+    const slide = activeStoryboard.slides[storyboardSlideIndex];
+    if (!slide) return;
+
+    const ctrl = controllers[0];
+    if (slide.representation) ctrl.setRepresentation(slide.representation);
+    if (slide.coloring) ctrl.setColoring(slide.coloring);
+    if (slide.customColors) ctrl.setCustomColors(slide.customColors);
+    if (slide.showSurface !== undefined) ctrl.setShowSurface(slide.showSurface);
+    if (slide.showLigands !== undefined) ctrl.setShowLigands(slide.showLigands);
+    if (slide.selectedResidue) ctrl.setHighlightedResidue(slide.selectedResidue);
+
+    if (slide.cameraOrientation) {
+      const timer = setTimeout(() => {
+        viewerRefs[0].current?.setOrientation(slide.cameraOrientation);
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [activeStoryboard, storyboardSlideIndex]);
 
   // Multi-View Sharing Selection State
   // Default to all indices [0, 1, 2, 3] until user changes it
@@ -2985,7 +3028,31 @@ function App() {
             isNotesOpen={isNotesOpen}
             onToggleNotes={() => setIsNotesOpen(!isNotesOpen)}
             onOpenSettings={() => setIsSettingsOpen(true)}
+            isTeachingMode={isTeachingMode}
+            onOpenStoryboardBuilder={() => setShowStoryboardBuilder(true)}
           />
+
+          {activeStoryboard && (
+            <Suspense fallback={null}>
+              <DrawingCanvas
+                isActive={isStoryboardDrawing}
+                color={storyboardDrawingColor}
+                clearTrigger={storyboardClearTrigger}
+              />
+              <StoryboardOverlay
+                storyboard={activeStoryboard}
+                currentSlideIndex={storyboardSlideIndex}
+                isLightMode={isLightMode}
+                onSlideChange={setStoryboardSlideIndex}
+                onExit={() => setActiveStoryboard(null)}
+                isDrawing={isStoryboardDrawing}
+                setIsDrawing={setIsStoryboardDrawing}
+                drawingColor={storyboardDrawingColor}
+                setDrawingColor={setStoryboardDrawingColor}
+                onClearDrawing={() => setStoryboardClearTrigger(t => t + 1)}
+              />
+            </Suspense>
+          )}
 
           <AIChatSidebar isOpen={isAiChatOpen} onClose={() => setIsAiChatOpen(false)} pdbId={pdbId} pdbMetadata={pdbMetadata} />
           <NotesPanel isOpen={isNotesOpen} onClose={() => setIsNotesOpen(false)} />
@@ -3919,6 +3986,48 @@ function App() {
         peerSession={peerSession}
         // onLiveUpgradeRequired disabled until monetization is live:
         // onLiveUpgradeRequired={!planCanUse(plan, 'collaboration') ? () => setUpgradeModalTarget({ feature: 'Live Collaboration', requiredPlan: 'team' }) : undefined}
+      />
+      </Suspense>
+      )}
+
+      {hasOpenedStoryboardBuilder && (
+      <Suspense fallback={null}>
+      <StoryboardBuilderModal
+        isOpen={showStoryboardBuilder}
+        onClose={() => setShowStoryboardBuilder(false)}
+        isLightMode={isLightMode}
+        captureScreenshot={async () => {
+          const viewer = viewerRef.current;
+          if (!viewer) return null;
+          // Low resolution, no transparency: this gets JSON-stringified and
+          // base64-encoded straight into the share URL (see urlManager.ts,
+          // no compression), so keeping each capture small matters — a
+          // full-res PNG per slide would make multi-slide storyboard links
+          // impractically long.
+          const blob = await viewer.getSnapshotBlob(1, false);
+          if (!blob) return null;
+          return new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.readAsDataURL(blob);
+          });
+        }}
+        onPreview={(payload) => {
+          setShowStoryboardBuilder(false);
+          setStoryboardSlideIndex(0);
+          setActiveStoryboard(payload);
+        }}
+        getCurrentViewerState={() => ({
+          cameraOrientation: viewerRef.current?.getOrientation(),
+          representation,
+          coloring,
+          customColors,
+          selectedResidue: highlightedResidue,
+          showSurface,
+          showLigands,
+          pdbId,
+          dataSource,
+        })}
       />
       </Suspense>
       )}
