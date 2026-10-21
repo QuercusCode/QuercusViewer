@@ -1,12 +1,14 @@
 
 import React, { useRef, useEffect, useState } from 'react';
 import { Map, Atom } from 'lucide-react';
-import type { ChainInfo, ColoringType, ColorPalette } from '../types';
+import type { ChainInfo, ColoringType, ColorPalette, MappedUniProtFeature } from '../types';
 import { getPaletteColor } from '../utils/colorUtils';
+import { featureColor } from '../hooks/useUniProtFeatures';
 
 interface SequenceTrackProps {
     id?: string;
     chains: ChainInfo[];
+    uniprotFeatures?: Record<string, MappedUniProtFeature[]> | null;
     highlightedResidue: { chain: string; resNo: number } | null;
     onHoverResidue: (chain: string, resNo: number) => void;
     onClickResidue: (chain: string, resNo: number) => void;
@@ -87,6 +89,7 @@ const getAtomColor = (element: string, isLight: boolean) => {
 export const SequenceTrack: React.FC<SequenceTrackProps> = ({
     id,
     chains,
+    uniprotFeatures,
     highlightedResidue,
     onHoverResidue,
     onClickResidue,
@@ -99,6 +102,7 @@ export const SequenceTrack: React.FC<SequenceTrackProps> = ({
     const scrollContainerRef = useRef<HTMLDivElement>(null);
 
     const activeChain = chains[activeChainIndex];
+    const activeChainFeatures = (activeChain && uniprotFeatures?.[activeChain.name]) || [];
 
     // Pre-calculate B-Factor Range for current chain if needed
     const bFactorRange = React.useMemo(() => {
@@ -263,16 +267,33 @@ export const SequenceTrack: React.FC<SequenceTrackProps> = ({
                                 color = getResidueColor(res, isLightMode, activeChain.type, coloring, colorPalette);
                             }
 
+                            // A residue can fall under more than one annotation (e.g. a
+                            // domain AND an active site); show the first match's color
+                            // as the indicator and list every match in the tooltip.
+                            const matchedFeatures = activeChainFeatures.filter(f => resNo >= f.pdbStart && resNo <= f.pdbEnd);
+                            const featureTooltip = matchedFeatures.length > 0
+                                ? matchedFeatures.map(f => `${f.type}: ${f.description}`).join('\n')
+                                : undefined;
+
                             return (
                                 <button
                                     key={idx}
                                     onMouseEnter={() => onHoverResidue(activeChain.name, resNo)}
                                     onClick={() => onClickResidue(activeChain.name, resNo)}
+                                    title={featureTooltip}
                                     className={`group relative flex items-center gap-2 px-2 w-full h-8 rounded-lg transition-all duration-150 flex-shrink-0
                                         ${isActive
                                             ? 'bg-purple-500/20 z-10 ring-2 ring-purple-500 scale-105 shadow-lg shadow-purple-500/10'
                                             : 'hover:bg-black/5 dark:hover:bg-white/5'}`}
                                 >
+                                    {/* UniProt feature indicator */}
+                                    {matchedFeatures.length > 0 && (
+                                        <span
+                                            className="absolute left-0 top-0.5 bottom-0.5 w-1 rounded-full"
+                                            style={{ backgroundColor: featureColor(matchedFeatures[0].type) }}
+                                        />
+                                    )}
+
                                     {/* Residue Box */}
                                     <span
                                         className={`w-6 h-6 flex items-center justify-center rounded-md text-[11px] font-mono font-bold shadow-sm transition-transform
