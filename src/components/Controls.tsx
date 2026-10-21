@@ -45,6 +45,7 @@ import {
     Sparkles,
     Star,
     Sun,
+    Tag,
     Trash2,
     Undo2,
     Upload,
@@ -53,7 +54,8 @@ import {
     X,
     Zap
 } from 'lucide-react';
-import type { RepresentationType, ColoringType, ChainInfo, Snapshot, Movie, ColorPalette, PDBMetadata, CustomColorRule, CustomStyleRule, CustomTransparencyRule, Measurement, NucleicResidueRule, RadiusSourceType, SurfaceAlgorithm, ResidueInteraction } from '../types';
+import type { RepresentationType, ColoringType, ChainInfo, Snapshot, Movie, ColorPalette, PDBMetadata, CustomColorRule, CustomStyleRule, CustomTransparencyRule, Measurement, NucleicResidueRule, RadiusSourceType, SurfaceAlgorithm, ResidueInteraction, MappedUniProtFeature } from '../types';
+import { featureColor } from '../hooks/useUniProtFeatures';
 import type { DataSource } from '../utils/pdbUtils';
 import type { HistoryItem } from '../hooks/useHistory';
 import { formatChemicalId } from '../utils/pdbUtils';
@@ -339,6 +341,8 @@ interface ControlsProps {
     isSharedSession: boolean; // Added prop
     onOpenSuperposition?: () => void;
     pdbMetadata: PDBMetadata | null;
+    uniprotFeatures?: Record<string, MappedUniProtFeature[]> | null;
+    onJumpToResidue?: (chain: string, resNo: number) => void;
 
 
     isLightMode: boolean;
@@ -515,6 +519,8 @@ export const Controls: React.FC<ControlsProps> = ({
     measurements,
     onDeleteMeasurement,
     pdbMetadata,
+    uniprotFeatures,
+    onJumpToResidue,
     isLightMode,
     user,
     isNotebookOpen,
@@ -2658,6 +2664,50 @@ export const Controls: React.FC<ControlsProps> = ({
                                     </div>
                                 </div>
                             )
+                        }
+
+                        {/* Functional Features (UniProt) */}
+                        {
+                            !isChemical && uniprotFeatures && (() => {
+                                const flat = Object.entries(uniprotFeatures)
+                                    .flatMap(([chain, features]) => features.map(f => ({ chain, ...f })))
+                                    .sort((a, b) => a.chain.localeCompare(b.chain) || a.pdbStart - b.pdbStart);
+
+                                if (flat.length === 0) return null;
+
+                                return (
+                                    <div className="space-y-2">
+                                        <div className="flex items-center gap-2">
+                                            <Tag className="w-3.5 h-3.5 text-indigo-500" />
+                                            <span className={`text-[10px] font-bold uppercase tracking-wider ${subtleText}`}>
+                                                {(t.functionalFeaturesLabel as (n: number) => string)(flat.length)}
+                                            </span>
+                                        </div>
+                                        <div className="max-h-40 overflow-y-auto space-y-1 scrollbar-thin scrollbar-thumb-white/10">
+                                            {flat.map((f, idx) => (
+                                                <button
+                                                    key={idx}
+                                                    onClick={() => onJumpToResidue && onJumpToResidue(f.chain, f.pdbStart)}
+                                                    title={f.description}
+                                                    className={`w-full flex items-center gap-2 px-2 py-1 rounded-md text-left transition-colors ${isLightMode ? 'hover:bg-neutral-100' : 'hover:bg-white/5'}`}
+                                                >
+                                                    <span
+                                                        className="w-2 h-2 rounded-full shrink-0"
+                                                        style={{ backgroundColor: featureColor(f.type) }}
+                                                    />
+                                                    <span className={`text-[10px] font-medium truncate flex-1 ${isLightMode ? 'text-neutral-800' : 'text-neutral-200'}`}>
+                                                        {f.type}
+                                                        {chains.length > 1 && <span className={subtleText}> · {f.chain}</span>}
+                                                    </span>
+                                                    <span className={`text-[9px] font-mono shrink-0 ${subtleText}`}>
+                                                        {f.pdbStart === f.pdbEnd ? f.pdbStart : `${f.pdbStart}-${f.pdbEnd}`}
+                                                    </span>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                );
+                            })()
                         }
 
                         {/* Chains */}

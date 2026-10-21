@@ -78,6 +78,7 @@ import { useVisualStack, type VisualState } from './hooks/useVisualStack';
 import { useStructureController, type StructureController } from './hooks/useStructureController';
 import { usePeerSession } from './hooks/usePeerSession';
 import { useStructureMetadata } from './hooks/useStructureMetadata';
+import { useUniProtFeatures } from './hooks/useUniProtFeatures';
 
 
 import { initGA, logPageView, logEvent } from './utils/analytics';
@@ -769,6 +770,11 @@ function App() {
   useStructureMetadata(controllers[2]);
   useStructureMetadata(controllers[3]);
 
+  useUniProtFeatures(controllers[0]);
+  useUniProtFeatures(controllers[1]);
+  useUniProtFeatures(controllers[2]);
+  useUniProtFeatures(controllers[3]);
+
   // Destructure Active Controller for UI Consistency
   const {
     pdbId, setPdbId,
@@ -805,6 +811,7 @@ function App() {
     ligands,
     pdbMetadata, setPdbMetadata,
     proteinTitle, setProteinTitle,
+    uniprotFeatures,
     highlightedResidue, setHighlightedResidue,
     measurements, setMeasurements,
     isMeasurementPanelOpen, setIsMeasurementPanelOpen,
@@ -3265,6 +3272,8 @@ function App() {
                     customBackgroundColor={customBackgroundColor}
                     setCustomBackgroundColor={setCustomBackgroundColor}
                     pdbMetadata={pdbMetadata}
+                    uniprotFeatures={uniprotFeatures}
+                    onJumpToResidue={handleHighlightResidue}
                     onHighlightRegion={(selection, label) => {
                       viewerRef.current?.highlightRegion(selection, label);
                     }}
@@ -3688,6 +3697,7 @@ function App() {
               <SequenceTrack
                 id="sequence-track"
                 chains={chains}
+                uniprotFeatures={uniprotFeatures}
                 highlightedResidue={highlightedResidue}
                 onHoverResidue={() => { }}
                 onClickResidue={(chain, resNo) => viewerRef.current?.focusResidue(chain, resNo)}

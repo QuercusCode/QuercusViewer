@@ -1,12 +1,15 @@
 
 
 
-export interface UniProtFeature {
+// A UniProt functional annotation (domain, active site, binding site, etc.)
+// with its UniProt-numbered range already converted to PDB author residue
+// numbering for a specific chain, via SIFTS (see src/services/siftsMapping.ts).
+export interface MappedUniProtFeature {
     type: string;
     description: string;
-    start: number;
-    end: number;
-    chain?: string;
+    pdbStart: number;
+    pdbEnd: number;
+    accession: string;
 }
 
 export interface CustomColorRule {
