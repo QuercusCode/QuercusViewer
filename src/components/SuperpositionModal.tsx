@@ -1,14 +1,16 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { X, Plus, Eye, EyeOff, Trash2, Upload, FileDown, AlertTriangle } from 'lucide-react';
 import jsPDF from 'jspdf';
-import type { SuperposedStructure } from '../types';
+import type { ChainInfo, SuperposedStructure } from '../types';
 import { useTranslation } from '../lib/i18n';
 import { useModalA11y } from '../hooks/useModalA11y';
+import { alignSequences } from '../utils/sequenceAlignment';
 
 interface SuperpositionModalProps {
     isOpen: boolean;
     onClose: () => void;
     overlays: SuperposedStructure[];
+    primaryChains?: ChainInfo[];
     onAddOverlay: (structure: SuperposedStructure) => void;
     onRemoveOverlay: (id: string) => void;
     onToggleOverlay: (id: string) => void;
@@ -16,10 +18,18 @@ interface SuperpositionModalProps {
     getSnapshot?: () => Promise<string | null>; // Add snapshot capability
 }
 
+interface OverlayFitStat {
+    identity: number;
+    rmsd?: number;
+    primaryChain: string;
+    targetChain: string;
+}
+
 export const SuperpositionModal: React.FC<SuperpositionModalProps> = ({
     isOpen,
     onClose,
     overlays,
+    primaryChains,
     onAddOverlay,
     onRemoveOverlay,
     onToggleOverlay,
@@ -31,6 +41,48 @@ export const SuperpositionModal: React.FC<SuperpositionModalProps> = ({
     const [colorInput, setColorInput] = useState('#FFA500'); // Default Orange
 
     const dialogRef = useModalA11y<HTMLDivElement>(isOpen, onClose);
+
+    // Fit-quality summary per overlay — reuses the same Needleman-Wunsch +
+    // BLOSUM62 aligner the "Align Seq" sub-modal already uses, so the number
+    // shown here always matches what that detailed view would report. Picks
+    // the primary/overlay chain pair with the longest alignment as the
+    // headline match, since overlay chain IDs aren't guaranteed to line up
+    // with the primary structure's (e.g. comparing a single chain upload
+    // against one chain of a hetero-multimer).
+    const overlayStats = useMemo(() => {
+        const result: Record<string, OverlayFitStat | null> = {};
+        if (!primaryChains || primaryChains.length === 0) return result;
+
+        overlays.forEach(overlay => {
+            if (overlay.superpositionFailed || !overlay.chains || overlay.chains.length === 0) {
+                result[overlay.id] = null;
+                return;
+            }
+
+            let best: (OverlayFitStat & { length: number }) | null = null;
+            primaryChains.forEach(pChain => {
+                overlay.chains!.forEach(tChain => {
+                    // Comparing a protein chain to a nucleic chain is
+                    // meaningless (and can crash the BLOSUM62 scorer on
+                    // non-amino-acid letters), so skip cross-type pairs.
+                    if (pChain.type && tChain.type && pChain.type !== tChain.type) return;
+                    const { stats } = alignSequences(pChain, tChain);
+                    if (!best || stats.length > best.length) {
+                        best = {
+                            identity: stats.identity,
+                            rmsd: stats.rmsd,
+                            primaryChain: pChain.name,
+                            targetChain: tChain.name,
+                            length: stats.length
+                        };
+                    }
+                });
+            });
+            result[overlay.id] = best;
+        });
+
+        return result;
+    }, [overlays, primaryChains]);
 
     if (!isOpen) return null;
 
@@ -119,9 +171,12 @@ export const SuperpositionModal: React.FC<SuperpositionModalProps> = ({
         doc.setTextColor(203, 213, 225);
 
         overlays.forEach((overlay, idx) => {
+            const fit = !overlay.superpositionFailed ? overlayStats[overlay.id] : null;
+            const boxHeight = fit ? 18 : 12;
+
             // Structure box
             doc.setFillColor(30, 41, 59, 25);
-            doc.roundedRect(margin, yPos, pageWidth - 2 * margin, 12, 2, 2, 'F');
+            doc.roundedRect(margin, yPos, pageWidth - 2 * margin, boxHeight, 2, 2, 'F');
 
             // Color indicator
             const hexColor = overlay.color;
@@ -139,9 +194,18 @@ export const SuperpositionModal: React.FC<SuperpositionModalProps> = ({
             doc.setFontSize(11);
             doc.setTextColor(overlay.isVisible ? 148 : 100, overlay.isVisible ? 226 : 163, overlay.isVisible ? 213 : 184);
             doc.text(overlay.isVisible ? '(Visible)' : '(Hidden)', pageWidth - margin - 20, yPos + 7);
+
+            // Fit quality — RMSD + identity of the best-matching chain pair,
+            // computed the same way as the on-screen overlay list.
+            if (fit) {
+                doc.setTextColor(148, 163, 184);
+                const rmsdLabel = fit.rmsd !== undefined ? `${fit.rmsd.toFixed(2)} Å` : 'N/A';
+                doc.text(`RMSD ${rmsdLabel} · ${fit.identity.toFixed(0)}% identity (chain ${fit.primaryChain || '—'} vs ${fit.targetChain || '—'})`, margin + 12, yPos + 13);
+            }
+
             doc.setFontSize(14);
 
-            yPos += 15;
+            yPos += boxHeight + 3;
         });
 
         // Add snapshot if available
@@ -311,6 +375,18 @@ export const SuperpositionModal: React.FC<SuperpositionModalProps> = ({
                                                     <div className="flex items-center gap-1 mt-0.5 text-amber-400" title="Automatic 3D alignment onto the main structure failed — shown in its original orientation. Any RMSD computed against it is not meaningful.">
                                                         <AlertTriangle size={11} className="shrink-0" />
                                                         <span className="text-[10px]">Alignment failed — shown unfitted</span>
+                                                    </div>
+                                                )}
+                                                {!item.superpositionFailed && overlayStats[item.id] && (
+                                                    <div
+                                                        className="flex items-center gap-1.5 mt-0.5 text-[10px] text-neutral-400 font-mono"
+                                                        title={`Best-matching chain pair: primary chain ${overlayStats[item.id]!.primaryChain || '(unnamed)'} vs. this overlay's chain ${overlayStats[item.id]!.targetChain || '(unnamed)'}`}
+                                                    >
+                                                        <span>
+                                                            RMSD {overlayStats[item.id]!.rmsd !== undefined ? `${overlayStats[item.id]!.rmsd!.toFixed(2)} Å` : '—'}
+                                                        </span>
+                                                        <span className="opacity-40">·</span>
+                                                        <span>{overlayStats[item.id]!.identity.toFixed(0)}% identity</span>
                                                     </div>
                                                 )}
                                             </div>

@@ -55,7 +55,8 @@ import type {
   StructureInfo,
   ChatMessage,
   ResidueInteraction,
-  StoryboardPayload
+  StoryboardPayload,
+  ChainInfo
 } from './types';
 // LabNotebook pulls in the full rich-text editor (vendor-tiptap) and its chart
 // node view (vendor-charts) — most viewer sessions never open the notebook
@@ -3131,6 +3132,7 @@ function App() {
             isOpen={isSuperpositionModalOpen}
             onClose={() => setIsSuperpositionModalOpen(false)}
             overlays={controllers[activeViewIndex].overlays}
+            primaryChains={controllers[activeViewIndex].chains}
             onAddOverlay={controllers[activeViewIndex].addOverlay}
             onRemoveOverlay={controllers[activeViewIndex].removeOverlay}
             onToggleOverlay={controllers[activeViewIndex].toggleOverlay}
@@ -3630,6 +3632,9 @@ function App() {
                             overlays={ctrl.overlays}
                             onSuperpositionStatus={(overlayId: string, failed: boolean) => {
                               ctrl.setOverlays(prev => prev.map(o => o.id === overlayId ? { ...o, superpositionFailed: failed } : o));
+                            }}
+                            onOverlayChainsLoaded={(overlayId: string, chains: ChainInfo[]) => {
+                              ctrl.setOverlays(prev => prev.map(o => o.id === overlayId ? { ...o, chains } : o));
                             }}
                             onToast={addToast}
                             // The Mol* engine has no internal error UI of its own (unlike the

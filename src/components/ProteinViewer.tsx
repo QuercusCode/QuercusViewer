@@ -84,6 +84,11 @@ export interface ProteinViewerProps {
     measurementTextColor?: MeasurementTextColor; // Added prop
     overlays?: SuperposedStructure[];
     onSuperpositionStatus?: (overlayId: string, failed: boolean) => void;
+    // Fired once an overlay's chains (with post-superposition world coords)
+    // have been extracted — lets a caller outside this component (e.g. the
+    // Superpose modal, which lives above it in the tree) compute fit-quality
+    // stats via the same alignSequences() utility SequenceAlignmentModal uses.
+    onOverlayChainsLoaded?: (overlayId: string, chains: ChainInfo[]) => void;
     onToast?: (message: string, type?: 'success' | 'error' | 'info' | 'warning') => void;
 
     // Quality
@@ -220,6 +225,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
     isChemical = false,
     overlays,
     onSuperpositionStatus,
+    onOverlayChainsLoaded,
     onToast,
 
     palette: colorPalette = 'standard', // Rename to matches internal usage
@@ -2285,6 +2291,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                                 ...prev,
                                 [overlay.id]: extracted.chains
                             }));
+                            onOverlayChainsLoaded?.(overlay.id, extracted.chains);
                         }
                     }
                 } catch (e) {
