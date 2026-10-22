@@ -2017,6 +2017,12 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
 
                         // Add extension hint for NGL if needed
                         if (dataSource === 'pubchem') loadParams.ext = 'sdf';
+                        // No explicit ext hint for 'pdb': NGL auto-detects cif/pdb
+                        // from the URL's own extension (confirmed working — this
+                        // is NGL's own documented pattern for loading an RCSB URL
+                        // directly), and the AVAILABLE_LOCAL_PDBS override just
+                        // below still points at a bundled .pdb file, which a
+                        // blanket 'cif' hint here would wrongly override.
 
                         const AVAILABLE_LOCAL_PDBS = ['2b3p', '4hhb'];
                         if (dataSource === 'pdb' && AVAILABLE_LOCAL_PDBS.includes(cleanId)) {
