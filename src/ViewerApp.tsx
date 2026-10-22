@@ -789,6 +789,8 @@ function App() {
     coloring, setColoring,
     customColors, setCustomColors,
     chainStyles, setChainStyle, // Destructure
+    ligandStyles, setLigandStyle,
+    ligandColors, setLigandColor,
     chainVisibility, setChainVisibility,
     radiusType, setRadiusType,
     radiusScale, setRadiusScale,
@@ -1623,6 +1625,7 @@ function App() {
     ctrl.setChains(info.chains);
     ctrl.setLigands(info.ligands);
     ctrl.resetChainVisibility();
+    ctrl.resetLigandOverrides();
 
     const hasPolymer = info.chains.some(c => c.type === 'protein' || c.type === 'nucleic');
     const totalResidues = info.chains.reduce((acc, c) => acc + c.sequence.length, 0);
@@ -1685,6 +1688,7 @@ function App() {
     activeController.setFile(null);
     activeController.setChains([]);
     activeController.resetChainVisibility();
+    activeController.resetLigandOverrides();
     activeController.setHighlightedResidue(null);
     activeController.setMeasurements([]);
     activeController.setResidueInteractions([]);
@@ -1722,6 +1726,7 @@ function App() {
     activeController.setFile(null);
     activeController.setChains([]);
     activeController.resetChainVisibility();
+    activeController.resetLigandOverrides();
     activeController.setHighlightedResidue(null);
     activeController.setMeasurements([]);
     activeController.setResidueInteractions([]);
@@ -3226,6 +3231,10 @@ function App() {
                     setCustomColors={setCustomColors}
                     chainStyles={chainStyles}
                     setChainStyle={setChainStyle}
+                    ligandStyles={ligandStyles}
+                    setLigandStyle={setLigandStyle}
+                    ligandColors={ligandColors}
+                    setLigandColor={setLigandColor}
                     chainVisibility={chainVisibility}
                     radiusType={radiusType}
                     setRadiusType={setRadiusType}
@@ -3594,6 +3603,8 @@ function App() {
                             coloring={ctrl.coloring}
                             customColors={ctrl.customColors}
                             chainStyles={ctrl.chainStyles}
+                            ligandStyles={ctrl.ligandStyles}
+                            ligandColors={ctrl.ligandColors}
                             chainVisibility={ctrl.chainVisibility}
                             radiusType={ctrl.radiusType}
                             radiusScale={ctrl.radiusScale}

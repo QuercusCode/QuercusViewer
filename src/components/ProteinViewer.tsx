@@ -65,6 +65,10 @@ export interface ProteinViewerProps {
     palette: ColorPalette;
     customColors?: CustomColorRule[];
     chainStyles?: Record<string, RepresentationType>; // New Prop
+    // Per-ligand/ion style + color override, keyed by PDB chemical component
+    // code (e.g. "HEM") — mirrors chainStyles but for bound chemicals.
+    ligandStyles?: Record<string, RepresentationType>;
+    ligandColors?: Record<string, string>;
     chainVisibility?: Record<string, boolean>; // New Prop — false = hidden
     radiusType?: RadiusSourceType; // New Prop — PyMOL-style "putty" when 'bfactor'
     radiusScale?: number; // New Prop — only applied when radiusType is set
@@ -203,6 +207,8 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
     coloring = 'chainid',
     customColors = [],
     chainStyles = {},
+    ligandStyles = {},
+    ligandColors = {},
     chainVisibility = {},
     radiusType,
     radiusScale = 1.0,
@@ -2972,6 +2978,19 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                 ? ` and not (${hiddenChainNames.map(c => `:${c}`).join(' or ')})`
                 : "";
 
+            // --- LIGAND/ION STYLE OVERRIDES ---
+            // Any ligand/ion code with an explicit style and/or color override
+            // gets its own dedicated representation further below, so it must
+            // be excluded from the generic showLigands/showIons overlay to
+            // avoid drawing the same atoms twice (z-fighting).
+            const overriddenLigandCodes = Array.from(new Set([
+                ...Object.keys(ligandStyles),
+                ...Object.keys(ligandColors)
+            ]));
+            const ligandOverrideExclusion = overriddenLigandCodes.length > 0
+                ? ` and not (${overriddenLigandCodes.map(c => `[${c}]`).join(' or ')})`
+                : "";
+
             // --- 3. APPLY CUSTOM OVERRIDES USING SELECTION SCHEME ---
             if (customColors && customColors.length > 0 && NGL.ColormakerRegistry.addSelectionScheme) {
                 const dataList: any[] = [];
@@ -3307,6 +3326,40 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                 });
             }
 
+            // --- 5.5 RENDER LIGAND/ION-SPECIFIC STYLES ---
+            // Per-chemical-code overrides (by PDB ligand/ion code, e.g. "HEM")
+            // selected via NGL's `[CODE]` resname-selection syntax, since
+            // ligands/ions here are tracked as a flat code list rather than
+            // per-instance. Always rendered when a code has an override,
+            // independent of the showLigands/showIons toggles — an explicit
+            // per-ligand choice should be visible even if the blanket overlay
+            // is off. A code missing one of style/color falls back to this
+            // app's existing ligand-overlay defaults (ball+stick / element)
+            // for the other.
+            if (overriddenLigandCodes.length > 0) {
+                overriddenLigandCodes.forEach(code => {
+                    const style = ligandStyles[code] || 'ball+stick';
+                    const color = ligandColors[code] || 'element';
+
+                    let actualStyle: RepresentationType = style;
+                    if (actualStyle === 'backbone') actualStyle = 'trace';
+
+                    const ligandParams: Record<string, unknown> = {
+                        quality: 'high',
+                        multipleBond: 'symmetric',
+                        color,
+                        sele: `[${code}]${hiddenChainExclusion}`
+                    };
+
+                    if (actualStyle === 'licorice' || actualStyle === 'ball+stick') {
+                        ligandParams.scale = 2.0;
+                    }
+                    applyAdvancedStyle(ligandParams, actualStyle);
+
+                    addRepresentationWithRocketBackbone(actualStyle, ligandParams);
+                });
+            }
+
             // --- 6. RENDER CUSTOM RESIDUE STYLES ---
             if (customStyles) {
                 customStyles.forEach(rule => {
@@ -3358,8 +3411,8 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
             const skipLigandOverlay = isBaseRepAtomic && isSmallMoleculeOrSingleChain;
 
             if (showSurface) tryApply('surface', 'white', `*${hiddenChainExclusion}`, { opacity: 0.4, depthWrite: false, side: 'front', ...(surfaceWireframe ? { wireframe: true } : {}), ...(surfaceType ? { surfaceType } : {}) });
-            if (showLigands && !skipLigandOverlay) tryApply('ball+stick', 'element', `ligand and not (water or ion)${hiddenChainExclusion}`, { scale: 2.0 });
-            if (showIons) tryApply('ball+stick', 'element', `ion${hiddenChainExclusion}`, { scale: 2.0 });
+            if (showLigands && !skipLigandOverlay) tryApply('ball+stick', 'element', `ligand and not (water or ion)${hiddenChainExclusion}${ligandOverrideExclusion}`, { scale: 2.0 });
+            if (showIons) tryApply('ball+stick', 'element', `ion${hiddenChainExclusion}${ligandOverrideExclusion}`, { scale: 2.0 });
             if (showWaters) tryApply('ball+stick', 'element', `water${hiddenChainExclusion}`, { scale: 1.5 });
 
             // For backbone-style reps: nucleic acids are excluded from cartoon above.
@@ -3506,7 +3559,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
 
     useEffect(() => {
         updateRepresentation();
-    }, [representation, coloring, showSurface, showLigands, showIons, showWaters, colorPalette, customColors, chainStyles, chainVisibility, radiusType, radiusScale, surfaceWireframe, surfaceType, customStyles, customTransparency, smoothSheetEnabled, nucleicBackboneStyle, nucleicBackboneColor, nucleicBaseStyle, nucleicBaseColor, nucleicBackboneOpacity, nucleicBaseOpacity, nucleicResidueRules]);
+    }, [representation, coloring, showSurface, showLigands, showIons, showWaters, colorPalette, customColors, chainStyles, ligandStyles, ligandColors, chainVisibility, radiusType, radiusScale, surfaceWireframe, surfaceType, customStyles, customTransparency, smoothSheetEnabled, nucleicBackboneStyle, nucleicBackboneColor, nucleicBaseStyle, nucleicBaseColor, nucleicBackboneOpacity, nucleicBaseOpacity, nucleicResidueRules]);
 
     useEffect(() => {
         if (stageRef.current) {

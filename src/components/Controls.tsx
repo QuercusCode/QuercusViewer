@@ -429,6 +429,10 @@ interface ControlsProps {
     setCustomColors?: (colors: CustomColorRule[] | ((prev: CustomColorRule[]) => CustomColorRule[])) => void;
     chainStyles?: Record<string, RepresentationType>;
     setChainStyle?: (chain: string, style: RepresentationType | null) => void;
+    ligandStyles?: Record<string, RepresentationType>;
+    setLigandStyle?: (code: string, style: RepresentationType | null) => void;
+    ligandColors?: Record<string, string>;
+    setLigandColor?: (code: string, color: string | null) => void;
     chainVisibility?: Record<string, boolean>;
     setChainVisibility?: (chain: string, visible: boolean) => void;
     radiusType?: RadiusSourceType;
@@ -491,6 +495,10 @@ export const Controls: React.FC<ControlsProps> = ({
     setCustomColors,
     chainStyles, // Destructure
     setChainStyle, // Destructure
+    ligandStyles,
+    setLigandStyle,
+    ligandColors,
+    setLigandColor,
     chainVisibility,
     setChainVisibility,
     radiusType,
@@ -621,7 +629,16 @@ export const Controls: React.FC<ControlsProps> = ({
     // Chain Styling State
     const [selectedChainForStyle, setSelectedChainForStyle] = useState<string>("__none__");
     const [selectedStyleForChain, setSelectedStyleForChain] = useState<RepresentationType>("cartoon");
-    const [customStylesMode, setCustomStylesMode] = useState<'chain' | 'residue'>('chain');
+    const [customStylesMode, setCustomStylesMode] = useState<'chain' | 'residue' | 'ligand'>('chain');
+
+    // Ligand/Ion Styling State
+    const [selectedLigandForStyle, setSelectedLigandForStyle] = useState<string>("__none__");
+    const [selectedStyleForLigand, setSelectedStyleForLigand] = useState<RepresentationType>("ball+stick");
+
+    const handleSetLigandStyle = () => {
+        if (!setLigandStyle || selectedLigandForStyle === '__none__') return;
+        setLigandStyle(selectedLigandForStyle, selectedStyleForLigand);
+    };
 
     // Custom Residue Style State
     const [customResStyleChain, setCustomResStyleChain] = useState<string>("All");
@@ -752,7 +769,16 @@ export const Controls: React.FC<ControlsProps> = ({
     const [customChain, setCustomChain] = useState<string>("__none__");
     const [customSelection, setCustomSelection] = useState<string>("");
     const [customColorValue, setCustomColorValue] = useState<string>("#ff0000");
-    const [customColorMode, setCustomColorMode] = useState<'chain' | 'residue'>('chain');
+    const [customColorMode, setCustomColorMode] = useState<'chain' | 'residue' | 'ligand'>('chain');
+
+    // Ligand/Ion Color State
+    const [selectedLigandForColor, setSelectedLigandForColor] = useState<string>("__none__");
+    const [ligandColorValue, setLigandColorValue] = useState<string>("#ff0000");
+
+    const handleSetLigandColor = () => {
+        if (!setLigandColor || selectedLigandForColor === '__none__') return;
+        setLigandColor(selectedLigandForColor, ligandColorValue);
+    };
 
     // Transparency State
     const [transparencyMode, setTransparencyMode] = useState<'chain' | 'residue'>('chain');
@@ -2083,6 +2109,16 @@ export const Controls: React.FC<ControlsProps> = ({
                                                         >
                                                             {isChemical ? 'Atoms/Elements' : 'Residue'}
                                                         </button>
+                                                        {setLigandColor && ligands && ligands.length > 0 && (
+                                                            <button
+                                                                onClick={() => setCustomColorMode('ligand')}
+                                                                className={`px-2 py-0.5 text-[9px] font-bold rounded-md transition-all ${customColorMode === 'ligand'
+                                                                    ? (isLightMode ? 'bg-white shadow text-blue-600' : 'bg-neutral-700 text-white shadow')
+                                                                    : 'text-neutral-400 hover:text-neutral-500'}`}
+                                                            >
+                                                                Ligands
+                                                            </button>
+                                                        )}
                                                     </div>
                                                 </div>
 
@@ -2215,8 +2251,82 @@ export const Controls: React.FC<ControlsProps> = ({
                                                         </>
                                                     )}
 
+                                                    {/* MODE: LIGAND/ION COLORS */}
+                                                    {customColorMode === 'ligand' && setLigandColor && ligandColors && (
+                                                        <>
+                                                            <div className="flex gap-2">
+                                                                <div className="w-1/3">
+                                                                    <label className={`text-[9px] font-bold uppercase tracking-wider mb-1 block ${subtleText} opacity-70`}>Ligand/Ion</label>
+                                                                    <div className={`relative flex items-center rounded-lg border transition-all ${inputBg}`}>
+                                                                        <select
+                                                                            value={selectedLigandForColor}
+                                                                            onChange={(e) => setSelectedLigandForColor(e.target.value)}
+                                                                            className="w-full appearance-none bg-transparent py-1.5 pl-2 pr-6 text-xs font-mono outline-none"
+                                                                        >
+                                                                            <option value="__none__" disabled>Select</option>
+                                                                            {(ligands || []).map(code => (
+                                                                                <option key={code} value={code}>{code}</option>
+                                                                            ))}
+                                                                        </select>
+                                                                        <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 opacity-50 pointer-events-none" />
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* Color Picker */}
+                                                                <div className="flex-1">
+                                                                    <label className={`text-[9px] font-bold uppercase tracking-wider mb-1 block ${subtleText} opacity-70`}>{t.colorLabel as string}</label>
+                                                                    <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all ${inputBg}`}>
+                                                                        <div className="relative w-4 h-4 rounded-full overflow-hidden border border-white/10 ring-1 ring-black/5 shrink-0 shadow-sm">
+                                                                            <input
+                                                                                type="color"
+                                                                                value={ligandColorValue}
+                                                                                onChange={(e) => setLigandColorValue(e.target.value)}
+                                                                                className="absolute inset-[-50%] w-[200%] h-[200%] cursor-pointer p-0 m-0"
+                                                                            />
+                                                                        </div>
+                                                                        <span className="text-[10px] font-mono opacity-80 uppercase tracking-wide">
+                                                                            {ligandColorValue}
+                                                                        </span>
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* Add Button */}
+                                                                <button
+                                                                    onClick={handleSetLigandColor}
+                                                                    disabled={selectedLigandForColor === '__none__'}
+                                                                    className="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg text-xs font-bold transition-all shadow-sm active:scale-95 flex items-center justify-center gap-1.5"
+                                                                >
+                                                                    {t.setBtn as string}
+                                                                </button>
+                                                            </div>
+
+                                                            {/* Active Ligand Colors List */}
+                                                            {Object.keys(ligandColors).length > 0 && (
+                                                                <div className="space-y-1 pt-1">
+                                                                    <div className={`text-[9px] font-bold uppercase tracking-wider ${subtleText} opacity-70`}>{t.activeRules as string}</div>
+                                                                    <div className="space-y-1">
+                                                                        {Object.entries(ligandColors).map(([code, color]) => (
+                                                                            <div key={code} className={`flex items-center justify-between p-2 rounded border ${isLightMode ? 'bg-white border-neutral-200' : 'bg-neutral-800 border-white/5'}`}>
+                                                                                <div className="flex items-center gap-2">
+                                                                                    <div className="w-3.5 h-3.5 rounded-full shadow-sm border border-black/10 ring-1 ring-inset ring-black/5" style={{ background: color }} />
+                                                                                    <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold ${isLightMode ? 'bg-neutral-100 text-neutral-700' : 'bg-neutral-700 text-neutral-300'}`}>{code}</span>
+                                                                                </div>
+                                                                                <button
+                                                                                    onClick={() => setLigandColor(code, null)}
+                                                                                    className="p-1 hover:bg-red-500/20 text-neutral-400 hover:text-red-500 rounded transition-colors"
+                                                                                >
+                                                                                    <X size={12} />
+                                                                                </button>
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                        </>
+                                                    )}
+
                                                     {/* Active Rules List */}
-                                                    {customColors && customColors.length > 0 && (
+                                                    {customColorMode !== 'ligand' && customColors && customColors.length > 0 && (
                                                         <div className="space-y-1 pt-2 border-t border-dashed border-neutral-200 dark:border-neutral-800">
                                                             <div className="flex justify-between items-center mb-2">
                                                                 <span className={`text-[9px] font-bold uppercase tracking-wider ${subtleText}`}>{t.activeRules as string} ({customColors.length})</span>
@@ -2414,6 +2524,16 @@ export const Controls: React.FC<ControlsProps> = ({
                                                         >
                                                             {isChemical ? 'Atoms/Elements' : 'Residue'}
                                                         </button>
+                                                        {setLigandStyle && ligands && ligands.length > 0 && (
+                                                            <button
+                                                                onClick={() => setCustomStylesMode('ligand')}
+                                                                className={`px-2 py-0.5 text-[9px] font-bold rounded-md transition-all ${customStylesMode === 'ligand'
+                                                                    ? (isLightMode ? 'bg-white shadow text-blue-600' : 'bg-neutral-700 text-white shadow')
+                                                                    : 'text-neutral-400 hover:text-neutral-500'}`}
+                                                            >
+                                                                Ligands
+                                                            </button>
+                                                        )}
                                                     </div>
                                                 </div>
 
@@ -2602,6 +2722,81 @@ export const Controls: React.FC<ControlsProps> = ({
                                                                                     className="p-1 hover:bg-red-500/20 text-neutral-400 hover:text-red-500 rounded transition-colors"
                                                                                 >
                                                                                     <Trash2 size={12} />
+                                                                                </button>
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                        </>
+                                                    )}
+
+                                                    {/* MODE: LIGAND/ION STYLES */}
+                                                    {customStylesMode === 'ligand' && setLigandStyle && ligandStyles && (
+                                                        <>
+                                                            <div className="flex gap-2">
+                                                                <div className="w-1/3">
+                                                                    <label className={`text-[9px] font-bold uppercase tracking-wider mb-1 block ${subtleText} opacity-70`}>Ligand/Ion</label>
+                                                                    <div className={`relative flex items-center rounded-lg border transition-all ${inputBg}`}>
+                                                                        <select
+                                                                            value={selectedLigandForStyle}
+                                                                            onChange={(e) => setSelectedLigandForStyle(e.target.value)}
+                                                                            className="w-full appearance-none bg-transparent py-1.5 pl-2 pr-6 text-xs font-mono outline-none"
+                                                                        >
+                                                                            <option value="__none__" disabled>Select</option>
+                                                                            {(ligands || []).map(code => (
+                                                                                <option key={code} value={code}>{code}</option>
+                                                                            ))}
+                                                                        </select>
+                                                                        <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 opacity-50 pointer-events-none" />
+                                                                    </div>
+                                                                </div>
+                                                                <div className="flex-1">
+                                                                    <label className={`text-[9px] font-bold uppercase tracking-wider mb-1 block ${subtleText} opacity-70`}>{t.styleLabel as string}</label>
+                                                                    <div className="flex gap-2">
+                                                                        <div className={`relative flex-1 flex items-center rounded-lg border transition-all ${inputBg}`}>
+                                                                            <select
+                                                                                value={selectedStyleForLigand}
+                                                                                onChange={(e) => setSelectedStyleForLigand(e.target.value as RepresentationType)}
+                                                                                className="w-full appearance-none bg-transparent py-1.5 pl-2 pr-6 text-xs outline-none"
+                                                                            >
+                                                                                <option value="ball+stick">Ball & Stick</option>
+                                                                                <option value="licorice">Licorice</option>
+                                                                                <option value="spacefill">Spacefill</option>
+                                                                                <option value="surface">Surface</option>
+                                                                                <option value="line">Line</option>
+                                                                                <option value="point">Dots</option>
+                                                                                <option value="hyperball">Hyperball</option>
+                                                                            </select>
+                                                                            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 opacity-50 pointer-events-none" />
+                                                                        </div>
+                                                                        <button
+                                                                            onClick={handleSetLigandStyle}
+                                                                            disabled={selectedLigandForStyle === '__none__'}
+                                                                            className="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg text-xs font-bold transition-all shadow-sm active:scale-95 flex items-center justify-center gap-1.5 shrink-0"
+                                                                        >
+                                                                            {t.setBtn as string}
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Active Ligand Styles List */}
+                                                            {Object.keys(ligandStyles).length > 0 && (
+                                                                <div className="space-y-1 pt-1">
+                                                                    <div className={`text-[9px] font-bold uppercase tracking-wider ${subtleText} opacity-70`}>{t.activeRules as string}</div>
+                                                                    <div className="space-y-1">
+                                                                        {Object.entries(ligandStyles).map(([code, style]) => (
+                                                                            <div key={code} className={`flex items-center justify-between p-2 rounded border ${isLightMode ? 'bg-white border-neutral-200' : 'bg-neutral-800 border-white/5'}`}>
+                                                                                <div className="flex items-center gap-2">
+                                                                                    <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold ${isLightMode ? 'bg-neutral-100 text-neutral-700' : 'bg-neutral-700 text-neutral-300'}`}>{code}</span>
+                                                                                    <span className="text-[10px] capitalize">{style}</span>
+                                                                                </div>
+                                                                                <button
+                                                                                    onClick={() => setLigandStyle(code, null)}
+                                                                                    className="p-1 hover:bg-red-500/20 text-neutral-400 hover:text-red-500 rounded transition-colors"
+                                                                                >
+                                                                                    <X size={12} />
                                                                                 </button>
                                                                             </div>
                                                                         ))}

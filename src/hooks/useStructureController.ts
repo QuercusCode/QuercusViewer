@@ -22,6 +22,15 @@ export interface StructureController {
     setCustomColors: (colors: CustomColorRule[] | ((prev: CustomColorRule[]) => CustomColorRule[])) => void;
     chainStyles: Record<string, RepresentationType>;
     setChainStyle: (chain: string, style: RepresentationType | null) => void;
+    // Per-ligand/ion styling — keyed by PDB chemical component code (e.g.
+    // "HEM"), mirroring chainStyles but scoped to bound chemicals instead of
+    // chains, since ligands are only tracked by a flat code list, not chain
+    // membership.
+    ligandStyles: Record<string, RepresentationType>;
+    setLigandStyle: (code: string, style: RepresentationType | null) => void;
+    ligandColors: Record<string, string>;
+    setLigandColor: (code: string, color: string | null) => void;
+    resetLigandOverrides: () => void;
     customStyles: CustomStyleRule[];
     setCustomStyles: (styles: CustomStyleRule[] | ((prev: CustomStyleRule[]) => CustomStyleRule[])) => void;
     customTransparency: CustomTransparencyRule[];
@@ -191,6 +200,38 @@ export const useStructureController = (initialState: any = {}): StructureControl
         setChainVisibilityState({});
     }, []);
 
+    // Ligand/Ion Styling — per-chemical-code style + color override.
+    const [ligandStyles, setLigandStyles] = useState<Record<string, RepresentationType>>({});
+
+    const setLigandStyle = useCallback((code: string, style: RepresentationType | null) => {
+        setLigandStyles(prev => {
+            if (style === null) {
+                const next = { ...prev };
+                delete next[code];
+                return next;
+            }
+            return { ...prev, [code]: style };
+        });
+    }, []);
+
+    const [ligandColors, setLigandColorsState] = useState<Record<string, string>>({});
+
+    const setLigandColor = useCallback((code: string, color: string | null) => {
+        setLigandColorsState(prev => {
+            if (color === null) {
+                const next = { ...prev };
+                delete next[code];
+                return next;
+            }
+            return { ...prev, [code]: color };
+        });
+    }, []);
+
+    const resetLigandOverrides = useCallback(() => {
+        setLigandStyles({});
+        setLigandColorsState({});
+    }, []);
+
     // Advanced Style (PyMOL-style radius source / surface rendering).
     // radiusType/surfaceType default to undefined so nothing is passed to NGL
     // unless the user explicitly opts in — current visuals stay unchanged.
@@ -234,6 +275,7 @@ export const useStructureController = (initialState: any = {}): StructureControl
         setChains([]);
         setLigands([]);
         resetChainVisibility();
+        resetLigandOverrides();
         setMeasurements([]);
         setResidueInteractions([]);
         setHighlightedResidue(null);
@@ -258,7 +300,7 @@ export const useStructureController = (initialState: any = {}): StructureControl
             };
             reader.readAsText(uploadedFile);
         }
-    }, [resetChainVisibility]);
+    }, [resetChainVisibility, resetLigandOverrides]);
 
     const addOverlay = useCallback((structure: SuperposedStructure) => {
         setOverlays(prev => [...prev, structure]);
@@ -281,6 +323,9 @@ export const useStructureController = (initialState: any = {}): StructureControl
         coloring, setColoring,
         customColors, setCustomColors,
         chainStyles, setChainStyle,
+        ligandStyles, setLigandStyle,
+        ligandColors, setLigandColor,
+        resetLigandOverrides,
         customStyles, setCustomStyles,
         customTransparency, setCustomTransparency,
         isSpinning, setIsSpinning,
