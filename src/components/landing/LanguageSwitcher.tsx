@@ -20,9 +20,16 @@ const L = {
   fontBody: "'DM Sans', system-ui, sans-serif",
 };
 
+// Approximate rendered height of the dropdown (6 language rows + container
+// padding) — used to decide whether there's room to open downward before
+// the real height is known, since that decision has to be made in the same
+// synchronous click that sets `open`.
+const DROPDOWN_HEIGHT_ESTIMATE = 260;
+
 export function LanguageSwitcher({ compact = false }: { compact?: boolean }) {
   const { i18n } = useTranslation();
   const [open, setOpen] = useState(false);
+  const [openUpward, setOpenUpward] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   const current = LANGUAGES.find(l => l.code === i18n.language) ?? LANGUAGES[0];
@@ -54,7 +61,24 @@ export function LanguageSwitcher({ compact = false }: { compact?: boolean }) {
     <div ref={ref} style={{ position: 'relative', userSelect: 'none' }}>
       {/* Trigger button */}
       <button
-        onClick={() => setOpen(o => !o)}
+        onClick={() => {
+          setOpen(o => {
+            const next = !o;
+            if (next && ref.current) {
+              const rect = ref.current.getBoundingClientRect();
+              const spaceBelow = window.innerHeight - rect.bottom;
+              const spaceAbove = rect.top;
+              // Only flip when there's actually more room above than below —
+              // checking spaceBelow alone can flip the dropdown into an even
+              // tighter spot when the trigger sits near the TOP of the
+              // viewport (e.g. this component's non-compact usage in the
+              // landing page's fixed top nav), reproducing the same overflow
+              // this is meant to fix, just at the opposite edge.
+              setOpenUpward(spaceBelow < DROPDOWN_HEIGHT_ESTIMATE && spaceAbove > spaceBelow);
+            }
+            return next;
+          });
+        }}
         aria-label="Change language"
         aria-expanded={open}
         style={{
@@ -102,7 +126,7 @@ export function LanguageSwitcher({ compact = false }: { compact?: boolean }) {
       {open && (
         <div style={{
           position: 'absolute',
-          top: 'calc(100% + 8px)',
+          ...(openUpward ? { bottom: 'calc(100% + 8px)' } : { top: 'calc(100% + 8px)' }),
           right: 0,
           zIndex: 500,
           minWidth: 160,
@@ -112,11 +136,15 @@ export function LanguageSwitcher({ compact = false }: { compact?: boolean }) {
           borderRadius: 10,
           padding: '4px',
           boxShadow: '0 12px 40px rgba(0,0,0,0.6)',
-          animation: 'qvLangFadeDown .15s cubic-bezier(.4,0,.2,1) both',
+          animation: `${openUpward ? 'qvLangFadeUp' : 'qvLangFadeDown'} .15s cubic-bezier(.4,0,.2,1) both`,
         }}>
           <style>{`
             @keyframes qvLangFadeDown {
               from { opacity: 0; transform: translateY(-6px); }
+              to   { opacity: 1; transform: translateY(0); }
+            }
+            @keyframes qvLangFadeUp {
+              from { opacity: 0; transform: translateY(6px); }
               to   { opacity: 1; transform: translateY(0); }
             }
           `}</style>

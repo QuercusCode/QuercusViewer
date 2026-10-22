@@ -84,7 +84,16 @@ export const getStructureUrl = (id: string, source: DataSource): string => {
             }
             return `https://alphafold.ebi.ac.uk/files/AF-${id}-F1-model_v6.pdb`;
         }
-        case 'pdb': default: return `https://files.rcsb.org/download/${id}.pdb`; // Explicitly use PDB format
+        // mmCIF, not legacy PDB format: RCSB has not generated a complete
+        // legacy-format file for any entry whose beta-sheet topology is too
+        // complex to represent in that format since June 2021 (~3.7% of the
+        // archive as of 2025) — those entries' SHEET records are silently
+        // missing or absent from the .pdb download, so NGL falls back to
+        // its own (visibly worse) computed secondary structure instead of
+        // RCSB's actual curated annotations. mmCIF has no such limitation
+        // and is what Quercus's own Mol* engine already uses for this exact
+        // reason (see MolStarProteinViewer.tsx).
+        case 'pdb': default: return `https://files.rcsb.org/download/${id}.cif`;
     }
 };
 
