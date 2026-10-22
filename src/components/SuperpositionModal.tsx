@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { X, Plus, Eye, EyeOff, Trash2, Upload, FileDown, AlertTriangle } from 'lucide-react';
 import jsPDF from 'jspdf';
-import type { ChainInfo, SuperposedStructure } from '../types';
+import type { ChainInfo, RepresentationType, SuperposedStructure } from '../types';
 import { useTranslation } from '../lib/i18n';
 import { useModalA11y } from '../hooks/useModalA11y';
 import { alignSequences } from '../utils/sequenceAlignment';
@@ -14,6 +14,7 @@ interface SuperpositionModalProps {
     onAddOverlay: (structure: SuperposedStructure) => void;
     onRemoveOverlay: (id: string) => void;
     onToggleOverlay: (id: string) => void;
+    onUpdateOverlay: (id: string, updates: Partial<SuperposedStructure>) => void;
     onOpenAlignment: () => void;
     getSnapshot?: () => Promise<string | null>; // Add snapshot capability
 }
@@ -33,6 +34,7 @@ export const SuperpositionModal: React.FC<SuperpositionModalProps> = ({
     onAddOverlay,
     onRemoveOverlay,
     onToggleOverlay,
+    onUpdateOverlay,
     onOpenAlignment,
     getSnapshot
 }) => {
@@ -359,52 +361,99 @@ export const SuperpositionModal: React.FC<SuperpositionModalProps> = ({
                             <h3 className="text-xs font-bold text-neutral-500 uppercase tracking-wider">Active Overlays</h3>
                             <div className="space-y-2 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
                                 {overlays.map(item => (
-                                    <div key={item.id} className="flex items-center justify-between bg-neutral-800/40 border border-neutral-700/50 rounded-lg p-3">
-                                        <div className="flex items-center gap-3 min-w-0 overflow-hidden flex-1 mr-2">
-                                            <div
-                                                className="w-3 h-3 rounded-full shadow-sm flex-shrink-0"
-                                                style={{ backgroundColor: item.color }}
-                                            />
-                                            <div className="flex flex-col min-w-0 overflow-hidden">
-                                                <span className="text-sm font-medium text-neutral-200 truncate" title={item.description}>{item.description || 'Unknown Structure'}</span>
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-[10px] text-neutral-500 font-mono truncate" title={item.id}>{item.id}</span>
+                                    <div key={item.id} className="flex flex-col gap-2 bg-neutral-800/40 border border-neutral-700/50 rounded-lg p-3">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-3 min-w-0 overflow-hidden flex-1 mr-2">
+                                                <div
+                                                    className="w-3 h-3 rounded-full shadow-sm flex-shrink-0"
+                                                    style={{ backgroundColor: item.color }}
+                                                />
+                                                <div className="flex flex-col min-w-0 overflow-hidden">
+                                                    <span className="text-sm font-medium text-neutral-200 truncate" title={item.description}>{item.description || 'Unknown Structure'}</span>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-[10px] text-neutral-500 font-mono truncate" title={item.id}>{item.id}</span>
 
+                                                    </div>
+                                                    {item.superpositionFailed && (
+                                                        <div className="flex items-center gap-1 mt-0.5 text-amber-400" title="Automatic 3D alignment onto the main structure failed — shown in its original orientation. Any RMSD computed against it is not meaningful.">
+                                                            <AlertTriangle size={11} className="shrink-0" />
+                                                            <span className="text-[10px]">Alignment failed — shown unfitted</span>
+                                                        </div>
+                                                    )}
+                                                    {!item.superpositionFailed && overlayStats[item.id] && (
+                                                        <div
+                                                            className="flex items-center gap-1.5 mt-0.5 text-[10px] text-neutral-400 font-mono"
+                                                            title={`Best-matching chain pair: primary chain ${overlayStats[item.id]!.primaryChain || '(unnamed)'} vs. this overlay's chain ${overlayStats[item.id]!.targetChain || '(unnamed)'}`}
+                                                        >
+                                                            <span>
+                                                                RMSD {overlayStats[item.id]!.rmsd !== undefined ? `${overlayStats[item.id]!.rmsd!.toFixed(2)} Å` : '—'}
+                                                            </span>
+                                                            <span className="opacity-40">·</span>
+                                                            <span>{overlayStats[item.id]!.identity.toFixed(0)}% identity</span>
+                                                        </div>
+                                                    )}
                                                 </div>
-                                                {item.superpositionFailed && (
-                                                    <div className="flex items-center gap-1 mt-0.5 text-amber-400" title="Automatic 3D alignment onto the main structure failed — shown in its original orientation. Any RMSD computed against it is not meaningful.">
-                                                        <AlertTriangle size={11} className="shrink-0" />
-                                                        <span className="text-[10px]">Alignment failed — shown unfitted</span>
-                                                    </div>
-                                                )}
-                                                {!item.superpositionFailed && overlayStats[item.id] && (
-                                                    <div
-                                                        className="flex items-center gap-1.5 mt-0.5 text-[10px] text-neutral-400 font-mono"
-                                                        title={`Best-matching chain pair: primary chain ${overlayStats[item.id]!.primaryChain || '(unnamed)'} vs. this overlay's chain ${overlayStats[item.id]!.targetChain || '(unnamed)'}`}
-                                                    >
-                                                        <span>
-                                                            RMSD {overlayStats[item.id]!.rmsd !== undefined ? `${overlayStats[item.id]!.rmsd!.toFixed(2)} Å` : '—'}
-                                                        </span>
-                                                        <span className="opacity-40">·</span>
-                                                        <span>{overlayStats[item.id]!.identity.toFixed(0)}% identity</span>
-                                                    </div>
-                                                )}
+                                            </div>
+
+                                            <div className="flex items-center gap-1">
+                                                <button
+                                                    onClick={() => onToggleOverlay(item.id)}
+                                                    className="p-1.5 text-neutral-400 hover:text-white hover:bg-white/10 rounded-md transition-colors"
+                                                >
+                                                    {item.isVisible ? <Eye size={16} /> : <EyeOff size={16} />}
+                                                </button>
+                                                <button
+                                                    onClick={() => onRemoveOverlay(item.id)}
+                                                    className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-md transition-colors"
+                                                >
+                                                    <Trash2 size={16} />
+                                                </button>
                                             </div>
                                         </div>
 
-                                        <div className="flex items-center gap-1">
-                                            <button
-                                                onClick={() => onToggleOverlay(item.id)}
-                                                className="p-1.5 text-neutral-400 hover:text-white hover:bg-white/10 rounded-md transition-colors"
+                                        {/* Per-overlay style — same treatment the main structure's chains
+                                            already get, so an overlay isn't stuck as a fixed translucent
+                                            cartoon ghost. */}
+                                        <div className="flex items-center gap-2 pt-2 border-t border-neutral-700/30">
+                                            <select
+                                                value={item.representation || 'cartoon'}
+                                                onChange={(e) => onUpdateOverlay(item.id, { representation: e.target.value as RepresentationType })}
+                                                title="Representation"
+                                                className="bg-neutral-900/60 border border-neutral-700 rounded text-[10px] text-neutral-300 pl-1.5 pr-1 py-1 outline-none focus:border-cyan-500/50 shrink-0"
                                             >
-                                                {item.isVisible ? <Eye size={16} /> : <EyeOff size={16} />}
-                                            </button>
-                                            <button
-                                                onClick={() => onRemoveOverlay(item.id)}
-                                                className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-md transition-colors"
-                                            >
-                                                <Trash2 size={16} />
-                                            </button>
+                                                <option value="cartoon">Cartoon</option>
+                                                <option value="tube">Tube</option>
+                                                <option value="rope">Rope</option>
+                                                <option value="rocket">Rocket</option>
+                                                <option value="ribbon">Ribbon</option>
+                                                <option value="ball+stick">Ball &amp; Stick</option>
+                                                <option value="licorice">Licorice</option>
+                                                <option value="backbone">Backbone</option>
+                                                <option value="spacefill">Spacefill</option>
+                                                <option value="surface">Surface</option>
+                                                <option value="line">Line</option>
+                                            </select>
+                                            <input
+                                                type="color"
+                                                value={item.color}
+                                                onChange={(e) => onUpdateOverlay(item.id, { color: e.target.value })}
+                                                title="Color"
+                                                className="w-6 h-6 rounded cursor-pointer bg-transparent border-0 shrink-0"
+                                            />
+                                            <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                                                <input
+                                                    type="range"
+                                                    min={0}
+                                                    max={100}
+                                                    value={Math.round((item.opacity ?? 0.7) * 100)}
+                                                    onChange={(e) => onUpdateOverlay(item.id, { opacity: Number(e.target.value) / 100 })}
+                                                    title="Opacity"
+                                                    className="flex-1 accent-cyan-500 h-1"
+                                                />
+                                                <span className="text-[9px] text-neutral-500 font-mono w-8 text-right shrink-0">
+                                                    {Math.round((item.opacity ?? 0.7) * 100)}%
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
                                 ))}

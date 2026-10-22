@@ -109,6 +109,7 @@ export interface SuperposedStructure {
     description?: string;
     isVisible: boolean;
     opacity?: number;
+    representation?: RepresentationType; // Defaults to 'cartoon' when unset
     chains?: ChainInfo[]; // Added for Sequence Alignment
     superpositionFailed?: boolean; // True if automatic 3D alignment onto the main structure failed — it's shown in its original, unfitted orientation, and any RMSD computed against it is not meaningful.
 }
