@@ -65,8 +65,16 @@ export function LanguageSwitcher({ compact = false }: { compact?: boolean }) {
           setOpen(o => {
             const next = !o;
             if (next && ref.current) {
-              const spaceBelow = window.innerHeight - ref.current.getBoundingClientRect().bottom;
-              setOpenUpward(spaceBelow < DROPDOWN_HEIGHT_ESTIMATE);
+              const rect = ref.current.getBoundingClientRect();
+              const spaceBelow = window.innerHeight - rect.bottom;
+              const spaceAbove = rect.top;
+              // Only flip when there's actually more room above than below —
+              // checking spaceBelow alone can flip the dropdown into an even
+              // tighter spot when the trigger sits near the TOP of the
+              // viewport (e.g. this component's non-compact usage in the
+              // landing page's fixed top nav), reproducing the same overflow
+              // this is meant to fix, just at the opposite edge.
+              setOpenUpward(spaceBelow < DROPDOWN_HEIGHT_ESTIMATE && spaceAbove > spaceBelow);
             }
             return next;
           });
