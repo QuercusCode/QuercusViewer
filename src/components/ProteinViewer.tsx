@@ -2276,7 +2276,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                         onSuperpositionStatus?.(overlay.id, !superposeSucceeded);
 
                         // Add Representation
-                        comp.addRepresentation('cartoon', {
+                        comp.addRepresentation(overlay.representation || 'cartoon', {
                             color: overlay.color || 'lightgrey',
                             opacity: overlay.opacity ?? 0.7,
                             side: 'front'
@@ -2300,8 +2300,17 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
             } else {
                 // Update Existing
                 comp.setVisibility(overlay.isVisible);
-                // Update opacity/color if changed?
-                // Re-superposing every render is expensive/jumpy. Assume static once aligned.
+                // Re-apply representation/color/opacity from current overlay
+                // state on every pass — cheap (a single representation on an
+                // already-loaded component) and visually instant, unlike
+                // re-superposing (the expensive/jumpy position fit this
+                // deliberately never redoes once an overlay has landed).
+                comp.removeAllRepresentations();
+                comp.addRepresentation(overlay.representation || 'cartoon', {
+                    color: overlay.color || 'lightgrey',
+                    opacity: overlay.opacity ?? 0.7,
+                    side: 'front'
+                });
             }
         });
 

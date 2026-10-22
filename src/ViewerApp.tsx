@@ -56,7 +56,8 @@ import type {
   ChatMessage,
   ResidueInteraction,
   StoryboardPayload,
-  ChainInfo
+  ChainInfo,
+  SuperposedStructure
 } from './types';
 // LabNotebook pulls in the full rich-text editor (vendor-tiptap) and its chart
 // node view (vendor-charts) — most viewer sessions never open the notebook
@@ -3136,6 +3137,9 @@ function App() {
             onAddOverlay={controllers[activeViewIndex].addOverlay}
             onRemoveOverlay={controllers[activeViewIndex].removeOverlay}
             onToggleOverlay={controllers[activeViewIndex].toggleOverlay}
+            onUpdateOverlay={(id: string, updates: Partial<SuperposedStructure>) => {
+              controllers[activeViewIndex].setOverlays(prev => prev.map(o => o.id === id ? { ...o, ...updates } : o));
+            }}
             getSnapshot={async () => {
               if (!viewerRefs[activeViewIndex].current) return null;
               const blob = await viewerRefs[activeViewIndex].current.getSnapshotBlob();
