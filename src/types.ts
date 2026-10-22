@@ -12,6 +12,17 @@ export interface MappedUniProtFeature {
     accession: string;
 }
 
+// Another PDB entry sharing a UniProt accession with the loaded structure
+// (e.g. a different crystal form, mutant, or ligand-bound state of the same
+// protein) — via UniProt's own PDB cross-references, not a structural
+// similarity search.
+export interface RelatedPdbEntry {
+    id: string;
+    method?: string;
+    resolution?: string;
+    chains?: string;
+}
+
 export interface CustomColorRule {
     selection: string;
     color: string;

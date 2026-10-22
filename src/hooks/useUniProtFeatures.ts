@@ -1,8 +1,27 @@
 import { useEffect, useRef } from 'react';
 import type { StructureController } from './useStructureController';
-import type { MappedUniProtFeature } from '../types';
+import type { MappedUniProtFeature, RelatedPdbEntry } from '../types';
 import { fetchSiftsMapping, mapUnpRangeToPdb } from '../services/siftsMapping';
 import { fetchUniProtDataByAccession, type UniProtFeature } from '../services/uniprot';
+
+// Merges related-PDB-entry lists from (potentially) several UniProt
+// accessions mapped onto this structure, de-duplicating by PDB ID and
+// dropping the entry for the structure that's actually loaded right now —
+// "related to itself" isn't a useful suggestion.
+function mergeRelatedPdbEntries(lists: RelatedPdbEntry[][], currentPdbId: string): RelatedPdbEntry[] {
+    const seen = new Set<string>();
+    const merged: RelatedPdbEntry[] = [];
+    const current = currentPdbId.toUpperCase();
+    for (const list of lists) {
+        for (const entry of list) {
+            const id = entry.id.toUpperCase();
+            if (id === current || seen.has(id)) continue;
+            seen.add(id);
+            merged.push(entry);
+        }
+    }
+    return merged;
+}
 
 // Only the 5 feature categories services/uniprot.ts actually requests
 // (ft_act_site, ft_binding, ft_site, ft_mutagen, ft_domain) need a color —
@@ -42,7 +61,7 @@ function toMapped(
 // residue numbering, per chain. Mirrors useStructureMetadata's shape: called
 // once per viewport controller, keyed on pdbId/dataSource.
 export function useUniProtFeatures(controller: StructureController) {
-    const { pdbId, dataSource, setUniprotFeatures } = controller;
+    const { pdbId, dataSource, setUniprotFeatures, setRelatedStructures } = controller;
     const requestIdRef = useRef(0);
 
     useEffect(() => {
@@ -52,11 +71,13 @@ export function useUniProtFeatures(controller: StructureController) {
         // mapping; AlphaFold and real PDB entries are handled below.
         if (!pdbId || dataSource === 'pubchem') {
             setUniprotFeatures(null);
+            setRelatedStructures(null);
             return;
         }
 
         (async () => {
             let featuresByChain: Record<string, MappedUniProtFeature[]> | null = null;
+            const relatedPdbLists: RelatedPdbEntry[][] = [];
 
             if (dataSource === 'alphafold') {
                 // AlphaFold model IDs ARE UniProt accessions (optionally with a
@@ -66,11 +87,14 @@ export function useUniProtFeatures(controller: StructureController) {
                 // lookup or remapping is needed.
                 const accession = pdbId.split('::')[0];
                 const data = await fetchUniProtDataByAccession(accession);
-                if (data && data.features.length > 0) {
-                    const mapped = data.features
-                        .map(f => toMapped(f, data.accession))
-                        .filter((f): f is MappedUniProtFeature => f !== null);
-                    if (mapped.length > 0) featuresByChain = { A: mapped };
+                if (data) {
+                    relatedPdbLists.push(data.relatedPdbEntries);
+                    if (data.features.length > 0) {
+                        const mapped = data.features
+                            .map(f => toMapped(f, data.accession))
+                            .filter((f): f is MappedUniProtFeature => f !== null);
+                        if (mapped.length > 0) featuresByChain = { A: mapped };
+                    }
                 }
             } else {
                 const mapping = await fetchSiftsMapping(pdbId);
@@ -79,6 +103,7 @@ export function useUniProtFeatures(controller: StructureController) {
                     for (const accession of Object.keys(mapping)) {
                         const data = await fetchUniProtDataByAccession(accession);
                         if (!data) continue;
+                        relatedPdbLists.push(data.relatedPdbEntries);
 
                         for (const feature of data.features) {
                             const unpStart = parseInt(feature.begin, 10);
@@ -99,7 +124,9 @@ export function useUniProtFeatures(controller: StructureController) {
             // A newer pdbId/dataSource change superseded this fetch — drop it.
             if (requestIdRef.current === thisRequest) {
                 setUniprotFeatures(featuresByChain);
+                const related = mergeRelatedPdbEntries(relatedPdbLists, pdbId);
+                setRelatedStructures(related.length > 0 ? related : null);
             }
         })();
-    }, [pdbId, dataSource, setUniprotFeatures]);
+    }, [pdbId, dataSource, setUniprotFeatures, setRelatedStructures]);
 }

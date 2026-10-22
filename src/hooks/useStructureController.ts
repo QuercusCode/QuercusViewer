@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import type { RepresentationType, ColoringType, ResidueInfo, Measurement, ResidueInteraction, PDBMetadata, ChainInfo, CustomColorRule, CustomStyleRule, CustomTransparencyRule, SuperposedStructure, NucleicResidueRule, RadiusSourceType, SurfaceAlgorithm, MappedUniProtFeature } from '../types';
+import type { RepresentationType, ColoringType, ResidueInfo, Measurement, ResidueInteraction, PDBMetadata, ChainInfo, CustomColorRule, CustomStyleRule, CustomTransparencyRule, SuperposedStructure, NucleicResidueRule, RadiusSourceType, SurfaceAlgorithm, MappedUniProtFeature, RelatedPdbEntry } from '../types';
 import type { DataSource } from '../utils/pdbUtils';
 
 // Types for the Controller Return Value
@@ -66,6 +66,8 @@ export interface StructureController {
     setProteinTitle: (title: string | null) => void;
     uniprotFeatures: Record<string, MappedUniProtFeature[]> | null;
     setUniprotFeatures: (features: Record<string, MappedUniProtFeature[]> | null) => void;
+    relatedStructures: RelatedPdbEntry[] | null;
+    setRelatedStructures: (entries: RelatedPdbEntry[] | null) => void;
 
     // Interaction
     highlightedResidue: ResidueInfo | null;
@@ -143,6 +145,7 @@ export const useStructureController = (initialState: any = {}): StructureControl
     const [pdbMetadata, setPdbMetadata] = useState<PDBMetadata | null>(null);
     const [proteinTitle, setProteinTitle] = useState<string | null>(null);
     const [uniprotFeatures, setUniprotFeatures] = useState<Record<string, MappedUniProtFeature[]> | null>(null);
+    const [relatedStructures, setRelatedStructures] = useState<RelatedPdbEntry[] | null>(null);
 
     // Interaction
     const [highlightedResidue, setHighlightedResidue] = useState<ResidueInfo | null>(null);
@@ -312,6 +315,7 @@ export const useStructureController = (initialState: any = {}): StructureControl
         pdbMetadata, setPdbMetadata,
         proteinTitle, setProteinTitle,
         uniprotFeatures, setUniprotFeatures,
+        relatedStructures, setRelatedStructures,
         highlightedResidue, setHighlightedResidue,
         measurements, setMeasurements,
 

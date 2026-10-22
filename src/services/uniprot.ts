@@ -1,3 +1,4 @@
+import type { RelatedPdbEntry } from '../types';
 
 export interface UniProtFeature {
     type: string;
@@ -14,12 +15,13 @@ export interface UniProtData {
     organism: string;
     function: string;
     features: UniProtFeature[];
+    relatedPdbEntries: RelatedPdbEntry[];
 }
 
-// Shape of the fields this module actually requests (fields=accession,id,
-// protein_name,gene_names,organism_name,cc_function,ft_act_site,ft_binding,
-// ft_site,ft_mutagen,ft_domain) from UniProt's REST API — not the full
-// UniProtKB entry schema.
+const FIELDS = 'accession,id,protein_name,gene_names,organism_name,cc_function,ft_act_site,ft_binding,ft_site,ft_mutagen,ft_domain,xref_pdb';
+
+// Shape of the fields this module actually requests (see FIELDS above) from
+// UniProt's REST API — not the full UniProtKB entry schema.
 interface RawUniProtFeature {
     type: string;
     description?: string;
@@ -31,6 +33,16 @@ interface RawUniProtComment {
     texts?: { value: string }[];
 }
 
+// rcsb_chem_comp_descriptor-style gotcha, UniProt edition: `properties` is an
+// ARRAY of {key, value} pairs, not a pre-keyed object — every real-world
+// consumer of this API reduces it into a lookup before reading fields like
+// "Method"/"Resolution"/"Chains" off it, and so do we (see below).
+interface RawUniProtCrossReference {
+    database: string;
+    id: string;
+    properties?: { key: string; value: string }[];
+}
+
 interface RawUniProtResult {
     primaryAccession: string;
     uniProtkbId: string;
@@ -39,6 +51,21 @@ interface RawUniProtResult {
     organism?: { scientificName?: string };
     comments?: RawUniProtComment[];
     features?: RawUniProtFeature[];
+    uniProtKBCrossReferences?: RawUniProtCrossReference[];
+}
+
+function parseRelatedPdbEntries(crossReferences: RawUniProtCrossReference[] | undefined): RelatedPdbEntry[] {
+    return (crossReferences ?? [])
+        .filter(ref => ref.database === 'PDB' && typeof ref.id === 'string')
+        .map(ref => {
+            const props = Object.fromEntries((ref.properties ?? []).map(p => [p.key, p.value]));
+            return {
+                id: ref.id,
+                method: props.Method || undefined,
+                resolution: props.Resolution || undefined,
+                chains: props.Chains || undefined,
+            };
+        });
 }
 
 function parseUniProtResult(result: RawUniProtResult): UniProtData {
@@ -57,12 +84,13 @@ function parseUniProtResult(result: RawUniProtResult): UniProtData {
         organism: result.organism?.scientificName || 'Unknown Organism',
         function: result.comments?.find(c => c.commentType === 'FUNCTION')?.texts?.[0]?.value || 'No function described.',
         features,
+        relatedPdbEntries: parseRelatedPdbEntries(result.uniProtKBCrossReferences),
     };
 }
 
 export const fetchUniProtData = async (pdbId: string): Promise<UniProtData | null> => {
     try {
-        const searchUrl = `https://rest.uniprot.org/uniprotkb/search?query=database:(type:pdb ${pdbId})&fields=accession,id,protein_name,gene_names,organism_name,cc_function,ft_act_site,ft_binding,ft_site,ft_mutagen,ft_domain&size=1`;
+        const searchUrl = `https://rest.uniprot.org/uniprotkb/search?query=database:(type:pdb ${pdbId})&fields=${FIELDS}&size=1`;
 
         const response = await fetch(searchUrl);
         if (!response.ok) throw new Error('UniProt API failed');
@@ -83,7 +111,7 @@ export const fetchUniProtData = async (pdbId: string): Promise<UniProtData | nul
 // UniProt accession).
 export const fetchUniProtDataByAccession = async (accession: string): Promise<UniProtData | null> => {
     try {
-        const url = `https://rest.uniprot.org/uniprotkb/${accession}.json?fields=accession,id,protein_name,gene_names,organism_name,cc_function,ft_act_site,ft_binding,ft_site,ft_mutagen,ft_domain`;
+        const url = `https://rest.uniprot.org/uniprotkb/${accession}.json?fields=${FIELDS}`;
 
         const response = await fetch(url);
         if (!response.ok) throw new Error('UniProt API failed');
