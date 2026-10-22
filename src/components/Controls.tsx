@@ -2848,7 +2848,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                             <button
                                                 key={entry.id}
                                                 onClick={() => onLoadRelatedStructure && onLoadRelatedStructure(entry.id)}
-                                                title={[entry.method, entry.resolution].filter(Boolean).join(' · ') || entry.id}
+                                                title={[entry.method, entry.resolution, entry.chains && `Chains ${entry.chains}`].filter(Boolean).join(' · ') || entry.id}
                                                 className={`w-full flex items-center gap-2 px-2 py-1 rounded-md text-left transition-colors ${isLightMode ? 'hover:bg-neutral-100' : 'hover:bg-white/5'}`}
                                             >
                                                 <span className="w-2 h-2 rounded-full shrink-0 bg-teal-500" />
