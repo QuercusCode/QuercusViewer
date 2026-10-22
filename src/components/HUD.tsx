@@ -3,6 +3,17 @@ import type { ResidueInfo, PDBMetadata } from '../types';
 import type { PeerSession } from '../hooks/usePeerSession';
 import { Eye, Wrench, Lock, Unlock, Mic, MicOff, PhoneOff, MessageSquare, Sparkles, StickyNote, Target, BookOpen } from 'lucide-react';
 import { useTranslation } from '../lib/i18n';
+import { fetchChemicalComponent } from '../services/chemicalComponent';
+
+// Standard residues to filter out atom-level detail for proteins/nucleic
+// acids (module-level: it's a constant, and the chemical-name lookup effect
+// below needs a stable reference to depend on without recreating a Set on
+// every render).
+const STANDARD_RESIDUES = new Set([
+    'ALA', 'ARG', 'ASN', 'ASP', 'CYS', 'GLN', 'GLU', 'GLY', 'HIS', 'ILE',
+    'LEU', 'LYS', 'MET', 'PHE', 'PRO', 'SER', 'THR', 'TRP', 'TYR', 'VAL',
+    'A', 'C', 'G', 'T', 'U', 'DA', 'DC', 'DG', 'DT'
+]);
 
 interface HUDProps {
     hoveredResidue: ResidueInfo | null;
@@ -72,12 +83,29 @@ export function HUD({ hoveredResidue, pdbMetadata, pdbId, isLightMode, isEmbedMo
         return pdbId ? pdbId.toUpperCase() : null;
     }, [pdbMetadata, pdbId]);
 
-    // Standard residues list to filter out atom details for proteins/nucleic acids
-    const STANDARD_RESIDUES = new Set([
-        'ALA', 'ARG', 'ASN', 'ASP', 'CYS', 'GLN', 'GLU', 'GLY', 'HIS', 'ILE',
-        'LEU', 'LYS', 'MET', 'PHE', 'PRO', 'SER', 'THR', 'TRP', 'TYR', 'VAL',
-        'A', 'C', 'G', 'T', 'U', 'DA', 'DC', 'DG', 'DT'
-    ]);
+    // Full chemical name for the hovered ligand/ion, via the same
+    // RCSB-backed lookup + cache the "Related Structures" ligand chips use
+    // (src/services/chemicalComponent.ts) — keyed on resName alone (not the
+    // whole effectiveResidue object) so moving the mouse between atoms of
+    // the SAME ligand doesn't refetch; only switching to a different
+    // residue does. Already-cached codes resolve instantly from a prior
+    // lookup anywhere else in the app.
+    const [resolvedChemicalName, setResolvedChemicalName] = useState<{ resName: string; name: string } | null>(null);
+    useEffect(() => {
+        const resName = effectiveResidue?.resName;
+        if (!resName || STANDARD_RESIDUES.has(resName.toUpperCase())) return;
+        let cancelled = false;
+        fetchChemicalComponent(resName).then(info => {
+            if (!cancelled && info?.name) setResolvedChemicalName({ resName, name: info.name });
+        });
+        return () => { cancelled = true; };
+    }, [effectiveResidue?.resName]);
+    // Only trust the resolved name while it still matches what's hovered —
+    // avoids an imperative "reset to null" branch in the effect above (which
+    // would be a synchronous setState call directly in an effect body).
+    const chemicalName = (effectiveResidue && resolvedChemicalName?.resName === effectiveResidue.resName)
+        ? resolvedChemicalName.name
+        : null;
 
     // Position at bottom center to avoid interfering with any viewports
 
@@ -355,22 +383,30 @@ export function HUD({ hoveredResidue, pdbMetadata, pdbId, isLightMode, isEmbedMo
                                                 </span>
                                             </>
                                         ) : (
-                                            (effectiveResidue.atomName) ? (
-                                                <span className={`font-mono font-bold ${textColor} whitespace-nowrap text-lg`}>
-                                                    {effectiveResidue.atomName} <span className="text-sm opacity-60">#{effectiveResidue.atomSerial}</span>
+                                            // Ligand/ion/water: lead with what the molecule actually IS (matching
+                                            // Mol*'s hover behavior), not just the raw picked atom — the full
+                                            // chemical name once looked up, the short PDB code + residue number
+                                            // always, and which specific atom was hovered as a trailing detail.
+                                            <>
+                                                <span
+                                                    className={`font-semibold ${textColor} whitespace-nowrap max-w-[180px] truncate`}
+                                                    title={chemicalName ?? undefined}
+                                                >
+                                                    {chemicalName || effectiveResidue.resName}
                                                 </span>
-                                            ) : (
-                                                // Fallback for chemical with no atom name: Show Element + Serial
-                                                (effectiveResidue.element && effectiveResidue.atomSerial) ? (
-                                                    <span className={`font-mono font-bold ${textColor} whitespace-nowrap text-lg`}>
-                                                        {effectiveResidue.element}{effectiveResidue.atomSerial} <span className="text-sm opacity-60">#{effectiveResidue.atomSerial}</span>
-                                                    </span>
-                                                ) : (
-                                                    <span className={`font-semibold ${textColor} whitespace-nowrap`}>
-                                                        {effectiveResidue.resName} <span className="opacity-90">{effectiveResidue.resNo}</span>
-                                                    </span>
-                                                )
-                                            )
+                                                <div className={`h-3 w-px ${isLightMode ? 'bg-black/10' : 'bg-white/20'}`} />
+                                                <span className={`text-xs uppercase tracking-wide opacity-80 ${textColor} whitespace-nowrap`}>
+                                                    {effectiveResidue.resName} {effectiveResidue.resNo} &middot; Chain {effectiveResidue.chain}
+                                                </span>
+                                                {(effectiveResidue.atomName || effectiveResidue.element) && (
+                                                    <>
+                                                        <div className={`h-3 w-px ${isLightMode ? 'bg-black/10' : 'bg-white/20'}`} />
+                                                        <span className={`font-mono text-xs opacity-70 ${textColor} whitespace-nowrap`}>
+                                                            {effectiveResidue.atomName || effectiveResidue.element}
+                                                        </span>
+                                                    </>
+                                                )}
+                                            </>
                                         )}
                                     </>
                                 )}
