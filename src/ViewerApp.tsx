@@ -3154,6 +3154,7 @@ function App() {
               setIsSuperpositionModalOpen(false);
               viewerRefs[activeViewIndex].current?.openAlignmentView();
             }}
+            onExportPdb={() => viewerRefs[activeViewIndex].current?.getSuperposedPdbBlob() ?? null}
           />
           </Suspense>
           )}

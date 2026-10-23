@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { X, Plus, Eye, EyeOff, Trash2, Upload, FileDown, AlertTriangle } from 'lucide-react';
+import { X, Plus, Eye, EyeOff, Trash2, Upload, FileDown, AlertTriangle, Download } from 'lucide-react';
 import jsPDF from 'jspdf';
 import type { ChainInfo, RepresentationType, SuperposedStructure } from '../types';
 import { useTranslation } from '../lib/i18n';
@@ -17,6 +17,7 @@ interface SuperpositionModalProps {
     onUpdateOverlay: (id: string, updates: Partial<SuperposedStructure>) => void;
     onOpenAlignment: () => void;
     getSnapshot?: () => Promise<string | null>; // Add snapshot capability
+    onExportPdb?: () => Blob | null; // Combined main + overlays PDB, each its own MODEL block
 }
 
 interface OverlayFitStat {
@@ -36,7 +37,8 @@ export const SuperpositionModal: React.FC<SuperpositionModalProps> = ({
     onToggleOverlay,
     onUpdateOverlay,
     onOpenAlignment,
-    getSnapshot
+    getSnapshot,
+    onExportPdb
 }) => {
     const { t } = useTranslation();
     const [pdbInput, setPdbInput] = useState('');
@@ -298,6 +300,52 @@ export const SuperpositionModal: React.FC<SuperpositionModalProps> = ({
         }
     };
 
+    // Colors this overlay's aligned chain by per-residue structural
+    // deviation from the main structure (green = close fit, red = far),
+    // reusing whichever chain pair overlayStats already reports (the
+    // explicit pick, or the auto-matched best pair) — the same pair the
+    // RMSD/identity readout is based on, so it stays consistent with what's
+    // already on screen. Clicking again reverts to the flat custom color.
+    const handleToggleDeviationColoring = (overlay: SuperposedStructure) => {
+        if (overlay.colorMode === 'difference') {
+            onUpdateOverlay(overlay.id, { colorMode: 'custom', residueDeviations: undefined, residueDeviationChain: undefined });
+            return;
+        }
+        const fit = overlayStats[overlay.id];
+        if (!fit || !primaryChains || !overlay.chains) return;
+        const pChain = primaryChains.find(c => c.name === fit.primaryChain);
+        const tChain = overlay.chains.find(c => c.name === fit.targetChain);
+        if (!pChain || !tChain) return;
+
+        const { stats } = alignSequences(pChain, tChain);
+        const residueDeviations: Record<number, number> = {};
+        stats.perResidueDeviations.forEach(({ resNo, distance }) => {
+            residueDeviations[resNo] = distance;
+        });
+        onUpdateOverlay(overlay.id, {
+            colorMode: 'difference',
+            residueDeviations,
+            residueDeviationChain: tChain.name
+        });
+    };
+
+    // Downloads the main structure plus every loaded overlay as one combined
+    // PDB file (each as its own MODEL block, in their current fitted pose) —
+    // lets the alignment work done here be taken into PyMOL/ChimeraX, or just
+    // kept as a record, same as any multi-MODEL PDB (e.g. an NMR ensemble).
+    const handleExportPdb = () => {
+        const blob = onExportPdb?.();
+        if (!blob) return;
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `superposed_structures_${new Date().toISOString().slice(0, 10)}.pdb`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    };
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
             <div ref={dialogRef} role="dialog" aria-modal="true" tabIndex={-1} className="bg-neutral-900 border border-neutral-700/50 rounded-xl shadow-2xl w-full max-w-md overflow-hidden outline-none">
@@ -320,6 +368,16 @@ export const SuperpositionModal: React.FC<SuperpositionModalProps> = ({
                         >
                             {t.superpositionAlignSeq as string}
                         </button>
+                        {onExportPdb && overlays.length > 0 && (
+                            <button
+                                onClick={handleExportPdb}
+                                title="Download the main structure and every overlay, in their current fitted pose, as one combined multi-MODEL PDB file"
+                                className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-xs px-3 py-1.5 rounded-lg border border-emerald-500/30 transition-colors flex items-center gap-1.5"
+                            >
+                                <Download size={14} />
+                                Export PDB
+                            </button>
+                        )}
                         <button onClick={onClose} className="text-neutral-400 hover:text-white transition-colors">
                             <X size={20} />
                         </button>
@@ -456,8 +514,9 @@ export const SuperpositionModal: React.FC<SuperpositionModalProps> = ({
                                                 type="color"
                                                 value={item.color}
                                                 onChange={(e) => onUpdateOverlay(item.id, { color: e.target.value })}
-                                                title="Color"
-                                                className="w-6 h-6 rounded cursor-pointer bg-transparent border-0 shrink-0"
+                                                title={item.colorMode === 'difference' ? 'Flat color — inactive while "By Deviation" coloring is on' : 'Color'}
+                                                disabled={item.colorMode === 'difference'}
+                                                className="w-6 h-6 rounded cursor-pointer bg-transparent border-0 shrink-0 disabled:opacity-30 disabled:cursor-not-allowed"
                                             />
                                             <div className="flex items-center gap-1.5 flex-1 min-w-0">
                                                 <input
@@ -505,6 +564,16 @@ export const SuperpositionModal: React.FC<SuperpositionModalProps> = ({
                                                         <option key={c.name} value={c.name}>This :{c.name}</option>
                                                     ))}
                                                 </select>
+                                                <button
+                                                    onClick={() => handleToggleDeviationColoring(item)}
+                                                    disabled={item.colorMode !== 'difference' && !overlayStats[item.id]}
+                                                    title={item.colorMode === 'difference' ? 'Showing per-residue deviation — click to use the flat color again' : "Color this overlay's aligned chain by per-residue deviation from the main structure (green = close fit, red = far)"}
+                                                    className={`px-2 py-1 text-[10px] font-bold rounded shrink-0 transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${item.colorMode === 'difference'
+                                                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                                                        : 'bg-neutral-900/60 text-neutral-400 border border-neutral-700 hover:text-neutral-200'}`}
+                                                >
+                                                    By Deviation
+                                                </button>
                                             </div>
                                         )}
                                     </div>

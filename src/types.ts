@@ -126,6 +126,18 @@ export interface SuperposedStructure {
     alignOverlayChain?: string;
     alignMainChain?: string;
 
+    // When 'difference', the renderer colors this overlay's
+    // residueDeviationChain by per-residue structural deviation (green/low
+    // -> red/high) instead of the flat `color` above; 'custom' (default)
+    // keeps the normal flat color.
+    colorMode?: 'custom' | 'difference';
+    // Per-residue structural deviation (Å) from the main structure's aligned
+    // residue, computed once when "Color by Deviation" is turned on for this
+    // overlay — keyed by this overlay's PDB residue number on
+    // residueDeviationChain.
+    residueDeviations?: Record<number, number>;
+    residueDeviationChain?: string;
+
     // Full per-structure styling, mirroring the main structure's own
     // Advanced Styles / Advanced Colors / Transparency system so an overlay
     // can be customized the exact same way (by chain, by residue range, or

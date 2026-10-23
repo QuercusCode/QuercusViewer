@@ -661,6 +661,7 @@ export const MolStarProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerPr
             }
         },
         getPdbBlob: () => null,
+        getSuperposedPdbBlob: () => null, // Superpose overlays are NGL-only
         restoreMeasurements: () => { },
         captureImage: async () => { },
         highlightRegion: () => { },

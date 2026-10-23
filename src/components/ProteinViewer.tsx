@@ -8,6 +8,7 @@ const SequenceAlignmentModal = lazy(() => import('./SequenceAlignmentModal').the
 import type { RepresentationType, ColoringType, ChainInfo, Measurement, ResidueInteraction, AtomContact, CustomColorRule, CustomStyleRule, CustomTransparencyRule, ColorPalette, ResidueInfo, StructureInfo, MeasurementTextColor, SuperposedStructure, Annotation, NucleicResidueRule, RadiusSourceType, SurfaceAlgorithm } from '../types';
 import { getAtomicInteractionType } from '../utils/interactionUtils';
 import { ChargeGrid, getFormalCharge, potentialToColor } from '../utils/electrostatics';
+import { deviationToColor } from '../utils/sequenceAlignment';
 
 // Minimal shape of the NGL atom proxy fields the electrostatics scan reads;
 // the full NGL proxy has many more untyped fields, so the rest stays `any`
@@ -19,6 +20,8 @@ interface NGLAtomProxyLike {
     resname: string;
     atomname: string;
     index: number;
+    chainname: string;
+    resno: number;
 }
 
 // Minimal typed surface of an NGL structure component, used only by
@@ -57,6 +60,21 @@ function createElectrostaticColorScheme(grid: ChargeGrid, vMax: number, schemeNa
     return window.NGL.ColormakerRegistry.addScheme(function (this: NGLColormakerThis, params: unknown) {
         this.parameters = params;
         this.atomColor = (atom: NGLAtomProxyLike) => potentialToColor(grid.potentialAt(atom.x, atom.y, atom.z), vMax);
+    }, schemeName);
+}
+
+// Colors a single overlay chain by its per-residue structural deviation
+// (green = close fit, red = far) from the main structure's aligned chain;
+// every other chain — and any residue the alignment skipped as a gap — gets
+// a neutral gray, since deviation is only meaningful for the aligned pair.
+function createDifferenceColorScheme(deviations: Record<number, number>, chainName: string, maxDeviation: number, schemeName: string): string {
+    return window.NGL.ColormakerRegistry.addScheme(function (this: NGLColormakerThis, params: unknown) {
+        this.parameters = params;
+        this.atomColor = (atom: NGLAtomProxyLike) => {
+            if (atom.chainname !== chainName) return 0x999999;
+            const d = deviations[atom.resno];
+            return d === undefined ? 0x999999 : deviationToColor(d, maxDeviation);
+        };
     }, schemeName);
 }
 import { type DataSource, getStructureUrl, extractChainsFromComponent } from '../utils/pdbUtils';
@@ -241,6 +259,7 @@ export interface ProteinViewerRef {
     getOrientation: () => any;
     setOrientation: (orientation: any) => void;
     getPdbBlob: () => Blob | null; // Method to extract current structure as blob
+    getSuperposedPdbBlob: () => Blob | null; // Main structure + every loaded Superpose overlay, each as its own MODEL block
     container: HTMLDivElement | null; // Expose container for canvas access
     openAlignmentView: () => void; // Added for Sequence Alignment
 }
@@ -1277,6 +1296,53 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                 return new Blob([pdbString], { type: 'text/plain' });
             } catch (e) {
                 console.error("Failed to write PDB blob:", e);
+                return null;
+            }
+        },
+        getSuperposedPdbBlob: () => {
+            if (!componentRef.current || !componentRef.current.structure) return null;
+            try {
+                // Standard multi-MODEL PDB — the main structure plus every
+                // currently loaded overlay (already in its fitted/superposed
+                // pose, since that's baked into the component's own
+                // coordinates), each as its own MODEL block. Any PDB viewer
+                // (PyMOL, ChimeraX, this app itself) opens a multi-MODEL file
+                // natively, same as an NMR ensemble.
+                const extractAtomLines = (pdbText: string): string[] =>
+                    pdbText.split(/\r?\n/).filter(line =>
+                        line.startsWith('ATOM') || line.startsWith('HETATM') || line.startsWith('TER') || line.startsWith('ANISOU')
+                    );
+                const modelRecord = (n: number) => 'MODEL'.padEnd(10, ' ') + String(n).padStart(4, ' ');
+
+                const parts: string[] = [];
+                let modelNum = 1;
+
+                const mainWriter = new window.NGL.PdbWriter(componentRef.current.structure);
+                parts.push(`REMARK 250 MODEL ${modelNum}: Main structure`);
+                parts.push(modelRecord(modelNum));
+                parts.push(...extractAtomLines(mainWriter.getData()));
+                parts.push('ENDMDL');
+                modelNum++;
+
+                overlayComponentsRef.current.forEach((comp, id) => {
+                    if (!comp || !comp.structure) return;
+                    const overlayLabel = overlays?.find(o => o.id === id)?.description || id;
+                    try {
+                        const writer = new window.NGL.PdbWriter(comp.structure);
+                        parts.push(`REMARK 250 MODEL ${modelNum}: Overlay - ${overlayLabel}`);
+                        parts.push(modelRecord(modelNum));
+                        parts.push(...extractAtomLines(writer.getData()));
+                        parts.push('ENDMDL');
+                        modelNum++;
+                    } catch (e) {
+                        console.warn(`Failed to write overlay ${id} into combined PDB:`, e);
+                    }
+                });
+
+                parts.push('END');
+                return new Blob([parts.join('\n')], { type: 'text/plain' });
+            } catch (e) {
+                console.error("Failed to write combined superposed PDB blob:", e);
                 return null;
             }
         },
@@ -2912,6 +2978,16 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                     });
                 }
                 finalColor = createElectrostaticColorScheme(grid, vMax, `overlay_electrostatic_dynamic_${overlay.id}`);
+            }
+
+            // Per-residue deviation coloring — "Color by Deviation" in the
+            // Superpose modal, computed there (it's the one place with both
+            // this structure's and the main structure's aligned sequences)
+            // and stashed on the overlay for rendering here.
+            if (overlay.colorMode === 'difference' && overlay.residueDeviations && overlay.residueDeviationChain) {
+                const deviations = overlay.residueDeviations;
+                const maxDeviation = Math.max(1, ...Object.values(deviations));
+                finalColor = createDifferenceColorScheme(deviations, overlay.residueDeviationChain, maxDeviation, `overlay_difference_${overlay.id}`);
             }
 
             // --- Custom color selection scheme (chain/residue/ligand rules) ---
