@@ -3241,6 +3241,10 @@ function App() {
                     setLigandStyle={setLigandStyle}
                     ligandColors={ligandColors}
                     setLigandColor={setLigandColor}
+                    overlays={controllers[activeViewIndex].overlays}
+                    onUpdateOverlay={(id: string, updates: Partial<SuperposedStructure>) => {
+                      controllers[activeViewIndex].setOverlays(prev => prev.map(o => o.id === id ? { ...o, ...updates } : o));
+                    }}
                     chainVisibility={chainVisibility}
                     radiusType={radiusType}
                     setRadiusType={setRadiusType}
@@ -3637,8 +3641,8 @@ function App() {
                             onSuperpositionStatus={(overlayId: string, failed: boolean) => {
                               ctrl.setOverlays(prev => prev.map(o => o.id === overlayId ? { ...o, superpositionFailed: failed } : o));
                             }}
-                            onOverlayChainsLoaded={(overlayId: string, chains: ChainInfo[]) => {
-                              ctrl.setOverlays(prev => prev.map(o => o.id === overlayId ? { ...o, chains } : o));
+                            onOverlayChainsLoaded={(overlayId: string, chains: ChainInfo[], ligands: string[]) => {
+                              ctrl.setOverlays(prev => prev.map(o => o.id === overlayId ? { ...o, chains, ligands } : o));
                             }}
                             onToast={addToast}
                             // The Mol* engine has no internal error UI of its own (unlike the

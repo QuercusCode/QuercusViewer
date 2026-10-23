@@ -41,6 +41,10 @@ export interface CustomTransparencyRule {
     chain: string;
     residues?: string; // e.g. "50-60", optional
     opacity: number; // 0.0 to 1.0
+    // When set, this rule targets a bound ligand/ion by its PDB chemical
+    // component code (e.g. "HEM") instead of chain/residues — rendered as
+    // its own independent pass, same as ligandStyles/ligandColors.
+    ligandCode?: string;
 }
 
 export interface NucleicResidueRule {
@@ -111,7 +115,20 @@ export interface SuperposedStructure {
     opacity?: number;
     representation?: RepresentationType; // Defaults to 'cartoon' when unset
     chains?: ChainInfo[]; // Added for Sequence Alignment
+    ligands?: string[]; // Bound ligand/ion codes on this overlay, for ligand-mode style/color/transparency editing
     superpositionFailed?: boolean; // True if automatic 3D alignment onto the main structure failed — it's shown in its original, unfitted orientation, and any RMSD computed against it is not meaningful.
+
+    // Full per-structure styling, mirroring the main structure's own
+    // Advanced Styles / Advanced Colors / Transparency system so an overlay
+    // can be customized the exact same way (by chain, by residue range, or
+    // by bound ligand/ion code) instead of only a single flat representation
+    // + color + opacity.
+    customColors?: CustomColorRule[];
+    chainStyles?: Record<string, RepresentationType>;
+    customStyles?: CustomStyleRule[];
+    customTransparency?: CustomTransparencyRule[];
+    ligandStyles?: Record<string, RepresentationType>;
+    ligandColors?: Record<string, string>;
 }
 
 
