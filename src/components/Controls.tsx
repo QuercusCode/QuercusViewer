@@ -55,7 +55,7 @@ import {
     X,
     Zap
 } from 'lucide-react';
-import type { RepresentationType, ColoringType, ChainInfo, Snapshot, Movie, ColorPalette, PDBMetadata, CustomColorRule, CustomStyleRule, CustomTransparencyRule, Measurement, NucleicResidueRule, RadiusSourceType, SurfaceAlgorithm, ResidueInteraction, MappedUniProtFeature, LigandChemicalInfo, RelatedPdbEntry } from '../types';
+import type { RepresentationType, ColoringType, ChainInfo, Snapshot, Movie, ColorPalette, PDBMetadata, CustomColorRule, CustomStyleRule, CustomTransparencyRule, Measurement, NucleicResidueRule, RadiusSourceType, SurfaceAlgorithm, ResidueInteraction, MappedUniProtFeature, LigandChemicalInfo, RelatedPdbEntry, SuperposedStructure } from '../types';
 import { featureColor } from '../hooks/useUniProtFeatures';
 import { fetchChemicalComponent } from '../services/chemicalComponent';
 import type { DataSource } from '../utils/pdbUtils';
@@ -433,6 +433,11 @@ interface ControlsProps {
     setLigandStyle?: (code: string, style: RepresentationType | null) => void;
     ligandColors?: Record<string, string>;
     setLigandColor?: (code: string, color: string | null) => void;
+    // Superpose overlays — lets the Advanced Styles/Colors/Transparency
+    // cards below target an overlay instead of the main structure, reusing
+    // the exact same chain/residue/ligand editing UI.
+    overlays?: SuperposedStructure[];
+    onUpdateOverlay?: (id: string, updates: Partial<SuperposedStructure>) => void;
     chainVisibility?: Record<string, boolean>;
     setChainVisibility?: (chain: string, visible: boolean) => void;
     radiusType?: RadiusSourceType;
@@ -499,6 +504,8 @@ export const Controls: React.FC<ControlsProps> = ({
     setLigandStyle,
     ligandColors,
     setLigandColor,
+    overlays,
+    onUpdateOverlay,
     chainVisibility,
     setChainVisibility,
     radiusType,
@@ -636,8 +643,8 @@ export const Controls: React.FC<ControlsProps> = ({
     const [selectedStyleForLigand, setSelectedStyleForLigand] = useState<RepresentationType>("ball+stick");
 
     const handleSetLigandStyle = () => {
-        if (!setLigandStyle || selectedLigandForStyle === '__none__') return;
-        setLigandStyle(selectedLigandForStyle, selectedStyleForLigand);
+        if (selectedLigandForStyle === '__none__') return;
+        activeSetLigandStyle(selectedLigandForStyle, selectedStyleForLigand);
     };
 
     // Custom Residue Style State
@@ -686,14 +693,14 @@ export const Controls: React.FC<ControlsProps> = ({
     }, [pdbId]);
 
     const handleAddCustomStyle = () => {
-        if (!setCustomStyles || !customResStyleRange) return;
+        if (!customResStyleRange) return;
         const newRule: CustomStyleRule = {
             id: crypto.randomUUID(),
             chain: customResStyleChain,
             residues: customResStyleRange,
             style: customResStyleType
         };
-        setCustomStyles((prev: CustomStyleRule[]) => [...prev, newRule]);
+        activeSetCustomStyles((prev: CustomStyleRule[]) => [...prev, newRule]);
         setCustomResStyleRange('');
     };
 
@@ -776,18 +783,31 @@ export const Controls: React.FC<ControlsProps> = ({
     const [ligandColorValue, setLigandColorValue] = useState<string>("#ff0000");
 
     const handleSetLigandColor = () => {
-        if (!setLigandColor || selectedLigandForColor === '__none__') return;
-        setLigandColor(selectedLigandForColor, ligandColorValue);
+        if (selectedLigandForColor === '__none__') return;
+        activeSetLigandColor(selectedLigandForColor, ligandColorValue);
     };
 
     // Transparency State
-    const [transparencyMode, setTransparencyMode] = useState<'chain' | 'residue'>('chain');
+    const [transparencyMode, setTransparencyMode] = useState<'chain' | 'residue' | 'ligand'>('chain');
     const [transparencyChain, setTransparencyChain] = useState<string>('__none__');
     const [transparencyResidues, setTransparencyResidues] = useState('');
     const [transparencyValue, setTransparencyValue] = useState(50); // 0-100
+    const [selectedLigandForTransparency, setSelectedLigandForTransparency] = useState<string>("__none__");
 
     // Handlers
     const handleAddTransparencyRule = () => {
+        if (transparencyMode === 'ligand') {
+            if (selectedLigandForTransparency === '__none__') return;
+            const newLigandRule: CustomTransparencyRule = {
+                id: crypto.randomUUID(),
+                chain: 'All',
+                ligandCode: selectedLigandForTransparency,
+                opacity: transparencyValue / 100
+            };
+            activeSetCustomTransparency(prev => [...prev, newLigandRule]);
+            return;
+        }
+
         if (transparencyChain === '__none__' && transparencyMode === 'chain') return;
         if (transparencyChain === 'Select' && transparencyMode === 'chain') return;
 
@@ -798,16 +818,12 @@ export const Controls: React.FC<ControlsProps> = ({
             opacity: transparencyValue / 100
         };
 
-        if (setCustomTransparency) {
-            setCustomTransparency(prev => [...prev, newRule]);
-            setTransparencyResidues('');
-        }
+        activeSetCustomTransparency(prev => [...prev, newRule]);
+        setTransparencyResidues('');
     };
 
     const handleRemoveTransparencyRule = (id: string) => {
-        if (setCustomTransparency) {
-            setCustomTransparency(prev => prev.filter(r => r.id !== id));
-        }
+        activeSetCustomTransparency(prev => prev.filter(r => r.id !== id));
     };
 
     const handleAddCustomColor = () => {
@@ -827,8 +843,8 @@ export const Controls: React.FC<ControlsProps> = ({
             selectionString = customSelection;
         }
 
-        if (selectionString && setCustomColors) {
-            setCustomColors(prev => [...prev, {
+        if (selectionString) {
+            activeSetCustomColors(prev => [...prev, {
                 selection: selectionString,
                 color: customColorValue
             }]);
@@ -838,8 +854,7 @@ export const Controls: React.FC<ControlsProps> = ({
     };
 
     const handleRemoveCustomColor = (index: number) => {
-        if (!setCustomColors) return;
-        setCustomColors(prev => prev.filter((_, i) => i !== index));
+        activeSetCustomColors(prev => prev.filter((_, i) => i !== index));
     };
 
     // Styles
@@ -966,6 +981,87 @@ export const Controls: React.FC<ControlsProps> = ({
         }
 
         setPdbId(localPdbId.trim());
+    };
+
+    // Superpose overlay style targeting — lets the Advanced Styles/Colors/
+    // Transparency cards below edit a chosen overlay's own rule sets instead
+    // of the main structure's, reusing the exact same chain/residue/ligand
+    // editing UI and handlers.
+    const [styleTarget, setStyleTarget] = useState<string>('__main__');
+    const activeOverlay = overlays?.find(o => o.id === styleTarget);
+    useEffect(() => {
+        if (styleTarget !== '__main__' && !overlays?.some(o => o.id === styleTarget)) {
+            setStyleTarget('__main__');
+        }
+    }, [overlays, styleTarget]);
+
+    const activeChains = activeOverlay ? (activeOverlay.chains || []) : chains;
+    const activeLigands = activeOverlay ? (activeOverlay.ligands || []) : ligands;
+
+    const activeChainStyles = activeOverlay ? (activeOverlay.chainStyles || {}) : (chainStyles || {});
+    const activeSetChainStyle = (chain: string, style: RepresentationType | null) => {
+        if (activeOverlay) {
+            const next = { ...(activeOverlay.chainStyles || {}) };
+            if (style === null) delete next[chain]; else next[chain] = style;
+            onUpdateOverlay?.(activeOverlay.id, { chainStyles: next });
+        } else {
+            setChainStyle?.(chain, style);
+        }
+    };
+
+    const activeCustomStyles = activeOverlay ? (activeOverlay.customStyles || []) : customStyles;
+    const activeSetCustomStyles = (updater: CustomStyleRule[] | ((prev: CustomStyleRule[]) => CustomStyleRule[])) => {
+        if (activeOverlay) {
+            const prev = activeOverlay.customStyles || [];
+            const next = typeof updater === 'function' ? (updater as (p: CustomStyleRule[]) => CustomStyleRule[])(prev) : updater;
+            onUpdateOverlay?.(activeOverlay.id, { customStyles: next });
+        } else {
+            setCustomStyles(updater);
+        }
+    };
+
+    const activeLigandStyles = activeOverlay ? (activeOverlay.ligandStyles || {}) : (ligandStyles || {});
+    const activeSetLigandStyle = (code: string, style: RepresentationType | null) => {
+        if (activeOverlay) {
+            const next = { ...(activeOverlay.ligandStyles || {}) };
+            if (style === null) delete next[code]; else next[code] = style;
+            onUpdateOverlay?.(activeOverlay.id, { ligandStyles: next });
+        } else {
+            setLigandStyle?.(code, style);
+        }
+    };
+
+    const activeCustomColors = activeOverlay ? (activeOverlay.customColors || []) : (customColors || []);
+    const activeSetCustomColors = (updater: CustomColorRule[] | ((prev: CustomColorRule[]) => CustomColorRule[])) => {
+        if (activeOverlay) {
+            const prev = activeOverlay.customColors || [];
+            const next = typeof updater === 'function' ? (updater as (p: CustomColorRule[]) => CustomColorRule[])(prev) : updater;
+            onUpdateOverlay?.(activeOverlay.id, { customColors: next });
+        } else {
+            setCustomColors?.(updater);
+        }
+    };
+
+    const activeLigandColors = activeOverlay ? (activeOverlay.ligandColors || {}) : (ligandColors || {});
+    const activeSetLigandColor = (code: string, color: string | null) => {
+        if (activeOverlay) {
+            const next = { ...(activeOverlay.ligandColors || {}) };
+            if (color === null) delete next[code]; else next[code] = color;
+            onUpdateOverlay?.(activeOverlay.id, { ligandColors: next });
+        } else {
+            setLigandColor?.(code, color);
+        }
+    };
+
+    const activeCustomTransparency = activeOverlay ? (activeOverlay.customTransparency || []) : customTransparency;
+    const activeSetCustomTransparency = (updater: CustomTransparencyRule[] | ((prev: CustomTransparencyRule[]) => CustomTransparencyRule[])) => {
+        if (activeOverlay) {
+            const prev = activeOverlay.customTransparency || [];
+            const next = typeof updater === 'function' ? (updater as (p: CustomTransparencyRule[]) => CustomTransparencyRule[])(prev) : updater;
+            onUpdateOverlay?.(activeOverlay.id, { customTransparency: next });
+        } else {
+            setCustomTransparency(updater);
+        }
     };
 
 
@@ -2084,6 +2180,26 @@ export const Controls: React.FC<ControlsProps> = ({
                                             </div>
                                         )}
 
+                                        {/* STYLE TARGET SELECTOR — chooses whether Advanced Styles/Colors/Transparency below edit the main structure or a Superpose overlay */}
+                                        {overlays && overlays.length > 0 && (
+                                            <div className="col-span-2 pt-2 border-t border-white/5">
+                                                <label className={`text-[9px] font-bold uppercase tracking-wider mb-1 block ${subtleText} opacity-70`}>Editing Target</label>
+                                                <div className={`relative flex items-center rounded-lg border transition-all ${inputBg}`}>
+                                                    <select
+                                                        value={styleTarget}
+                                                        onChange={(e) => setStyleTarget(e.target.value)}
+                                                        className="w-full appearance-none bg-transparent py-1.5 pl-2 pr-6 text-xs font-mono outline-none"
+                                                    >
+                                                        <option value="__main__">Main Structure</option>
+                                                        {overlays.map(o => (
+                                                            <option key={o.id} value={o.id}>{o.description || o.pdbId || o.file?.name || 'Overlay'}</option>
+                                                        ))}
+                                                    </select>
+                                                    <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 opacity-50 pointer-events-none" />
+                                                </div>
+                                            </div>
+                                        )}
+
                                         {/* ADVANCED COLORS WRAPPER */}
                                         {setCustomColors && (
                                             <div className="col-span-2 pt-2 border-t border-white/5 space-y-2">
@@ -2109,7 +2225,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                         >
                                                             {isChemical ? 'Atoms/Elements' : 'Residue'}
                                                         </button>
-                                                        {setLigandColor && ligands && ligands.length > 0 && (
+                                                        {activeLigands && activeLigands.length > 0 && (
                                                             <button
                                                                 onClick={() => setCustomColorMode('ligand')}
                                                                 className={`px-2 py-0.5 text-[9px] font-bold rounded-md transition-all ${customColorMode === 'ligand'
@@ -2140,7 +2256,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                                             className="w-full appearance-none bg-transparent py-1.5 pl-2 pr-6 text-xs font-mono outline-none"
                                                                         >
                                                                             <option value="__none__" disabled>Select</option>
-                                                                            {chains.map(c => (
+                                                                            {activeChains.map(c => (
                                                                                 <option key={c.name} value={c.name}>{c.name ? `:${c.name}` : 'Molecule'}</option>
                                                                             ))}
                                                                         </select>
@@ -2191,7 +2307,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                                             className="w-full appearance-none bg-transparent py-1.5 pl-2 pr-6 text-xs font-mono outline-none"
                                                                         >
                                                                             <option value="All">All</option>
-                                                                            {chains.map(c => (
+                                                                            {activeChains.map(c => (
                                                                                 <option key={c.name} value={c.name}>{c.name ? `:${c.name}` : 'Molecule'}</option>
                                                                             ))}
                                                                         </select>
@@ -2203,9 +2319,9 @@ export const Controls: React.FC<ControlsProps> = ({
                                                                         <label className={`text-[9px] font-bold uppercase tracking-wider ${subtleText} opacity-70`}>
                                                                             {isChemical ? 'Atoms/Elements' : 'Residues'}
                                                                         </label>
-                                                                        {!isChemical && customChain && chains.find(c => c.name === customChain)?.min !== undefined && (
+                                                                        {!isChemical && customChain && activeChains.find(c => c.name === customChain)?.min !== undefined && (
                                                                             <span className={`text-[9px] font-mono ${subtleText} opacity-50`}>
-                                                                                {chains.find(c => c.name === customChain)?.min}-{chains.find(c => c.name === customChain)?.max}
+                                                                                {activeChains.find(c => c.name === customChain)?.min}-{activeChains.find(c => c.name === customChain)?.max}
                                                                             </span>
                                                                         )}
                                                                     </div>
@@ -2252,7 +2368,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                     )}
 
                                                     {/* MODE: LIGAND/ION COLORS */}
-                                                    {customColorMode === 'ligand' && setLigandColor && ligandColors && (
+                                                    {customColorMode === 'ligand' && (
                                                         <>
                                                             <div className="flex gap-2">
                                                                 <div className="w-1/3">
@@ -2264,7 +2380,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                                             className="w-full appearance-none bg-transparent py-1.5 pl-2 pr-6 text-xs font-mono outline-none"
                                                                         >
                                                                             <option value="__none__" disabled>Select</option>
-                                                                            {(ligands || []).map(code => (
+                                                                            {(activeLigands || []).map(code => (
                                                                                 <option key={code} value={code}>{code}</option>
                                                                             ))}
                                                                         </select>
@@ -2301,18 +2417,18 @@ export const Controls: React.FC<ControlsProps> = ({
                                                             </div>
 
                                                             {/* Active Ligand Colors List */}
-                                                            {Object.keys(ligandColors).length > 0 && (
+                                                            {Object.keys(activeLigandColors).length > 0 && (
                                                                 <div className="space-y-1 pt-1">
                                                                     <div className={`text-[9px] font-bold uppercase tracking-wider ${subtleText} opacity-70`}>{t.activeRules as string}</div>
                                                                     <div className="space-y-1">
-                                                                        {Object.entries(ligandColors).map(([code, color]) => (
+                                                                        {Object.entries(activeLigandColors).map(([code, color]) => (
                                                                             <div key={code} className={`flex items-center justify-between p-2 rounded border ${isLightMode ? 'bg-white border-neutral-200' : 'bg-neutral-800 border-white/5'}`}>
                                                                                 <div className="flex items-center gap-2">
                                                                                     <div className="w-3.5 h-3.5 rounded-full shadow-sm border border-black/10 ring-1 ring-inset ring-black/5" style={{ background: color }} />
                                                                                     <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold ${isLightMode ? 'bg-neutral-100 text-neutral-700' : 'bg-neutral-700 text-neutral-300'}`}>{code}</span>
                                                                                 </div>
                                                                                 <button
-                                                                                    onClick={() => setLigandColor(code, null)}
+                                                                                    onClick={() => activeSetLigandColor(code, null)}
                                                                                     className="p-1 hover:bg-red-500/20 text-neutral-400 hover:text-red-500 rounded transition-colors"
                                                                                 >
                                                                                     <X size={12} />
@@ -2326,13 +2442,13 @@ export const Controls: React.FC<ControlsProps> = ({
                                                     )}
 
                                                     {/* Active Rules List */}
-                                                    {customColorMode !== 'ligand' && customColors && customColors.length > 0 && (
+                                                    {customColorMode !== 'ligand' && activeCustomColors.length > 0 && (
                                                         <div className="space-y-1 pt-2 border-t border-dashed border-neutral-200 dark:border-neutral-800">
                                                             <div className="flex justify-between items-center mb-2">
-                                                                <span className={`text-[9px] font-bold uppercase tracking-wider ${subtleText}`}>{t.activeRules as string} ({customColors.length})</span>
+                                                                <span className={`text-[9px] font-bold uppercase tracking-wider ${subtleText}`}>{t.activeRules as string} ({activeCustomColors.length})</span>
                                                             </div>
                                                             <div className="space-y-1.5 max-h-32 overflow-y-auto pr-1 scrollbar-thin">
-                                                                {customColors.map((rule, idx) => (
+                                                                {activeCustomColors.map((rule, idx) => (
                                                                     <div key={idx} className={`group flex items-center justify-between text-xs p-2 rounded-lg border transition-all ${isLightMode ? 'bg-white border-neutral-200 hover:border-blue-300' : 'bg-white/5 border-transparent hover:bg-white/10'}`}>
                                                                         <div className="flex items-center gap-3">
                                                                             <div className="w-3.5 h-3.5 rounded-full shadow-sm border border-black/10 ring-1 ring-inset ring-black/5" style={{ background: rule.color }} />
@@ -2382,6 +2498,16 @@ export const Controls: React.FC<ControlsProps> = ({
                                                         >
                                                             {isChemical ? 'Atoms/Elements' : 'Residue'}
                                                         </button>
+                                                        {activeLigands && activeLigands.length > 0 && (
+                                                            <button
+                                                                onClick={() => setTransparencyMode('ligand')}
+                                                                className={`px-2 py-0.5 text-[9px] font-bold rounded-md transition-all ${transparencyMode === 'ligand'
+                                                                    ? (isLightMode ? 'bg-white shadow text-blue-600' : 'bg-neutral-700 text-white shadow')
+                                                                    : 'text-neutral-400 hover:text-neutral-500'}`}
+                                                            >
+                                                                Ligands
+                                                            </button>
+                                                        )}
                                                     </div>
                                                 </div>
 
@@ -2399,7 +2525,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                                 >
                                                                     <option value="__none__" disabled>Select Chain</option>
                                                                     <option value="All">All Chains</option>
-                                                                    {chains.map(c => (
+                                                                    {activeChains.map(c => (
                                                                         <option key={c.name} value={c.name}>{c.name ? `Chain ${c.name}` : 'Molecule'}</option>
                                                                     ))}
                                                                 </select>
@@ -2420,7 +2546,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                                         className="w-full appearance-none bg-transparent py-1.5 pl-2 pr-4 text-xs font-mono outline-none"
                                                                     >
                                                                         <option value="All">All</option>
-                                                                        {chains.map(c => (
+                                                                        {activeChains.map(c => (
                                                                             <option key={c.name} value={c.name}>{c.name ? `:${c.name}` : 'Molecule'}</option>
                                                                         ))}
                                                                     </select>
@@ -2438,6 +2564,26 @@ export const Controls: React.FC<ControlsProps> = ({
                                                                     placeholder={isChemical ? "e.g. @1-5 or _C" : "e.g. 50-60"}
                                                                     className={`w-full py-1.5 px-2 rounded-lg border text-xs outline-none transition-all ${inputBg}`}
                                                                 />
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Ligand/Ion Selection */}
+                                                    {transparencyMode === 'ligand' && (
+                                                        <div className="space-y-2">
+                                                            <label className={`text-[9px] font-bold uppercase tracking-wider block ${subtleText} opacity-70`}>Ligand/Ion</label>
+                                                            <div className={`relative flex items-center rounded-lg border transition-all ${inputBg}`}>
+                                                                <select
+                                                                    value={selectedLigandForTransparency}
+                                                                    onChange={(e) => setSelectedLigandForTransparency(e.target.value)}
+                                                                    className="w-full appearance-none bg-transparent py-1.5 pl-2 pr-6 text-xs font-mono outline-none"
+                                                                >
+                                                                    <option value="__none__" disabled>Select</option>
+                                                                    {(activeLigands || []).map(code => (
+                                                                        <option key={code} value={code}>{code}</option>
+                                                                    ))}
+                                                                </select>
+                                                                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 opacity-50 pointer-events-none" />
                                                             </div>
                                                         </div>
                                                     )}
@@ -2460,7 +2606,7 @@ export const Controls: React.FC<ControlsProps> = ({
 
                                                     <button
                                                         onClick={handleAddTransparencyRule}
-                                                        disabled={transparencyMode === 'chain' && transparencyChain === '__none__'}
+                                                        disabled={(transparencyMode === 'chain' && transparencyChain === '__none__') || (transparencyMode === 'ligand' && selectedLigandForTransparency === '__none__')}
                                                         className="w-full py-1.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg text-xs font-bold transition-all shadow-sm active:scale-95 flex items-center justify-center"
                                                     >
                                                         <Plus size={14} className="mr-1" />
@@ -2468,16 +2614,16 @@ export const Controls: React.FC<ControlsProps> = ({
                                                     </button>
 
                                                     {/* Active Rules */}
-                                                    {customTransparency && customTransparency.length > 0 && (
+                                                    {activeCustomTransparency.length > 0 && (
                                                         <div className="space-y-1 pt-2 border-t border-dashed border-gray-200 dark:border-gray-700">
                                                             <div className={`text-[9px] font-bold uppercase tracking-wider ${subtleText} opacity-70`}>{t.activeRules as string}</div>
                                                             <div className="space-y-1 max-h-[100px] overflow-y-auto custom-scrollbar">
-                                                                {customTransparency.map((rule) => (
+                                                                {activeCustomTransparency.map((rule) => (
                                                                     <div key={rule.id} className={`flex items-center justify-between p-2 rounded border ${isLightMode ? 'bg-white border-neutral-200' : 'bg-neutral-800 border-white/5'}`}>
                                                                         <div className="flex flex-col gap-0.5">
                                                                             <div className="flex items-center gap-2">
                                                                                 <span className={`px-1.5 py-0.5 rounded text-[9px] font-mono font-bold ${isLightMode ? 'bg-neutral-100 text-neutral-700' : 'bg-neutral-700 text-neutral-300'}`}>
-                                                                                    {rule.chain === 'All' ? '*' : `:${rule.chain}`}
+                                                                                    {rule.ligandCode ? rule.ligandCode : (rule.chain === 'All' ? '*' : `:${rule.chain}`)}
                                                                                 </span>
                                                                                 {rule.residues && <span className="text-[10px] opacity-70 font-mono">{rule.residues}</span>}
                                                                             </div>
@@ -2524,7 +2670,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                         >
                                                             {isChemical ? 'Atoms/Elements' : 'Residue'}
                                                         </button>
-                                                        {setLigandStyle && ligands && ligands.length > 0 && (
+                                                        {activeLigands && activeLigands.length > 0 && (
                                                             <button
                                                                 onClick={() => setCustomStylesMode('ligand')}
                                                                 className={`px-2 py-0.5 text-[9px] font-bold rounded-md transition-all ${customStylesMode === 'ligand'
@@ -2540,7 +2686,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                 <div className={`p-2.5 rounded-xl space-y-3 ${cardBg}`}>
 
                                                     {/* MODE: CHAIN STYLES */}
-                                                    {customStylesMode === 'chain' && setChainStyle && chainStyles && (
+                                                    {customStylesMode === 'chain' && (
                                                         <>
                                                             <div className="flex gap-2">
                                                                 <div className="w-1/3">
@@ -2552,7 +2698,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                                             className="w-full appearance-none bg-transparent py-1.5 pl-2 pr-6 text-xs font-mono outline-none"
                                                                         >
                                                                             <option value="__none__" disabled>Select</option>
-                                                                            {chains.map(c => (
+                                                                            {activeChains.map(c => (
                                                                                 <option key={c.name} value={c.name}>{c.name ? `:${c.name}` : 'Molecule'}</option>
                                                                             ))}
                                                                         </select>
@@ -2587,7 +2733,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                                         <button
                                                                             onClick={() => {
                                                                                 if (selectedChainForStyle !== '__none__') {
-                                                                                    setChainStyle(selectedChainForStyle, selectedStyleForChain);
+                                                                                    activeSetChainStyle(selectedChainForStyle, selectedStyleForChain);
                                                                                 }
                                                                             }}
                                                                             disabled={selectedChainForStyle === '__none__'}
@@ -2600,18 +2746,18 @@ export const Controls: React.FC<ControlsProps> = ({
                                                             </div>
 
                                                             {/* Active Chain Styles List */}
-                                                            {Object.keys(chainStyles).length > 0 && (
+                                                            {Object.keys(activeChainStyles).length > 0 && (
                                                                 <div className="space-y-1 pt-1">
                                                                     <div className={`text-[9px] font-bold uppercase tracking-wider ${subtleText} opacity-70`}>{t.activeRules as string}</div>
                                                                     <div className="space-y-1">
-                                                                        {Object.entries(chainStyles).map(([chain, style]) => (
+                                                                        {Object.entries(activeChainStyles).map(([chain, style]) => (
                                                                             <div key={chain} className={`flex items-center justify-between p-2 rounded border ${isLightMode ? 'bg-white border-neutral-200' : 'bg-neutral-800 border-white/5'}`}>
                                                                                 <div className="flex items-center gap-2">
                                                                                     <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold ${isLightMode ? 'bg-neutral-100 text-neutral-700' : 'bg-neutral-700 text-neutral-300'}`}>:{chain}</span>
                                                                                     <span className="text-[10px] capitalize">{style}</span>
                                                                                 </div>
                                                                                 <button
-                                                                                    onClick={() => setChainStyle(chain, null)}
+                                                                                    onClick={() => activeSetChainStyle(chain, null)}
                                                                                     className="p-1 hover:bg-red-500/20 text-neutral-400 hover:text-red-500 rounded transition-colors"
                                                                                 >
                                                                                     <X size={12} />
@@ -2625,7 +2771,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                     )}
 
                                                     {/* MODE: RESIDUE STYLES */}
-                                                    {customStylesMode === 'residue' && setCustomStyles && customStyles && (
+                                                    {customStylesMode === 'residue' && (
                                                         <>
                                                             <div className="flex gap-2">
                                                                 <div className="w-[80px]">
@@ -2637,7 +2783,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                                             className="w-full appearance-none bg-transparent py-1.5 pl-2 pr-4 text-xs font-mono outline-none"
                                                                         >
                                                                             <option value="All">All</option>
-                                                                            {chains.map(c => (
+                                                                            {activeChains.map(c => (
                                                                                 <option key={c.name} value={c.name}>{c.name ? `:${c.name}` : 'Molecule'}</option>
                                                                             ))}
                                                                         </select>
@@ -2649,9 +2795,9 @@ export const Controls: React.FC<ControlsProps> = ({
                                                                         <label className={`text-[9px] font-bold uppercase tracking-wider ${subtleText} opacity-70`}>
                                                                             {isChemical ? 'Atoms/Elements' : 'Residues'}
                                                                         </label>
-                                                                        {!isChemical && customResStyleChain && customResStyleChain !== 'All' && chains.find(c => c.name === customResStyleChain)?.min !== undefined && (
+                                                                        {!isChemical && customResStyleChain && customResStyleChain !== 'All' && activeChains.find(c => c.name === customResStyleChain)?.min !== undefined && (
                                                                             <span className={`text-[9px] font-mono ${subtleText} opacity-50`}>
-                                                                                {chains.find(c => c.name === customResStyleChain)?.min}-{chains.find(c => c.name === customResStyleChain)?.max}
+                                                                                {activeChains.find(c => c.name === customResStyleChain)?.min}-{activeChains.find(c => c.name === customResStyleChain)?.max}
                                                                             </span>
                                                                         )}
                                                                     </div>
@@ -2702,11 +2848,11 @@ export const Controls: React.FC<ControlsProps> = ({
                                                             </div>
 
                                                             {/* Active Custom Styles List */}
-                                                            {customStyles.length > 0 && (
+                                                            {activeCustomStyles.length > 0 && (
                                                                 <div className="space-y-1 pt-1">
                                                                     <div className={`text-[9px] font-bold uppercase tracking-wider ${subtleText} opacity-70`}>{t.activeRules as string}</div>
                                                                     <div className="space-y-1 max-h-[100px] overflow-y-auto custom-scrollbar">
-                                                                        {customStyles.map((rule: CustomStyleRule) => (
+                                                                        {activeCustomStyles.map((rule: CustomStyleRule) => (
                                                                             <div key={rule.id} className={`flex items-center justify-between p-2 rounded border ${isLightMode ? 'bg-white border-neutral-200' : 'bg-neutral-800 border-white/5'}`}>
                                                                                 <div className="flex flex-col gap-0.5">
                                                                                     <div className="flex items-center gap-2">
@@ -2718,7 +2864,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                                                     <span className="text-[9px] capitalize text-blue-500 font-medium">{rule.style}</span>
                                                                                 </div>
                                                                                 <button
-                                                                                    onClick={() => setCustomStyles!((prev: CustomStyleRule[]) => prev.filter((r: CustomStyleRule) => r.id !== rule.id))}
+                                                                                    onClick={() => activeSetCustomStyles((prev: CustomStyleRule[]) => prev.filter((r: CustomStyleRule) => r.id !== rule.id))}
                                                                                     className="p-1 hover:bg-red-500/20 text-neutral-400 hover:text-red-500 rounded transition-colors"
                                                                                 >
                                                                                     <Trash2 size={12} />
@@ -2732,7 +2878,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                     )}
 
                                                     {/* MODE: LIGAND/ION STYLES */}
-                                                    {customStylesMode === 'ligand' && setLigandStyle && ligandStyles && (
+                                                    {customStylesMode === 'ligand' && (
                                                         <>
                                                             <div className="flex gap-2">
                                                                 <div className="w-1/3">
@@ -2744,7 +2890,7 @@ export const Controls: React.FC<ControlsProps> = ({
                                                                             className="w-full appearance-none bg-transparent py-1.5 pl-2 pr-6 text-xs font-mono outline-none"
                                                                         >
                                                                             <option value="__none__" disabled>Select</option>
-                                                                            {(ligands || []).map(code => (
+                                                                            {(activeLigands || []).map(code => (
                                                                                 <option key={code} value={code}>{code}</option>
                                                                             ))}
                                                                         </select>
@@ -2782,18 +2928,18 @@ export const Controls: React.FC<ControlsProps> = ({
                                                             </div>
 
                                                             {/* Active Ligand Styles List */}
-                                                            {Object.keys(ligandStyles).length > 0 && (
+                                                            {Object.keys(activeLigandStyles).length > 0 && (
                                                                 <div className="space-y-1 pt-1">
                                                                     <div className={`text-[9px] font-bold uppercase tracking-wider ${subtleText} opacity-70`}>{t.activeRules as string}</div>
                                                                     <div className="space-y-1">
-                                                                        {Object.entries(ligandStyles).map(([code, style]) => (
+                                                                        {Object.entries(activeLigandStyles).map(([code, style]) => (
                                                                             <div key={code} className={`flex items-center justify-between p-2 rounded border ${isLightMode ? 'bg-white border-neutral-200' : 'bg-neutral-800 border-white/5'}`}>
                                                                                 <div className="flex items-center gap-2">
                                                                                     <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold ${isLightMode ? 'bg-neutral-100 text-neutral-700' : 'bg-neutral-700 text-neutral-300'}`}>{code}</span>
                                                                                     <span className="text-[10px] capitalize">{style}</span>
                                                                                 </div>
                                                                                 <button
-                                                                                    onClick={() => setLigandStyle(code, null)}
+                                                                                    onClick={() => activeSetLigandStyle(code, null)}
                                                                                     className="p-1 hover:bg-red-500/20 text-neutral-400 hover:text-red-500 rounded transition-colors"
                                                                                 >
                                                                                     <X size={12} />

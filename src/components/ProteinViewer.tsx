@@ -18,6 +18,46 @@ interface NGLAtomProxyLike {
     z: number;
     resname: string;
     atomname: string;
+    index: number;
+}
+
+// Minimal typed surface of an NGL structure component, used only by
+// applyOverlayStyle() below so that new overlay-rendering code can satisfy
+// `no-explicit-any` without retyping the rest of this file's existing,
+// deeply dynamic NGL usage.
+interface NGLBondProxyLike {
+    atom1: { index: number };
+    atom2: { index: number };
+}
+interface NGLChainProxyLike {
+    chainname: string;
+}
+interface NGLStructureLike {
+    eachAtom: (callback: (atom: NGLAtomProxyLike) => void, selection?: unknown) => void;
+    eachBond: (callback: (bond: NGLBondProxyLike) => void) => void;
+    eachChain: (callback: (chain: NGLChainProxyLike) => void) => void;
+    chainStore?: unknown;
+}
+interface NGLComponentLike {
+    structure: NGLStructureLike;
+    removeAllRepresentations: () => void;
+    addRepresentation: (type: string, params?: Record<string, unknown>) => unknown;
+}
+
+// NGL's ColormakerRegistry.addScheme API requires a constructor-style
+// function that sets `this.atomColor`; factored out to module scope (rather
+// than written inline) so the one unavoidable `this` usage this needs isn't
+// inside a component body, where it would otherwise opt that component out
+// of React Compiler optimization.
+interface NGLColormakerThis {
+    parameters: unknown;
+    atomColor: (atom: NGLAtomProxyLike) => number;
+}
+function createElectrostaticColorScheme(grid: ChargeGrid, vMax: number, schemeName: string): string {
+    return window.NGL.ColormakerRegistry.addScheme(function (this: NGLColormakerThis, params: unknown) {
+        this.parameters = params;
+        this.atomColor = (atom: NGLAtomProxyLike) => potentialToColor(grid.potentialAt(atom.x, atom.y, atom.z), vMax);
+    }, schemeName);
 }
 import { type DataSource, getStructureUrl, extractChainsFromComponent } from '../utils/pdbUtils';
 
@@ -85,10 +125,12 @@ export interface ProteinViewerProps {
     overlays?: SuperposedStructure[];
     onSuperpositionStatus?: (overlayId: string, failed: boolean) => void;
     // Fired once an overlay's chains (with post-superposition world coords)
-    // have been extracted — lets a caller outside this component (e.g. the
-    // Superpose modal, which lives above it in the tree) compute fit-quality
-    // stats via the same alignSequences() utility SequenceAlignmentModal uses.
-    onOverlayChainsLoaded?: (overlayId: string, chains: ChainInfo[]) => void;
+    // and bound ligand/ion codes have been extracted — lets a caller outside
+    // this component (e.g. the Superpose modal, which lives above it in the
+    // tree) compute fit-quality stats via the same alignSequences() utility
+    // SequenceAlignmentModal uses, and populate the ligand-code dropdown for
+    // per-overlay ligand styling the same way the main structure's does.
+    onOverlayChainsLoaded?: (overlayId: string, chains: ChainInfo[], ligands: string[]) => void;
     onToast?: (message: string, type?: 'success' | 'error' | 'info' | 'warning') => void;
 
     // Quality
@@ -2275,23 +2317,22 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                         // computed from it elsewhere) carried on as if it had worked.
                         onSuperpositionStatus?.(overlay.id, !superposeSucceeded);
 
-                        // Add Representation
-                        comp.addRepresentation(overlay.representation || 'cartoon', {
-                            color: overlay.color || 'lightgrey',
-                            opacity: overlay.opacity ?? 0.7,
-                            side: 'front'
-                        });
+                        // Add Representation — full per-chain/residue/ligand
+                        // style, color, and transparency support, not just a
+                        // flat representation + color + opacity.
+                        applyOverlayStyle(comp, overlay);
 
                         overlayComponentsRef.current.set(overlay.id, comp);
 
-                        // Extract Chains for Alignment
+                        // Extract Chains (+ bound ligand/ion codes) for Alignment and for
+                        // this overlay's own ligand-mode style/color/transparency editing.
                         const extracted = extractChainsFromComponent(comp, comp.matrix?.elements);
                         if (extracted.chains.length > 0) {
                             setOverlayChains(prev => ({
                                 ...prev,
                                 [overlay.id]: extracted.chains
                             }));
-                            onOverlayChainsLoaded?.(overlay.id, extracted.chains);
+                            onOverlayChainsLoaded?.(overlay.id, extracted.chains, extracted.ligands);
                         }
                     }
                 } catch (e) {
@@ -2300,17 +2341,12 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
             } else {
                 // Update Existing
                 comp.setVisibility(overlay.isVisible);
-                // Re-apply representation/color/opacity from current overlay
-                // state on every pass — cheap (a single representation on an
+                // Re-apply the full style from current overlay state on
+                // every pass — cheap (a handful of representations on an
                 // already-loaded component) and visually instant, unlike
                 // re-superposing (the expensive/jumpy position fit this
                 // deliberately never redoes once an overlay has landed).
-                comp.removeAllRepresentations();
-                comp.addRepresentation(overlay.representation || 'cartoon', {
-                    color: overlay.color || 'lightgrey',
-                    opacity: overlay.opacity ?? 0.7,
-                    side: 'front'
-                });
+                applyOverlayStyle(comp, overlay);
             }
         });
 
@@ -2793,6 +2829,329 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
     }, [onAtomClick, isMeasurementMode, isInteractionMode, onAddResidueInteraction]);
 
 
+    // Renders a Superpose overlay's full style — not just the single flat
+    // representation + color + opacity it started with, but the same
+    // per-chain/per-residue/per-ligand style, color, and transparency
+    // override system the main structure gets via updateRepresentation()
+    // below. Deliberately a SEPARATE, self-contained function rather than a
+    // shared/parameterized extraction of updateRepresentation() itself:
+    // that function is large and load-bearing for every feature in this
+    // app, and duplicating the (much smaller) overlay-relevant subset here
+    // keeps the main rendering path completely unchanged and unaffected by
+    // this feature. Intentionally does not support everything the main
+    // structure's styling does: no nucleic acid backbone/base split
+    // rendering (an overlay's nucleic chains render via its single base
+    // representation only) and no PyMOL-style radius/surface-algorithm
+    // controls — neither was asked for here, and both would meaningfully
+    // grow this function for a rarely-exercised combination (comparing
+    // nucleic acid structures via Superpose is a narrow case).
+    const applyOverlayStyle = (component: NGLComponentLike, overlay: SuperposedStructure) => {
+        if (!component || !component.structure) return;
+        const NGL = window.NGL;
+
+        try {
+            component.removeAllRepresentations();
+
+            let repType: RepresentationType = overlay.representation || 'cartoon';
+            if ((repType as string) === 'backbone') repType = 'trace';
+
+            let finalColor: string = overlay.color || 'lightgrey';
+            const baseOpacity = overlay.opacity ?? 0.7;
+
+            const chainStyles = overlay.chainStyles || {};
+            const customStyles = overlay.customStyles || [];
+            const customTransparency = overlay.customTransparency || [];
+            const ligandStyles = overlay.ligandStyles || {};
+            const ligandColors = overlay.ligandColors || {};
+            const customColors = overlay.customColors || [];
+
+            // Electrostatic coloring is a per-structure computed property
+            // (screened sum of fixed formal side-chain charges — see
+            // src/utils/electrostatics.ts), meaningful for any structure,
+            // not just the main one.
+            if (finalColor === 'electrostatic') {
+                const grid = new ChargeGrid();
+                let vMax = 0;
+                component.structure.eachAtom((atom: NGLAtomProxyLike) => {
+                    const q = getFormalCharge(atom.resname, atom.atomname);
+                    if (q !== 0) grid.add({ x: atom.x, y: atom.y, z: atom.z, charge: q });
+                });
+                if (grid.size > 0) {
+                    component.structure.eachAtom((atom: NGLAtomProxyLike) => {
+                        const v = Math.abs(grid.potentialAt(atom.x, atom.y, atom.z));
+                        if (v > vMax) vMax = v;
+                    });
+                }
+                finalColor = createElectrostaticColorScheme(grid, vMax, `overlay_electrostatic_dynamic_${overlay.id}`);
+            }
+
+            // --- Custom color selection scheme (chain/residue/ligand rules) ---
+            if (customColors.length > 0 && NGL.ColormakerRegistry.addSelectionScheme) {
+                const dataList: [string, string][] = [];
+                customColors.forEach(rule => {
+                    if (rule.selection && rule.color) {
+                        try {
+                            new NGL.Selection(rule.selection);
+                            dataList.push([rule.color, rule.selection]);
+                        } catch {
+                            console.warn("Skipping invalid overlay selection rule:", rule.selection);
+                        }
+                    }
+                });
+                dataList.push([finalColor, "*"]);
+                try {
+                    const schemeId = `overlay_custom_${overlay.id}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                    const compositeId = NGL.ColormakerRegistry.addSelectionScheme(dataList, schemeId);
+                    if (compositeId) finalColor = compositeId;
+                } catch (e) {
+                    console.error("Failed to register overlay selection scheme", e);
+                }
+            }
+
+            const expandSelectionByBonds = (selectionStr: string): string => {
+                if (!component.structure || !window.NGL) return selectionStr;
+                try {
+                    const sel = new window.NGL.Selection(selectionStr);
+                    const selectedIndices = new Set<number>();
+                    component.structure.eachAtom((a) => { selectedIndices.add(a.index); }, sel);
+                    if (selectedIndices.size === 0) return selectionStr;
+                    const expandedIndices = new Set<number>(selectedIndices);
+                    component.structure.eachBond((b) => {
+                        const idx1 = b.atom1.index;
+                        const idx2 = b.atom2.index;
+                        if (selectedIndices.has(idx1) && !selectedIndices.has(idx2)) expandedIndices.add(idx2);
+                        else if (selectedIndices.has(idx2) && !selectedIndices.has(idx1)) expandedIndices.add(idx1);
+                    });
+                    if (expandedIndices.size === selectedIndices.size) return selectionStr;
+                    return `@${Array.from(expandedIndices).join(',')}`;
+                } catch (e) {
+                    console.warn("Failed to topologically expand overlay NGL selection:", e);
+                    return selectionStr;
+                }
+            };
+
+            // --- Transparency (chain/residue) selections ---
+            const transparencySelections: string[] = [];
+            const renderSelections: Array<{ chain: string, opacity: number, exactSelection: string, expandedSelection: string }> = [];
+            customTransparency.forEach(rule => {
+                if (rule.ligandCode) return; // handled by its own pass below
+                const chainPart = rule.chain === 'All' ? '' : (rule.chain ? `:${rule.chain}` : '');
+                let exactSelection = chainPart;
+                if (rule.residues) {
+                    exactSelection = chainPart === '' ? `(${rule.residues})` : `${chainPart} and (${rule.residues})`;
+                }
+                if (!exactSelection) exactSelection = '*';
+                transparencySelections.push(exactSelection);
+                renderSelections.push({
+                    chain: rule.chain,
+                    opacity: rule.opacity,
+                    exactSelection,
+                    expandedSelection: expandSelectionByBonds(exactSelection)
+                });
+            });
+            const transparencyExclusion = transparencySelections.length > 0
+                ? transparencySelections.map(s => ` and not (${s})`).join('')
+                : "";
+
+            const ligandTransparencyRules = customTransparency.filter(r => r.ligandCode);
+            const ligandTransparencyCodes = new Set(ligandTransparencyRules.map(r => r.ligandCode!));
+            const overriddenLigandCodes = Array.from(new Set([
+                ...Object.keys(ligandStyles),
+                ...Object.keys(ligandColors),
+                ...ligandTransparencyCodes
+            ]));
+
+            const params: Record<string, unknown> = {
+                color: finalColor,
+                quality: 'high',
+                name: 'overlay_base_representation',
+                multipleBond: 'symmetric',
+                opacity: baseOpacity
+            };
+            const cartoonParams = { aspectRatio: 6.0, subdiv: 6, radialSegments: 10, smoothSheet: false };
+            const backboneParams = { lineOnly: false, scale: 2.0, aspectRatio: 1.5 };
+
+            const addRepresentationWithRocketBackbone = (style: string, repParams: Record<string, unknown>) => {
+                if (style === 'rocket') {
+                    const tubeParams = { ...repParams };
+                    delete tubeParams.quality;
+                    tubeParams.radiusScale = 0.7;
+                    component.addRepresentation('tube', tubeParams);
+                }
+                return component.addRepresentation(style, repParams);
+            };
+
+            const globalParams: Record<string, unknown> = { ...params };
+            if (repType === 'licorice') globalParams.scale = 2.0;
+
+            // Transparent chain/residue regions
+            renderSelections.forEach(rule => {
+                let styleToUse: RepresentationType = repType;
+                if (rule.chain && rule.chain !== 'All' && chainStyles[rule.chain]) {
+                    styleToUse = chainStyles[rule.chain] || repType;
+                }
+                let actualStyle: RepresentationType = styleToUse;
+                if (actualStyle === 'backbone') actualStyle = 'trace';
+
+                const ruleParams: Record<string, unknown> = {
+                    ...params,
+                    color: finalColor,
+                    sele: rule.expandedSelection,
+                    opacity: rule.opacity,
+                    depthWrite: false,
+                    side: 'front'
+                };
+                if (actualStyle === 'cartoon' || actualStyle === 'tube' || actualStyle === 'rope') Object.assign(ruleParams, cartoonParams);
+                else if (actualStyle === 'trace') Object.assign(ruleParams, backboneParams);
+                else if (actualStyle === 'licorice') ruleParams.scale = 2.0;
+
+                addRepresentationWithRocketBackbone(actualStyle, ruleParams);
+            });
+
+            if (repType === 'cartoon' || repType === 'tube' || repType === 'rope') {
+                delete globalParams.quality;
+                Object.assign(globalParams, cartoonParams);
+            } else if (repType === 'trace') {
+                Object.assign(globalParams, backboneParams);
+            }
+
+            // --- Custom style (chain+residue range) exclusions ---
+            const backboneStyles = new Set(['cartoon', 'backbone', 'trace', 'tube', 'ribbon', 'rocket', 'rope']);
+            const customStyleSelections = customStyles.filter(rule => backboneStyles.has(rule.style)).map(rule => {
+                const chainPart = rule.chain === 'All' ? '' : (rule.chain ? `:${rule.chain}` : '');
+                const resPart = rule.residues ? (chainPart === '' ? rule.residues : ` and ${rule.residues}`) : '';
+                return `(${chainPart}${resPart})`;
+            });
+            const customExclusion = customStyleSelections.length > 0
+                ? ` and not (${customStyleSelections.join(' or ')})`
+                : "";
+
+            // --- Base / remaining-chain rendering ---
+            const fullyHandledChains = new Set<string>();
+            customStyles.forEach(rule => {
+                if (rule.chain !== 'All' && !rule.residues && backboneStyles.has(rule.style)) fullyHandledChains.add(rule.chain);
+            });
+            customTransparency.forEach(rule => {
+                if (rule.ligandCode) return;
+                if (rule.chain !== 'All' && !rule.residues) fullyHandledChains.add(rule.chain);
+            });
+            Object.keys(chainStyles).forEach(c => fullyHandledChains.add(c));
+
+            if (component.structure.chainStore) {
+                component.structure.eachChain((cp) => {
+                    const chainName = cp.chainname;
+                    if (fullyHandledChains.has(chainName)) return;
+
+                    const thisChainExclusions: string[] = [];
+                    customStyles.forEach(rule => {
+                        if ((rule.chain === 'All' || rule.chain === chainName) && rule.residues && backboneStyles.has(rule.style)) {
+                            thisChainExclusions.push(`(${rule.residues})`);
+                        }
+                    });
+                    customTransparency.forEach(rule => {
+                        if (rule.ligandCode) return;
+                        if ((rule.chain === 'All' || rule.chain === chainName) && rule.residues) {
+                            thisChainExclusions.push(`(${rule.residues})`);
+                        }
+                    });
+
+                    let selection = chainName ? `:${chainName}` : "*";
+                    if (thisChainExclusions.length > 0) selection += ` and not (${thisChainExclusions.join(' or ')})`;
+
+                    try { addRepresentationWithRocketBackbone(repType, { ...globalParams, sele: selection }); } catch (err) { console.error("CRASH IN OVERLAY BASE RENDER:", err); }
+                });
+            }
+
+            // --- Chain-specific styles ---
+            Object.entries(chainStyles).forEach(([chain, style]) => {
+                if (!style) return;
+                let actualStyle: RepresentationType = style;
+                if (actualStyle === 'backbone') actualStyle = 'trace';
+
+                const chainParams: Record<string, unknown> = {
+                    ...params,
+                    color: finalColor,
+                    sele: chain ? `:${chain}${customExclusion}${transparencyExclusion}` : `*${customExclusion}${transparencyExclusion}`
+                };
+                if (actualStyle === 'cartoon' || actualStyle === 'tube' || actualStyle === 'rope') Object.assign(chainParams, cartoonParams);
+                else if (actualStyle === 'trace') Object.assign(chainParams, backboneParams);
+                if (actualStyle === 'licorice') chainParams.scale = 2.0;
+
+                addRepresentationWithRocketBackbone(actualStyle, chainParams);
+            });
+
+            // --- Ligand/ion styles ---
+            overriddenLigandCodes.forEach(code => {
+                if (ligandTransparencyCodes.has(code)) return; // handled below instead
+                const style = ligandStyles[code] || 'ball+stick';
+                const color = ligandColors[code] || 'element';
+                let actualStyle: RepresentationType = style;
+                if (actualStyle === 'backbone') actualStyle = 'trace';
+
+                const ligandParams: Record<string, unknown> = {
+                    quality: 'high',
+                    multipleBond: 'symmetric',
+                    color,
+                    opacity: baseOpacity,
+                    sele: `[${code}]`
+                };
+                if (actualStyle === 'licorice' || actualStyle === 'ball+stick') ligandParams.scale = 2.0;
+
+                addRepresentationWithRocketBackbone(actualStyle, ligandParams);
+            });
+
+            // --- Ligand/ion transparency (overrides style/color pass above) ---
+            ligandTransparencyRules.forEach(rule => {
+                const code = rule.ligandCode!;
+                const style = ligandStyles[code] || 'ball+stick';
+                const color = ligandColors[code] || 'element';
+                let actualStyle: RepresentationType = style;
+                if (actualStyle === 'backbone') actualStyle = 'trace';
+
+                const ligandParams: Record<string, unknown> = {
+                    quality: 'high',
+                    multipleBond: 'symmetric',
+                    color,
+                    opacity: rule.opacity,
+                    depthWrite: false,
+                    side: 'front',
+                    sele: `[${code}]`
+                };
+                if (actualStyle === 'licorice' || actualStyle === 'ball+stick') ligandParams.scale = 2.0;
+
+                addRepresentationWithRocketBackbone(actualStyle, ligandParams);
+            });
+
+            // --- Custom residue styles (chain+range) ---
+            customStyles.forEach(rule => {
+                const chainPart = rule.chain === 'All' ? '' : (rule.chain ? `:${rule.chain}` : '');
+                const resPart = rule.residues ? (chainPart === '' ? rule.residues : ` and ${rule.residues}`) : '';
+                const exactSelection = `${chainPart}${resPart}` || '*';
+                const renderSelection = expandSelectionByBonds(exactSelection);
+
+                let actualStyle: RepresentationType = rule.style;
+                if (actualStyle === 'backbone') actualStyle = 'trace';
+
+                const ruleParams: Record<string, unknown> = {
+                    ...params,
+                    color: finalColor,
+                    sele: `${renderSelection}${transparencyExclusion}`
+                };
+                if (actualStyle === 'cartoon' || actualStyle === 'tube' || actualStyle === 'rope') Object.assign(ruleParams, cartoonParams);
+                else if (actualStyle === 'trace') Object.assign(ruleParams, backboneParams);
+                if (actualStyle === 'licorice') ruleParams.scale = 2.0;
+
+                addRepresentationWithRocketBackbone(actualStyle, ruleParams);
+            });
+
+            if (stageRef.current?.viewer) {
+                stageRef.current.viewer.requestRender();
+            }
+        } catch (e) {
+            console.error("Critical error in applyOverlayStyle:", e);
+        }
+    };
+
     const updateRepresentation = (specificComponent?: any) => {
         if (!isMounted.current) return;
         const component = specificComponent || componentRef.current;
@@ -2957,6 +3316,9 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
 
             if (customTransparency) {
                 customTransparency.forEach(rule => {
+                    // Ligand-coded rules target a `[CODE]` selection, not a
+                    // chain/residue region — handled by their own pass below.
+                    if (rule.ligandCode) return;
                     const chainPart = rule.chain === 'All' ? '' : (rule.chain ? `:${rule.chain}` : '');
                     if (rule.chain !== 'All') {
                         transparentChainMap[rule.chain] = rule.opacity;
@@ -2995,13 +3357,17 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                 : "";
 
             // --- LIGAND/ION STYLE OVERRIDES ---
-            // Any ligand/ion code with an explicit style and/or color override
-            // gets its own dedicated representation further below, so it must
-            // be excluded from the generic showLigands/showIons overlay to
-            // avoid drawing the same atoms twice (z-fighting).
+            // Any ligand/ion code with an explicit style, color, and/or
+            // transparency override gets its own dedicated representation
+            // further below, so it must be excluded from the generic
+            // showLigands/showIons overlay to avoid drawing the same atoms
+            // twice (z-fighting).
+            const ligandTransparencyRules = (customTransparency || []).filter(r => r.ligandCode);
+            const ligandTransparencyCodes = new Set(ligandTransparencyRules.map(r => r.ligandCode!));
             const overriddenLigandCodes = Array.from(new Set([
                 ...Object.keys(ligandStyles),
-                ...Object.keys(ligandColors)
+                ...Object.keys(ligandColors),
+                ...ligandTransparencyCodes
             ]));
             const ligandOverrideExclusion = overriddenLigandCodes.length > 0
                 ? ` and not (${overriddenLigandCodes.map(c => `[${c}]`).join(' or ')})`
@@ -3254,6 +3620,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
             // Add Transparent Chains (only if full chain)
             if (customTransparency) {
                 customTransparency.forEach(rule => {
+                    if (rule.ligandCode) return;
                     if (rule.chain !== 'All' && !rule.residues) {
                         fullyHandledChains.add(rule.chain);
                     }
@@ -3354,6 +3721,11 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
             // for the other.
             if (overriddenLigandCodes.length > 0) {
                 overriddenLigandCodes.forEach(code => {
+                    // Codes with a transparency rule are fully handled by
+                    // the dedicated pass below instead (a ligand can't have
+                    // two separate representations without z-fighting).
+                    if (ligandTransparencyCodes.has(code)) return;
+
                     const style = ligandStyles[code] || 'ball+stick';
                     const color = ligandColors[code] || 'element';
 
@@ -3364,6 +3736,40 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                         quality: 'high',
                         multipleBond: 'symmetric',
                         color,
+                        sele: `[${code}]${hiddenChainExclusion}`
+                    };
+
+                    if (actualStyle === 'licorice' || actualStyle === 'ball+stick') {
+                        ligandParams.scale = 2.0;
+                    }
+                    applyAdvancedStyle(ligandParams, actualStyle);
+
+                    addRepresentationWithRocketBackbone(actualStyle, ligandParams);
+                });
+            }
+
+            // --- 5.6 RENDER LIGAND/ION TRANSPARENCY ---
+            // Per-ligand-code opacity override, as its own pass (ligands
+            // aren't part of the base representation's chain selection to
+            // begin with — they're drawn via the overlay above). Folds in
+            // that code's style/color override too, if any, since this pass
+            // replaces (not layers on top of) the plain style/color pass.
+            if (ligandTransparencyRules.length > 0) {
+                ligandTransparencyRules.forEach(rule => {
+                    const code = rule.ligandCode!;
+                    const style = ligandStyles[code] || 'ball+stick';
+                    const color = ligandColors[code] || 'element';
+
+                    let actualStyle: RepresentationType = style;
+                    if (actualStyle === 'backbone') actualStyle = 'trace';
+
+                    const ligandParams: Record<string, unknown> = {
+                        quality: 'high',
+                        multipleBond: 'symmetric',
+                        color,
+                        opacity: rule.opacity,
+                        depthWrite: false,
+                        side: 'front',
                         sele: `[${code}]${hiddenChainExclusion}`
                     };
 
