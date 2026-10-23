@@ -61,6 +61,25 @@ export const SuperpositionModal: React.FC<SuperpositionModalProps> = ({
                 return;
             }
 
+            // When the user picked an explicit chain pair to align, report
+            // stats for exactly that pair — it's what the 3D fit actually
+            // used, so the "best match" auto-pick would otherwise disagree
+            // with the number that fit was judged by.
+            if (overlay.alignMainChain && overlay.alignOverlayChain) {
+                const pChain = primaryChains.find(c => c.name === overlay.alignMainChain);
+                const tChain = overlay.chains.find(c => c.name === overlay.alignOverlayChain);
+                if (pChain && tChain) {
+                    const { stats } = alignSequences(pChain, tChain);
+                    result[overlay.id] = {
+                        identity: stats.identity,
+                        rmsd: stats.rmsd,
+                        primaryChain: pChain.name,
+                        targetChain: tChain.name
+                    };
+                    return;
+                }
+            }
+
             let best: (OverlayFitStat & { length: number }) | null = null;
             primaryChains.forEach(pChain => {
                 overlay.chains!.forEach(tChain => {
@@ -455,6 +474,39 @@ export const SuperpositionModal: React.FC<SuperpositionModalProps> = ({
                                                 </span>
                                             </div>
                                         </div>
+
+                                        {/* Chain-pair alignment — restricts the 3D fit to a specific
+                                            chain on each side instead of NGL's default whole-structure,
+                                            sequence-alignment-guided fit across every chain. Useful when
+                                            chain IDs don't correspond 1:1, or to compare one domain. */}
+                                        {primaryChains && primaryChains.length > 0 && item.chains && item.chains.length > 0 && (
+                                            <div className="flex items-center gap-1.5 pt-2 border-t border-neutral-700/30">
+                                                <span className="text-[9px] text-neutral-500 uppercase tracking-wider shrink-0">Align</span>
+                                                <select
+                                                    value={item.alignMainChain || ''}
+                                                    onChange={(e) => onUpdateOverlay(item.id, { alignMainChain: e.target.value || undefined })}
+                                                    title="Main structure chain to align onto"
+                                                    className="bg-neutral-900/60 border border-neutral-700 rounded text-[10px] text-neutral-300 px-1.5 py-1 outline-none focus:border-cyan-500/50 flex-1 min-w-0"
+                                                >
+                                                    <option value="">Auto</option>
+                                                    {primaryChains.map(c => (
+                                                        <option key={c.name} value={c.name}>Main :{c.name}</option>
+                                                    ))}
+                                                </select>
+                                                <span className="text-neutral-600 text-[10px] shrink-0">&rarr;</span>
+                                                <select
+                                                    value={item.alignOverlayChain || ''}
+                                                    onChange={(e) => onUpdateOverlay(item.id, { alignOverlayChain: e.target.value || undefined })}
+                                                    title="This overlay's chain to align"
+                                                    className="bg-neutral-900/60 border border-neutral-700 rounded text-[10px] text-neutral-300 px-1.5 py-1 outline-none focus:border-cyan-500/50 flex-1 min-w-0"
+                                                >
+                                                    <option value="">Auto</option>
+                                                    {item.chains.map(c => (
+                                                        <option key={c.name} value={c.name}>This :{c.name}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        )}
                                     </div>
                                 ))}
                             </div>
