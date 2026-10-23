@@ -103,6 +103,10 @@ export const alignSequences = (chain1: ChainInfo, chain2: ChainInfo) => {
 
     let sumSqDist = 0;
     let atomPairs = 0;
+    // Per-residue structural deviation, keyed by chain2's (the second
+    // argument's) PDB residue number — lets a caller visualize WHERE a fit
+    // is good or bad, not just the single aggregate RMSD number.
+    const perResidueDeviations: { resNo: number; distance: number }[] = [];
 
     while (i > 0 || j > 0) {
         if (i > 0 && j > 0 && scoreMatrix[i][j] === scoreMatrix[i - 1][j - 1] + pairScore(seq1[i - 1], seq2[j - 1])) {
@@ -124,8 +128,14 @@ export const alignSequences = (chain1: ChainInfo, chain2: ChainInfo) => {
                 const dx = p1.x - p2.x;
                 const dy = p1.y - p2.y;
                 const dz = p1.z - p2.z;
-                sumSqDist += dx * dx + dy * dy + dz * dz;
+                const sqDist = dx * dx + dy * dy + dz * dz;
+                sumSqDist += sqDist;
                 atomPairs++;
+
+                const resNo = chain2.residueMap?.[j - 1];
+                if (typeof resNo === 'number') {
+                    perResidueDeviations.push({ resNo, distance: Math.sqrt(sqDist) });
+                }
             }
 
             i--; j--;
@@ -156,7 +166,27 @@ export const alignSequences = (chain1: ChainInfo, chain2: ChainInfo) => {
             gaps: gapCount,
             length,
             score: scoreMatrix[n][m],
-            rmsd
+            rmsd,
+            perResidueDeviations
         }
     };
 };
+
+// Maps a per-residue structural deviation to a green(low)-yellow-red(high)
+// RGB color, the common "good fit / poor fit" convention — intuitive
+// without needing a legend. maxDistance bounds the scale (typically the
+// largest deviation seen across the aligned region) so contrast adapts per
+// overlay; values beyond it saturate to red.
+export function deviationToColor(distance: number, maxDistance: number): number {
+    const norm = maxDistance > 0 ? Math.max(0, Math.min(1, distance / maxDistance)) : 0;
+    if (norm <= 0.5) {
+        // green -> yellow
+        const t = norm / 0.5;
+        const r = Math.round(255 * t);
+        return (r << 16) | (255 << 8) | 0;
+    }
+    // yellow -> red
+    const t = (norm - 0.5) / 0.5;
+    const g = Math.round(255 * (1 - t));
+    return (255 << 16) | (g << 8) | 0;
+}
