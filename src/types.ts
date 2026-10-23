@@ -118,6 +118,14 @@ export interface SuperposedStructure {
     ligands?: string[]; // Bound ligand/ion codes on this overlay, for ligand-mode style/color/transparency editing
     superpositionFailed?: boolean; // True if automatic 3D alignment onto the main structure failed — it's shown in its original, unfitted orientation, and any RMSD computed against it is not meaningful.
 
+    // When both set, restricts the 3D superposition fit to this specific
+    // chain pair (this overlay's chain onto this main-structure chain)
+    // instead of the default whole-structure, sequence-alignment-guided fit
+    // across all chains — useful when chain IDs don't correspond 1:1
+    // between the two structures, or to compare a single domain/subunit.
+    alignOverlayChain?: string;
+    alignMainChain?: string;
+
     // Full per-structure styling, mirroring the main structure's own
     // Advanced Styles / Advanced Colors / Transparency system so an overlay
     // can be customized the exact same way (by chain, by residue range, or

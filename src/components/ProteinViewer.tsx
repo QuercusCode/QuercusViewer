@@ -343,6 +343,12 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
     const contactLineRepRef = useRef<any>(null); // Track single contact line representation
     const regionHighlightRepRef = useRef<any>(null); // V6: Track region highlight
     const overlayComponentsRef = useRef<Map<string, any>>(new Map()); // Track overlay components
+    // Tracks the chain-pair alignment (alignOverlayChain|alignMainChain) each
+    // overlay was last loaded/superposed with, so the overlay effect can tell
+    // the user picked a different pair and needs a fresh reload+re-fit —
+    // NGL's superpose() bakes the fit into the structure's own coordinates,
+    // so re-running it on an already-fitted component would compound.
+    const overlayAlignRef = useRef<Map<string, string>>(new Map());
     const selectedAtomsRef = useRef<any[]>([]);
     const selectedResiduesRef = useRef<ResidueInfo[]>([]); // Interaction Mode: residues picked so far (0-1 pending)
     const interactionRepsRef = useRef<any[]>([]); // Track NGL Representations for interaction-contact lines, for cleanup
@@ -2263,12 +2269,26 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
             if (!currentIds.has(id)) {
                 stage.removeComponent(comp);
                 overlayComponentsRef.current.delete(id);
+                overlayAlignRef.current.delete(id);
             }
         });
 
         // 2. Handle Additions/Updates
         overlays?.forEach(async (overlay) => {
             let comp = overlayComponentsRef.current.get(overlay.id);
+            const alignKey = `${overlay.alignOverlayChain || ''}|${overlay.alignMainChain || ''}`;
+
+            // If the user picked a different chain pair (or went back to
+            // Auto) for an already-loaded overlay, the existing fit is
+            // stale. NGL bakes a superpose() fit into the structure's own
+            // coordinates rather than a reversible transform, so the only
+            // safe way to re-fit is to drop the component and reload it
+            // fresh below, same as a brand-new overlay.
+            if (comp && overlayAlignRef.current.get(overlay.id) !== alignKey) {
+                stage.removeComponent(comp);
+                overlayComponentsRef.current.delete(overlay.id);
+                comp = undefined;
+            }
 
             if (!comp) {
                 // Load New Overlay
@@ -2298,9 +2318,17 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                                 const overlayAtoms = comp.structure.atomCount;
                                 console.log(`[Superpose] Aligning '${overlay.id}' (${overlayAtoms} atoms) to Main (${mainAtoms} atoms)`);
 
+                                // When a specific chain pair is requested, restrict
+                                // the fit to just those chains' CA atoms instead of
+                                // the default whole-structure, sequence-alignment-
+                                // guided fit across every chain — NGL's superpose()
+                                // takes selection strings for each side.
+                                const sele1 = overlay.alignOverlayChain ? `CA and :${overlay.alignOverlayChain}` : "CA";
+                                const sele2 = overlay.alignMainChain ? `CA and :${overlay.alignMainChain}` : undefined;
+
                                 // align=true moves the component
                                 try {
-                                    comp.superpose(mainComponent, true, "CA");
+                                    comp.superpose(mainComponent, true, sele1, sele2);
                                     // Also try to update position just in case
                                     comp.updateRepresentations({ position: true });
                                     superposeSucceeded = true;
@@ -2323,6 +2351,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                         applyOverlayStyle(comp, overlay);
 
                         overlayComponentsRef.current.set(overlay.id, comp);
+                        overlayAlignRef.current.set(overlay.id, alignKey);
 
                         // Extract Chains (+ bound ligand/ion codes) for Alignment and for
                         // this overlay's own ligand-mode style/color/transparency editing.
