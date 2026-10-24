@@ -25,7 +25,14 @@ interface OverlayFitStat {
     rmsd?: number;
     primaryChain: string;
     targetChain: string;
+    // The 3 most-deviating aligned residues (this overlay's chain/resNo,
+    // descending by distance) — the specific spots worth looking at, not
+    // just the single aggregate RMSD number.
+    topDeviations: { resNo: number; distance: number }[];
 }
+
+const topDeviatingResidues = (perResidueDeviations: { resNo: number; distance: number }[]) =>
+    [...perResidueDeviations].sort((a, b) => b.distance - a.distance).slice(0, 3);
 
 export const SuperpositionModal: React.FC<SuperpositionModalProps> = ({
     isOpen,
@@ -76,7 +83,8 @@ export const SuperpositionModal: React.FC<SuperpositionModalProps> = ({
                         identity: stats.identity,
                         rmsd: stats.rmsd,
                         primaryChain: pChain.name,
-                        targetChain: tChain.name
+                        targetChain: tChain.name,
+                        topDeviations: topDeviatingResidues(stats.perResidueDeviations)
                     };
                     return;
                 }
@@ -96,6 +104,7 @@ export const SuperpositionModal: React.FC<SuperpositionModalProps> = ({
                             rmsd: stats.rmsd,
                             primaryChain: pChain.name,
                             targetChain: tChain.name,
+                            topDeviations: topDeviatingResidues(stats.perResidueDeviations),
                             length: stats.length
                         };
                     }
@@ -195,7 +204,8 @@ export const SuperpositionModal: React.FC<SuperpositionModalProps> = ({
 
         overlays.forEach((overlay, idx) => {
             const fit = !overlay.superpositionFailed ? overlayStats[overlay.id] : null;
-            const boxHeight = fit ? 18 : 12;
+            const hasTopDeviations = !!fit && fit.topDeviations.length > 0;
+            const boxHeight = fit ? (hasTopDeviations ? 24 : 18) : 12;
 
             // Structure box
             doc.setFillColor(30, 41, 59, 25);
@@ -224,6 +234,13 @@ export const SuperpositionModal: React.FC<SuperpositionModalProps> = ({
                 doc.setTextColor(148, 163, 184);
                 const rmsdLabel = fit.rmsd !== undefined ? `${fit.rmsd.toFixed(2)} Å` : 'N/A';
                 doc.text(`RMSD ${rmsdLabel} · ${fit.identity.toFixed(0)}% identity (chain ${fit.primaryChain || '—'} vs ${fit.targetChain || '—'})`, margin + 12, yPos + 13);
+
+                if (hasTopDeviations) {
+                    const devLabel = fit.topDeviations.map(d => `:${fit.targetChain}${d.resNo} (${d.distance.toFixed(1)}Å)`).join(', ');
+                    doc.setFontSize(10);
+                    doc.text(`Largest gaps: ${devLabel}`, margin + 12, yPos + 18);
+                    doc.setFontSize(11);
+                }
             }
 
             doc.setFontSize(14);
@@ -467,6 +484,19 @@ export const SuperpositionModal: React.FC<SuperpositionModalProps> = ({
                                                             </span>
                                                             <span className="opacity-40">·</span>
                                                             <span>{overlayStats[item.id]!.identity.toFixed(0)}% identity</span>
+                                                        </div>
+                                                    )}
+                                                    {!item.superpositionFailed && overlayStats[item.id] && overlayStats[item.id]!.topDeviations.length > 0 && (
+                                                        <div
+                                                            className="flex items-center gap-1 mt-0.5 text-[9px] text-neutral-500 font-mono truncate"
+                                                            title="The most-deviating aligned residues — where this fit is worst, not just how bad on average"
+                                                        >
+                                                            <span className="shrink-0 text-neutral-600">Largest gaps:</span>
+                                                            {overlayStats[item.id]!.topDeviations.map((d, idx) => (
+                                                                <span key={d.resNo} className="shrink-0">
+                                                                    :{overlayStats[item.id]!.targetChain}{d.resNo} ({d.distance.toFixed(1)}Å){idx < overlayStats[item.id]!.topDeviations.length - 1 ? ',' : ''}
+                                                                </span>
+                                                            ))}
                                                         </div>
                                                     )}
                                                 </div>
