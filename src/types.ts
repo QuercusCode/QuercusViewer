@@ -57,6 +57,16 @@ export interface NucleicResidueRule {
     backboneColor?: string;
 }
 
+export interface NucleicResidueRule {
+    id: string;
+    chain: string;
+    residues: string;
+    baseStyle?: string;
+    baseColor?: string;
+    backboneStyle?: string;
+    backboneColor?: string;
+}
+
 export interface AtomInfo {
     serial: number;
     name: string;
