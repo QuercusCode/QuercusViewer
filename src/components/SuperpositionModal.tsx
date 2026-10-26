@@ -18,6 +18,10 @@ interface SuperpositionModalProps {
     onOpenAlignment: () => void;
     getSnapshot?: () => Promise<string | null>; // Add snapshot capability
     onExportPdb?: () => Blob | null; // Combined main + overlays PDB, each its own MODEL block
+    // Animates an interpolated backbone trace ping-ponging between an
+    // overlay's aligned residue positions and the main structure's.
+    onPlayMorph?: (pairs: { resNo: number; mainPos: { x: number; y: number; z: number }; overlayPos: { x: number; y: number; z: number } }[], color?: string) => void;
+    onStopMorph?: () => void;
 }
 
 interface OverlayFitStat {
@@ -45,13 +49,37 @@ export const SuperpositionModal: React.FC<SuperpositionModalProps> = ({
     onUpdateOverlay,
     onOpenAlignment,
     getSnapshot,
-    onExportPdb
+    onExportPdb,
+    onPlayMorph,
+    onStopMorph
 }) => {
     const { t } = useTranslation();
     const [pdbInput, setPdbInput] = useState('');
     const [colorInput, setColorInput] = useState('#FFA500'); // Default Orange
+    const [morphingOverlayId, setMorphingOverlayId] = useState<string | null>(null);
 
     const dialogRef = useModalA11y<HTMLDivElement>(isOpen, onClose);
+
+    // Stop any running morph animation when this modal closes, so it doesn't
+    // keep animating invisibly in the background — mirrors how the viewport
+    // itself has no other way to know the modal went away.
+    React.useEffect(() => {
+        if (!isOpen && morphingOverlayId) {
+            onStopMorph?.();
+            setMorphingOverlayId(null);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isOpen]);
+
+    // If the overlay currently morphing gets removed (or loses its chains),
+    // stop the animation rather than leave it running against stale data.
+    React.useEffect(() => {
+        if (morphingOverlayId && !overlays.some(o => o.id === morphingOverlayId)) {
+            onStopMorph?.();
+            setMorphingOverlayId(null);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [overlays]);
 
     // Fit-quality summary per overlay — reuses the same Needleman-Wunsch +
     // BLOSUM62 aligner the "Align Seq" sub-modal already uses, so the number
@@ -346,6 +374,30 @@ export const SuperpositionModal: React.FC<SuperpositionModalProps> = ({
         });
     };
 
+    // Animates a backbone trace ping-ponging between this overlay's aligned
+    // chain and the main structure's — the same chain pair (explicit pick or
+    // auto-matched best pair) overlayStats already reports, so what moves is
+    // exactly what the RMSD/identity readout describes. Clicking again while
+    // it's already running on this overlay stops it.
+    const handleToggleMorph = (overlay: SuperposedStructure) => {
+        if (morphingOverlayId === overlay.id) {
+            onStopMorph?.();
+            setMorphingOverlayId(null);
+            return;
+        }
+        const fit = overlayStats[overlay.id];
+        if (!fit || !primaryChains || !overlay.chains) return;
+        const pChain = primaryChains.find(c => c.name === fit.primaryChain);
+        const tChain = overlay.chains.find(c => c.name === fit.targetChain);
+        if (!pChain || !tChain) return;
+
+        const { stats } = alignSequences(pChain, tChain);
+        const pairs = [...stats.perResidueDeviations].sort((a, b) => a.resNo - b.resNo);
+        if (pairs.length === 0) return;
+        onPlayMorph?.(pairs, overlay.color);
+        setMorphingOverlayId(overlay.id);
+    };
+
     // Downloads the main structure plus every loaded overlay as one combined
     // PDB file (each as its own MODEL block, in their current fitted pose) —
     // lets the alignment work done here be taken into PyMOL/ChimeraX, or just
@@ -604,6 +656,18 @@ export const SuperpositionModal: React.FC<SuperpositionModalProps> = ({
                                                 >
                                                     By Deviation
                                                 </button>
+                                                {onPlayMorph && (
+                                                    <button
+                                                        onClick={() => handleToggleMorph(item)}
+                                                        disabled={morphingOverlayId !== item.id && !overlayStats[item.id]}
+                                                        title={morphingOverlayId === item.id ? 'Stop the morph animation' : "Animate this overlay's aligned chain morphing between its own pose and the main structure's"}
+                                                        className={`px-2 py-1 text-[10px] font-bold rounded shrink-0 transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${morphingOverlayId === item.id
+                                                            ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
+                                                            : 'bg-neutral-900/60 text-neutral-400 border border-neutral-700 hover:text-neutral-200'}`}
+                                                    >
+                                                        {morphingOverlayId === item.id ? 'Stop Morph' : 'Morph'}
+                                                    </button>
+                                                )}
                                             </div>
                                         )}
 

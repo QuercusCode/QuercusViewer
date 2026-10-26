@@ -3155,6 +3155,8 @@ function App() {
               viewerRefs[activeViewIndex].current?.openAlignmentView();
             }}
             onExportPdb={() => viewerRefs[activeViewIndex].current?.getSuperposedPdbBlob() ?? null}
+            onPlayMorph={(pairs, color) => viewerRefs[activeViewIndex].current?.playMorph(pairs, color)}
+            onStopMorph={() => viewerRefs[activeViewIndex].current?.stopMorph()}
           />
           </Suspense>
           )}

@@ -260,6 +260,13 @@ export interface ProteinViewerRef {
     setOrientation: (orientation: any) => void;
     getPdbBlob: () => Blob | null; // Method to extract current structure as blob
     getSuperposedPdbBlob: () => Blob | null; // Main structure + every loaded Superpose overlay, each as its own MODEL block
+    // Animates an interpolated backbone trace (spheres + bonds) ping-ponging
+    // between a Superpose overlay's aligned residue positions and the main
+    // structure's — a visual "morph" between the two fitted poses. `pairs`
+    // comes from alignSequences()'s perResidueDeviations (resNo/mainPos/
+    // overlayPos), sorted by resNo so consecutive entries can be bonded.
+    playMorph: (pairs: { resNo: number; mainPos: { x: number; y: number; z: number }; overlayPos: { x: number; y: number; z: number } }[], color?: string) => void;
+    stopMorph: () => void;
     container: HTMLDivElement | null; // Expose container for canvas access
     openAlignmentView: () => void; // Added for Sequence Alignment
 }
@@ -362,6 +369,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
     const contactLineRepRef = useRef<any>(null); // Track single contact line representation
     const regionHighlightRepRef = useRef<any>(null); // V6: Track region highlight
     const overlayComponentsRef = useRef<Map<string, any>>(new Map()); // Track overlay components
+    const morphIntervalRef = useRef<number | null>(null); // Active morph-animation interval, if any
     // Tracks the chain-pair alignment (alignOverlayChain|alignMainChain) each
     // overlay was last loaded/superposed with, so the overlay effect can tell
     // the user picked a different pair and needs a fresh reload+re-fit —
@@ -1346,6 +1354,74 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                 return null;
             }
         },
+        playMorph: (pairs, color) => {
+            const stage = stageRef.current;
+            if (!stage || !pairs || pairs.length === 0) return;
+
+            if (morphIntervalRef.current !== null) {
+                window.clearInterval(morphIntervalRef.current);
+                morphIntervalRef.current = null;
+            }
+            stage.getComponentsByName("morph-trace").list.forEach((c: unknown) => stage.removeComponent(c));
+
+            const hexToRgb = (hex?: string): [number, number, number] => {
+                const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex || '');
+                return result ? [
+                    parseInt(result[1], 16) / 255,
+                    parseInt(result[2], 16) / 255,
+                    parseInt(result[3], 16) / 255
+                ] : [1, 0.6, 0];
+            };
+            const rgb = hexToRgb(color);
+            const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+            const ease = (t: number) => t * t * (3 - 2 * t); // smoothstep, less mechanical than a linear ping-pong
+
+            let t = 0;
+            let direction = 1;
+
+            const render = () => {
+                if (!stageRef.current) return;
+                stage.getComponentsByName("morph-trace").list.forEach((c: unknown) => stage.removeComponent(c));
+
+                const easedT = ease(t);
+                const shape = new window.NGL.Shape("morph-trace");
+                const positions = pairs.map(({ mainPos, overlayPos }) => ([
+                    lerp(mainPos.x, overlayPos.x, easedT),
+                    lerp(mainPos.y, overlayPos.y, easedT),
+                    lerp(mainPos.z, overlayPos.z, easedT)
+                ]));
+                positions.forEach((pos, idx) => {
+                    shape.addSphere(pos, rgb, 0.5);
+                    // Only bond consecutive aligned residues that are actually
+                    // adjacent in the chain (resNo delta of 1) — otherwise a
+                    // gap in the alignment would draw a long spurious rod.
+                    if (idx > 0 && pairs[idx].resNo - pairs[idx - 1].resNo === 1) {
+                        shape.addCylinder(positions[idx - 1], pos, rgb, 0.25);
+                    }
+                });
+                const comp = stage.addComponentFromObject(shape);
+                comp.addRepresentation("buffer", { opacity: 0.9 });
+                if (stage.viewer) stage.viewer.requestRender();
+            };
+
+            render();
+            morphIntervalRef.current = window.setInterval(() => {
+                t += direction * 0.025;
+                if (t >= 1) { t = 1; direction = -1; }
+                else if (t <= 0) { t = 0; direction = 1; }
+                render();
+            }, 40); // ~25fps
+        },
+        stopMorph: () => {
+            if (morphIntervalRef.current !== null) {
+                window.clearInterval(morphIntervalRef.current);
+                morphIntervalRef.current = null;
+            }
+            if (stageRef.current) {
+                stageRef.current.getComponentsByName("morph-trace").list.forEach((c: unknown) => stageRef.current.removeComponent(c));
+                if (stageRef.current.viewer) stageRef.current.viewer.requestRender();
+            }
+        },
         container: containerRef.current,
         getOrientation: () => {
             if (!stageRef.current || !stageRef.current.viewerControls) return null;
@@ -2042,6 +2118,10 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
 
             return () => {
                 resizeObserver.disconnect();
+                if (morphIntervalRef.current !== null) {
+                    window.clearInterval(morphIntervalRef.current);
+                    morphIntervalRef.current = null;
+                }
                 try { stage.dispose(); } catch (e) { }
                 stageRef.current = null;
             };

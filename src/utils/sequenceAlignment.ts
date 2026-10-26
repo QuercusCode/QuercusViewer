@@ -105,8 +105,15 @@ export const alignSequences = (chain1: ChainInfo, chain2: ChainInfo) => {
     let atomPairs = 0;
     // Per-residue structural deviation, keyed by chain2's (the second
     // argument's) PDB residue number — lets a caller visualize WHERE a fit
-    // is good or bad, not just the single aggregate RMSD number.
-    const perResidueDeviations: { resNo: number; distance: number }[] = [];
+    // is good or bad, not just the single aggregate RMSD number. mainPos/
+    // overlayPos carry the raw aligned coordinate pair (chain1's/chain2's),
+    // reused by morph-animation to interpolate between them.
+    const perResidueDeviations: {
+        resNo: number;
+        distance: number;
+        mainPos: { x: number; y: number; z: number };
+        overlayPos: { x: number; y: number; z: number };
+    }[] = [];
 
     while (i > 0 || j > 0) {
         if (i > 0 && j > 0 && scoreMatrix[i][j] === scoreMatrix[i - 1][j - 1] + pairScore(seq1[i - 1], seq2[j - 1])) {
@@ -134,7 +141,7 @@ export const alignSequences = (chain1: ChainInfo, chain2: ChainInfo) => {
 
                 const resNo = chain2.residueMap?.[j - 1];
                 if (typeof resNo === 'number') {
-                    perResidueDeviations.push({ resNo, distance: Math.sqrt(sqDist) });
+                    perResidueDeviations.push({ resNo, distance: Math.sqrt(sqDist), mainPos: p1, overlayPos: p2 });
                 }
             }
 
