@@ -2959,6 +2959,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
             const ligandStyles = overlay.ligandStyles || {};
             const ligandColors = overlay.ligandColors || {};
             const customColors = overlay.customColors || [];
+            const chainVisibility = overlay.chainVisibility || {};
 
             // Electrostatic coloring is a per-structure computed property
             // (screened sum of fixed formal side-chain charges — see
@@ -3066,6 +3067,15 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                 ...ligandTransparencyCodes
             ]));
 
+            // --- CHAIN VISIBILITY (ISOLATION) ---
+            const hiddenChainSet = new Set(
+                Object.keys(chainVisibility).filter(c => chainVisibility[c] === false)
+            );
+            const hiddenChainNames = Array.from(hiddenChainSet).filter(c => c !== '');
+            const hiddenChainExclusion = hiddenChainNames.length > 0
+                ? ` and not (${hiddenChainNames.map(c => `:${c}`).join(' or ')})`
+                : "";
+
             const params: Record<string, unknown> = {
                 color: finalColor,
                 quality: 'high',
@@ -3091,6 +3101,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
 
             // Transparent chain/residue regions
             renderSelections.forEach(rule => {
+                if (rule.chain && rule.chain !== 'All' && hiddenChainSet.has(rule.chain)) return;
                 let styleToUse: RepresentationType = repType;
                 if (rule.chain && rule.chain !== 'All' && chainStyles[rule.chain]) {
                     styleToUse = chainStyles[rule.chain] || repType;
@@ -3145,6 +3156,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
             if (component.structure.chainStore) {
                 component.structure.eachChain((cp) => {
                     const chainName = cp.chainname;
+                    if (hiddenChainSet.has(chainName)) return;
                     if (fullyHandledChains.has(chainName)) return;
 
                     const thisChainExclusions: string[] = [];
@@ -3170,6 +3182,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
             // --- Chain-specific styles ---
             Object.entries(chainStyles).forEach(([chain, style]) => {
                 if (!style) return;
+                if (hiddenChainSet.has(chain)) return;
                 let actualStyle: RepresentationType = style;
                 if (actualStyle === 'backbone') actualStyle = 'trace';
 
@@ -3198,7 +3211,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                     multipleBond: 'symmetric',
                     color,
                     opacity: baseOpacity,
-                    sele: `[${code}]`
+                    sele: `[${code}]${hiddenChainExclusion}`
                 };
                 if (actualStyle === 'licorice' || actualStyle === 'ball+stick') ligandParams.scale = 2.0;
 
@@ -3220,7 +3233,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                     opacity: rule.opacity,
                     depthWrite: false,
                     side: 'front',
-                    sele: `[${code}]`
+                    sele: `[${code}]${hiddenChainExclusion}`
                 };
                 if (actualStyle === 'licorice' || actualStyle === 'ball+stick') ligandParams.scale = 2.0;
 
@@ -3229,6 +3242,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
 
             // --- Custom residue styles (chain+range) ---
             customStyles.forEach(rule => {
+                if (rule.chain !== 'All' && hiddenChainSet.has(rule.chain)) return;
                 const chainPart = rule.chain === 'All' ? '' : (rule.chain ? `:${rule.chain}` : '');
                 const resPart = rule.residues ? (chainPart === '' ? rule.residues : ` and ${rule.residues}`) : '';
                 const exactSelection = `${chainPart}${resPart}` || '*';
@@ -3240,7 +3254,7 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                 const ruleParams: Record<string, unknown> = {
                     ...params,
                     color: finalColor,
-                    sele: `${renderSelection}${transparencyExclusion}`
+                    sele: `${renderSelection}${transparencyExclusion}${hiddenChainExclusion}`
                 };
                 if (actualStyle === 'cartoon' || actualStyle === 'tube' || actualStyle === 'rope') Object.assign(ruleParams, cartoonParams);
                 else if (actualStyle === 'trace') Object.assign(ruleParams, backboneParams);

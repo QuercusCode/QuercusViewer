@@ -606,6 +606,33 @@ export const SuperpositionModal: React.FC<SuperpositionModalProps> = ({
                                                 </button>
                                             </div>
                                         )}
+
+                                        {/* Per-chain visibility for this overlay — same show/hide
+                                            convention as the main structure's own Chains card, scoped
+                                            to just this overlay, so a multi-chain overlay can be
+                                            narrowed down to the chain(s) actually being compared. */}
+                                        {item.chains && item.chains.length > 1 && (
+                                            <div className="flex items-center gap-1 pt-2 border-t border-neutral-700/30 flex-wrap">
+                                                <span className="text-[9px] text-neutral-500 uppercase tracking-wider shrink-0">Chains</span>
+                                                {item.chains.map(c => {
+                                                    const isHidden = item.chainVisibility?.[c.name] === false;
+                                                    return (
+                                                        <button
+                                                            key={c.name}
+                                                            onClick={() => onUpdateOverlay(item.id, {
+                                                                chainVisibility: { ...item.chainVisibility, [c.name]: isHidden }
+                                                            })}
+                                                            title={isHidden ? `Show chain ${c.name} on this overlay` : `Hide chain ${c.name} on this overlay`}
+                                                            className={`px-1.5 py-0.5 text-[10px] font-mono font-bold rounded border transition-colors ${isHidden
+                                                                ? 'bg-neutral-900/40 text-neutral-600 border-neutral-800 line-through'
+                                                                : 'bg-neutral-900/60 text-neutral-300 border-neutral-700 hover:border-cyan-500/50'}`}
+                                                        >
+                                                            :{c.name}
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
                                     </div>
                                 ))}
                             </div>
