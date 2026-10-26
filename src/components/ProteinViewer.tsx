@@ -1376,14 +1376,15 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
             const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
             const ease = (t: number) => t * t * (3 - 2 * t); // smoothstep, less mechanical than a linear ping-pong
 
-            let t = 0;
-            let direction = 1;
-
-            const render = () => {
-                if (!stageRef.current) return;
-                stage.getComponentsByName("morph-trace").list.forEach((c: unknown) => stage.removeComponent(c));
-
-                const easedT = ease(t);
+            // NGL's Shape has no in-place position update, so animating by
+            // rebuilding the whole Shape/component/representation every tick
+            // is far too expensive to run continuously (each rebuild recreates
+            // WebGL buffers). Instead, build a small, fixed number of frames
+            // ONCE up front and animate by toggling their visibility — after
+            // this one-time cost, each tick is just a cheap boolean flip.
+            const FRAME_COUNT = 6;
+            const frames = Array.from({ length: FRAME_COUNT }, (_, f) => {
+                const easedT = ease(f / (FRAME_COUNT - 1));
                 const shape = new window.NGL.Shape("morph-trace");
                 const positions = pairs.map(({ mainPos, overlayPos }) => ([
                     lerp(mainPos.x, overlayPos.x, easedT),
@@ -1401,16 +1402,23 @@ export const ProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerProps>(({
                 });
                 const comp = stage.addComponentFromObject(shape);
                 comp.addRepresentation("buffer", { opacity: 0.9 });
-                if (stage.viewer) stage.viewer.requestRender();
-            };
+                comp.setVisibility(f === 0);
+                return comp;
+            });
 
-            render();
+            if (stage.viewer) stage.viewer.requestRender();
+
+            let frameIdx = 0;
+            let direction = 1;
             morphIntervalRef.current = window.setInterval(() => {
-                t += direction * 0.025;
-                if (t >= 1) { t = 1; direction = -1; }
-                else if (t <= 0) { t = 0; direction = 1; }
-                render();
-            }, 40); // ~25fps
+                const prevIdx = frameIdx;
+                frameIdx += direction;
+                if (frameIdx >= FRAME_COUNT - 1) { frameIdx = FRAME_COUNT - 1; direction = -1; }
+                else if (frameIdx <= 0) { frameIdx = 0; direction = 1; }
+                frames[prevIdx]?.setVisibility(false);
+                frames[frameIdx]?.setVisibility(true);
+                if (stage.viewer) stage.viewer.requestRender();
+            }, 200);
         },
         stopMorph: () => {
             if (morphIntervalRef.current !== null) {

@@ -60,16 +60,12 @@ export const SuperpositionModal: React.FC<SuperpositionModalProps> = ({
 
     const dialogRef = useModalA11y<HTMLDivElement>(isOpen, onClose);
 
-    // Stop any running morph animation when this modal closes, so it doesn't
-    // keep animating invisibly in the background — mirrors how the viewport
-    // itself has no other way to know the modal went away.
-    React.useEffect(() => {
-        if (!isOpen && morphingOverlayId) {
-            onStopMorph?.();
-            setMorphingOverlayId(null);
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isOpen]);
+    // Deliberately does NOT stop the morph animation when this modal closes —
+    // the viewport stays fully visible behind the (now-closed) modal, so
+    // closing it is exactly how you'd want to watch the morph unobstructed.
+    // morphingOverlayId survives the close (this component stays mounted,
+    // only its render output goes to null — see the lazy-mount-gate pattern
+    // in ViewerApp.tsx), so reopening still shows "Stop Morph" correctly.
 
     // If the overlay currently morphing gets removed (or loses its chains),
     // stop the animation rather than leave it running against stale data.
