@@ -149,6 +149,12 @@ export interface SuperposedStructure {
     customTransparency?: CustomTransparencyRule[];
     ligandStyles?: Record<string, RepresentationType>;
     ligandColors?: Record<string, string>;
+
+    // Per-chain show/hide for this overlay specifically, same convention as
+    // the main structure's own chainVisibility (absent/true = visible,
+    // false = hidden) — lets a multi-chain overlay be narrowed down to just
+    // the chain(s) actually being compared.
+    chainVisibility?: Record<string, boolean>;
 }
 
 

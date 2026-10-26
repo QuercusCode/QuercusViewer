@@ -662,6 +662,8 @@ export const MolStarProteinViewer = forwardRef<ProteinViewerRef, ProteinViewerPr
         },
         getPdbBlob: () => null,
         getSuperposedPdbBlob: () => null, // Superpose overlays are NGL-only
+        playMorph: () => { }, // Morph animation is NGL-only
+        stopMorph: () => { },
         restoreMeasurements: () => { },
         captureImage: async () => { },
         highlightRegion: () => { },
